@@ -33,6 +33,15 @@ function formatErrorType(errorType: string | undefined): string | null {
     .trim()
 }
 
+/** Shimmer sweep text — flowing light across text, mirrors iOS ShimmerText.swift */
+function ShimmerText({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="shimmer-sweep-text">
+      {children}
+    </span>
+  )
+}
+
 export function StreamingIndicator() {
   const t = useTranslation()
   const [now, setNow] = useState(() => Date.now())
@@ -90,8 +99,6 @@ export function StreamingIndicator() {
   }
 
   if (streamingFallback) {
-    // 预期内的降级等待（非错误）：非流式响应一次性返回，期间无增量输出。
-    // 用中性样式的轻提示 + 回合计时，与 api_retry 的警示横幅区分开。
     return (
       <div
         data-testid="streaming-fallback-indicator"
@@ -123,15 +130,17 @@ export function StreamingIndicator() {
       ? t('serverVerb.Thinking')
       : chatState === 'compacting'
         ? t('serverVerb.Compacting conversation')
-      : chatState === 'tool_executing'
-        ? t('serverVerb.Running')
-        : t('serverVerb.Working')
+        : chatState === 'tool_executing'
+          ? t('serverVerb.Running')
+          : t('serverVerb.Working')
   }
 
   return (
     <div className="mb-2 flex w-fit items-center gap-2 rounded-full border border-[var(--color-border)]/40 bg-[var(--color-surface-container-low)] px-3 py-1">
       <span className="text-[var(--color-brand)] animate-shimmer text-xs">✦</span>
-      <span className="text-xs font-medium text-[var(--color-text-secondary)]">{verb}...</span>
+      <ShimmerText>
+        <span className="text-xs font-medium text-[var(--color-text-secondary)]">{verb}...</span>
+      </ShimmerText>
       {elapsedSeconds > 0 && (
         <span className="text-[10px] text-[var(--color-text-tertiary)]">
           {formatElapsed(elapsedSeconds)}
@@ -142,6 +151,53 @@ export function StreamingIndicator() {
           · ↓ {t('common.tokens', { count: formatTokenCount(streamingTokens) })}
         </span>
       )}
+    </div>
+  )
+}
+
+/**
+ * StickyThinkingIndicator — sits above the chat input, aligned to the
+ * assistant message content area. Shows thinking verb with shimmer sweep.
+ * Mirrors iOS's StickyPendingAssistantIndicatorRow + ShimmerText.
+ */
+export function StickyThinkingIndicator({ visible, compact }: { visible: boolean; compact?: boolean }) {
+  const t = useTranslation()
+  const activeTabId = useTabStore((s) => s.activeTabId)
+  const sessionState = useChatStore((s) => activeTabId ? s.sessions[activeTabId] : undefined)
+  const chatState = sessionState?.chatState ?? 'idle'
+  const statusVerb = sessionState?.statusVerb ?? ''
+  const elapsedSeconds = sessionState?.elapsedSeconds ?? 0
+
+  if (!visible) return null
+
+  let verb: string
+  if (statusVerb) {
+    verb = translateServerVerb(t, statusVerb)
+  } else {
+    verb = chatState === 'thinking'
+      ? t('serverVerb.Thinking')
+      : chatState === 'compacting'
+        ? t('serverVerb.Compacting conversation')
+        : chatState === 'tool_executing'
+          ? t('serverVerb.Running')
+          : t('serverVerb.Working')
+  }
+
+  return (
+    <div className={`sticky-thinking-indicator ${visible ? 'sticky-thinking-indicator--visible' : 'sticky-thinking-indicator--hidden'}`}>
+      <div className={compact ? 'mx-auto max-w-full' : 'mx-auto max-w-[800px]'}>
+        <div className="flex items-center gap-2.5 px-3.5 py-2">
+          <span className="text-[var(--color-brand)] animate-shimmer text-xs">✦</span>
+          <ShimmerText>
+            <span className="text-[13px] font-medium text-[var(--color-text-secondary)]">{verb}...</span>
+          </ShimmerText>
+          {elapsedSeconds > 0 && (
+            <span className="text-[11px] text-[var(--color-text-tertiary)] font-mono tabular-nums">
+              {formatElapsed(elapsedSeconds)}
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

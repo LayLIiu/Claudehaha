@@ -18,7 +18,7 @@ export const UserMessage = memo(function UserMessage({ content, attachments, bra
     <div className="codex-task-stream-item mb-[3px] flex justify-end">
       <div
         data-message-shell="user"
-        className="group/message relative flex min-w-0 max-w-[82%] flex-col items-end sm:max-w-[76%] lg:max-w-[68%]"
+        className="group/message relative flex min-w-0 max-w-[88%] flex-col items-end sm:max-w-[82%] lg:max-w-[72%]"
       >
         <div className="flex max-w-full flex-col items-end gap-2">
           {attachments && attachments.length > 0 && (

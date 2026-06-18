@@ -1472,6 +1472,7 @@ export const en = {
   'toolGroup.searchedMany': 'searched {count} patterns',
   'toolGroup.agentOne': 'dispatched an agent',
   'toolGroup.agentMany': 'dispatched {count} agents',
+  'toolGroup.working': 'Working',
   'agentStatus.starting': 'Starting',
   'agentStatus.running': 'Running',
   'agentStatus.done': 'Done',

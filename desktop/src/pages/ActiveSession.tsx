@@ -25,6 +25,7 @@ import {
 import { useTranslation } from '../i18n'
 import { MessageList } from '../components/chat/MessageList'
 import { ChatInput } from '../components/chat/ChatInput'
+import { StickyThinkingIndicator } from '../components/chat/StreamingIndicator'
 import { ComputerUsePermissionModal } from '../components/chat/ComputerUsePermissionModal'
 import { SessionTaskBar } from '../components/chat/SessionTaskBar'
 import { ConfirmDialog } from '../components/shared/ConfirmDialog'
@@ -575,7 +576,7 @@ export function ActiveSession() {
       <div data-testid="active-session-content-row" className="flex min-h-0 min-w-0 flex-1">
         <div
           data-testid="active-session-chat-column"
-          className={`flex min-h-0 flex-col ${showRightPanel ? CHAT_COLUMN_WITH_WORKSPACE_CLASS : isMobileLayout ? 'min-w-0 flex-1' : 'min-w-[360px] flex-1'}`}
+          className={`relative flex min-h-0 flex-col ${showRightPanel ? CHAT_COLUMN_WITH_WORKSPACE_CLASS : isMobileLayout ? 'min-w-0 flex-1' : 'min-w-[360px] flex-1'}`}
         >
           {isMemberSession && (
             <div className="relative shrink-0 bg-[var(--color-surface-container)]">
@@ -817,12 +818,10 @@ export function ActiveSession() {
                   {historyError}
                 </div>
               ) : (
-                <MessageList compact={showRightPanel} />
+                <MessageList compact={showRightPanel} bottomPadding={240} />
               )}
             </>
           )}
-
-          {!isMemberSession && <SessionTaskBar />}
 
           <TeamStatusBar />
 
@@ -834,6 +833,8 @@ export function ActiveSession() {
                 : 'chat-input-dock-region'
             }
           >
+            {!isMemberSession && <SessionTaskBar />}
+            <StickyThinkingIndicator visible={chatState === 'tool_executing' || chatState === 'thinking' || chatState === 'streaming'} compact={showRightPanel} />
             <ChatInput
               variant={shouldFloatHeroComposer && !composerDocked ? 'hero' : 'default'}
               compact={showRightPanel}

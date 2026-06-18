@@ -1,6 +1,67 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useTranslation } from '../../i18n'
 import { MarkdownRenderer } from '../markdown/MarkdownRenderer'
+
+// ── Thinking Disclosure Parser ──
+// Detects **bold title** lines in thinking text and splits into collapsible sections.
+
+type ThinkingDisclosureSection = {
+  id: string
+  title: string
+  detail: string
+}
+
+type ThinkingDisclosureContent = {
+  /** Leading text before any section header */
+  preamble: string
+  sections: ThinkingDisclosureSection[]
+}
+
+function parseThinkingDisclosure(rawText: string): ThinkingDisclosureContent | null {
+  const lines = rawText.split('\n')
+  const sections: ThinkingDisclosureSection[] = []
+  let preamble = ''
+  let currentTitle: string | null = null
+  let currentDetail: string[] = []
+  let sectionIndex = 0
+  let foundSection = false
+
+  // Detect lines starting with **bold** as section headers
+  const boldHeaderRegex = /^\*\*(.+?)\*\*\s*:?\s*$/
+
+  const flushSection = () => {
+    if (currentTitle !== null) {
+      sections.push({
+        id: `section-${sectionIndex++}`,
+        title: currentTitle,
+        detail: currentDetail.join('\n').trim(),
+      })
+    }
+    currentTitle = null
+    currentDetail = []
+  }
+
+  for (const line of lines) {
+    const match = line.match(boldHeaderRegex)
+    if (match) {
+      if (!foundSection) {
+        // First section found — everything before was preamble
+        foundSection = true
+      } else {
+        flushSection()
+      }
+      currentTitle = match[1]!.trim()
+    } else if (currentTitle !== null) {
+      currentDetail.push(line)
+    } else if (!foundSection) {
+      preamble += (preamble ? '\n' : '') + line
+    }
+  }
+  flushSection()
+
+  if (sections.length === 0) return null
+  return { preamble: preamble.trim(), sections }
+}
 
 export function ThinkingBlock({ content, isActive = false }: { content: string; isActive?: boolean }) {
   const t = useTranslation()
@@ -8,6 +69,27 @@ export function ThinkingBlock({ content, isActive = false }: { content: string; 
   const contentRef = useRef<HTMLDivElement>(null)
   const displayContent = useMemo(() => content.replace(/\r\n?/g, '\n').trimEnd(), [content])
   const hasDisplayContent = displayContent.trim().length > 0
+  const [expandedSectionIds, setExpandedSectionIds] = useState<Set<string>>(new Set())
+
+  // Reset disclosure state when content changes identity
+  useEffect(() => {
+    setExpandedSectionIds(new Set())
+  }, [content])
+
+  // Try to parse disclosure sections from thinking content
+  const disclosure = useMemo(() => {
+    if (isActive || !hasDisplayContent) return null
+    return parseThinkingDisclosure(displayContent)
+  }, [displayContent, hasDisplayContent, isActive])
+
+  const toggleSection = useCallback((sectionId: string) => {
+    setExpandedSectionIds(prev => {
+      const next = new Set(prev)
+      if (next.has(sectionId)) next.delete(sectionId)
+      else next.add(sectionId)
+      return next
+    })
+  }, [])
 
   useEffect(() => {
     if (expanded && isActive && contentRef.current) {
@@ -15,6 +97,48 @@ export function ThinkingBlock({ content, isActive = false }: { content: string; 
     }
   }, [displayContent, expanded, isActive])
 
+  // When actively thinking, show the normal (non-disclosure) view
+  if (isActive || !disclosure) {
+    return (
+      <div className="mb-1">
+        <style>{thinkingStyles}</style>
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+          className="flex w-full items-center gap-1.5 rounded-md px-1 py-0.5 text-left text-[12px] text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-text-secondary)]"
+        >
+          <span className="text-[10px] text-[var(--color-outline)]">
+            {expanded ? '\u25BE' : '\u25B8'}
+          </span>
+          <span className="shrink-0 font-medium italic">
+            {isActive ? t('thinking.label') : t('thinking.labelDone')}
+            {isActive && <span className="thinking-dots" />}
+          </span>
+        </button>
+        {hasDisplayContent && (
+          <div className={`tool-group-content${expanded ? ' expanded' : ''}`}>
+            <div
+              ref={contentRef}
+              data-thinking-content="expanded"
+              className="relative mt-1 max-h-[300px] overflow-y-auto rounded-lg border border-[var(--color-border)]/40 bg-[var(--color-surface-container-lowest)] p-2.5 text-[11px] text-[var(--color-text-secondary)]"
+            >
+              <MarkdownRenderer
+                content={displayContent}
+                variant="compact"
+                cache={!isActive}
+                streaming={isActive}
+                className="thinking-markdown text-[var(--color-text-secondary)]"
+              />
+              {isActive && <span className="thinking-cursor" />}
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // ── Disclosure view: collapsible sections with bold titles ──
   return (
     <div className="mb-1">
       <style>{thinkingStyles}</style>
@@ -28,24 +152,65 @@ export function ThinkingBlock({ content, isActive = false }: { content: string; 
           {expanded ? '\u25BE' : '\u25B8'}
         </span>
         <span className="shrink-0 font-medium italic">
-          {isActive ? t('thinking.label') : t('thinking.labelDone')}
-          {isActive && <span className="thinking-dots" />}
+          {t('thinking.labelDone')}
         </span>
       </button>
-      {expanded && hasDisplayContent && (
-        <div
-          ref={contentRef}
-          data-thinking-content="expanded"
-          className="relative mt-1 max-h-[300px] overflow-y-auto rounded-lg border border-[var(--color-border)]/40 bg-[var(--color-surface-container-lowest)] p-2.5 text-[11px] text-[var(--color-text-secondary)]"
-        >
-          <MarkdownRenderer
-            content={displayContent}
-            variant="compact"
-            cache={!isActive}
-            streaming={isActive}
-            className="thinking-markdown text-[var(--color-text-secondary)]"
-          />
-          {isActive && <span className="thinking-cursor" />}
+      {expanded && (
+        <div className="mt-1 rounded-lg border border-[var(--color-border)]/40 bg-[var(--color-surface-container-lowest)] p-2.5">
+          {/* Preamble text before any section */}
+          {disclosure.preamble && (
+            <div className="mb-2 text-[11px] text-[var(--color-text-secondary)]">
+              <MarkdownRenderer
+                content={disclosure.preamble}
+                variant="compact"
+                cache
+                className="thinking-markdown text-[var(--color-text-secondary)]"
+              />
+            </div>
+          )}
+          {/* Disclosure sections */}
+          {disclosure.sections.map((section) => {
+            const isSectionExpanded = expandedSectionIds.has(section.id)
+            const hasDetail = section.detail.length > 0
+            return (
+              <div key={section.id} className="mb-1 last:mb-0">
+                <button
+                  type="button"
+                  onClick={hasDetail ? () => toggleSection(section.id) : undefined}
+                  className={`flex items-center gap-2 w-full text-left text-[11px] ${
+                    hasDetail
+                      ? 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] cursor-pointer'
+                      : 'text-[var(--color-text-tertiary)] cursor-default'
+                  } transition-colors`}
+                >
+                  <span
+                    className="turn-chevron text-[9px] text-[var(--color-outline)]"
+                    data-rotated={isSectionExpanded ? 'true' : 'false'}
+                  >
+                    {'▸'}
+                  </span>
+                  <span className="font-semibold text-[var(--color-text-secondary)]">{section.title}</span>
+                </button>
+                {hasDetail && (
+                  <div
+                    className="thinking-disclosure-content"
+                    data-collapse-state={isSectionExpanded ? 'open' : 'closed'}
+                  >
+                    <div className="thinking-disclosure-content-inner">
+                      <div className="pl-5 pt-1 text-[11px] text-[var(--color-text-secondary)]">
+                        <MarkdownRenderer
+                          content={section.detail}
+                          variant="compact"
+                          cache
+                          className="thinking-markdown text-[var(--color-text-secondary)]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
     </div>

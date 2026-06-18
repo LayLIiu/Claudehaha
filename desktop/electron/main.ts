@@ -1,4 +1,4 @@
-import { app, BrowserWindow, clipboard, ipcMain, Notification, screen, session, WebContentsView } from 'electron'
+import { app, BrowserWindow, clipboard, ipcMain, Menu, MenuItem, Notification, screen, session, WebContentsView } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import path from 'node:path'
 import { ELECTRON_EVENT_CHANNELS, ELECTRON_INTERNAL_CHANNELS, ELECTRON_IPC_CHANNELS, type ElectronIpcChannel } from './ipc/channels'
@@ -379,9 +379,40 @@ async function createMainWindow() {
     writeWindowSmokeSnapshot(mainWindow, `did-fail-load:${errorCode}:${errorDescription}:${validatedURL}`)
   })
 
+  // Right-click context menu for input fields (cut/copy/paste)
+  mainWindow.webContents.on('context-menu', (_event, params) => {
+    const menu = new Menu()
+    if (params.isEditable) {
+      if (params.editFlags.canCut) menu.append(new MenuItem({ label: 'Cut', role: 'cut' }))
+      if (params.editFlags.canCopy) menu.append(new MenuItem({ label: 'Copy', role: 'copy' }))
+      if (params.editFlags.canPaste) menu.append(new MenuItem({ label: 'Paste', role: 'paste' }))
+      if (params.editFlags.canSelectAll) menu.append(new MenuItem({ label: 'Select All', role: 'selectAll' }))
+    } else if (params.selectionText) {
+      menu.append(new MenuItem({ label: 'Copy', role: 'copy' }))
+    }
+    if (menu.items.length > 0) menu.popup()
+  })
+
   writeWindowSmokeSnapshot(mainWindow, 'after-create')
 
   await loadRendererEntry(mainWindow)
+
+  // In dev mode, watch for Vite HMR failures and auto-reload the page
+  if (!app.isPackaged) {
+    const fs = await import('node:fs')
+    const srcRoot = path.join(appRoot(), 'src')
+    let reloadTimer: ReturnType<typeof setTimeout> | null = null
+    fs.watch(srcRoot, { recursive: true }, () => {
+      // Debounce: if HMR is working, React will update without a full reload.
+      // If HMR is broken, we force a full page reload after a short delay.
+      if (reloadTimer) clearTimeout(reloadTimer)
+      reloadTimer = setTimeout(() => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.reload()
+        }
+      }, 500)
+    })
+  }
 
   restoreWindowMaximized(mainWindow, restoredState)
   showMainWindow(mainWindow, app)

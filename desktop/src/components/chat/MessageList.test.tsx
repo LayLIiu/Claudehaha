@@ -1370,11 +1370,14 @@ describe('MessageList nested tool calls', () => {
     ]
 
     const { renderItems, childToolCallsByParent } = buildRenderModel(messages)
-    const renderedKinds = renderItems.map((item) =>
-      item.kind === 'tool_group'
-        ? `tool:${item.toolCalls[0]?.toolUseId}`
-        : `message:${item.message.id}`,
-    )
+    const renderedKinds = renderItems.map((item) => {
+      switch (item.kind) {
+        case 'tool_group': return `tool:${item.toolCalls[0]?.toolUseId}`
+        case 'tool_burst': return `burst:${item.burst.pinnedToolCalls[0]?.toolUseId ?? item.burst.overflowToolCalls[0]?.toolUseId}`
+        case 'turn_process': return `turn:${item.group.userMsgId}`
+        case 'message': return `message:${item.message.id}`
+      }
+    })
 
     expect(renderedKinds).toEqual([
       'tool:agent-1',

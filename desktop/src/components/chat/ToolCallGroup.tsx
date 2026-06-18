@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from 'react'
+import { memo, useState } from 'react'
 import { BookMarked, ChevronDown, ChevronRight, Settings } from 'lucide-react'
 import { ToolCallBlock } from './ToolCallBlock'
 import { MarkdownRenderer } from '../markdown/MarkdownRenderer'
@@ -34,6 +34,8 @@ type Props = {
   agentTaskNotifications: Record<string, AgentTaskNotification>
   /** When true, the last tool is still executing — show expanded */
   isStreaming?: boolean
+  /** When true, render without the collapsible header — just the tool list */
+  flat?: boolean
 }
 
 const TOOL_VERBS: Record<string, (count: number, t: (key: TranslationKey, params?: Record<string, string | number>) => string) => string> = {
@@ -106,29 +108,6 @@ function generateActiveTitle(toolCalls: ToolCall[], resultMap: Map<string, ToolR
   return activeParts.length > 3 ? `${display} ...` : display
 }
 
-function toolCallHasError(
-  toolCall: ToolCall,
-  resultMap: Map<string, ToolResult>,
-  childToolCallsByParent: Map<string, ToolCall[]>,
-): boolean {
-  const result = resultMap.get(toolCall.toolUseId)
-  if (result?.isError) return true
-
-  return (childToolCallsByParent.get(toolCall.toolUseId) ?? []).some((childToolCall) =>
-    toolCallHasError(childToolCall, resultMap, childToolCallsByParent),
-  )
-}
-
-function groupHasErrors(
-  toolCalls: ToolCall[],
-  resultMap: Map<string, ToolResult>,
-  childToolCallsByParent: Map<string, ToolCall[]>,
-): boolean {
-  return toolCalls.some((tc) => {
-    return toolCallHasError(tc, resultMap, childToolCallsByParent)
-  })
-}
-
 function isToolCallResolved(
   toolCall: ToolCall,
   resultMap: Map<string, ToolResult>,
@@ -158,6 +137,7 @@ export const ToolCallGroup = memo(function ToolCallGroup({
   childToolCallsByParent,
   agentTaskNotifications,
   isStreaming,
+  flat,
 }: Props) {
   const memoryActivity = getMemoryToolActivity(toolCalls, resultMap)
   if (memoryActivity) {
@@ -179,6 +159,7 @@ export const ToolCallGroup = memo(function ToolCallGroup({
             childToolCallsByParent={childToolCallsByParent}
             agentTaskNotifications={agentTaskNotifications}
             isStreaming={isStreaming}
+            flat={flat}
           />
         </div>
       )
@@ -201,6 +182,7 @@ export const ToolCallGroup = memo(function ToolCallGroup({
       childToolCallsByParent={childToolCallsByParent}
       agentTaskNotifications={agentTaskNotifications}
       isStreaming={isStreaming}
+      flat={flat}
     />
   )
 })
@@ -211,6 +193,7 @@ function ToolCallGroupContent({
   childToolCallsByParent,
   agentTaskNotifications,
   isStreaming,
+  flat,
 }: Props) {
   const allAgents = toolCalls.every((toolCall) => toolCall.toolName === 'Agent')
 
@@ -222,6 +205,7 @@ function ToolCallGroupContent({
         childToolCallsByParent={childToolCallsByParent}
         agentTaskNotifications={agentTaskNotifications}
         isStreaming={isStreaming}
+        flat={flat}
       />
     )
   }
@@ -233,6 +217,7 @@ function ToolCallGroupContent({
       childToolCallsByParent={childToolCallsByParent}
       agentTaskNotifications={agentTaskNotifications}
       isStreaming={isStreaming}
+      flat={flat}
     />
   )
 }
@@ -259,9 +244,7 @@ function MemoryToolActivityGroup({
   const visibleFiles = activity.files.slice(0, 4)
   const hiddenCount = Math.max(0, activity.files.length - visibleFiles.length)
 
-  useEffect(() => {
-    if (isStreaming) setExpanded(true)
-  }, [isStreaming])
+  /* collapsed by default — user clicks to expand */
 
   return (
     <div className="mb-[3px]">
@@ -288,7 +271,7 @@ function MemoryToolActivityGroup({
           ) : null}
         </button>
 
-        {expanded ? (
+        <div className={`tool-group-content${expanded ? ' expanded' : ''}`}>
           <div className="border-t border-[var(--color-border)]/55 px-3 py-2.5">
             <div className="space-y-1.5">
               {visibleFiles.map((file) => (
@@ -351,7 +334,7 @@ function MemoryToolActivityGroup({
               </div>
             ) : null}
           </div>
-        ) : null}
+        </div>
       </div>
     </div>
   )
@@ -363,6 +346,7 @@ function AgentToolGroup({
   childToolCallsByParent,
   agentTaskNotifications,
   isStreaming,
+  flat,
 }: Props) {
   const [expanded, setExpanded] = useState(false)
   const t = useTranslation()
@@ -380,6 +364,32 @@ function AgentToolGroup({
   const errorPresent = statuses.some((status) => status === 'failed')
   const allComplete = statuses.every((status) => status === 'done')
   const anyStopped = statuses.some((status) => status === 'stopped')
+
+  // Flat mode: just the agent cards, no collapsible wrapper
+  if (flat) {
+    return (
+      <div className="relative pl-5">
+        <div className="absolute bottom-6 left-[11px] top-4 w-px rounded-full bg-[var(--color-border)]/45" />
+        <div className="space-y-2">
+          {toolCalls.map((toolCall) => (
+            <div key={toolCall.id} className="relative pl-7">
+              <div className="absolute left-0 top-1/2 -translate-y-1/2">
+                <div className="absolute left-[11px] top-1/2 h-px w-4 -translate-y-1/2 bg-[var(--color-border)]/45" />
+                <div className="absolute left-[8px] top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full border border-[var(--color-border)]/65 bg-[var(--color-surface-container-lowest)] shadow-[0_0_0_2px_var(--color-surface)]" />
+              </div>
+              <AgentCallCard
+                toolCall={toolCall}
+                resultMap={resultMap}
+                childToolCallsByParent={childToolCallsByParent}
+                agentTaskNotification={agentTaskNotifications[toolCall.toolUseId]}
+                isStreaming={isStreaming && !resultMap.has(toolCall.toolUseId)}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="mb-[3px]">
@@ -401,12 +411,6 @@ function AgentToolGroup({
             {t('agentStatus.running')}
           </span>
         )}
-        {!isAnyRunning && errorPresent && (
-          <span className="material-symbols-outlined text-[14px] text-[var(--color-error)]">error</span>
-        )}
-        {!isAnyRunning && !errorPresent && allComplete && (
-          <span className="material-symbols-outlined text-[14px] text-[var(--color-success)]">check_circle</span>
-        )}
         {!isAnyRunning && !errorPresent && !allComplete && !anyStopped && (
           <span className="material-symbols-outlined text-[14px] text-[var(--color-outline)]">pending</span>
         )}
@@ -415,7 +419,7 @@ function AgentToolGroup({
         )}
       </button>
 
-      {expanded && (
+      <div className={`tool-group-content${expanded ? ' expanded' : ''}`}>
         <div className="relative mt-3 pl-5">
           <div className="absolute bottom-6 left-[11px] top-4 w-px rounded-full bg-[var(--color-border)]/45" />
           <div className="space-y-2">
@@ -436,26 +440,37 @@ function AgentToolGroup({
             ))}
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
 
 /** Separated so the useState hook is never called conditionally. */
-function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isStreaming }: Props) {
+function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isStreaming, flat }: Props) {
   const [expanded, setExpanded] = useState(false)
   const t = useTranslation()
   const summary = generateSummary(toolCalls, t)
-  const errorPresent = groupHasErrors(toolCalls, resultMap, childToolCallsByParent)
   const hasUnresolvedTools = hasUnresolvedToolCalls(toolCalls, resultMap, childToolCallsByParent)
   const isRunning = !!isStreaming || hasUnresolvedTools
-  const hasNestedToolCalls = toolCalls.some((tc) => (childToolCallsByParent.get(tc.toolUseId)?.length ?? 0) > 0)
 
-  useEffect(() => {
-    if (isRunning || hasNestedToolCalls) {
-      setExpanded(true)
-    }
-  }, [hasNestedToolCalls, isRunning])
+  const activeTitle = generateActiveTitle(toolCalls, resultMap)
+
+  // Flat mode: no collapsible header, just the tool list (used inside turn_process)
+  if (flat) {
+    return (
+      <div className="space-y-1 border-l border-[var(--color-border)]/30 pl-3">
+        {toolCalls.map((tc) => (
+          <ToolCallTree
+            key={tc.id}
+            toolCall={tc}
+            resultMap={resultMap}
+            childToolCallsByParent={childToolCallsByParent}
+            compact
+          />
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="mb-[3px]">
@@ -468,20 +483,19 @@ function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isSt
           {expanded ? 'expand_less' : 'expand_more'}
         </span>
         <span className="flex-1 truncate text-[12px] text-[var(--color-text-secondary)]">
-          {summary}
+          {isStreaming ? (
+            <span className="shimmer-sweep-text">
+              {activeTitle || t('toolGroup.working')}
+            </span>
+          ) : summary}
         </span>
-        {!isRunning && !errorPresent && (
-          <span className="material-symbols-outlined text-[14px] text-[var(--color-success)]">check_circle</span>
-        )}
-        {!isRunning && errorPresent && (
-          <span className="material-symbols-outlined text-[14px] text-[var(--color-error)]">error</span>
-        )}
+
         {isRunning && (
           <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-brand)] animate-pulse-dot" />
         )}
       </button>
 
-      {expanded && (
+      <div className={`tool-group-content${expanded ? ' expanded' : ''}`}>
         <div className="ml-3 mt-1 space-y-1 border-l border-[var(--color-border)]/38 pl-3">
           {toolCalls.map((tc) => {
             return (
@@ -495,7 +509,7 @@ function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isSt
             )
           })}
         </div>
-      )}
+      </div>
     </div>
   )
 }
@@ -1113,3 +1127,4 @@ function extractTextContent(content: unknown): string {
   }
   return ''
 }
+

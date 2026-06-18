@@ -1474,6 +1474,7 @@ export const zh: Record<TranslationKey, string> = {
   'toolGroup.searchedMany': '搜尋了 {count} 個模式',
   'toolGroup.agentOne': '派遣了一個代理',
   'toolGroup.agentMany': '派遣了 {count} 個代理',
+  'toolGroup.working': '處理中',
   'agentStatus.starting': '開始中',
   'agentStatus.running': '進行中',
   'agentStatus.done': '完成',

@@ -949,7 +949,7 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
           ? `bg-transparent ${isMobileComposer ? 'px-4 pb-3' : 'px-8 pb-4'}`
           : compact
             ? `bg-transparent ${isMobileComposer ? 'px-3 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-0' : 'px-2 pb-2 pt-0'}`
-            : `bg-transparent ${isMobileComposer ? 'px-3 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-0' : 'px-2 pb-2 pt-0'}`
+            : `bg-transparent ${isMobileComposer ? 'px-3 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-0' : 'px-0 pb-[25px] pt-0'}`
       }
     >
       <div
@@ -958,7 +958,7 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
             ? 'mx-auto flex w-full max-w-3xl flex-col'
           : compact
               ? 'mx-auto max-w-full'
-              : `${isMobileComposer ? 'mx-0 max-w-none' : 'mx-auto max-w-[1040px]'}`
+              : `${isMobileComposer ? 'mx-0 max-w-none' : 'mx-auto max-w-[800px]'}`
         }
       >
         <div
@@ -968,7 +968,7 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
             ? `glass-panel relative flex flex-col gap-3 overflow-visible ${embedLaunchControlsInHero ? 'rounded-[18px]' : 'rounded-t-[18px] rounded-b-none'} p-4 transition-colors ${isDragActive ? 'composer-drop-target-active' : ''}`
             : compact
               ? `glass-panel relative overflow-visible p-3 transition-colors ${isMobileComposer ? 'rounded-2xl shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[16px]'} ${isDragActive ? 'composer-drop-target-active' : ''}`
-              : `glass-panel relative overflow-visible transition-colors ${isMobileComposer ? 'rounded-2xl p-3 shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[16px] p-4'} ${isDragActive ? 'composer-drop-target-active' : ''}`}
+              : `glass-panel relative overflow-visible transition-colors ${isMobileComposer ? 'rounded-2xl p-3 shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[16px] pt-[24px] pb-4 px-4 -ml-[8px] w-[calc(100%+8px)]'} ${isDragActive ? 'composer-drop-target-active' : ''}`}
           {...dragHandlers}
         >
           {isDragActive && (

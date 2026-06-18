@@ -1474,6 +1474,7 @@ export const jp: Record<TranslationKey, string> = {
   'toolGroup.searchedMany': '{count} 件のパターンを検索しました',
   'toolGroup.agentOne': 'エージェントを 1 件起動しました',
   'toolGroup.agentMany': '{count} 件のエージェントを起動しました',
+  'toolGroup.working': '処理中',
   'agentStatus.starting': '起動中',
   'agentStatus.running': '実行中',
   'agentStatus.done': '完了',

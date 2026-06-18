@@ -40,8 +40,34 @@ type GoalEvent = Extract<UIMessage, { type: 'goal_event' }>
 type BackgroundTaskEvent = Extract<UIMessage, { type: 'background_task' }>
 type CompactSummaryEvent = Extract<UIMessage, { type: 'compact_summary' }>
 
+type ToolBurstGroup = {
+  /** First N tool calls that stay visible (pinned) */
+  pinnedToolCalls: ToolCall[]
+  /** Overflow tool calls hidden behind the fold */
+  overflowToolCalls: ToolCall[]
+  /** Total count of overflow items */
+  hiddenCount: number
+}
+
+type TurnProcessGroup = {
+  /** User message ID that starts this turn */
+  userMsgId: string
+  /** All intermediate items (thinking, tool_groups, non-final assistant_text) between user and final assistant */
+  processItems: RenderItem[]
+  /** Count of process steps for display */
+  stepCount: number
+  /** Start time (timestamp of the user message) */
+  startTime: number | null
+  /** End time (timestamp of the final assistant message) */
+  endTime: number | null
+  /** Whether this turn is currently being processed */
+  isActive: boolean
+}
+
 type RenderItem =
   | { kind: 'tool_group'; toolCalls: ToolCall[]; id: string }
+  | { kind: 'tool_burst'; burst: ToolBurstGroup; id: string }
+  | { kind: 'turn_process'; group: TurnProcessGroup; id: string }
   | { kind: 'message'; message: UIMessage }
 
 type RenderModel = {
@@ -535,6 +561,9 @@ function appendChildToolCall(
   }
 }
 
+/** Max visible tool calls before burst-fold kicks in (mirrors iOS collapsedVisibleCount = 5) */
+const TOOL_BURST_VISIBLE_COUNT = 5
+
 export function buildRenderModel(messages: UIMessage[], activeAskUserQuestionToolUseId?: string | null): RenderModel {
   const items: RenderItem[] = []
   const toolResultMap = new Map<string, ToolResult>()
@@ -544,15 +573,31 @@ export function buildRenderModel(messages: UIMessage[], activeAskUserQuestionToo
   let lastUnresolvedAskUserQuestionIndex: number | null = null
   let pendingToolCalls: ToolCall[] = []
 
+  /** Flush pending tool calls as a tool_group or tool_burst */
   const flushGroup = () => {
-    if (pendingToolCalls.length > 0) {
+    if (pendingToolCalls.length === 0) return
+
+    // If more than TOOL_BURST_VISIBLE_COUNT, split into pinned + overflow (tool_burst)
+    if (pendingToolCalls.length > TOOL_BURST_VISIBLE_COUNT) {
+      const pinnedToolCalls = pendingToolCalls.slice(0, TOOL_BURST_VISIBLE_COUNT)
+      const overflowToolCalls = pendingToolCalls.slice(TOOL_BURST_VISIBLE_COUNT)
+      items.push({
+        kind: 'tool_burst',
+        burst: {
+          pinnedToolCalls,
+          overflowToolCalls,
+          hiddenCount: overflowToolCalls.length,
+        },
+        id: `burst-${pinnedToolCalls[0]!.id}`,
+      })
+    } else {
       items.push({
         kind: 'tool_group',
         toolCalls: [...pendingToolCalls],
         id: `group-${pendingToolCalls[0]!.id}`,
       })
-      pendingToolCalls = []
     }
+    pendingToolCalls = []
   }
   const appendRootToolCall = (toolCall: ToolCall) => {
     const nextIsAgent = toolCall.toolName === 'Agent'
@@ -637,7 +682,115 @@ export function buildRenderModel(messages: UIMessage[], activeAskUserQuestionToo
   }
 
   flushGroup()
-  return { renderItems: items, toolResultMap, childToolCallsByParent }
+
+  // ── Turn collapse projection ──
+  // Group intermediate items (thinking, tool_groups, tool_bursts, non-final
+  // assistant_text) into turn_process render items. Active turns show "已处理"
+  // always expanded; completed turns are collapsible with elapsed time.
+  return { renderItems: applyTurnCollapse(items), toolResultMap, childToolCallsByParent }
+}
+
+/**
+ * Post-process render items to collapse completed turn internals.
+ * A "turn" = user_text → [process items] → final assistant_text.
+ * Process items include thinking, tool_group, tool_burst, and non-final assistant_text.
+ */
+function applyTurnCollapse(items: RenderItem[]): RenderItem[] {
+  const result: RenderItem[] = []
+  let currentUserMsgId: string | null = null
+  let currentUserMsgTimestamp: number | null = null
+  let processItems: RenderItem[] = []
+  let lastAssistantItem: RenderItem | null = null
+  let lastAssistantTimestamp: number | null = null
+
+  const flushCurrentTurn = () => {
+    if (currentUserMsgId === null) return
+
+    if (lastAssistantItem !== null) {
+      // This turn is complete — collapsible process section
+      const stepCount = countProcessSteps(processItems)
+      if (stepCount > 0) {
+        result.push({
+          kind: 'turn_process',
+          group: {
+            userMsgId: currentUserMsgId,
+            processItems: [...processItems],
+            stepCount,
+            startTime: currentUserMsgTimestamp,
+            endTime: lastAssistantTimestamp,
+            isActive: false,
+          },
+          id: `turn-${currentUserMsgId}`,
+        })
+      }
+      // Final assistant_text stays visible
+      result.push(lastAssistantItem)
+    } else if (processItems.length > 0) {
+      // Turn is still active — show "已处理" but always expanded (not collapsible)
+      const stepCount = countProcessSteps(processItems)
+      result.push({
+        kind: 'turn_process',
+        group: {
+          userMsgId: currentUserMsgId!,
+          processItems: [...processItems],
+          stepCount,
+          startTime: currentUserMsgTimestamp,
+          endTime: null,
+          isActive: true,
+        },
+        id: `turn-${currentUserMsgId}`,
+      })
+    }
+  }
+
+  for (const item of items) {
+    if (item.kind === 'message' && item.message.type === 'user_text' && !item.message.pending) {
+      flushCurrentTurn()
+      currentUserMsgId = item.message.id
+      currentUserMsgTimestamp = item.message.timestamp
+      processItems = []
+      lastAssistantItem = null
+      lastAssistantTimestamp = null
+      result.push(item)
+      continue
+    }
+
+    if (currentUserMsgId === null) {
+      result.push(item)
+      continue
+    }
+
+    // Check if this is the final assistant_text in the turn
+    if (item.kind === 'message' && item.message.type === 'assistant_text') {
+      // If we already had a previous final assistant, it becomes a process item
+      if (lastAssistantItem !== null) {
+        processItems.push(lastAssistantItem)
+      }
+      lastAssistantItem = item
+      lastAssistantTimestamp = item.message.timestamp
+      continue
+    }
+
+    // Everything else between user and final assistant is a process item
+    processItems.push(item)
+  }
+
+  flushCurrentTurn()
+  return result
+}
+
+/** Count meaningful process steps for display (thinking blocks, tool groups, tool bursts) */
+function countProcessSteps(items: RenderItem[]): number {
+  let count = 0
+  for (const item of items) {
+    if (item.kind === 'tool_group') count += item.toolCalls.length
+    else if (item.kind === 'tool_burst') count += item.burst.pinnedToolCalls.length + item.burst.overflowToolCalls.length
+    else if (item.kind === 'message' && item.message.type === 'thinking') count += 1
+    else if (item.kind === 'message' && item.message.type === 'assistant_text') count += 1
+    else if (item.kind === 'message' && item.message.type === 'system') count += 0
+    else count += 1
+  }
+  return count
 }
 
 function isTurnResponseMessage(message: UIMessage) {
@@ -901,6 +1054,7 @@ function MemoryEventCard({ message }: { message: MemoryEvent }) {
 type MessageListProps = {
   sessionId?: string | null
   compact?: boolean
+  bottomPadding?: number
 }
 
 const AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 48
@@ -925,16 +1079,16 @@ const EMPTY_AGENT_TASK_NOTIFICATIONS: Record<string, AgentTaskNotification> = {}
 const CHAT_SCROLL_AREA_CLASS = [
   'chat-scroll-area',
   '[scrollbar-width:auto]',
-  '[scrollbar-color:color-mix(in_srgb,var(--color-outline)_72%,transparent)_transparent]',
+  '[scrollbar-color:rgba(128,128,128,0.22)_transparent]',
   '[&::-webkit-scrollbar]:w-2.5',
   '[&::-webkit-scrollbar-track]:bg-transparent',
   '[&::-webkit-scrollbar-thumb]:rounded-full',
   '[&::-webkit-scrollbar-thumb]:border-[3px]',
   '[&::-webkit-scrollbar-thumb]:border-transparent',
-  '[&::-webkit-scrollbar-thumb]:bg-[color-mix(in_srgb,var(--color-outline)_74%,transparent)]',
+  '[&::-webkit-scrollbar-thumb]:bg-[rgba(128,128,128,0.22)]',
   '[&::-webkit-scrollbar-thumb]:bg-clip-content',
   '[&::-webkit-scrollbar-thumb:hover]:border-2',
-  '[&::-webkit-scrollbar-thumb:hover]:bg-[color-mix(in_srgb,var(--color-outline)_90%,transparent)]',
+  '[&::-webkit-scrollbar-thumb:hover]:bg-[rgba(128,128,128,0.32)]',
 ].join(' ')
 const CHAT_RENDER_ITEM_CLASS = [
   'chat-render-item',
@@ -1016,7 +1170,14 @@ function clampNumber(value: number, min: number, max: number) {
 }
 
 function getRenderItemKey(item: RenderItem) {
-  return item.kind === 'tool_group' ? item.id : item.message.id
+  switch (item.kind) {
+    case 'tool_group':
+    case 'tool_burst':
+    case 'turn_process':
+      return item.id
+    case 'message':
+      return item.message.id
+  }
 }
 
 function isRecordValue(value: unknown): value is Record<string, unknown> {
@@ -1068,8 +1229,18 @@ function getMessageContentWeight(message: UIMessage): number {
 }
 
 function getRenderItemContentWeight(item: RenderItem): number {
-  if (item.kind === 'message') return getMessageContentWeight(item.message)
-  return item.toolCalls.reduce((total, toolCall) => total + getMessageContentWeight(toolCall), 0)
+  switch (item.kind) {
+    case 'message':
+      return getMessageContentWeight(item.message)
+    case 'tool_group':
+      return item.toolCalls.reduce((total, toolCall) => total + getMessageContentWeight(toolCall), 0)
+    case 'tool_burst': {
+      const all = [...item.burst.pinnedToolCalls, ...item.burst.overflowToolCalls]
+      return all.reduce((total, toolCall) => total + getMessageContentWeight(toolCall), 0)
+    }
+    case 'turn_process':
+      return item.group.processItems.reduce((total, pi) => total + getRenderItemContentWeight(pi), 0)
+  }
 }
 
 export function shouldVirtualizeRenderItems(
@@ -1137,9 +1308,23 @@ function estimateMessageHeight(message: UIMessage): number {
 }
 
 function estimateRenderItemHeight(item: RenderItem): number {
-  if (item.kind === 'message') return estimateMessageHeight(item.message)
-  const textWeight = getRenderItemContentWeight(item)
-  return clampNumber(92 + item.toolCalls.length * 78 + Math.ceil(textWeight / 140) * 16, 88, 2600)
+  switch (item.kind) {
+    case 'message':
+      return estimateMessageHeight(item.message)
+    case 'tool_group': {
+      const textWeight = getRenderItemContentWeight(item)
+      return clampNumber(92 + item.toolCalls.length * 78 + Math.ceil(textWeight / 140) * 16, 88, 2600)
+    }
+    case 'tool_burst': {
+      const all = [...item.burst.pinnedToolCalls, ...item.burst.overflowToolCalls]
+      const textWeight = getRenderItemContentWeight(item)
+      return clampNumber(92 + all.length * 78 + Math.ceil(textWeight / 140) * 16, 88, 2600)
+    }
+    case 'turn_process':
+      // Collapsed: just the toggle button (~40px). Expanded: sum of children.
+      // Default to collapsed height for virtualization estimate.
+      return 40
+  }
 }
 
 function getMessageMetricSignature(message: UIMessage): string {
@@ -1172,8 +1357,16 @@ function getMessageMetricSignature(message: UIMessage): string {
 }
 
 function getRenderItemMetricSignature(item: RenderItem): string {
-  if (item.kind === 'message') return getMessageMetricSignature(item.message)
-  return item.toolCalls.map(getMessageMetricSignature).join('|')
+  switch (item.kind) {
+    case 'message':
+      return getMessageMetricSignature(item.message)
+    case 'tool_group':
+      return item.toolCalls.map(getMessageMetricSignature).join('|')
+    case 'tool_burst':
+      return `burst:${[...item.burst.pinnedToolCalls, ...item.burst.overflowToolCalls].map(getMessageMetricSignature).join('|')}`
+    case 'turn_process':
+      return `turn:${item.group.userMsgId}:${item.group.stepCount}:${item.group.processItems.map(getRenderItemMetricSignature).join('|')}`
+  }
 }
 
 function findVirtualStartIndex(offsets: number[], target: number) {
@@ -1332,7 +1525,7 @@ const MeasuredRenderItem = memo(function MeasuredRenderItem({
   )
 })
 
-export function MessageList({ sessionId, compact = false }: MessageListProps = {}) {
+export function MessageList({ sessionId, compact = false, bottomPadding = 160 }: MessageListProps = {}) {
   const activeTabId = useTabStore((s) => s.activeTabId)
   const resolvedSessionId = sessionId ?? activeTabId
   const sessionState = useChatStore((s) =>
@@ -1662,6 +1855,16 @@ export function MessageList({ sessionId, compact = false }: MessageListProps = {
     () => buildRenderModel(messages, activeAskUserQuestionToolUseId),
     [activeAskUserQuestionToolUseId, messages],
   )
+  // Find the last tool_group/tool_burst index — used to keep the last group in
+  // "running" mode while chatState === 'tool_executing', preventing premature
+  // summary display when more tool calls may still arrive in the group.
+  const lastActiveToolGroupIndex = useMemo(() => {
+    for (let i = renderItems.length - 1; i >= 0; i--) {
+      const k = renderItems[i]!.kind
+      if (k === 'tool_group' || k === 'tool_burst') return i
+    }
+    return -1
+  }, [renderItems])
   // Defer the per-message branchable / completed-turn computations so the first
   // commit on tab switch can render the virtualization window without doing two
   // additional O(N) walks synchronously. They re-run in a low-priority render
@@ -1938,6 +2141,125 @@ export function MessageList({ sessionId, compact = false }: MessageListProps = {
     return result
   }, [toolResultMap])
 
+
+
+  // ── Turn collapse expand state ──
+  const [expandedTurns, setExpandedTurns] = useState<Set<string>>(new Set())
+  const [expandedToolBursts, setExpandedToolBursts] = useState<Set<string>>(new Set())
+  const toggleTurnExpand = useCallback((userMsgId: string) => {
+    setExpandedTurns(prev => {
+      const next = new Set(prev)
+      if (next.has(userMsgId)) next.delete(userMsgId)
+      else next.add(userMsgId)
+      return next
+    })
+  }, [])
+  const toggleToolBurstExpand = useCallback((burstId: string) => {
+    setExpandedToolBursts(prev => {
+      const next = new Set(prev)
+      if (next.has(burstId)) next.delete(burstId)
+      else next.add(burstId)
+      return next
+    })
+  }, [])
+
+  /** Render a single inner RenderItem inside a turn_process or tool_burst */
+  const renderInnerItem = (item: RenderItem) => {
+    switch (item.kind) {
+      case 'tool_group':
+        return (
+          <ToolCallGroup
+            toolCalls={item.toolCalls}
+            resultMap={toolResultMap}
+            childToolCallsByParent={childToolCallsByParent}
+            agentTaskNotifications={agentTaskNotifications}
+            isStreaming={
+              chatState === 'tool_executing' &&
+              item.toolCalls.some((tc) => !toolResultMap.has(tc.toolUseId))
+            }
+            flat
+          />
+        )
+      case 'tool_burst':
+        return renderToolBurst(item, false)
+      case 'message':
+        return (
+          <MessageBlock
+            sessionId={resolvedSessionId}
+            message={item.message}
+            activeThinkingId={activeThinkingId}
+            agentTaskNotifications={agentTaskNotifications}
+            toolResult={
+              item.message.type === 'tool_use'
+                ? toolResultByToolUseId.get(item.message.toolUseId) ?? null
+                : null
+            }
+            branchAction={branchActionByMessageId.get(item.message.id)}
+            showActions={
+              item.message.type === 'user_text'
+                ? !item.message.pending && item.message.content.trim().length > 0
+                : turnFinalAssistantMessageIds.has(item.message.id)
+            }
+            turnChangedFiles={undefined}
+          />
+        )
+      case 'turn_process':
+        // Nested turn_process shouldn't happen, but guard
+        return null
+    }
+  }
+
+  /** Render a tool_burst item: pinned calls visible + overflow behind fold */
+  const renderToolBurst = (item: Extract<RenderItem, { kind: 'tool_burst' }>, isLastActiveGroup: boolean) => {
+    const { pinnedToolCalls, overflowToolCalls, hiddenCount } = item.burst
+    const isExpanded = expandedToolBursts.has(item.id)
+    return (
+      <div className="mb-[3px]">
+        {/* Pinned (visible) tool calls */}
+        <ToolCallGroup
+          toolCalls={pinnedToolCalls}
+          resultMap={toolResultMap}
+          childToolCallsByParent={childToolCallsByParent}
+          agentTaskNotifications={agentTaskNotifications}
+          isStreaming={
+            isLastActiveGroup
+              ? chatState === 'tool_executing'
+              : chatState === 'tool_executing' &&
+                pinnedToolCalls.some((tc) => !toolResultMap.has(tc.toolUseId))
+          }
+        />
+        {/* "+N tool calls" overflow fold */}
+        <button
+          type="button"
+          onClick={() => toggleToolBurstExpand(item.id)}
+          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-text-secondary)]"
+        >
+          <span
+            className="turn-chevron text-[10px] text-[var(--color-outline)]"
+            data-rotated={isExpanded ? 'true' : 'false'}
+          >
+            {'▸'}
+          </span>
+          <span className="font-medium">{`+${hiddenCount} tool call${hiddenCount > 1 ? 's' : ''}`}</span>
+        </button>
+        <div
+          className="tool-burst-overflow"
+          data-collapse-state={isExpanded ? 'open' : 'closed'}
+        >
+          <div className="tool-burst-overflow-inner">
+            <ToolCallGroup
+              toolCalls={overflowToolCalls}
+              resultMap={toolResultMap}
+              childToolCallsByParent={childToolCallsByParent}
+              agentTaskNotifications={agentTaskNotifications}
+              isStreaming={false}
+            />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const renderTranscriptItem = (item: RenderItem, index: number) => {
     const cardsForItem = turnCardsByRenderIndex.get(index) ?? []
 
@@ -1950,9 +2272,23 @@ export function MessageList({ sessionId, compact = false }: MessageListProps = {
             childToolCallsByParent={childToolCallsByParent}
             agentTaskNotifications={agentTaskNotifications}
             isStreaming={
-              chatState === 'tool_executing' &&
-              item.toolCalls.some((tc) => !toolResultMap.has(tc.toolUseId))
+              // For the last tool group, stay in "running" mode while chat is
+              // still executing — prevents premature summary when a brief gap
+              // exists between tool calls in the same group.
+              index === lastActiveToolGroupIndex
+                ? chatState === 'tool_executing'
+                : chatState === 'tool_executing' &&
+                  item.toolCalls.some((tc) => !toolResultMap.has(tc.toolUseId))
             }
+          />
+        ) : item.kind === 'tool_burst' ? (
+          renderToolBurst(item, index === lastActiveToolGroupIndex)
+        ) : item.kind === 'turn_process' ? (
+          <TurnProcessSection
+            group={item.group}
+            isExpanded={expandedTurns.has(item.group.userMsgId)}
+            onToggle={() => toggleTurnExpand(item.group.userMsgId)}
+            renderInnerItem={renderInnerItem}
           />
         ) : (
           <MessageBlock
@@ -1995,6 +2331,7 @@ export function MessageList({ sessionId, compact = false }: MessageListProps = {
 
   return (
     <div className="relative min-h-0 flex-1">
+      <div className="pointer-events-none absolute top-0 z-10 h-[30px]" style={{ left: '50%', width: '820px', transform: 'translateX(-50%)', background: 'linear-gradient(to bottom, var(--color-surface) 0%, transparent 100%)' }} />
       <div
         ref={scrollContainerRef}
         onScroll={updateAutoScrollState}
@@ -2002,7 +2339,8 @@ export function MessageList({ sessionId, compact = false }: MessageListProps = {
       >
         <div
           ref={scrollContentRef}
-          className={compact ? 'mx-auto max-w-full' : 'codex-task-transcript mx-auto max-w-[980px]'}
+          className={compact ? 'mx-auto max-w-full' : 'codex-task-transcript mx-auto max-w-[800px]'}
+          style={{ paddingBottom: bottomPadding }}
         >
           {virtualTranscriptWindow.enabled ? (
             <VirtualSpacer height={virtualTranscriptWindow.beforeHeight} position="top" />
@@ -2039,11 +2377,8 @@ export function MessageList({ sessionId, compact = false }: MessageListProps = {
             <CompactStatusDivider state="compacting" />
           )}
 
-          {/* Show StreamingIndicator when:
-              - tool_executing: background work is running
-              - thinking but no active ThinkingBlock yet: the gap between
-                sending a message and receiving the first thinking delta */}
-          {(chatState === 'tool_executing' || (chatState === 'thinking' && !activeThinkingId)) && (
+          {/* API retry / streaming fallback indicators — shown inline in the transcript */}
+          {(Boolean(sessionState?.apiRetry) || Boolean(sessionState?.streamingFallback)) && (
             <StreamingIndicator />
           )}
 
@@ -2063,10 +2398,9 @@ export function MessageList({ sessionId, compact = false }: MessageListProps = {
           onClick={handleJumpToLatest}
           title={t('chat.jumpToLatest')}
           aria-label={t('chat.jumpToLatest')}
-          className="absolute bottom-4 right-5 z-20 flex h-9 items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] px-3 text-xs font-medium text-[var(--color-text-primary)] shadow-[var(--shadow-dropdown)] transition-colors hover:border-[var(--color-brand)]/50 hover:bg-[var(--color-surface-container-low)]"
+          className="absolute bottom-[200px] left-1/2 -translate-x-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(255,255,255,0.18)] bg-[var(--color-surface-container-lowest)] text-xs font-medium text-[var(--color-text-primary)] shadow-[var(--shadow-dropdown)] transition-colors hover:border-[var(--color-brand)]/50 hover:bg-[var(--color-surface-container-low)]"
         >
           <ArrowDown size={15} aria-hidden="true" />
-          <span>{t('chat.jumpToLatest')}</span>
         </button>
       )}
 
@@ -2091,6 +2425,96 @@ export function MessageList({ sessionId, compact = false }: MessageListProps = {
         confirmVariant="danger"
         loading={Boolean(rewindingTurnId)}
       />
+    </div>
+  )
+}
+
+/** Format elapsed seconds as "Xs" or "Xm Ys" */
+function formatProcessElapsed(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return `${m}m ${s}s`
+}
+
+/** Collapsible section for completed turn process items (thinking, tool calls, intermediate assistant text) */
+function TurnProcessSection({
+  group,
+  isExpanded,
+  onToggle,
+  renderInnerItem,
+}: {
+  group: TurnProcessGroup
+  isExpanded: boolean
+  onToggle: () => void
+  renderInnerItem: (item: RenderItem) => ReactNode
+}) {
+  const { processItems, startTime, endTime, isActive } = group
+
+  // Compute elapsed time for this turn
+  let elapsedText = ''
+  if (startTime != null && endTime != null) {
+    const elapsedSec = Math.round((endTime - startTime) / 1000)
+    if (elapsedSec > 0) elapsedText = formatProcessElapsed(elapsedSec)
+  }
+
+  return (
+    <div className="flex flex-col">
+      {/* "已处理" header — collapsible only when turn is complete */}
+      {isActive ? (
+        <div className="flex items-center gap-2 px-1 py-2 text-[13px] text-[var(--color-text-tertiary)]">
+          <span className="text-[var(--color-brand)] animate-shimmer text-xs">✦</span>
+          <span className="shimmer-sweep-text font-medium">已处理</span>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={onToggle}
+          className="flex items-center gap-2 px-1 py-2 text-[13px] text-[var(--color-text-tertiary)] transition-colors cursor-pointer hover:text-[var(--color-text-secondary)]"
+        >
+          <span
+            className="turn-chevron text-[10px] text-[var(--color-outline)]"
+            data-rotated={isExpanded ? 'true' : 'false'}
+          >
+            {'▸'}
+          </span>
+          <span className="font-medium">已处理</span>
+          {elapsedText && (
+            <span className="text-[11px] font-mono tabular-nums text-[var(--color-text-tertiary)]">
+              {elapsedText}
+            </span>
+          )}
+        </button>
+      )}
+
+      {/* Content — always visible when active, collapsible when complete */}
+      {isActive ? (
+        <div className="space-y-1 pl-2 border-l border-[var(--color-border)]/30">
+          {processItems.map((pi) => (
+            <div key={pi.kind === 'message' ? pi.message.id : pi.id}>
+              {renderInnerItem(pi)}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div
+          className="turn-collapse-content"
+          data-collapse-state={isExpanded ? 'open' : 'closed'}
+        >
+          <div className="turn-collapse-content-inner">
+            <div className="space-y-1 pl-2 border-l border-[var(--color-border)]/30">
+              {processItems.map((pi) => (
+                <div key={pi.kind === 'message' ? pi.message.id : pi.id}>
+                  {renderInnerItem(pi)}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Divider */}
+      <div className="h-px bg-[rgba(255,255,255,0.08)]" />
     </div>
   )
 }

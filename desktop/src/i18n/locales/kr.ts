@@ -1474,6 +1474,7 @@ export const kr: Record<TranslationKey, string> = {
   'toolGroup.searchedMany': '패턴 {count}개를 검색했습니다',
   'toolGroup.agentOne': '에이전트 1개를 디스패치했습니다',
   'toolGroup.agentMany': '에이전트 {count}개를 디스패치했습니다',
+  'toolGroup.working': '처리 중',
   'agentStatus.starting': '시작 중',
   'agentStatus.running': '실행 중',
   'agentStatus.done': '완료',
