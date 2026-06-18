@@ -67,13 +67,13 @@ export const AssistantMessage = memo(function AssistantMessage({ content, isStre
   const documentLayout = shouldUseDocumentLayout(content)
 
   return (
-    <div className="mb-5 flex justify-start">
+    <div className="mb-6 flex justify-start">
       <div
         data-message-shell="assistant"
         data-layout="document"
-        className="group flex min-w-0 w-full flex-col items-start"
+        className="group flex min-w-0 w-full max-w-[920px] flex-col items-start"
       >
-        <div className="w-full text-sm text-[var(--color-text-primary)]">
+        <div className="assistant-message-flow w-full text-[14px] leading-7 text-[var(--color-text-primary)]">
           <MarkdownRenderer
             content={content}
             variant={documentLayout ? 'document' : 'default'}
@@ -88,7 +88,7 @@ export const AssistantMessage = memo(function AssistantMessage({ content, isStre
         </div>
 
         {!isStreaming && sessionId && outputTargets.length > 0 && (
-          <div className="mt-1 flex w-full flex-col gap-2">
+          <div className="mt-3 flex w-full flex-col gap-2.5">
             {outputTargets.slice(0, MAX_CARDS).map((target) => (
               <AssistantOutputTargetCard key={target.id} target={target} sessionId={sessionId} workDir={workDir} />
             ))}

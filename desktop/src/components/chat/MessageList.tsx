@@ -192,13 +192,13 @@ function CompactStatusDivider({ message, state }: { message?: CompactSummaryEven
   return (
     <section data-testid="compact-status-divider" className="my-4 w-full px-1">
       <div className="flex w-full items-center gap-3">
-        <div className="h-px flex-1 bg-[var(--color-border)]" aria-hidden="true" />
+        <div className="h-px flex-1 bg-[color-mix(in_srgb,var(--color-border)_92%,transparent)]" aria-hidden="true" />
         <button
           type="button"
           aria-expanded={hasDetails ? expanded : undefined}
           onClick={() => hasDetails && setExpanded((value) => !value)}
           disabled={!hasDetails}
-          className="group inline-flex min-h-8 max-w-[min(78vw,520px)] items-center gap-2 rounded-md px-2.5 py-1 text-[13px] font-semibold text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-text-primary)] disabled:cursor-default disabled:hover:text-[var(--color-text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/30"
+          className="group inline-flex min-h-8 max-w-[min(78vw,520px)] items-center gap-2 rounded-full border border-[var(--color-border)]/55 bg-[var(--color-surface-container-low)]/54 px-3 py-1.5 text-[12px] font-semibold text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-text-primary)] disabled:cursor-default disabled:hover:text-[var(--color-text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/30"
         >
           {state === 'compacting' ? (
             <LoaderCircle size={16} strokeWidth={2.1} className="shrink-0 animate-spin text-[var(--color-text-tertiary)]" aria-hidden="true" />
@@ -209,10 +209,10 @@ function CompactStatusDivider({ message, state }: { message?: CompactSummaryEven
             {title}
           </span>
         </button>
-        <div className="h-px flex-1 bg-[var(--color-border)]" aria-hidden="true" />
+        <div className="h-px flex-1 bg-[color-mix(in_srgb,var(--color-border)_92%,transparent)]" aria-hidden="true" />
       </div>
       {hasDetails && expanded && (
-        <div className="mx-auto mt-1.5 w-full max-w-[620px] rounded-md border border-[var(--color-border)]/65 bg-[var(--color-surface-container-lowest)] px-3 py-2">
+        <div className="mx-auto mt-2 w-full max-w-[620px] rounded-[16px] border border-[var(--color-border)]/60 bg-[var(--color-surface-container-lowest)] px-3.5 py-2.5 shadow-[0_10px_26px_rgba(0,0,0,0.08)]">
           {meta.length > 0 && (
             <div className="mb-1.5 flex flex-wrap gap-x-2 gap-y-1 text-[11px] font-medium text-[var(--color-text-tertiary)]">
               {meta.map((item) => <span key={item}>{item}</span>)}
@@ -244,7 +244,7 @@ function GoalEventCard({ message }: { message: GoalEvent }) {
     <div className="mb-2">
       <div
         data-testid="goal-event-card"
-        className="overflow-hidden rounded-lg border border-[var(--color-memory-border)] bg-[var(--color-memory-surface)]"
+        className="overflow-hidden rounded-[16px] border border-[var(--color-memory-border)] bg-[var(--color-memory-surface)] shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
       >
         <button
           type="button"
@@ -269,7 +269,7 @@ function GoalEventCard({ message }: { message: GoalEvent }) {
         </button>
 
         {expanded ? (
-          <div className="border-t border-[var(--color-border)]/55 px-3 py-2.5">
+          <div className="border-t border-[var(--color-border)]/55 px-3.5 py-3">
             <div className="space-y-1.5">
               {message.objective ? (
                 <div className="line-clamp-2 rounded-md px-2 py-1 text-[12px] leading-5 text-[var(--color-text-secondary)]">
@@ -323,7 +323,7 @@ function BackgroundTaskEventCard({ message }: { message: BackgroundTaskEvent }) 
       <div
         data-testid="background-task-event-card"
         data-status={task.status}
-        className="flex min-w-0 items-start gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-3 py-2"
+        className="flex min-w-0 items-start gap-2 rounded-[16px] border border-[var(--color-border)]/70 bg-[var(--color-surface-container-low)] px-3.5 py-2.5 shadow-[0_8px_22px_rgba(0,0,0,0.06)]"
       >
         <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center">
           {isRunning ? (
@@ -853,7 +853,7 @@ function MemoryEventCard({ message }: { message: MemoryEvent }) {
 
   return (
     <div className="mb-3 flex justify-center px-3">
-      <div className="w-full max-w-2xl rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-3.5 py-3 text-xs shadow-sm">
+      <div className="w-full max-w-2xl rounded-[16px] border border-[var(--color-border)]/70 bg-[var(--color-surface-container-low)] px-3.5 py-3 text-xs shadow-[0_8px_22px_rgba(0,0,0,0.06)]">
         <div className="flex items-start gap-3">
           <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-brand)]">
             <BookMarked size={15} aria-hidden="true" />
@@ -1974,11 +1974,11 @@ export function MessageList({ sessionId, compact = false }: MessageListProps = {
       <div
         ref={scrollContainerRef}
         onScroll={updateAutoScrollState}
-        className={`${CHAT_SCROLL_AREA_CLASS} h-full overflow-y-auto ${compact ? 'px-3 py-3 pb-5' : 'px-4 py-4'}`}
+        className={`${CHAT_SCROLL_AREA_CLASS} h-full overflow-y-auto ${compact ? 'px-3 py-3 pb-5' : 'px-5 py-5'}`}
       >
         <div
           ref={scrollContentRef}
-          className={compact ? 'mx-auto max-w-full' : 'mx-auto max-w-[860px]'}
+          className={compact ? 'mx-auto max-w-full' : 'mx-auto max-w-[900px]'}
         >
           {virtualTranscriptWindow.enabled ? (
             <VirtualSpacer height={virtualTranscriptWindow.beforeHeight} position="top" />

@@ -20,8 +20,8 @@ export const en = {
   'common.copied': 'Copied',
 
   // ─── Sidebar ──────────────────────────────────────
-  'sidebar.newSession': 'New session',
-  'sidebar.scheduled': 'Scheduled',
+  'sidebar.newSession': 'New chat',
+  'sidebar.scheduled': 'Automations',
   'sidebar.terminal': 'Terminal',
   'sidebar.settings': 'Settings',
   'sidebar.searchPlaceholder': 'Search sessions...',

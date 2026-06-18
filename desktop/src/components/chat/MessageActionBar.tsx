@@ -41,11 +41,11 @@ export function MessageActionBar({
     <div
       data-message-actions
       data-align={align}
-      className={`pointer-events-none mt-2 flex h-7 w-full opacity-0 transition-opacity duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100 ${
+      className={`pointer-events-none mt-2 flex h-7 w-full translate-y-0.5 opacity-0 transition-[opacity,transform] duration-200 ease-out group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100 ${
         align === 'end' ? 'justify-end' : 'justify-start'
       }`}
     >
-      <div className="flex min-h-7 items-center gap-1.5">
+      <div className="flex min-h-7 items-center gap-1 rounded-full border border-transparent bg-transparent px-0.5">
         {hasCopy ? (
           <CopyButton
             text={copyText!}
@@ -53,7 +53,7 @@ export function MessageActionBar({
             displayLabel={<Copy size={13} strokeWidth={2.2} aria-hidden="true" />}
             displayCopiedLabel={<Check size={13} strokeWidth={2.4} aria-hidden="true" />}
             onPointerUp={(event) => event.currentTarget.blur()}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-transparent bg-transparent text-[var(--color-text-tertiary)] transition-colors hover:border-[var(--color-brand)]/30 hover:bg-[var(--color-surface-container-low)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
+            className="inline-flex h-[26px] w-[26px] items-center justify-center rounded-[9px] border border-transparent bg-transparent text-[var(--color-text-tertiary)] transition-[color,background-color,border-color] duration-150 hover:border-[var(--color-border)] hover:bg-[var(--color-surface-container-low)]/80 hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/30"
           />
         ) : null}
         {branchAction ? (
@@ -64,14 +64,14 @@ export function MessageActionBar({
             aria-label={branchAction.label}
             title={branchAction.label}
             onPointerUp={(event) => event.currentTarget.blur()}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-transparent bg-transparent text-[var(--color-text-tertiary)] transition-colors hover:border-[var(--color-brand)]/30 hover:bg-[var(--color-surface-container-low)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35 disabled:cursor-wait disabled:opacity-60"
+            className="inline-flex h-[26px] w-[26px] items-center justify-center rounded-[9px] border border-transparent bg-transparent text-[var(--color-text-tertiary)] transition-[color,background-color,border-color] duration-150 hover:border-[var(--color-border)] hover:bg-[var(--color-surface-container-low)]/80 hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/30 disabled:cursor-wait disabled:opacity-60"
           >
             <GitFork size={13} strokeWidth={2.2} aria-hidden="true" />
           </button>
         ) : null}
         {timeLabel ? (
           <span
-            className="ml-1 inline-flex items-center text-[11px] font-medium tabular-nums text-[var(--color-text-tertiary)]"
+            className={`inline-flex items-center text-[10.5px] font-medium tabular-nums text-[var(--color-text-tertiary)]/85 ${align === 'end' ? 'mr-0.5 ml-1.5' : 'ml-1 mr-0.5'}`}
             title={exactTimeLabel || timeLabel}
           >
             {timeLabel}

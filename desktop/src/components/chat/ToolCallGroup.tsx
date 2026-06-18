@@ -236,7 +236,7 @@ function MemoryToolActivityGroup({
     <div className="mb-2">
       <div
         data-testid="memory-tool-activity-card"
-        className="overflow-hidden rounded-lg border border-[var(--color-memory-border)] bg-[var(--color-memory-surface)]"
+        className="overflow-hidden rounded-[16px] border border-[var(--color-memory-border)] bg-[var(--color-memory-surface)]"
       >
         <button
           type="button"
@@ -361,7 +361,7 @@ function AgentToolGroup({
       <button
         type="button"
         onClick={() => setExpanded((value) => !value)}
-        className="flex w-full items-center gap-2 rounded-lg border border-[var(--color-border)]/40 bg-[var(--color-surface-container-low)] px-3 py-1.5 text-left transition-colors hover:bg-[var(--color-surface-container-high)]"
+        className="flex w-full items-center gap-2 rounded-[14px] border border-[var(--color-border)]/40 bg-[var(--color-surface-container-low)]/80 px-3 py-2 text-left transition-colors hover:bg-[var(--color-surface-container-high)]/72"
       >
         <span className="material-symbols-outlined text-[14px] text-[var(--color-outline)]">
           {expanded ? 'expand_less' : 'expand_more'}
@@ -435,7 +435,7 @@ function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isSt
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="flex w-full items-center gap-2 rounded-lg border border-[var(--color-border)]/40 bg-[var(--color-surface-container-low)] px-3 py-1.5 text-left transition-colors hover:bg-[var(--color-surface-container-high)]"
+        className="flex w-full items-center gap-2 rounded-[14px] border border-[var(--color-border)]/40 bg-[var(--color-surface-container-low)]/80 px-3 py-2 text-left transition-colors hover:bg-[var(--color-surface-container-high)]/72"
       >
         <span className="material-symbols-outlined text-[14px] text-[var(--color-outline)]">
           {expanded ? 'expand_less' : 'expand_more'}
@@ -525,7 +525,7 @@ function AgentCallCard({
   const description = typeof input.description === 'string' ? input.description : ''
 
   return (
-    <div className="overflow-hidden rounded-lg border border-[var(--color-border)]/50 bg-[var(--color-surface-container-lowest)]">
+    <div className="overflow-hidden rounded-[14px] border border-[var(--color-border)]/50 bg-[var(--color-surface-container-low)]/76 backdrop-blur-[10px]">
       <div className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--color-surface-hover)]/50">
         <span className="material-symbols-outlined text-[18px] text-[var(--color-outline)]">smart_toy</span>
         <div className="min-w-0 flex-1">

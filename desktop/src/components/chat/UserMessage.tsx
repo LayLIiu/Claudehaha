@@ -14,10 +14,10 @@ export const UserMessage = memo(function UserMessage({ content, attachments, bra
   const hasText = content.trim().length > 0
 
   return (
-    <div className="mb-5 flex justify-end">
+    <div className="mb-6 flex justify-end">
       <div
         data-message-shell="user"
-        className="group flex min-w-0 max-w-[82%] flex-col items-end sm:max-w-[78%] lg:max-w-[72%]"
+        className="group flex min-w-0 max-w-[78%] flex-col items-end sm:max-w-[72%] lg:max-w-[64%]"
       >
         <div className="flex max-w-full flex-col items-end gap-2">
           {attachments && attachments.length > 0 && (
@@ -26,9 +26,8 @@ export const UserMessage = memo(function UserMessage({ content, attachments, bra
 
           {hasText && (
             <div
-              className="min-w-0 max-w-full bg-[var(--color-surface-user-msg)] px-4 py-3 text-sm leading-relaxed text-[var(--color-text-primary)] whitespace-pre-wrap break-words"
+              className="min-w-0 max-w-full rounded-[18px] bg-[#2A2A2A] px-4 py-3 text-[14px] leading-7 text-[var(--color-text-primary)] whitespace-pre-wrap break-words"
               style={{
-                borderRadius: '18px 4px 18px 18px',
                 overflowWrap: 'anywhere',
                 wordBreak: 'break-word',
               }}

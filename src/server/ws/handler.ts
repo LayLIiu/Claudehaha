@@ -2677,7 +2677,9 @@ async function waitForRuntimeTransitionBeforeUserTurn(
 }
 
 /**
- * Send a message to a specific session's WebSocket (for use by services)
+ * Send a message to a specific session's WebSocket (for use by services).
+ * Also broadcasts a session_broadcast wrapper to global channel clients
+ * for messages that represent session-level state changes.
  */
 export function sendToSession(sessionId: string, message: ServerMessage): boolean {
   const clients = activeSessions.get(sessionId)
@@ -2686,7 +2688,69 @@ export function sendToSession(sessionId: string, message: ServerMessage): boolea
   for (const ws of clients) {
     ws.send(payload)
   }
+
+  // Mirror certain events to the global channel so mobile clients
+  // subscribed to /ws/global can react to any session without per-session WS.
+  if (shouldBroadcastToGlobal(message)) {
+    broadcastToGlobalClients({
+      type: 'session_broadcast',
+      sessionId,
+      event: message,
+    } as ServerMessage)
+  }
+
   return true
+}
+
+/**
+ * Server messages that should be mirrored to the global channel.
+ */
+function shouldBroadcastToGlobal(message: ServerMessage): boolean {
+  switch (message.type) {
+    case 'status':
+    case 'session_title_updated':
+    case 'message_complete':
+    case 'permission_request':
+    case 'permission_mode_changed':
+    case 'error':
+      return true
+    default:
+      return false
+  }
+}
+
+/**
+ * Send the current sessions snapshot to a newly connected global client.
+ */
+async function sendSessionsSnapshot(ws: ServerWebSocket<WebSocketData>): Promise<void> {
+  try {
+    const sessions = await getSessionsSnapshot()
+    ws.send(JSON.stringify({
+      type: 'sessions_updated',
+      sessions,
+    } satisfies ServerMessage))
+  } catch {}
+}
+
+/**
+ * Build a snapshot of all active sessions for the global channel.
+ */
+async function getSessionsSnapshot(): Promise<SessionSummary[]> {
+  const active = conversationService.getActiveSessions()
+  const summaries: SessionSummary[] = []
+
+  for (const sessionId of active) {
+    const title = await sessionService.getCustomTitle(sessionId).catch(() => undefined)
+      || undefined
+    summaries.push({
+      sessionId,
+      title,
+      state: 'idle', // Will be refined when session state tracking is added
+      updatedAt: Date.now(),
+    })
+  }
+
+  return summaries
 }
 
 export function updateSessionSlashCommands(
@@ -2736,6 +2800,28 @@ function normalizeSessionSlashCommand(command: unknown): SessionSlashCommand | n
     description: typeof record.description === 'string' ? record.description : '',
     ...(typeof record.argumentHint === 'string' ? { argumentHint: record.argumentHint } : {}),
   }
+}
+
+// ============================================================================
+// Global channel exports
+// ============================================================================
+
+/**
+ * Broadcast a message to all global channel clients (exported for use by services).
+ */
+export function broadcastToGlobalClients(message: ServerMessage): void {
+  if (globalClients.size === 0) return
+  const payload = JSON.stringify(message)
+  for (const ws of globalClients) {
+    ws.send(payload)
+  }
+}
+
+/**
+ * Get the number of connected global channel clients.
+ */
+export function getGlobalClientCount(): number {
+  return globalClients.size
 }
 
 export function closeSessionConnection(sessionId: string, reason = 'session closed'): boolean {

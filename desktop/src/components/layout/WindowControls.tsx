@@ -25,6 +25,7 @@ export function WindowControls() {
   const toggleSidebar = useUIStore((s) => s.toggleSidebar)
   const setSidebarOpen = useUIStore((s) => s.setSidebarOpen)
   const activeTabId = useTabStore((s) => s.activeTabId)
+  const tabs = useTabStore((s) => s.tabs)
   const createSession = useSessionStore((s) => s.createSession)
 
   useEffect(() => {
@@ -68,6 +69,18 @@ export function WindowControls() {
   // ── macOS: native traffic lights from hiddenInset titleBar, only render sidebar controls ──
   if (isMacOS) {
     const isSettingsPage = activeTabId === SETTINGS_TAB_ID
+    const currentTabIndex = activeTabId ? tabs.findIndex((tab) => tab.sessionId === activeTabId) : -1
+    const canGoBack = currentTabIndex > 0
+    const canGoForward = currentTabIndex >= 0 && currentTabIndex < tabs.length - 1
+
+    const activateTabAt = (index: number) => {
+      const tab = tabs[index]
+      if (!tab) return
+      useTabStore.getState().setActiveTab(tab.sessionId)
+      if (tab.type === 'session') {
+        useChatStore.getState().connectToSession(tab.sessionId)
+      }
+    }
 
     const handleSidebarToggle = () => {
       if (isSettingsPage && !sidebarOpen) {
@@ -97,10 +110,33 @@ export function WindowControls() {
             title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
             className="flex h-[26px] w-[26px] items-center justify-center rounded-md text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-colors"
           >
-            <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 300" }}>
-              {sidebarOpen ? 'menu_open' : 'menu'}
-            </span>
+            <CodexSidebarToggleIcon collapsed={!sidebarOpen} />
           </button>
+        )}
+
+        {!isSettingsPage && (
+          <>
+            <button
+              type="button"
+              onClick={() => activateTabAt(currentTabIndex - 1)}
+              disabled={!canGoBack}
+              aria-label="Back"
+              title="Back"
+              className="flex h-[26px] w-[26px] items-center justify-center rounded-md text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-[var(--color-text-tertiary)]"
+            >
+              <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 300" }}>chevron_left</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => activateTabAt(currentTabIndex + 1)}
+              disabled={!canGoForward}
+              aria-label="Forward"
+              title="Forward"
+              className="flex h-[26px] w-[26px] items-center justify-center rounded-md text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-[var(--color-text-tertiary)]"
+            >
+              <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 300" }}>chevron_right</span>
+            </button>
+          </>
         )}
 
         {/* New conversation: sidebar closed & not on settings page */}
@@ -123,6 +159,23 @@ export function WindowControls() {
       </div>
     )
   }
+
+function CodexSidebarToggleIcon({ collapsed }: { collapsed: boolean }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      aria-hidden="true"
+      className="codex-sidebar-toggle-icon"
+    >
+      <rect x="2.25" y="2.5" width="11.5" height="11" rx="2" />
+      <path d="M6.25 2.75v10.5" />
+      <path d={collapsed ? 'M9.2 6 11.2 8 9.2 10' : 'M11.2 6 9.2 8l2 2'} />
+    </svg>
+  )
+}
 
   // ── Windows window controls (existing) ────────────────────────
   if (!win) return null

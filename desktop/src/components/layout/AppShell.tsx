@@ -55,6 +55,8 @@ export function AppShell() {
   const effectiveSidebarOpen = isMobileShell ? mobileSidebarOpen : sidebarOpen
   const activeTab = tabs.find((tab) => tab.sessionId === activeTabId)
   const isActiveChatTab = isChatTab(activeTab)
+  const isSettingsTab = activeTabId === SETTINGS_TAB_ID || activeTab?.type === 'settings'
+  const showDesktopSidebar = !isMobileShell && !isSettingsTab
   const mobileSessionTitle = activeSession?.title || activeTab?.title || t('session.untitled')
   const mobileSessionUpdated = (() => {
     if (!activeSession?.modifiedAt) return ''
@@ -231,23 +233,24 @@ export function AppShell() {
           onClick={() => setEffectiveSidebarOpen(false)}
         />
       ) : null}
-      <div
-        id="sidebar-shell"
-        data-testid="sidebar-shell"
-        data-state={effectiveSidebarOpen ? 'open' : 'closed'}
-        data-mobile={isMobileShell ? 'true' : 'false'}
-        className={`sidebar-shell${isMobileShell ? ' sidebar-shell--mobile' : ''}`}
-        {...sidebarHiddenProps}
-      >
-        {!isMobileShell || effectiveSidebarOpen ? (
-          <Sidebar isMobile={isMobileShell} onRequestClose={() => setEffectiveSidebarOpen(false)} />
-        ) : null}
-      </div>
+      {(showDesktopSidebar || isMobileShell) ? (
+        <div
+          id="sidebar-shell"
+          data-testid="sidebar-shell"
+          data-state={effectiveSidebarOpen ? 'open' : 'closed'}
+          data-mobile={isMobileShell ? 'true' : 'false'}
+          className={`sidebar-shell${isMobileShell ? ' sidebar-shell--mobile' : ''}`}
+          {...sidebarHiddenProps}
+        >
+          {!isMobileShell || effectiveSidebarOpen ? (
+            <Sidebar isMobile={isMobileShell} onRequestClose={() => setEffectiveSidebarOpen(false)} />
+          ) : null}
+        </div>
+      ) : null}
       <main
         id="content-area"
-        data-sidebar-state={effectiveSidebarOpen ? 'open' : 'closed'}
-        className={`min-w-0 flex-1 flex flex-col overflow-hidden bg-[var(--color-surface)] relative z-[100]${effectiveSidebarOpen && !isMobileShell ? ' rounded-l-[16px]' : ''}${isMobileShell ? ' app-shell-main--mobile' : ''}`}
-        style={effectiveSidebarOpen && !isMobileShell ? { borderLeft: '1.5px solid rgba(255,255,255,0.12)' } : undefined}
+        data-sidebar-state={showDesktopSidebar && effectiveSidebarOpen ? 'open' : 'closed'}
+        className={`app-shell-main min-w-0 flex-1 flex flex-col overflow-hidden bg-[var(--color-surface)] relative${isSettingsTab ? ' app-shell-main--settings' : ''}${isMobileShell ? ' app-shell-main--mobile' : ''}`}
       >
         {isMobileShell ? (
           <div

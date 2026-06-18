@@ -563,7 +563,7 @@ export function EmptySession() {
   }
 
   return (
-    <div className="relative flex flex-1 flex-col overflow-hidden bg-[var(--color-surface-container-low)]">
+    <div className="relative flex flex-1 flex-col overflow-hidden bg-[var(--color-surface)]">
       <NoiseDotBackground />
       <div className={`flex flex-1 flex-col items-center justify-center ${
         isMobileComposer ? 'px-6 pb-[230px] pt-10' : 'p-8 pb-32'
@@ -574,21 +574,19 @@ export function EmptySession() {
           <img
             src={publicAssetPath('app-icon.png')}
             alt="Claude Code Haha"
-            className={isMobileComposer ? 'mb-4 h-16 w-16' : 'mb-6 h-24 w-24'}
+            className={isMobileComposer ? 'mb-4 h-14 w-14 opacity-90' : 'mb-5 h-16 w-16 opacity-90'}
           />
           <h1
-            className={`mb-2 font-extrabold tracking-tight text-[var(--color-text-primary)] ${
-              isMobileComposer ? 'text-2xl' : 'text-3xl'
+            className={`mb-2 font-semibold tracking-tight text-[var(--color-text-primary)] ${
+              isMobileComposer ? 'text-[24px]' : 'text-[28px]'
             }`}
-            style={{ fontFamily: 'var(--font-headline)' }}
           >
             {t('empty.title')}
           </h1>
           <p
             className={`mx-auto text-[var(--color-text-secondary)] ${
-              isMobileComposer ? 'max-w-[280px] text-sm leading-6' : 'max-w-xs'
+              isMobileComposer ? 'max-w-[280px] text-sm leading-6' : 'max-w-sm text-[14px] leading-6'
             }`}
-            style={{ fontFamily: 'var(--font-body)' }}
           >
             {t('empty.subtitle')}
           </p>
@@ -600,7 +598,7 @@ export function EmptySession() {
         className={`absolute left-0 right-0 z-30 flex justify-center ${
         isMobileComposer
           ? 'bottom-0 px-3 pb-[calc(env(safe-area-inset-bottom)+10px)]'
-          : 'bottom-4 px-8'
+          : 'bottom-5 px-8'
       }`}
       >
         <div className={`flex w-full flex-col ${isMobileComposer ? 'max-w-none' : 'max-w-3xl'}`}>
@@ -608,7 +606,7 @@ export function EmptySession() {
             ref={panelRef}
             data-testid="empty-session-composer-panel"
             className={`glass-panel relative flex flex-col gap-3 overflow-visible ${
-              isMobileComposer ? 'rounded-2xl p-3 shadow-[0_-12px_36px_rgba(54,35,28,0.12)]' : 'rounded-xl p-0'
+              isMobileComposer ? 'rounded-2xl p-3 shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[18px] p-0'
             } ${isDragActive ? 'composer-drop-target-active' : ''}`}
             {...dragHandlers}
           >

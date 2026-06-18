@@ -407,38 +407,38 @@ export const __markdownParseCacheInternals = {
 }
 
 const BASE_PROSE_CLASSES = `markdown-prose prose prose-sm min-w-0 max-w-none break-words [overflow-wrap:anywhere] text-[var(--color-text-primary)]
-  prose-headings:text-[var(--color-text-primary)] prose-headings:font-semibold
-  prose-p:my-2 prose-p:leading-relaxed
+  prose-headings:text-[var(--color-text-primary)] prose-headings:font-medium
+  prose-p:my-2.5 prose-p:leading-7
   prose-p:break-words prose-p:[overflow-wrap:anywhere]
-  prose-code:text-[13px] prose-code:text-[var(--color-code-fg)] prose-code:font-[var(--font-mono)] prose-code:bg-[var(--color-code-bg)] prose-code:border prose-code:border-[var(--color-border)] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:before:hidden prose-code:after:hidden
+  prose-code:text-[12.5px] prose-code:text-[var(--color-code-fg)] prose-code:font-[var(--font-mono)] prose-code:bg-[var(--color-code-bg)] prose-code:border prose-code:border-[var(--color-border)] prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-[7px] prose-code:before:hidden prose-code:after:hidden
   prose-pre:!bg-transparent prose-pre:!p-0 prose-pre:!shadow-none
-  prose-a:text-[var(--color-text-accent)] prose-a:no-underline prose-a:[overflow-wrap:anywhere] hover:prose-a:underline
+  prose-a:font-medium prose-a:text-[var(--color-text-accent)] prose-a:no-underline prose-a:[overflow-wrap:anywhere] prose-a:decoration-[var(--color-border-focus)]/70 prose-a:underline-offset-[3px] hover:prose-a:underline
   prose-strong:text-[var(--color-text-primary)]
-  prose-ul:my-2 prose-ol:my-2 prose-ul:pl-5 prose-ol:pl-5 prose-ul:list-outside prose-ol:list-outside
-  prose-li:my-0.5
+  prose-ul:my-3 prose-ol:my-3 prose-ul:pl-5 prose-ol:pl-5 prose-ul:list-outside prose-ol:list-outside
+  prose-li:my-1
   prose-table:my-0 prose-table:w-full prose-table:table-auto prose-table:text-sm
-  prose-th:bg-[var(--color-surface-info)] prose-th:px-3 prose-th:py-2 prose-th:text-left prose-th:whitespace-normal prose-th:break-words prose-th:align-top prose-th:border-b prose-th:border-[var(--color-border)]
-  prose-td:px-3 prose-td:py-2 prose-td:border-b prose-td:border-[var(--color-border)] prose-td:whitespace-normal prose-td:break-words prose-td:align-top prose-td:bg-[var(--color-surface)]
+  prose-th:bg-[var(--color-surface-info)] prose-th:px-3 prose-th:py-2.5 prose-th:text-left prose-th:whitespace-normal prose-th:break-words prose-th:align-top prose-th:border-b prose-th:border-[var(--color-border)]
+  prose-td:px-3 prose-td:py-2.5 prose-td:border-b prose-td:border-[var(--color-border)] prose-td:whitespace-normal prose-td:break-words prose-td:align-top prose-td:bg-[var(--color-surface)]
   [&_.katex]:[white-space:nowrap] [&_.katex]:[overflow-wrap:normal] [&_.katex]:[word-break:normal]
   [&_.md-math-inline]:inline-flex [&_.md-math-inline]:max-w-full [&_.md-math-inline]:overflow-x-auto [&_.md-math-inline]:[vertical-align:-0.08em] [&_.md-math-inline_.katex]:text-[1.02em]
   [&_.md-math-display]:my-5 [&_.md-math-display]:flex [&_.md-math-display]:max-w-full [&_.md-math-display]:justify-center [&_.md-math-display]:overflow-x-auto [&_.md-math-display]:px-1 [&_.md-math-display]:py-2 [&_.md-math-display]:[scrollbar-width:thin]
   [&_.md-math-display_.katex-display]:m-0 [&_.md-math-display_.katex]:text-[1.14em] [&_.md-math-display_.katex-html]:min-w-max
-  [&_.md-table-wrap]:my-5 [&_.md-table-wrap]:overflow-x-auto [&_.md-table-wrap]:rounded-xl [&_.md-table-wrap]:border [&_.md-table-wrap]:border-[var(--color-border)] [&_.md-table-wrap]:bg-[var(--color-surface-container-lowest)]`
+  [&_.md-table-wrap]:my-5 [&_.md-table-wrap]:overflow-x-auto [&_.md-table-wrap]:rounded-[16px] [&_.md-table-wrap]:border [&_.md-table-wrap]:border-[var(--color-border)] [&_.md-table-wrap]:bg-[var(--color-surface-container-lowest)]`
 
 const DOCUMENT_PROSE_CLASSES = `
-  prose-p:text-[15px] prose-p:leading-7
-  prose-headings:scroll-mt-6 prose-headings:tracking-[-0.01em]
-  prose-h1:mb-4 prose-h1:text-2xl prose-h1:font-semibold prose-h1:leading-tight
-  prose-h2:mt-8 prose-h2:mb-3 prose-h2:border-b prose-h2:border-[var(--color-border)] prose-h2:pb-2 prose-h2:text-xl prose-h2:font-semibold
-  prose-h3:mt-6 prose-h3:mb-2 prose-h3:text-base prose-h3:font-semibold
-  prose-h4:mt-5 prose-h4:mb-2 prose-h4:text-sm prose-h4:font-semibold
-  prose-blockquote:my-4 prose-blockquote:rounded-r-lg prose-blockquote:border-l-4 prose-blockquote:border-[var(--color-outline-variant)] prose-blockquote:bg-[var(--color-surface-container-low)] prose-blockquote:px-4 prose-blockquote:py-2 prose-blockquote:italic
-  prose-hr:my-6 prose-hr:border-[var(--color-border)]
+  prose-p:text-[15px] prose-p:leading-7 prose-p:text-[var(--color-text-primary)]
+  prose-headings:scroll-mt-6 prose-headings:tracking-[-0.014em]
+  prose-h1:mb-4 prose-h1:text-[1.9rem] prose-h1:font-semibold prose-h1:leading-[1.18]
+  prose-h2:mt-9 prose-h2:mb-3 prose-h2:border-b prose-h2:border-[var(--color-border)] prose-h2:pb-2 prose-h2:text-[1.28rem] prose-h2:font-semibold
+  prose-h3:mt-7 prose-h3:mb-2.5 prose-h3:text-[1.02rem] prose-h3:font-semibold
+  prose-h4:mt-5 prose-h4:mb-2 prose-h4:text-[0.95rem] prose-h4:font-semibold prose-h4:text-[var(--color-text-secondary)]
+  prose-blockquote:my-5 prose-blockquote:rounded-[14px] prose-blockquote:border-l-2 prose-blockquote:border-[var(--color-border-focus)] prose-blockquote:bg-[var(--color-surface-container-low)] prose-blockquote:px-4 prose-blockquote:py-3 prose-blockquote:not-italic prose-blockquote:text-[var(--color-text-secondary)]
+  prose-hr:my-7 prose-hr:border-[var(--color-border)]
   prose-img:rounded-lg prose-img:border prose-img:border-[var(--color-border)]
-  prose-kbd:rounded prose-kbd:border prose-kbd:border-[var(--color-border)] prose-kbd:bg-[var(--color-surface-container-lowest)] prose-kbd:px-1.5 prose-kbd:py-0.5 prose-kbd:font-[var(--font-mono)] prose-kbd:text-[12px] prose-kbd:font-normal prose-kbd:text-[var(--color-text-secondary)] prose-kbd:shadow-none
+  prose-kbd:rounded-[7px] prose-kbd:border prose-kbd:border-[var(--color-border)] prose-kbd:bg-[var(--color-surface-container-lowest)] prose-kbd:px-1.5 prose-kbd:py-0.5 prose-kbd:font-[var(--font-mono)] prose-kbd:text-[12px] prose-kbd:font-normal prose-kbd:text-[var(--color-text-secondary)] prose-kbd:shadow-none
   prose-ul:pl-5 prose-ul:[&>li]:marker:text-[var(--color-text-tertiary)]
   prose-ol:pl-5 prose-ol:[&>li]:marker:text-[var(--color-text-tertiary)]
-  prose-li:my-1.5
+  prose-li:my-1.5 prose-li:text-[var(--color-text-primary)]
   prose-table:my-0
   [&_.md-math-display]:my-6 [&_.md-math-display_.katex]:text-[1.18em]`
 

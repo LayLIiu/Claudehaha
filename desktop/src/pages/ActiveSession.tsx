@@ -34,13 +34,19 @@ import type { ActiveGoalState } from '../types/chat'
 import { useMobileViewport } from '../hooks/useMobileViewport'
 import { isDesktopRuntime } from '../lib/desktopRuntime'
 import { formatTokenCount } from '../lib/formatTokenCount'
-import { publicAssetPath } from '../lib/publicAsset'
 
 const TASK_POLL_INTERVAL_MS = 1000
 const WORKSPACE_RESIZE_STEP = 32
 const TERMINAL_RESIZE_STEP = 24
 const CHAT_COLUMN_WITH_WORKSPACE_CLASS =
-  'min-w-[320px] flex-1 border-r border-[var(--color-border)] bg-[var(--color-surface)]'
+  'min-w-[320px] flex-1 bg-[var(--color-surface)]'
+
+function getPathLeaf(path: string | null | undefined) {
+  if (!path) return null
+  const normalized = path.replace(/\\/g, '/').replace(/\/+$/, '')
+  const parts = normalized.split('/').filter(Boolean)
+  return parts[parts.length - 1] ?? normalized
+}
 
 function isSessionTabState(activeTabId: string | null, activeTabType: TabType | null | undefined) {
   if (!activeTabId) return false
@@ -175,7 +181,7 @@ function WorkspaceResizeHandle() {
           setWidth(width - WORKSPACE_RESIZE_STEP)
         }
       }}
-      className="group relative z-10 flex w-2 shrink-0 cursor-col-resize items-stretch justify-center bg-[var(--color-surface)] outline-none focus-visible:bg-[var(--color-surface-container)]"
+      className="group relative z-10 flex w-2 shrink-0 cursor-col-resize items-stretch justify-center outline-none"
     >
       <div className="my-3 w-px rounded-full bg-[var(--color-border)] transition-colors group-hover:bg-[var(--color-border-focus)] group-focus-visible:bg-[var(--color-border-focus)]" />
     </div>
@@ -362,6 +368,7 @@ export function ActiveSession() {
   const openProjectPath = session?.workDir && session.workDirExists !== false
     ? session.workDir
     : session?.projectPath || null
+  const projectLabel = getPathLeaf(openProjectPath)
 
   const lastUpdated = useMemo(() => {
     if (!session?.modifiedAt) return ''
@@ -379,7 +386,7 @@ export function ActiveSession() {
   if (!activeTabId) return null
 
   return (
-    <div className="flex-1 flex relative overflow-hidden bg-background text-on-surface">
+    <div className="flex-1 flex relative overflow-hidden bg-[var(--color-surface)] text-on-surface">
       <div data-testid="active-session-content-row" className="flex min-h-0 min-w-0 flex-1">
         <div
           data-testid="active-session-chat-column"
@@ -439,7 +446,7 @@ export function ActiveSession() {
                 compactEmptyHero ? 'pb-6' : 'pb-32',
               ].join(' ')}
             >
-              <div className="flex max-w-md flex-col items-center text-center">
+              <div className="empty-session-hero-panel flex w-full max-w-[760px] flex-col items-center text-center">
                 {isMemberSession ? (
                   <>
                     <span className={`material-symbols-outlined mb-4 text-[var(--color-text-tertiary)] ${compactEmptyHero ? 'text-[36px]' : 'text-[48px]'}`}>smart_toy</span>
@@ -451,17 +458,27 @@ export function ActiveSession() {
                   </>
                 ) : (
                   <>
-                    <img
-                      src={publicAssetPath('app-icon.png')}
-                      alt="Claude Code Haha"
-                      className={compactEmptyHero ? 'mb-4 h-16 w-16' : 'mb-6 h-24 w-24'}
-                    />
-                    <h1 className={`${compactEmptyHero ? 'mb-1 text-2xl' : 'mb-2 text-3xl'} font-extrabold tracking-tight text-[var(--color-text-primary)]`} style={{ fontFamily: 'var(--font-headline)' }}>
+                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-3 py-1 text-[11px] font-medium text-[var(--color-text-secondary)]">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-brand)]" />
+                      {projectLabel ?? t('empty.title')}
+                    </div>
+                    <h1 className={`${compactEmptyHero ? 'mb-2 text-[28px]' : 'mb-3 text-[34px]'} font-semibold tracking-[-0.03em] text-[var(--color-text-primary)]`}>
                       {t('empty.title')}
                     </h1>
-                    <p className={`mx-auto max-w-xs text-[var(--color-text-secondary)] ${compactEmptyHero ? 'text-sm' : ''}`} style={{ fontFamily: 'var(--font-body)' }}>
+                    <p className={`mx-auto max-w-[520px] text-[var(--color-text-secondary)] ${compactEmptyHero ? 'text-sm leading-6' : 'text-[15px] leading-7'}`}>
                       {t('empty.subtitle')}
                     </p>
+                    <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+                      <span className="inline-flex items-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-3 py-1.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
+                        {t('chat.addFiles')}
+                      </span>
+                      <span className="inline-flex items-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-3 py-1.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
+                        {t('chat.slashCommands')}
+                      </span>
+                      <span className="inline-flex items-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-3 py-1.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
+                        {t('tabs.showWorkspace')}
+                      </span>
+                    </div>
                   </>
                 )}
               </div>
@@ -473,113 +490,115 @@ export function ActiveSession() {
                   data-desktop-drag-region={isDesktopRuntime() ? true : undefined}
                   className={
                     showRightPanel
-                      ? 'relative flex w-full items-center pl-4 pr-4 py-3'
-                      : 'relative flex w-full items-center pl-[160px] pr-4 py-3'
+                      ? 'relative flex w-full items-center px-4 py-3'
+                      : 'relative flex w-full items-center px-4 py-3'
                   }
                 >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <h1
+                  <div className="session-header-shell flex w-full items-start justify-between px-4 py-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <h1
+                          className={
+                            showRightPanel
+                              ? 'min-w-0 flex-1 truncate text-[15px] font-semibold leading-tight tracking-[-0.02em] text-[var(--color-text-primary)]'
+                              : 'min-w-0 flex-1 truncate text-[17px] font-semibold leading-tight tracking-[-0.02em] text-[var(--color-text-primary)]'
+                          }
+                        >
+                          {session?.title || t('session.untitled')}
+                        </h1>
+                      </div>
+                      <div
                         className={
                           showRightPanel
-                            ? 'min-w-0 flex-1 truncate text-[15px] font-bold font-headline leading-tight text-on-surface'
-                            : 'min-w-0 flex-1 text-lg font-bold font-headline text-on-surface leading-tight'
+                            ? 'mt-1.5 flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap text-[10px] font-medium text-[var(--color-text-tertiary)]'
+                            : 'mt-1.5 flex min-w-0 items-center gap-2 overflow-hidden whitespace-nowrap text-[10px] font-medium text-[var(--color-text-tertiary)]'
                         }
                       >
-                        {session?.title || t('session.untitled')}
-                      </h1>
-                    </div>
-                    <div
-                      className={
-                        showRightPanel
-                          ? 'mt-1 flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap text-[10px] font-medium text-outline'
-                          : 'flex items-center gap-2 text-[10px] text-outline font-medium mt-1'
-                      }
-                    >
-                      {isActive && (
-                        <span className="flex shrink-0 items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-success)] animate-pulse-dot" />
-                          {t('session.active')}
-                        </span>
-                      )}
-                      {totalTokens > 0 && (
-                        <>
-                          <span className="text-[var(--color-outline)]">·</span>
-                          <span title={t('common.tokens', { count: totalTokens.toLocaleString() })}>
-                            {t('common.tokens', { count: formatTokenCount(totalTokens) })}
+                        {isActive && (
+                          <span className="flex shrink-0 items-center gap-1 text-[var(--color-text-secondary)]">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-success)] animate-pulse-dot" />
+                            {t('session.active')}
                           </span>
-                        </>
-                      )}
-                      {lastUpdated && (
-                        <>
-                          <span className="shrink-0 text-[var(--color-outline)]">·</span>
-                          <span className="truncate">{t('session.lastUpdated', { time: lastUpdated })}</span>
-                        </>
-                      )}
-                      {!showRightPanel && visibleMessageCount > 0 && (
-                        <>
-                          <span className="text-[var(--color-outline)]">·</span>
-                          <span>{t('session.messages', { count: visibleMessageCount })}</span>
-                        </>
-                      )}
-                    </div>
-                    {session?.workDirExists === false && (
-                      <div className="mt-2 inline-flex max-w-full items-center gap-2 rounded-lg border border-[var(--color-error)]/20 bg-[var(--color-error)]/8 px-3 py-1.5 text-[11px] text-[var(--color-error)]">
-                        <span className="material-symbols-outlined text-[14px]">warning</span>
-                        <span className="truncate">
-                          {t('session.workspaceUnavailable', { dir: session.workDir || 'directory no longer exists' })}
-                        </span>
+                        )}
+                        {totalTokens > 0 && (
+                          <>
+                            <span className="text-[var(--color-text-tertiary)]">·</span>
+                            <span title={t('common.tokens', { count: totalTokens.toLocaleString() })}>
+                              {t('common.tokens', { count: formatTokenCount(totalTokens) })}
+                            </span>
+                          </>
+                        )}
+                        {lastUpdated && (
+                          <>
+                            <span className="shrink-0 text-[var(--color-text-tertiary)]">·</span>
+                            <span className="truncate">{t('session.lastUpdated', { time: lastUpdated })}</span>
+                          </>
+                        )}
+                        {!showRightPanel && visibleMessageCount > 0 && (
+                          <>
+                            <span className="text-[var(--color-text-tertiary)]">·</span>
+                            <span>{t('session.messages', { count: visibleMessageCount })}</span>
+                          </>
+                        )}
                       </div>
-                    )}
-                    <ActiveGoalStrip
-                      goal={activeGoal}
-                      isRunning={isActive}
-                      compact={showRightPanel}
-                    />
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1 ml-4">
-                    <OpenProjectMenu path={openProjectPath} />
-                    <button
-                      type="button"
-                      aria-label={t('tabs.openTerminal')}
-                      title={t('tabs.openTerminal')}
-                      onClick={() => {
-                        if (activeTabId) {
-                          useTerminalPanelStore.getState().togglePanel(activeTabId)
-                        }
-                      }}
-                      data-active={showTerminalPanel ? 'true' : 'false'}
-                      className={`inline-flex h-7 w-7 items-center justify-center rounded-[8px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] spring-bounce-btn ${
-                        showTerminalPanel
-                          ? 'bg-[var(--color-surface-hover)] text-[var(--color-text-primary)]'
-                          : 'text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]'
-                      }`}
-                    >
-                      <SquareTerminal size={15} strokeWidth={1.9} />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={t('tabs.showWorkspace')}
-                      title={t('tabs.showWorkspace')}
-                      onClick={() => {
-                        if (!activeTabId) return
-                        const ws = useWorkspacePanelStore.getState()
-                        if (ws.isPanelOpen(activeTabId) && ws.getMode(activeTabId) === 'workspace') {
-                          ws.closePanel(activeTabId)
-                        } else {
-                          ws.setMode(activeTabId, 'workspace')
-                          ws.openPanel(activeTabId)
-                        }
-                      }}
-                      data-active={showWorkbench ? 'true' : 'false'}
-                      className={`inline-flex h-7 w-7 items-center justify-center rounded-[8px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] spring-bounce-btn ${
-                        showWorkbench
-                          ? 'bg-[var(--color-surface-hover)] text-[var(--color-text-primary)]'
-                          : 'text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]'
-                      }`}
-                    >
-                      {showWorkbench ? <FolderOpen size={15} strokeWidth={1.9} /> : <Folder size={15} strokeWidth={1.9} />}
-                    </button>
+                      {session?.workDirExists === false && (
+                        <div className="mt-2 inline-flex max-w-full items-center gap-2 rounded-lg border border-[var(--color-error)]/20 bg-[var(--color-error)]/8 px-3 py-1.5 text-[11px] text-[var(--color-error)]">
+                          <span className="material-symbols-outlined text-[14px]">warning</span>
+                          <span className="truncate">
+                            {t('session.workspaceUnavailable', { dir: session.workDir || 'directory no longer exists' })}
+                          </span>
+                        </div>
+                      )}
+                      <ActiveGoalStrip
+                        goal={activeGoal}
+                        isRunning={isActive}
+                        compact={showRightPanel}
+                      />
+                    </div>
+                    <div className="session-header-actions flex shrink-0 items-center gap-1 p-1">
+                      <OpenProjectMenu path={openProjectPath} />
+                      <button
+                        type="button"
+                        aria-label={t('tabs.openTerminal')}
+                        title={t('tabs.openTerminal')}
+                        onClick={() => {
+                          if (activeTabId) {
+                            useTerminalPanelStore.getState().togglePanel(activeTabId)
+                          }
+                        }}
+                        data-active={showTerminalPanel ? 'true' : 'false'}
+                        className={`inline-flex h-7 w-7 items-center justify-center rounded-[8px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] spring-bounce-btn ${
+                          showTerminalPanel
+                            ? 'bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-[0_8px_18px_rgba(0,0,0,0.12)]'
+                            : 'text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-primary)]'
+                        }`}
+                      >
+                        <SquareTerminal size={15} strokeWidth={1.9} />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={t('tabs.showWorkspace')}
+                        title={t('tabs.showWorkspace')}
+                        onClick={() => {
+                          if (!activeTabId) return
+                          const ws = useWorkspacePanelStore.getState()
+                          if (ws.isPanelOpen(activeTabId) && ws.getMode(activeTabId) === 'workspace') {
+                            ws.closePanel(activeTabId)
+                          } else {
+                            ws.setMode(activeTabId, 'workspace')
+                            ws.openPanel(activeTabId)
+                          }
+                        }}
+                        data-active={showWorkbench ? 'true' : 'false'}
+                        className={`inline-flex h-7 w-7 items-center justify-center rounded-[8px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] spring-bounce-btn ${
+                          showWorkbench
+                            ? 'bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-[0_8px_18px_rgba(0,0,0,0.12)]'
+                            : 'text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-primary)]'
+                        }`}
+                      >
+                        {showWorkbench ? <FolderOpen size={15} strokeWidth={1.9} /> : <Folder size={15} strokeWidth={1.9} />}
+                      </button>
+                    </div>
                   </div>
                   <div className="absolute left-3 right-3 bottom-0 h-px rounded-full bg-[rgba(255,255,255,0.08)]" />
                 </div>
@@ -657,7 +676,7 @@ export function ActiveSession() {
             <WorkspaceResizeHandle />
             <aside
               data-testid="workbench-panel"
-              className="flex h-full shrink-0 flex-col border-l border-[var(--color-border)] bg-[var(--color-surface)]"
+              className="flex h-full shrink-0 flex-col bg-[var(--color-surface)]"
               style={{ width: rightPanelWidth, maxWidth: '62%', minWidth: 'min(420px, 54%)' }}
             >
               <WorkbenchPanel sessionId={activeTabId} />

@@ -58,9 +58,9 @@ export function Dropdown<T extends string>({
       {open && (
         <div
           className={`
-            absolute z-50 mt-1 rounded-[var(--radius-lg)]
+            absolute z-50 mt-1.5 rounded-[16px]
             bg-[var(--color-surface-container-lowest)] border border-[var(--color-border)]
-            shadow-[var(--shadow-dropdown)]
+            shadow-[var(--shadow-dropdown)] backdrop-blur-xl
             animate-in fade-in slide-in-from-top-1
             ${maxHeight ? 'overflow-y-auto' : 'overflow-hidden'}
             ${align === 'right' ? 'right-0' : 'left-0'}
@@ -72,7 +72,7 @@ export function Dropdown<T extends string>({
               key={item.value}
               onClick={() => { onChange(item.value); setOpen(false) }}
               className={`
-                w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors
+                w-full flex items-center gap-3 px-3.5 py-3 text-left transition-colors
                 hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:bg-[var(--color-surface-hover)]
                 ${item.value === value ? 'bg-[var(--color-model-option-selected-bg)]' : ''}
                 ${i > 0 ? 'border-t border-[var(--color-border-separator)]' : ''}

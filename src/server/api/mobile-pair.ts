@@ -16,6 +16,7 @@ import {
 import { ManagedSettingsService } from '../services/managedSettingsService.js'
 import { ProviderService } from '../services/providerService.js'
 import { ApiError, errorResponse } from '../middleware/errorHandler.js'
+import { handleMobilePushApi } from './mobile-push.js'
 
 export async function handleMobilePairApi(
   req: Request,
@@ -24,6 +25,11 @@ export async function handleMobilePairApi(
 ): Promise<Response> {
   try {
     const action = segments[2]
+
+    // Delegate push-token requests to push handler
+    if (action === 'push-token') {
+      return await handleMobilePushApi(req, _url, segments)
+    }
 
     // GET /api/mobile/network-info
     if (action === 'network-info' && req.method === 'GET') {

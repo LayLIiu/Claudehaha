@@ -937,6 +937,10 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
 
   const addFilesLabel = isHeroComposer ? t('empty.addFiles') : t('chat.addFiles')
   const slashCommandsLabel = isHeroComposer ? t('empty.slashCommands') : t('chat.slashCommands')
+  const heroHintLabels = useMemo(
+    () => [t('chat.addFiles'), t('chat.slashCommands'), t('tabs.showWorkspace')],
+    [t],
+  )
 
   return (
     <div
@@ -962,10 +966,10 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
           ref={panelRef}
           data-testid="chat-input-panel"
           className={isHeroComposer
-            ? `glass-panel relative flex flex-col gap-3 overflow-visible ${embedLaunchControlsInHero ? 'rounded-xl' : 'rounded-t-xl rounded-b-none'} p-4 transition-colors ${isDragActive ? 'composer-drop-target-active' : ''}`
+            ? `glass-panel relative flex flex-col gap-3 overflow-visible ${embedLaunchControlsInHero ? 'rounded-[18px]' : 'rounded-t-[18px] rounded-b-none'} p-4 transition-colors ${isDragActive ? 'composer-drop-target-active' : ''}`
             : compact
-              ? `glass-panel relative overflow-visible p-3 transition-colors ${isMobileComposer ? 'rounded-2xl shadow-[0_-12px_36px_rgba(54,35,28,0.12)]' : 'rounded-xl'} ${isDragActive ? 'composer-drop-target-active' : ''}`
-              : `glass-panel relative overflow-visible transition-colors ${isMobileComposer ? 'rounded-2xl p-3 shadow-[0_-12px_36px_rgba(54,35,28,0.12)]' : 'rounded-xl p-4'} ${isDragActive ? 'composer-drop-target-active' : ''}`}
+              ? `glass-panel relative overflow-visible p-3 transition-colors ${isMobileComposer ? 'rounded-2xl shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[16px]'} ${isDragActive ? 'composer-drop-target-active' : ''}`
+              : `glass-panel relative overflow-visible transition-colors ${isMobileComposer ? 'rounded-2xl p-3 shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[16px] p-4'} ${isDragActive ? 'composer-drop-target-active' : ''}`}
           {...dragHandlers}
         >
           {isDragActive && (
@@ -1195,20 +1199,34 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
           )}
 
           {isHeroComposer ? (
-            <div className="flex items-start gap-3">
-              <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyDown}
-                onCompositionStart={() => { composingRef.current = true }}
-                onCompositionEnd={() => { composingRef.current = false }}
-                onPaste={handlePaste}
-                placeholder={composerPlaceholder}
-                disabled={isWorkspaceMissing}
-                rows={2}
-                className="flex-1 resize-none border-none bg-transparent py-2 leading-relaxed text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-tertiary)] disabled:opacity-50"
-              />
+            <div className="flex flex-col gap-3">
+              <div className="flex items-start gap-3">
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  onCompositionStart={() => { composingRef.current = true }}
+                  onCompositionEnd={() => { composingRef.current = false }}
+                  onPaste={handlePaste}
+                  placeholder={composerPlaceholder}
+                  disabled={isWorkspaceMissing}
+                  rows={2}
+                  className="flex-1 resize-none border-none bg-transparent py-2 leading-7 text-[15px] text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-tertiary)] disabled:opacity-50"
+                />
+              </div>
+              {!input.trim() && composerAttachments.length === 0 && !embedLaunchControlsInHero ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  {heroHintLabels.map((label) => (
+                    <span
+                      key={label}
+                      className="inline-flex items-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface-container-low)]/85 px-2.5 py-1 text-[11px] font-medium text-[var(--color-text-secondary)]"
+                    >
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
             </div>
           ) : (
             <textarea
@@ -1222,7 +1240,7 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
               placeholder={composerPlaceholder}
               disabled={isWorkspaceMissing}
               rows={1}
-              className={`w-full resize-none bg-transparent text-sm leading-relaxed text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-tertiary)] disabled:opacity-50 ${
+              className={`w-full resize-none bg-transparent text-[14px] leading-7 text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-tertiary)] disabled:opacity-50 ${
                 useCompactControls ? 'py-1.5' : 'py-2'
               }`}
             />
@@ -1240,13 +1258,13 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
                     <button
                       onClick={() => setPlusMenuOpen((value) => !value)}
                       aria-label="Open composer tools"
-                      className={`text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] ${isMobileComposer ? 'inline-flex h-11 w-11 items-center justify-center rounded-xl' : 'rounded-[var(--radius-md)] p-1.5'}`}
+                      className={`text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] ${isMobileComposer ? 'inline-flex h-11 w-11 items-center justify-center rounded-xl' : 'rounded-[10px] p-1.5'}`}
                     >
                       <span className="material-symbols-outlined text-[18px]">add</span>
                     </button>
 
                     {plusMenuOpen && (
-                      <div className={`absolute bottom-full left-0 z-50 mb-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] py-1 shadow-[var(--shadow-dropdown)] ${isMobileComposer ? 'w-[min(240px,calc(100vw-32px))]' : 'w-[240px]'}`}>
+                      <div className={`absolute bottom-full left-0 z-50 mb-2 rounded-[14px] border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] py-1 shadow-[var(--shadow-dropdown)] ${isMobileComposer ? 'w-[min(240px,calc(100vw-32px))]' : 'w-[240px]'}`}>
                         <button
                           onClick={openAttachmentPicker}
                           className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[var(--color-surface-hover)]"

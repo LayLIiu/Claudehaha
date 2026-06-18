@@ -191,12 +191,12 @@ export function Settings() {
   }, [pendingSettingsTab])
 
   return (
-    <div className="flex-1 flex min-h-0 flex-col overflow-hidden bg-[var(--color-surface)]">
+    <div className="settings-page-root flex-1 flex min-h-0 flex-col overflow-hidden">
       <div className="flex-1 flex overflow-hidden">
         {/* Tab navigation */}
         <div
           data-testid="settings-sidebar-panel"
-          className="settings-sidebar-panel relative flex w-[220px] flex-shrink-0 flex-col py-3"
+          className="settings-sidebar-panel relative flex w-[300px] flex-shrink-0 flex-col py-3"
         >
           <div className="px-3 mb-2 pt-[28px]">
             <button
@@ -210,7 +210,7 @@ export function Settings() {
                 }
                 useUIStore.getState().setSidebarOpen(true)
               }}
-              className="flex w-full items-center gap-2 rounded-[8px] px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] transition-colors"
+              className="flex w-full items-center gap-2 rounded-[7px] px-2.5 py-1.5 text-[13px] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] transition-colors"
             >
               <span className="material-symbols-outlined text-[18px]">arrow_back</span>
               {t('settings.backToApp')}
@@ -240,10 +240,10 @@ export function Settings() {
           className={
             activeTab === 'trace'
               ? 'settings-content-panel flex-1 flex min-h-0 flex-col overflow-hidden'
-              : 'settings-content-panel flex-1 overflow-y-auto px-8 py-6 flex justify-center'
+              : 'settings-content-panel flex-1 overflow-y-auto px-10 py-10 flex justify-center'
           }
         >
-          <div className={activeTab === 'trace' ? undefined : 'w-full max-w-[720px]'}>
+          <div className={activeTab === 'trace' ? undefined : 'w-full max-w-[620px]'}>
           {activeTab === 'providers' && <ProviderSettings />}
           {activeTab === 'activity' && <ActivitySettings />}
           {activeTab === 'general' && <GeneralSettings />}
@@ -269,13 +269,13 @@ function TabButton({ icon, label, active, onClick }: { icon: string; label: stri
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-left rounded-[8px] transition-colors ${
+      className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-[13px] text-left rounded-[7px] border transition-colors ${
         active
-          ? 'bg-[var(--color-surface-selected)] text-[var(--color-text-primary)] font-medium'
-          : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+          ? 'border-transparent bg-[var(--color-sidebar-item-active)] text-[var(--color-text-primary)] font-medium'
+          : 'border-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-text-primary)]'
       }`}
     >
-      <span className="material-symbols-outlined text-[18px]">{icon}</span>
+      <span className="material-symbols-outlined text-[17px]">{icon}</span>
       {label}
     </button>
   )
@@ -2469,7 +2469,8 @@ export function GeneralSettings() {
   )
 
   return (
-    <div className="max-w-xl">
+    <div className="general-settings-view max-w-[620px] pb-10">
+      <section className="general-settings-section general-settings-section--compact">
       {/* Appearance selector */}
       <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.appearanceTitle')}</h2>
       <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.appearanceDescription')}</p>
@@ -2489,7 +2490,9 @@ export function GeneralSettings() {
           </button>
         ))}
       </div>
+      </section>
 
+      <section className="general-settings-section general-settings-section--compact">
       {/* Language selector */}
       <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.languageTitle')}</h2>
       <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.languageDescription')}</p>
@@ -2508,7 +2511,9 @@ export function GeneralSettings() {
           </button>
         ))}
       </div>
+      </section>
 
+      <section className="general-settings-section general-settings-section--compact">
       {/* Response Language */}
       <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.responseLangTitle')}</h2>
       <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.responseLangDescription')}</p>
@@ -2530,7 +2535,9 @@ export function GeneralSettings() {
           </button>
         }
       />
+      </section>
 
+      <section className="general-settings-section general-settings-section--compact">
       {/* Output style */}
       <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.outputStyleTitle')}</h2>
       <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.outputStyleDescription')}</p>
@@ -2586,8 +2593,9 @@ export function GeneralSettings() {
           </p>
         )}
       </div>
+      </section>
 
-      <div className="mt-8">
+      <div className="general-settings-section general-settings-section--compact mt-8">
         <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.thinkingTitle')}</h2>
         <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.thinkingDescription')}</p>
         <label className="relative flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-4 py-3 cursor-pointer hover:border-[var(--color-border-focus)] transition-colors">
@@ -2610,7 +2618,7 @@ export function GeneralSettings() {
         </label>
       </div>
 
-      <div className="mt-8">
+      <div className="general-settings-section general-settings-section--compact mt-8">
         <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.autoDreamTitle')}</h2>
         <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.autoDreamDescription')}</p>
         <label className="relative flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-4 py-3 cursor-pointer hover:border-[var(--color-border-focus)] transition-colors">
@@ -2635,7 +2643,7 @@ export function GeneralSettings() {
         </label>
       </div>
 
-      <div className="mt-8">
+      <div className="general-settings-section general-settings-section--compact mt-8">
         <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.traceTitle')}</h2>
         <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.traceDescription')}</p>
         <label className="relative flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-4 py-3 cursor-pointer hover:border-[var(--color-border-focus)] transition-colors">
@@ -2663,7 +2671,7 @@ export function GeneralSettings() {
         </label>
       </div>
 
-      <div className="mt-8">
+      <div className="general-settings-section general-settings-section--compact mt-8">
         <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.notificationsTitle')}</h2>
         <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.notificationsDescription')}</p>
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-4 py-3">
@@ -2710,7 +2718,7 @@ export function GeneralSettings() {
         </div>
       </div>
 
-      <div className="mt-8">
+      <div className="general-settings-section general-settings-section--compact mt-8">
         <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.chatSendBehaviorTitle')}</h2>
         <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.chatSendBehaviorDescription')}</p>
         <div className="grid grid-cols-2 gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] p-2">
@@ -2737,7 +2745,7 @@ export function GeneralSettings() {
 
       {uiZoomSection}
 
-      <div className="mt-8">
+      <div className="general-settings-section general-settings-section--compact mt-8">
         <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.networkTitle')}</h2>
         <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.networkDescription')}</p>
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-4 py-4">
@@ -2887,7 +2895,7 @@ export function GeneralSettings() {
         </div>
       </div>
 
-      <div className="mt-8">
+      <div className="general-settings-section general-settings-section--compact mt-8">
         <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.webFetchPreflightTitle')}</h2>
         <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.webFetchPreflightDescription')}</p>
         <label className="relative flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-4 py-3 cursor-pointer hover:border-[var(--color-border-focus)] transition-colors">
@@ -2910,7 +2918,7 @@ export function GeneralSettings() {
         </label>
       </div>
 
-      <div className="mt-8">
+      <div className="general-settings-section general-settings-section--compact mt-8">
         <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.webSearchTitle')}</h2>
         <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.webSearchDescription')}</p>
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-4 py-4">
@@ -3004,7 +3012,7 @@ export function GeneralSettings() {
       </div>
 
       {isDesktopRuntime() && (
-        <div className="mt-8 border-t border-[var(--color-border)] pt-8">
+        <div className="general-settings-section general-settings-section--compact mt-8">
           <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.storageTitle')}</h2>
           <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.storageDescription')}</p>
 

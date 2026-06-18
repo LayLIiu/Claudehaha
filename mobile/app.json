@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "Claude Haha",
+    "slug": "claude-haha-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.cc-haha.mobile",
+      "infoPlist": {
+        "NSLocalNetworkUsageDescription": "Claude Haha needs local network access to discover and connect to your desktop Claude server.",
+        "NSBonjourServices": ["_cc-haha._tcp"]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.cc_haha.mobile"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Claude Haha to access camera for QR code pairing."
+        }
+      ]
+    ]
+  }
+}

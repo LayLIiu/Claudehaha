@@ -22,8 +22,8 @@ export const jp: Record<TranslationKey, string> = {
   'common.copied': 'コピーしました',
 
   // ─── Sidebar ──────────────────────────────────────
-  'sidebar.newSession': '新しいセッション',
-  'sidebar.scheduled': 'スケジュール',
+  'sidebar.newSession': '新しいチャット',
+  'sidebar.scheduled': '自動化',
   'sidebar.terminal': 'ターミナル',
   'sidebar.settings': '設定',
   'sidebar.searchPlaceholder': 'セッションを検索...',

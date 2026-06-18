@@ -22,8 +22,8 @@ export const zh: Record<TranslationKey, string> = {
   'common.copied': '已複製',
 
   // ─── Sidebar ──────────────────────────────────────
-  'sidebar.newSession': '新建會話',
-  'sidebar.scheduled': '定時任務',
+  'sidebar.newSession': '新對話',
+  'sidebar.scheduled': '自動化',
   'sidebar.terminal': '終端',
   'sidebar.settings': '設定',
   'sidebar.searchPlaceholder': '搜尋會話...',

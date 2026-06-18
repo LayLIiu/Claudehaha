@@ -205,6 +205,39 @@ export function startServer(port = PORT, host = HOST) {
           return new Response(null, { status: 204, headers: cors.headers })
         }
 
+        // Global WebSocket — mobile clients subscribe to cross-session events
+        if (url.pathname === '/ws/global') {
+          if (cors.rejected) {
+            return corsRejectedResponse(cors)
+          }
+
+          // Enforce authentication when required
+          if (authRequired) {
+            const authError = await requireH5Token(req, url.searchParams.get('token'))
+            if (authError) {
+              return withCors(authError, cors)
+            }
+          } else if (forceAuth) {
+            const authError = await requireAuth(req, url.searchParams.get('token'))
+            if (authError) {
+              return withCors(authError, cors)
+            }
+          }
+
+          const upgraded = server.upgrade(req, {
+            data: {
+              sessionId: '__global__',
+              connectedAt: Date.now(),
+              channel: 'global',
+              sdkToken: null,
+              serverPort,
+              serverHost: localConnectHost,
+            },
+          })
+          if (upgraded) return undefined
+          return new Response('WebSocket upgrade failed', { status: 400 })
+        }
+
         // WebSocket upgrade
         if (url.pathname.startsWith('/ws/')) {
           if (cors.rejected) {

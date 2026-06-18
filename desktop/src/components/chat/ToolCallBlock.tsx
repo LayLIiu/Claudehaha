@@ -92,7 +92,7 @@ export const ToolCallBlock = memo(function ToolCallBlock({ toolName, input, resu
   }
 
   return (
-    <div className={`overflow-hidden rounded-lg border border-[var(--color-border)]/50 bg-[var(--color-surface-container-lowest)] ${
+    <div className={`tool-call-card overflow-hidden rounded-[16px] border border-[var(--color-border)]/58 bg-[var(--color-surface-container-low)]/72 backdrop-blur-[10px] ${
       compact ? 'mb-0' : 'mb-2'
     }`}>
       <button
@@ -102,12 +102,12 @@ export const ToolCallBlock = memo(function ToolCallBlock({ toolName, input, resu
             setExpanded((value) => !value)
           }
         }}
-        className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-[var(--color-surface-hover)]/50"
+        className="flex w-full items-center gap-2 px-3.5 py-2.5 text-left transition-colors hover:bg-[var(--color-surface-hover)]/34"
       >
         <span className="material-symbols-outlined text-[14px] text-[var(--color-outline)]">{icon}</span>
-        <span className="text-[11px] font-semibold text-[var(--color-text-secondary)]">
-          {toolName}
-        </span>
+          <span className="text-[11px] font-semibold tracking-[0.03em] text-[var(--color-text-secondary)]">
+            {toolName}
+          </span>
         {filePath ? (
           <span className="min-w-0 flex-1 truncate font-[var(--font-mono)] text-[11px] text-[var(--color-text-tertiary)]">
             {filePath.split('/').pop()}
@@ -166,7 +166,7 @@ export const ToolCallBlock = memo(function ToolCallBlock({ toolName, input, resu
       </button>
 
       {expandable && expanded && (
-        <div className="space-y-2.5 border-t border-[var(--color-border)]/60 px-3 py-3">
+        <div className="space-y-2.5 border-t border-[var(--color-border)]/60 px-3.5 py-3.5">
           {preview}
           {details}
         </div>
@@ -200,7 +200,7 @@ function PlanToolCallBlock({
   const hasRawResult = Boolean(result && extractTextContent(result.content))
 
   return (
-    <div className={`overflow-hidden rounded-lg border border-[var(--color-brand)]/35 bg-[var(--color-surface-container-lowest)] ${
+    <div className={`overflow-hidden rounded-[14px] border border-[var(--color-brand)]/28 bg-[var(--color-surface-container-low)]/74 backdrop-blur-[10px] ${
       compact ? 'mb-0' : 'mb-2'
     }`}>
       <button

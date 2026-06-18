@@ -91,6 +91,7 @@ export type ServerMessage =
   | { type: 'task_update'; taskId: string; status: string; progress?: string }
   | { type: 'session_title_updated'; sessionId: string; title: string }
   // 全局通道消息 — 广播给所有连接到 /ws/global 的移动端客户端
+  | { type: 'session_broadcast'; sessionId: string; event: ServerMessage }
   | { type: 'session_activated'; sessionId: string; title?: string }
   | { type: 'session_status_changed'; sessionId: string; state: ChatState }
   | { type: 'sessions_updated'; sessions: SessionSummary[] }
