@@ -1978,7 +1978,7 @@ export function MessageList({ sessionId, compact = false }: MessageListProps = {
       >
         <div
           ref={scrollContentRef}
-          className={compact ? 'mx-auto max-w-full' : 'mx-auto max-w-[900px]'}
+          className={compact ? 'mx-auto max-w-full' : 'codex-task-transcript mx-auto max-w-[980px]'}
         >
           {virtualTranscriptWindow.enabled ? (
             <VirtualSpacer height={virtualTranscriptWindow.beforeHeight} position="top" />

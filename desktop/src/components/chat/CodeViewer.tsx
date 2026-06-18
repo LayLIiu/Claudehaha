@@ -294,7 +294,7 @@ export function CodeViewer({ code, language, maxLines = 20, showLineNumbers = fa
   const showExpandToggle = allLines.length > maxLines
 
   return (
-    <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-outline-variant)]/50 bg-[var(--color-surface-container-low)]">
+    <div className="code-viewer-shell overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-outline-variant)]/50 bg-[var(--color-surface-container-low)]">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-[var(--color-outline-variant)]/40 bg-[var(--color-surface-container)] px-3 py-1.5 text-[11px] text-[var(--color-text-tertiary)]">
         <div className="flex items-center gap-3">

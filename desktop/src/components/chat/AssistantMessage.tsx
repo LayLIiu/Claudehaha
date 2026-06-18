@@ -67,11 +67,11 @@ export const AssistantMessage = memo(function AssistantMessage({ content, isStre
   const documentLayout = shouldUseDocumentLayout(content)
 
   return (
-    <div className="mb-6 flex justify-start">
+    <div className="codex-task-stream-item mb-6 flex justify-start">
       <div
         data-message-shell="assistant"
         data-layout="document"
-        className="group flex min-w-0 w-full max-w-[920px] flex-col items-start"
+        className="assistant-task-block group flex min-w-0 w-full max-w-[960px] flex-col items-start"
       >
         <div className="assistant-message-flow w-full text-[14px] leading-7 text-[var(--color-text-primary)]">
           <MarkdownRenderer

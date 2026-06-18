@@ -92,7 +92,7 @@ export const ToolCallBlock = memo(function ToolCallBlock({ toolName, input, resu
   }
 
   return (
-    <div className={`tool-call-card overflow-hidden rounded-[16px] border border-[var(--color-border)]/58 bg-[var(--color-surface-container-low)]/72 backdrop-blur-[10px] ${
+    <div className={`tool-call-card codex-execution-card overflow-hidden rounded-[16px] border border-[var(--color-border)]/58 bg-[var(--color-surface-container-low)]/72 backdrop-blur-[10px] ${
       compact ? 'mb-0' : 'mb-2'
     }`}>
       <button
@@ -102,9 +102,9 @@ export const ToolCallBlock = memo(function ToolCallBlock({ toolName, input, resu
             setExpanded((value) => !value)
           }
         }}
-        className="flex w-full items-center gap-2 px-3.5 py-2.5 text-left transition-colors hover:bg-[var(--color-surface-hover)]/34"
+        className="codex-execution-card-header flex w-full items-center gap-2 px-3.5 py-2.5 text-left transition-colors hover:bg-[var(--color-surface-hover)]/34"
       >
-        <span className="material-symbols-outlined text-[14px] text-[var(--color-outline)]">{icon}</span>
+        <span className="codex-execution-icon material-symbols-outlined text-[14px] text-[var(--color-outline)]">{icon}</span>
           <span className="text-[11px] font-semibold tracking-[0.03em] text-[var(--color-text-secondary)]">
             {toolName}
           </span>

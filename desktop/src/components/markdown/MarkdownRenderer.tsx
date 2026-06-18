@@ -557,6 +557,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content, varian
             <CodeViewer
               code={part.block.code}
               language={part.block.language}
+              showLineNumbers
             />
           </div>
         )

@@ -1829,3 +1829,117 @@ html[data-touch-h5] * {
 html[data-touch-h5] body {
   overscroll-behavior-y: none;
 }
+
+/* Codex-style task transcript rendering */
+.codex-task-transcript {
+  color: var(--color-text-primary);
+}
+
+
+
+
+.assistant-task-block {
+  position: relative;
+}
+
+
+
+.assistant-message-flow {
+  color: var(--color-text-primary);
+}
+
+.assistant-message-flow .markdown-prose {
+  font-size: 14px;
+  line-height: 1.72;
+}
+
+.assistant-message-flow .markdown-prose > p,
+.assistant-message-flow .markdown-prose > div > p,
+.assistant-message-flow .markdown-prose > ul,
+.assistant-message-flow .markdown-prose > div > ul,
+.assistant-message-flow .markdown-prose > ol,
+.assistant-message-flow .markdown-prose > div > ol,
+.assistant-message-flow .markdown-prose > blockquote,
+.assistant-message-flow .markdown-prose > div > blockquote {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  color: var(--color-text-primary);
+}
+
+.assistant-message-flow .markdown-prose > p,
+.assistant-message-flow .markdown-prose > div > p {
+  max-width: 860px;
+}
+
+.assistant-message-flow .markdown-prose h1,
+.assistant-message-flow .markdown-prose h2,
+.assistant-message-flow .markdown-prose h3 {
+  color: #fff;
+}
+
+.assistant-message-flow .markdown-prose h2 {
+  margin-top: 22px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.assistant-message-flow .markdown-prose ul,
+.assistant-message-flow .markdown-prose ol {
+  max-width: 860px;
+  border-left: 1px solid rgba(255, 255, 255, 0.075);
+  padding-left: 22px;
+}
+
+.assistant-message-flow .markdown-prose li::marker {
+  color: var(--color-text-tertiary);
+}
+
+.assistant-message-flow .markdown-prose blockquote {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-left: 2px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.assistant-message-flow .markdown-prose code:not(pre code) {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(255, 255, 255, 0.085);
+}
+
+.code-viewer-shell,
+.codex-execution-card {
+  border-color: rgba(255, 255, 255, 0.085) !important;
+  background: rgba(18, 18, 18, 0.96) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.code-viewer-shell > div:first-child,
+.codex-execution-card-header {
+  background: rgba(255, 255, 255, 0.035) !important;
+  border-color: rgba(255, 255, 255, 0.075) !important;
+}
+
+.code-viewer-area {
+  background: #0d0d0d !important;
+}
+
+.code-viewer-area [data-code-viewer-content] {
+  color: #f5f5f5;
+}
+
+.codex-execution-icon {
+  display: inline-flex;
+  height: 22px;
+  width: 22px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.055);
+  color: var(--color-text-secondary) !important;
+}
+
+.user-message-bubble {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
