@@ -95,7 +95,7 @@ export function PermissionModeSelector({ workDir: workDirProp, compact = false, 
     ? isMobile
       ? 'h-11 w-11 justify-center rounded-xl p-0'
       : 'h-8 w-8 justify-center rounded-full p-0'
-    : 'gap-1.5 rounded-full px-2.5 py-1.5 text-xs'
+    : 'gap-1.5 rounded-full px-1.5 py-1.5 text-xs'
   const menuId = 'permission-mode-menu'
 
   useEffect(() => {
@@ -141,9 +141,8 @@ export function PermissionModeSelector({ workDir: workDirProp, compact = false, 
             setOpen(false)
           }}
           className={`
-            flex w-full items-start gap-3 px-4 py-3 text-left transition-colors
-            hover:bg-[var(--color-surface-hover)]
-            ${item.value === currentMode ? 'bg-[var(--color-surface-selected)]' : ''}
+            sidebar-codex-menu-item items-start gap-2.5 rounded-[12px] px-3 py-2
+            ${item.value === currentMode ? 'bg-white/[0.085]' : ''}
           `}
         >
           <span className={`material-symbols-outlined mt-0.5 text-[20px] ${item.color || 'text-[var(--color-text-secondary)]'}`}>
@@ -165,7 +164,7 @@ export function PermissionModeSelector({ workDir: workDirProp, compact = false, 
 
   const menuContent = (
     <>
-      <div className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[var(--color-outline)]">
+      <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
         {t('permMode.executionPermissions')}
       </div>
       {permissionOptions}
@@ -181,11 +180,11 @@ export function PermissionModeSelector({ workDir: workDirProp, compact = false, 
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
         title={compact ? MODE_LABELS[currentMode] : undefined}
-        className={`flex items-center bg-[var(--color-surface-container-low)] font-medium text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] ${
-          compactButtonClass
-        }`}
+        className={`flex items-center bg-transparent font-semibold text-[var(--color-text-secondary)] transition-colors hover:bg-white/[0.055] hover:text-[var(--color-text-primary)] ${
+          currentMode === 'bypassPermissions' ? 'text-[#ff8a4c] hover:text-[#ff9b66]' : ''
+        } ${compactButtonClass}`}
       >
-        <span className="material-symbols-outlined text-[14px]">{MODE_ICONS[currentMode]}</span>
+        <span className="material-symbols-outlined text-[16px]">{MODE_ICONS[currentMode]}</span>
         {!compact && (
           <>
             <span>{MODE_LABELS[currentMode]}</span>
@@ -207,7 +206,7 @@ export function PermissionModeSelector({ workDir: workDirProp, compact = false, 
             {permissionOptions}
           </MobileBottomSheet>
         ) : (
-          <div id={menuId} ref={menuRef} role="menu" className="absolute left-0 bottom-full mb-2 w-[320px] rounded-xl bg-[var(--color-surface-container-lowest)] border border-[var(--color-border)] shadow-[var(--shadow-dropdown)] z-50 py-2">
+          <div id={menuId} ref={menuRef} role="menu" className="sidebar-codex-menu absolute bottom-full left-0 z-50 mb-2 w-[320px] rounded-[18px] border border-[var(--color-border)] p-1.5 shadow-[var(--shadow-dropdown)]">
             {menuContent}
           </div>
         )

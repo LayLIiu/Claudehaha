@@ -17,12 +17,19 @@ type RewindTarget = {
   messagesRemoved: number
 }
 
+type RewindFileChangeStats = {
+  path: string
+  insertions: number
+  deletions: number
+}
+
 type RewindCodePreview = {
   available: boolean
   reason?: string
   filesChanged: string[]
   insertions: number
   deletions: number
+  fileStats: RewindFileChangeStats[]
 }
 
 type TranscriptFileChange = {
@@ -74,12 +81,14 @@ function normalizeDiffStats(diffStats: {
   filesChanged?: string[]
   insertions?: number
   deletions?: number
+  fileStats?: RewindFileChangeStats[]
 } | undefined): RewindCodePreview {
   return {
     available: true,
     filesChanged: diffStats?.filesChanged ?? [],
     insertions: diffStats?.insertions ?? 0,
     deletions: diffStats?.deletions ?? 0,
+    fileStats: diffStats?.fileStats ?? [],
   }
 }
 
@@ -665,6 +674,7 @@ function buildTranscriptTurnCodePreview(
       filesChanged: [],
       insertions: 0,
       deletions: 0,
+      fileStats: [],
     }
   }
 
@@ -672,6 +682,11 @@ function buildTranscriptTurnCodePreview(
     filesChanged: changes.map((change) => change.absolutePath),
     insertions: changes.reduce((total, change) => total + change.additions, 0),
     deletions: changes.reduce((total, change) => total + change.deletions, 0),
+    fileStats: changes.map((change) => ({
+      path: change.absolutePath,
+      insertions: change.additions,
+      deletions: change.deletions,
+    })),
   })
 }
 
@@ -730,6 +745,7 @@ async function buildTurnCodePreview(
     ...Object.keys(nextSnapshot?.trackedFileBackups ?? {}),
   ])
   const filesChanged: string[] = []
+  const fileStats: RewindFileChangeStats[] = []
   let insertions = 0
   let deletions = 0
 
@@ -743,13 +759,19 @@ async function buildTurnCodePreview(
     )
     if (beforeContent === afterContent) continue
 
-    filesChanged.push(expandTrackingPath(checkpointBaseDir, trackingPath))
+    const responsePath = expandTrackingPath(checkpointBaseDir, trackingPath)
+    filesChanged.push(responsePath)
     const stats = countTurnDiffStats(beforeContent, afterContent)
     insertions += stats.insertions
     deletions += stats.deletions
+    fileStats.push({
+      path: responsePath,
+      insertions: stats.insertions,
+      deletions: stats.deletions,
+    })
   }
 
-  return normalizeDiffStats({ filesChanged, insertions, deletions })
+  return normalizeDiffStats({ filesChanged, insertions, deletions, fileStats })
 }
 
 async function hasFileChanged(
@@ -810,6 +832,7 @@ async function buildCodePreview(
         filesChanged: [],
         insertions: 0,
         deletions: 0,
+        fileStats: [],
       },
     }
   }
@@ -824,6 +847,7 @@ async function buildCodePreview(
         filesChanged: [],
         insertions: 0,
         deletions: 0,
+        fileStats: [],
       },
     }
   }
@@ -989,6 +1013,7 @@ export async function getSessionTurnCheckpointDiff(
         filesChanged: [],
         insertions: 0,
         deletions: 0,
+        fileStats: [],
       },
       checkpointBaseDir,
     ).target,

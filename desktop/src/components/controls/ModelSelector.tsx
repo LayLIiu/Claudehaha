@@ -353,10 +353,8 @@ export function ModelSelector({
   const buttonModelLabel = isRuntimeScoped
     ? selectedRuntimeModel?.name ?? storeModel?.name ?? t('model.selectModel')
     : selectedModel?.name ?? t('model.selectModel')
-  const buttonProviderLabel = isRuntimeScoped
-    ? selectedProviderChoice?.providerName ?? activeProviderName ?? t('settings.providers.officialName')
-    : null
   const selectedRuntimeEffort = activeRuntimeSelection?.effortLevel ?? effortLevel
+  const selectedRuntimeEffortLabel = EFFORT_OPTIONS.find((option) => option.value === selectedRuntimeEffort)?.label
 
   const handleRuntimeSelect = (selection: RuntimeSelection) => {
     onRuntimeSelectionChange?.(selection)
@@ -379,17 +377,17 @@ export function ModelSelector({
 
   const dropdownContent = (
     <>
-      <div className={`overflow-y-auto ${isMobileBrowser ? 'p-1' : 'p-3'}`} style={{ maxHeight: isMobileBrowser ? undefined : dropdownPosition?.maxHeight }}>
+      <div className={`overflow-y-auto ${isMobileBrowser ? 'p-1' : 'p-1.5'}`} style={{ maxHeight: isMobileBrowser ? undefined : dropdownPosition?.maxHeight }}>
         {!isMobileBrowser && (
-          <div className="mb-2 px-1 text-[10px] font-bold uppercase tracking-widest text-[var(--color-outline)]">
+          <div className="mb-1.5 px-2 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
             {t('model.configuration')}
           </div>
         )}
 
         {isRuntimeScoped ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {providerChoices.map((choice) => (
-              <div key={choice.providerId ?? 'official'} className="space-y-1.5">
+              <div key={choice.providerId ?? 'official'} className="space-y-1">
                 <div className="flex items-center justify-between px-2 pt-1">
                   <span className="truncate text-[11px] font-semibold tracking-[0.01em] text-[var(--color-text-secondary)]">
                     {choice.providerName}
@@ -415,12 +413,9 @@ export function ModelSelector({
                           effortLevel: selectedRuntimeEffort,
                         })}
                         className={`
-                          w-full rounded-lg border px-3 text-left transition-colors
-                          ${isMobileBrowser ? 'min-h-[56px] py-3' : 'py-2.5'}
-                          ${isSelected
-                            ? 'border-[var(--color-model-option-selected-border)] bg-[var(--color-model-option-selected-bg)]'
-                            : 'border-transparent hover:bg-[var(--color-surface-hover)]'
-                          }
+                          w-full rounded-[12px] px-2.5 text-left transition-colors
+                          ${isMobileBrowser ? 'min-h-[56px] py-3' : 'py-2'}
+                          ${isSelected ? 'bg-white/[0.085]' : 'hover:bg-white/[0.085]'}
                         `}
                       >
                         <div className="flex items-start gap-3">
@@ -466,12 +461,9 @@ export function ModelSelector({
                     setOpen(false)
                   }}
                   className={`
-                    w-full rounded-lg px-3 text-left transition-colors
-                    ${isMobileBrowser ? 'min-h-[56px] py-3' : 'py-2.5'}
-                    ${isSelected
-                      ? 'border border-[var(--color-model-option-selected-border)] bg-[var(--color-model-option-selected-bg)]'
-                      : 'hover:bg-[var(--color-surface-hover)]'
-                    }
+                    w-full rounded-[12px] px-2.5 text-left transition-colors
+                    ${isMobileBrowser ? 'min-h-[56px] py-3' : 'py-2'}
+                    ${isSelected ? 'bg-white/[0.085]' : 'hover:bg-white/[0.085]'}
                   `}
                 >
                   <div className="flex items-center gap-3">
@@ -500,8 +492,8 @@ export function ModelSelector({
       </div>
 
       {canEditRuntimeEffort && (
-        <div className="border-t border-[var(--color-border)] p-3">
-          <div className="mb-2 px-1 text-[10px] font-bold uppercase tracking-widest text-[var(--color-outline)]">
+        <div className="border-t border-white/[0.14] p-2">
+          <div className="mb-1.5 px-2 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
             {t('model.effort')}
           </div>
           <div className="grid grid-cols-4 gap-1.5">
@@ -516,8 +508,8 @@ export function ModelSelector({
                   className={`
                     rounded-lg py-2 text-center text-xs font-semibold transition-colors
                     ${isSelected
-                      ? 'bg-[var(--color-brand)] text-white'
-                      : 'bg-[var(--color-surface-container-high)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                      ? 'bg-white/[0.12] text-[var(--color-text-primary)]'
+                      : 'bg-transparent text-[var(--color-text-secondary)] hover:bg-white/[0.085]'
                     }
                   `}
                 >
@@ -549,7 +541,7 @@ export function ModelSelector({
       <div
         ref={dropdownRef}
         data-testid="model-selector-dropdown"
-        className="fixed z-[80] rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] shadow-[var(--shadow-dropdown)]"
+        className="sidebar-codex-menu fixed z-[80] overflow-hidden rounded-[18px] border border-[var(--color-border)] p-1.5 shadow-[var(--shadow-dropdown)]"
         style={{
           top: dropdownPosition.top,
           bottom: dropdownPosition.bottom,
@@ -568,21 +560,21 @@ export function ModelSelector({
       <button
         onClick={() => !disabled && setOpen(!open)}
         disabled={disabled}
-        className={`flex items-center gap-2 rounded-full bg-[var(--color-surface-container-low)] text-xs font-medium text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] disabled:cursor-not-allowed disabled:opacity-50 ${
-          compact ? 'max-w-[112px] px-2.5 py-1.5' : 'max-w-[280px] px-3 py-1.5'
+        className={`flex items-center gap-1.5 rounded-full bg-transparent text-xs font-medium text-[var(--color-text-secondary)] transition-colors hover:bg-white/[0.055] hover:text-[var(--color-text-primary)] disabled:cursor-not-allowed disabled:opacity-50 ${
+          compact ? 'max-w-[136px] px-1.5 py-1.5' : 'max-w-[240px] px-1.5 py-1.5'
         }`}
       >
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <span className={`${compact ? 'text-xs' : 'text-sm'} min-w-0 flex-1 truncate font-semibold text-[var(--color-text-primary)]`}>
+        <div className="flex min-w-0 flex-1 items-center gap-1.5">
+          <span className={`${compact ? 'text-xs' : 'text-sm'} min-w-0 truncate font-semibold text-[var(--color-text-primary)]`}>
             {buttonModelLabel}
           </span>
-          {!compact && buttonProviderLabel && (
-            <span className="max-w-[108px] flex-shrink-0 truncate text-[11px] text-[var(--color-text-tertiary)]">
-              {buttonProviderLabel}
+          {isRuntimeScoped && selectedRuntimeEffortLabel ? (
+            <span className="shrink-0 text-[12px] font-semibold text-[var(--color-text-tertiary)]">
+              {selectedRuntimeEffortLabel}
             </span>
-          )}
+          ) : null}
         </div>
-        <span className="material-symbols-outlined flex-shrink-0 text-[12px]">expand_more</span>
+        <span className="material-symbols-outlined flex-shrink-0 text-[16px] text-[var(--color-text-tertiary)]">expand_more</span>
       </button>
       {dropdown}
     </div>

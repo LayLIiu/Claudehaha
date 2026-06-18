@@ -75,21 +75,22 @@ function PanelShell({
   onClose: () => void
 }) {
   return (
-    <div className="absolute bottom-full left-0 right-0 z-50 mb-3 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] shadow-[var(--shadow-dropdown)]">
-      <div className="flex items-start justify-between gap-4 border-b border-[var(--color-border)] px-5 py-4">
+    <div className="sidebar-codex-menu absolute bottom-full left-0 right-0 z-50 mb-3 overflow-hidden rounded-[18px] border border-[var(--color-border)] p-1.5 shadow-[var(--shadow-dropdown)]">
+      <div className="flex items-start justify-between gap-4 px-3 py-3">
         <div>
-          <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">{title}</h3>
-          <p className="mt-1 text-sm text-[var(--color-text-tertiary)]">{subtitle}</p>
+          <h3 className="text-base font-semibold text-[var(--color-text-primary)]">{title}</h3>
+          <p className="mt-1 text-xs text-[var(--color-text-tertiary)]">{subtitle}</p>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
+          className="flex h-8 w-8 items-center justify-center rounded-[10px] text-[var(--color-text-secondary)] transition-colors hover:bg-white/[0.085] hover:text-[var(--color-text-primary)]"
         >
           <span className="material-symbols-outlined text-[18px]">close</span>
         </button>
       </div>
-      <div className="max-h-[min(620px,72vh)] overflow-y-auto px-5 py-4">{children}</div>
+      <div className="sidebar-codex-menu-divider" />
+      <div className="max-h-[min(620px,72vh)] overflow-y-auto px-3 py-3">{children}</div>
     </div>
   )
 }
@@ -697,9 +698,9 @@ function SessionInspectorShell({
 }) {
   return (
     <div
-      className="absolute bottom-full left-0 right-0 z-50 mb-4 overflow-hidden rounded-[10px] border border-[var(--color-inspector-border)] bg-[var(--color-inspector-surface)] text-[var(--color-inspector-text)] shadow-[var(--shadow-inspector)]"
+      className="sidebar-codex-menu absolute bottom-full left-0 right-0 z-50 mb-4 overflow-hidden rounded-[18px] border border-[var(--color-border)] p-1.5 text-[var(--color-inspector-text)] shadow-[var(--shadow-dropdown)]"
     >
-      <div className="grid min-h-[64px] grid-cols-[1fr_auto_1fr] items-center border-b border-[var(--color-inspector-border)] bg-[var(--color-inspector-surface)] px-6">
+      <div className="grid min-h-[54px] grid-cols-[1fr_auto_1fr] items-center px-4">
         <div className="font-mono text-[16px] font-semibold uppercase text-[var(--color-inspector-accent)]">{t('slash.inspector.title')}</div>
         <div className="flex items-center gap-8">
           {tabs.map((tab) => (
@@ -727,7 +728,8 @@ function SessionInspectorShell({
           </button>
         </div>
       </div>
-      <div className="max-h-[min(540px,58vh)] overflow-y-auto bg-[var(--color-inspector-surface)] px-6 py-6">{children}</div>
+      <div className="sidebar-codex-menu-divider" />
+      <div className="max-h-[min(540px,58vh)] overflow-y-auto px-4 py-4">{children}</div>
     </div>
   )
 }

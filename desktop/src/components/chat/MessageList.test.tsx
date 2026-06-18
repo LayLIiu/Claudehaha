@@ -1698,7 +1698,49 @@ describe('MessageList nested tool calls', () => {
     expect(within(dialog).queryByText(/\{"results"/)).toBeNull()
   })
 
-  it('renders copy controls for user messages and scopes assistant copy to a single reply', async () => {
+  it('shows action bars under every sent user message and each turn-final assistant reply', () => {
+    useChatStore.setState({
+      sessions: {
+        [ACTIVE_TAB]: makeSessionState({
+          messages: [
+            {
+              id: 'user-1',
+              type: 'user_text',
+              content: '第一条用户消息',
+              timestamp: 1,
+            },
+            {
+              id: 'assistant-1',
+              type: 'assistant_text',
+              content: '第一条 AI 回复。',
+              timestamp: 2,
+            },
+            {
+              id: 'user-2',
+              type: 'user_text',
+              content: '第二条用户消息',
+              timestamp: 3,
+            },
+            {
+              id: 'assistant-2',
+              type: 'assistant_text',
+              content: '第二条 AI 回复。',
+              timestamp: 4,
+            },
+          ],
+        }),
+      },
+    })
+
+    render(<MessageList />)
+
+    expect(screen.getAllByRole('button', { name: 'Copy prompt' })).toHaveLength(2)
+    expect(screen.getAllByRole('button', { name: 'Copy reply' })).toHaveLength(2)
+    expect(screen.getByText('第一条 AI 回复。').closest('[data-message-shell="assistant"]')?.querySelector('[data-message-actions]')).toBeTruthy()
+    expect(screen.getByText('第二条 AI 回复。').closest('[data-message-shell="assistant"]')?.querySelector('[data-message-actions]')).toBeTruthy()
+  })
+
+  it('renders copy controls only for the final assistant reply in a turn and scopes copy to that reply', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined)
     Object.assign(navigator, {
       clipboard: {
@@ -1736,8 +1778,9 @@ describe('MessageList nested tool calls', () => {
     render(<MessageList />)
 
     expect(screen.getByRole('button', { name: 'Copy prompt' })).toBeTruthy()
+    expect(screen.getAllByRole('button', { name: 'Copy reply' })).toHaveLength(1)
 
-    fireEvent.click(screen.getAllByRole('button', { name: 'Copy reply' })[1]!)
+    fireEvent.click(screen.getByRole('button', { name: 'Copy reply' }))
 
     await waitFor(() => {
       expect(writeText).toHaveBeenCalledWith('再看 desktop 前后端边界。')
@@ -3241,7 +3284,7 @@ describe('MessageList nested tool calls', () => {
     expect(scrollTop).toBe(600)
   })
 
-  it('keeps user actions anchored to the right bubble and assistant actions to the left bubble', () => {
+  it('keeps the floating actions on the latest completed assistant reply only', () => {
     const now = new Date('2026-05-29T16:00:00+08:00').getTime()
     vi.spyOn(Date, 'now').mockReturnValue(now)
 
@@ -3275,20 +3318,25 @@ describe('MessageList nested tool calls', () => {
 
     expect(userShell).toBeTruthy()
     expect(userShell?.className).toContain('items-end')
-    expect(userShell?.className).toContain('group')
+    expect(userShell?.className).toContain('group/message')
     expect(userShell?.className).not.toContain('w-full')
     expect(assistantShell).toBeTruthy()
     expect(assistantShell?.className).toContain('items-start')
-    expect(assistantShell?.className).toContain('group')
-    expect(assistantShell?.className).not.toContain('w-full')
+    expect(assistantShell?.className).toContain('group/message')
     expect(assistantShell?.className).not.toContain('ml-10')
     expect(userActions?.getAttribute('data-align')).toBe('end')
     expect(assistantActions?.getAttribute('data-align')).toBe('start')
     expect(userActions?.className).toContain('h-7')
     expect(userActions?.className).toContain('mt-2')
+    expect(userActions?.className).toContain('w-full')
+    expect(userActions?.className).not.toContain('absolute')
     expect(userActions?.className).not.toContain('h-0')
     expect(userActions?.className).not.toContain('group-hover:h-7')
     expect(userActions?.className).not.toContain('invisible')
+    expect(userActions?.className).not.toContain('blur')
+    expect(assistantActions?.className).toContain('h-7')
+    expect(assistantActions?.className).toContain('mt-2')
+    expect(assistantActions?.className).not.toContain('absolute')
     expect(within(userActions as HTMLElement).getByText('5m ago')).toBeTruthy()
     expect(within(assistantActions as HTMLElement).getByText('2h ago')).toBeTruthy()
   })

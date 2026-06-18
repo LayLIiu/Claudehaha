@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { Check, ChevronDown, Clock, Folder, FolderOpen, FolderPlus, GitBranch, LoaderCircle, MoreHorizontal, Pin, PinOff, RefreshCw, RotateCcw, SquarePen, X } from 'lucide-react'
+import { Check, ChevronDown, Clock, Copy, Folder, FolderOpen, FolderPlus, GitBranch, LoaderCircle, MoreHorizontal, Pin, PinOff, RefreshCw, RotateCcw, SquarePen, X } from 'lucide-react'
 import { useSessionStore } from '../../stores/sessionStore'
 import { useUIStore } from '../../stores/uiStore'
 import { useTranslation, type TranslationKey } from '../../i18n'
@@ -10,6 +10,7 @@ import type { SessionListItem } from '../../types/session'
 import { useTabStore, SETTINGS_TAB_ID, SCHEDULED_TAB_ID } from '../../stores/tabStore'
 import { useChatStore } from '../../stores/chatStore'
 import { useOpenTargetStore } from '../../stores/openTargetStore'
+import { usePinnedSessionStore } from '../../stores/pinnedSessionStore'
 import { desktopUiPreferencesApi, type SidebarProjectPreferences } from '../../api/desktopUiPreferences'
 import { getDesktopHost } from '../../lib/desktopHost'
 
@@ -73,6 +74,9 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
   const activeTabId = useTabStore((s) => s.activeTabId)
   const tabs = useTabStore((s) => s.tabs)
   const chatSessions = useChatStore((s) => s.sessions)
+  const pinnedSessionIds = usePinnedSessionStore((s) => s.pinnedSessionIds)
+  const togglePinnedSession = usePinnedSessionStore((s) => s.togglePinned)
+  const removePinnedSession = usePinnedSessionStore((s) => s.removePinned)
   const closeTab = useTabStore((s) => s.closeTab)
   const disconnectSession = useChatStore((s) => s.disconnectSession)
   const [contextMenu, setContextMenu] = useState<{ id: string; x: number; y: number } | null>(null)
@@ -85,6 +89,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const [lastSelectedSessionId, setLastSelectedSessionId] = useState<string | null>(null)
+  const [selectedProjectKey, setSelectedProjectKey] = useState<string | null>(null)
   const [expandedProjectKeys, setExpandedProjectKeys] = useState<Set<string>>(new Set())
   const [collapsedProjectKeys, setCollapsedProjectKeys] = useState<Set<string>>(new Set())
   const [projectOrder, setProjectOrder] = useState<string[]>(() => readStoredProjectOrder())
@@ -119,7 +124,11 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
   // Title filtering moved into the global search modal (Cmd+K); the list shows all sessions.
   const filteredSessions = sessions
 
-  const projectGroups = useMemo(() => groupByProject(filteredSessions, projectSortBy), [filteredSessions, projectSortBy])
+  const pinnedSessionIdSet = useMemo(() => new Set(pinnedSessionIds), [pinnedSessionIds])
+  const projectGroups = useMemo(
+    () => groupByProject(filteredSessions, projectSortBy, pinnedSessionIdSet),
+    [filteredSessions, pinnedSessionIdSet, projectSortBy],
+  )
   const orderedProjectGroups = useMemo(
     () => applyProjectOrder(projectGroups, projectOrder, pinnedProjectKeys, projectOrganization, projectSortBy),
     [projectGroups, projectOrder, pinnedProjectKeys, projectOrganization, projectSortBy],
@@ -452,6 +461,52 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
     }
   }, [addToast, t])
 
+  const openPathInFinder = useCallback(async (path: string | null | undefined) => {
+    setContextMenu(null)
+    try {
+      if (!path) {
+        throw new Error(t('sidebar.openInFinderUnavailable'))
+      }
+      const store = useOpenTargetStore.getState()
+      await store.ensureTargets()
+      const latest = useOpenTargetStore.getState()
+      const target = latest.targets.find((item) => item.id === 'finder')
+        ?? latest.targets.find((item) => item.kind === 'file_manager')
+      if (!target) {
+        throw new Error(t('sidebar.openInFinderUnavailable'))
+      }
+      await latest.openTarget(target.id, path)
+    } catch (error) {
+      addToast({
+        type: 'error',
+        message: error instanceof Error ? error.message : t('sidebar.openInFinderFailed'),
+      })
+    }
+  }, [addToast, t])
+
+  const copySidebarValue = useCallback(async (value: string | null | undefined, successMessage: string) => {
+    setContextMenu(null)
+    if (!value) return
+    try {
+      await navigator.clipboard.writeText(value)
+      addToast({ type: 'success', message: successMessage })
+    } catch (error) {
+      addToast({
+        type: 'error',
+        message: error instanceof Error ? error.message : '复制失败',
+      })
+    }
+  }, [addToast])
+
+  const togglePinnedSidebarSession = useCallback((sessionId: string) => {
+    setContextMenu(null)
+    const pinned = togglePinnedSession(sessionId)
+    addToast({
+      type: 'success',
+      message: pinned ? '已置顶对话' : '已取消置顶',
+    })
+  }, [addToast, togglePinnedSession])
+
   const handleDelete = useCallback((id: string) => {
     setContextMenu(null)
     setPendingDeleteSessionId(id)
@@ -460,10 +515,11 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
   const confirmDelete = useCallback(async () => {
     if (!pendingDeleteSessionId) return
     await deleteSession(pendingDeleteSessionId)
+    removePinnedSession(pendingDeleteSessionId)
     disconnectSession(pendingDeleteSessionId)
     closeTab(pendingDeleteSessionId)
     setPendingDeleteSessionId(null)
-  }, [closeTab, deleteSession, disconnectSession, pendingDeleteSessionId])
+  }, [closeTab, deleteSession, disconnectSession, pendingDeleteSessionId, removePinnedSession])
 
   const handleBatchSessionClick = useCallback((event: React.MouseEvent, id: string) => {
     if (event.shiftKey && lastSelectedSessionId) {
@@ -778,6 +834,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                 const hasInternalScroll = sessionsExpanded && project.sessions.length > PROJECT_GROUP_SCROLL_COUNT
                 const isProjectDragging = draggingProjectKey === project.key
                 const isProjectPinned = pinnedProjectKeys.has(project.key)
+                const isProjectActive = selectedProjectKey === project.key
                 const dropBefore = projectDropTarget?.key === project.key && projectDropTarget.position === 'before'
                 const dropAfter = projectDropTarget?.key === project.key && projectDropTarget.position === 'after'
                 return (
@@ -791,20 +848,32 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                         setProjectDropTarget((current) => current?.key === project.key ? null : current)
                       }
                     }}
-                    className={`group/project relative mb-1.5 px-1 transition-opacity ${isProjectDragging ? 'opacity-50' : ''}`}
+                    className={`group/project relative mb-0.5 px-1 transition-opacity ${isProjectDragging ? 'opacity-50' : ''}`}
                   >
                     {dropBefore && (
                       <div className="pointer-events-none absolute -top-1 left-1 right-1 z-10 h-0.5 rounded-full bg-[var(--color-brand)]" />
                     )}
-                    <div className="flex items-center gap-1">
+                    <div
+                      className={`sidebar-project-row flex items-center gap-1 ${isProjectActive ? 'sidebar-project-row--active' : ''}`}
+                      onContextMenu={(event) => {
+                        event.preventDefault()
+                        if (isBatchMode) return
+                        setSelectedProjectKey(project.key)
+                        setContextMenu(null)
+                        setProjectContextMenu({ key: project.key, x: event.clientX, y: event.clientY })
+                      }}
+                    >
                       <button
                         type="button"
                         draggable={!isBatchMode}
                         onDragStart={(event) => handleProjectDragStart(event, project.key)}
                         onDragEnd={clearProjectDragState}
-                        onClick={() => toggleProjectCollapsed(project.key)}
+                        onClick={() => {
+                          setSelectedProjectKey(project.key)
+                          toggleProjectCollapsed(project.key)
+                        }}
                         data-state={projectCollapsed ? 'closed' : 'open'}
-                        className="flex min-w-0 flex-1 cursor-grab items-center gap-2 rounded-[7px] px-2 py-1.5 text-left transition-[background,color,border-color] active:cursor-grabbing hover:bg-[var(--color-sidebar-item-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
+                        className="flex min-w-0 flex-1 cursor-grab items-center gap-2 rounded-[12px] px-0 py-0 text-left transition-[color,border-color] active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
                         aria-expanded={!projectCollapsed}
                         aria-label={t(projectCollapsed ? 'sidebar.expandProject' : 'sidebar.collapseProject', { project: project.title })}
                         title={project.subtitle || project.title}
@@ -853,7 +922,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                           </button>
                         )}
                         {!isBatchMode && (
-                          <div className="pointer-events-none flex items-center gap-0.5 opacity-0 transition-opacity duration-150 group-hover/project:pointer-events-auto group-hover/project:opacity-100 group-focus-within/project:pointer-events-auto group-focus-within/project:opacity-100">
+                          <div className={`flex items-center gap-0.5 transition-opacity duration-150 ${isProjectActive ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0 group-hover/project:pointer-events-auto group-hover/project:opacity-100 group-focus-within/project:pointer-events-auto group-focus-within/project:opacity-100'}`}>
                             <button
                               type="button"
                               onClick={(event) => {
@@ -885,7 +954,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                     </div>
                     <div
                       data-collapse-state={projectCollapsed ? 'closed' : 'open'}
-                      className="mt-0.5 pl-6 sidebar-project-collapse"
+                      className="mt-0 pl-0 sidebar-project-collapse"
                     >
                       <div className="sidebar-project-collapse-inner">
                         <div
@@ -893,7 +962,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                           data-testid={`sidebar-project-session-list-${domSafeProjectKey(project.key)}`}
                         >
                           {visibleItems.map((session) => (
-                            <div key={session.id} className="relative mb-0.5 last:mb-0">
+                            <div key={session.id} className="relative mb-0 last:mb-0">
                               {renamingId === session.id ? (
                                 <input
                                   autoFocus
@@ -916,6 +985,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                       handleBatchSessionClick(event, session.id)
                                       return
                                     }
+                                    setSelectedProjectKey(null)
                                     useTabStore.getState().openTab(session.id, session.title)
                                     useChatStore.getState().connectToSession(session.id)
                                     closeMobileDrawer()
@@ -948,6 +1018,9 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                       </span>
                                     ) : null}
                                     <span className="min-w-0 flex-1 truncate font-medium tracking-normal">{session.title || 'Untitled'}</span>
+                                    {pinnedSessionIdSet.has(session.id) && !isBatchMode && (
+                                      <Pin className="h-3.5 w-3.5 flex-shrink-0 text-[var(--color-text-tertiary)]" strokeWidth={1.8} aria-hidden="true" />
+                                    )}
                                     {!session.workDirExists && (
                                       <span
                                         className="flex-shrink-0 text-[10px] text-[var(--color-warning)]"
@@ -1019,28 +1092,43 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
         </div>
       )}
 
-      {contextMenu && renderSidebarOverlay(
-        <div
-          className="fixed z-[260] min-w-[140px] rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] py-1"
-          style={{ left: contextMenu.x, top: contextMenu.y, boxShadow: 'var(--shadow-dropdown)' }}
-        >
-          <button
-            onClick={() => {
-              const session = sessions.find((s) => s.id === contextMenu.id)
-              handleStartRename(contextMenu.id, session?.title || '')
-            }}
-            className="w-full px-3 py-1.5 text-left text-xs text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-surface-hover)]"
+      {contextMenu && (() => {
+        const session = sessions.find((item) => item.id === contextMenu.id)
+        if (!session) return null
+        const pinned = pinnedSessionIdSet.has(session.id)
+        const sessionPath = session.workDir || session.projectRoot || session.projectPath || null
+        return renderSidebarOverlay(
+          <div
+            role="menu"
+            className="sidebar-codex-menu fixed z-[320] w-[232px] overflow-hidden rounded-[18px] border border-[var(--color-border)] p-1.5 shadow-[var(--shadow-dropdown)]"
+            style={positionSessionMenu(contextMenu.x, contextMenu.y)}
+            onClick={(event) => event.stopPropagation()}
           >
-            {t('common.rename')}
-          </button>
-          <button
-            onClick={() => handleDelete(contextMenu.id)}
-            className="w-full px-3 py-1.5 text-left text-xs text-[var(--color-error)] transition-colors hover:bg-[var(--color-surface-hover)]"
-          >
-            {t('common.delete')}
-          </button>
-        </div>,
-      )}
+            <SidebarMenuItem onClick={() => togglePinnedSidebarSession(session.id)}>
+              {pinned ? '取消置顶对话' : '置顶对话'}
+            </SidebarMenuItem>
+            <SidebarMenuItem onClick={() => handleStartRename(session.id, session.title || '')}>
+              重命名对话
+            </SidebarMenuItem>
+            <SidebarMenuItem onClick={() => handleDelete(session.id)}>
+              归档对话
+            </SidebarMenuItem>
+            <SidebarMenuDivider />
+            <SidebarMenuItem onClick={() => void openPathInFinder(sessionPath)}>
+              在 Finder 中显示
+            </SidebarMenuItem>
+            <SidebarMenuItem onClick={() => void copySidebarValue(sessionPath, '已复制工作目录')}>
+              复制工作目录
+            </SidebarMenuItem>
+            <SidebarMenuItem onClick={() => void copySidebarValue(session.id, '已复制会话 ID')}>
+              复制会话 ID
+            </SidebarMenuItem>
+            <SidebarMenuItem onClick={() => void copySidebarValue(`cc-haha://session/${session.id}`, '已复制深度链接')}>
+              复制深度链接
+            </SidebarMenuItem>
+          </div>,
+        )
+      })()}
 
       {projectContextMenu && (() => {
         const project = orderedProjectGroups.find((group) => group.key === projectContextMenu.key)
@@ -1050,7 +1138,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
         return renderSidebarOverlay(
           <div
             role="menu"
-            className="fixed z-[260] min-w-[230px] overflow-hidden rounded-[18px] border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] py-2 shadow-[var(--shadow-dropdown)]"
+            className="sidebar-codex-menu fixed z-[320] w-[286px] overflow-hidden rounded-[18px] border border-[var(--color-border)] p-1.5 shadow-[var(--shadow-dropdown)]"
             style={positionProjectMenu(projectContextMenu.x, projectContextMenu.y)}
             onClick={(event) => event.stopPropagation()}
           >
@@ -1064,8 +1152,24 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
               icon={<FolderOpen size={18} aria-hidden="true" />}
               onClick={() => void openProjectInFinder(project)}
             >
-              {t('sidebar.openInFinder')}
+              在 Finder 中显示
             </ProjectMenuItem>
+            <ProjectMenuItem
+              icon={<SquarePen size={18} aria-hidden="true" />}
+              onClick={() => {
+                setProjectContextMenu(null)
+                void createSessionForWorkDir(project.workDir)
+              }}
+            >
+              新建对话
+            </ProjectMenuItem>
+            <ProjectMenuItem
+              icon={<Copy size={18} aria-hidden="true" />}
+              onClick={() => void copySidebarValue(project.workDir, '已复制项目目录')}
+            >
+              复制项目目录
+            </ProjectMenuItem>
+            <SidebarMenuDivider />
             <ProjectMenuItem
               icon={hidden ? <RotateCcw size={18} aria-hidden="true" /> : <X size={18} aria-hidden="true" />}
               onClick={() => toggleHiddenProject(project)}
@@ -1404,7 +1508,11 @@ function HeaderMenuItem({
   )
 }
 
-function groupByProject(sessions: SessionListItem[], sortBy: SidebarProjectSortBy): ProjectGroup[] {
+function groupByProject(
+  sessions: SessionListItem[],
+  sortBy: SidebarProjectSortBy,
+  pinnedSessionIds: Set<string>,
+): ProjectGroup[] {
   const groupsByKey = new Map<string, SessionListItem[]>()
   for (const session of sessions) {
     const key = getSessionProjectKey(session)
@@ -1414,7 +1522,12 @@ function groupByProject(sessions: SessionListItem[], sortBy: SidebarProjectSortB
   }
 
   const groups = [...groupsByKey.entries()].map(([key, items]) => {
-    const sortedSessions = [...items].sort((a, b) => compareSessionsByTimestamp(a, b, sortBy))
+    const sortedSessions = [...items].sort((a, b) => {
+      const aPinned = pinnedSessionIds.has(a.id)
+      const bPinned = pinnedSessionIds.has(b.id)
+      if (aPinned !== bPinned) return aPinned ? -1 : 1
+      return compareSessionsByTimestamp(a, b, sortBy)
+    })
     const newest = sortedSessions[0]
     const projectRoot = newest?.projectRoot || newest?.workDir || key
     return {
@@ -1727,12 +1840,50 @@ function domSafeProjectKey(projectKey: string): string {
 
 function positionProjectMenu(clientX: number, clientY: number): React.CSSProperties {
   if (typeof window === 'undefined') return { left: clientX, top: clientY }
-  const width = 230
-  const height = 280
+  const width = 286
+  const height = 300
   return {
     left: Math.max(8, Math.min(clientX, window.innerWidth - width - 8)),
     top: Math.max(8, Math.min(clientY, window.innerHeight - height - 8)),
   }
+}
+
+function positionSessionMenu(clientX: number, clientY: number): React.CSSProperties {
+  if (typeof window === 'undefined') return { left: clientX, top: clientY }
+  const width = 232
+  const height = 350
+  return {
+    left: Math.max(8, Math.min(clientX, window.innerWidth - width - 8)),
+    top: Math.max(8, Math.min(clientY, window.innerHeight - height - 8)),
+  }
+}
+
+function SidebarMenuDivider() {
+  return <div className="sidebar-codex-menu-divider" role="separator" />
+}
+
+function SidebarMenuItem({
+  children,
+  onClick,
+  disabled = false,
+  danger = false,
+}: {
+  children: React.ReactNode
+  onClick?: () => void
+  disabled?: boolean
+  danger?: boolean
+}) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      disabled={disabled}
+      onClick={disabled ? undefined : onClick}
+      className={`sidebar-codex-menu-item ${danger ? 'sidebar-codex-menu-item--danger' : ''}`}
+    >
+      <span className="min-w-0 flex-1 truncate">{children}</span>
+    </button>
+  )
 }
 
 function ProjectMenuItem({
@@ -1754,16 +1905,12 @@ function ProjectMenuItem({
       role="menuitem"
       disabled={disabled}
       onClick={disabled ? undefined : onClick}
-      className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:bg-[var(--color-surface-hover)] disabled:cursor-default disabled:opacity-45 ${
-        danger
-          ? 'text-[var(--color-error)] enabled:hover:bg-[var(--color-error)]/10'
-          : 'text-[var(--color-text-primary)] enabled:hover:bg-[var(--color-surface-hover)]'
-      }`}
+      className={`sidebar-codex-menu-item ${danger ? 'sidebar-codex-menu-item--danger' : ''}`}
     >
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-current">
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[var(--color-text-secondary)]">
         {icon}
       </span>
-      <span className="min-w-0 truncate">{children}</span>
+      <span className="min-w-0 flex-1 truncate">{children}</span>
     </button>
   )
 }

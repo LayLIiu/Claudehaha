@@ -63,6 +63,49 @@ function generateSummary(toolCalls: ToolCall[], t: (key: TranslationKey, params?
   return parts.join(', ')
 }
 
+/** Generate a live title showing what's currently being executed (e.g. "npm test" / "src/app.tsx") */
+function generateActiveTitle(toolCalls: ToolCall[], resultMap: Map<string, ToolResult>): string {
+  const activeParts: string[] = []
+  for (const tc of toolCalls) {
+    if (resultMap.has(tc.toolUseId)) continue
+    const obj = tc.input && typeof tc.input === 'object' ? (tc.input as Record<string, unknown>) : {}
+    switch (tc.toolName) {
+      case 'Bash': {
+        const cmd = typeof obj.command === 'string' ? obj.command : ''
+        if (cmd) activeParts.push(cmd)
+        break
+      }
+      case 'Write':
+      case 'Edit':
+      case 'Read': {
+        const fp = typeof obj.file_path === 'string' ? obj.file_path.split('/').pop() : ''
+        if (fp) activeParts.push(fp)
+        break
+      }
+      case 'Glob': {
+        const pat = typeof obj.pattern === 'string' ? obj.pattern : ''
+        if (pat) activeParts.push(pat)
+        break
+      }
+      case 'Grep': {
+        const pat = typeof obj.pattern === 'string' ? obj.pattern : ''
+        if (pat) activeParts.push(pat)
+        break
+      }
+      case 'Agent': {
+        const desc = typeof obj.description === 'string' ? obj.description : ''
+        if (desc) activeParts.push(desc)
+        break
+      }
+      default:
+        activeParts.push(tc.toolName)
+    }
+  }
+  if (activeParts.length === 0) return ''
+  const display = activeParts.slice(0, 3).join(', ')
+  return activeParts.length > 3 ? `${display} ...` : display
+}
+
 function toolCallHasError(
   toolCall: ToolCall,
   resultMap: Map<string, ToolResult>,
@@ -183,18 +226,6 @@ function ToolCallGroupContent({
     )
   }
 
-  // Single tool call — render directly without group wrapper
-  if (toolCalls.length === 1) {
-    const tc = toolCalls[0]!
-    return (
-      <ToolCallTree
-        toolCall={tc}
-        resultMap={resultMap}
-        childToolCallsByParent={childToolCallsByParent}
-      />
-    )
-  }
-
   return (
     <ToolCallGroupMulti
       toolCalls={toolCalls}
@@ -233,7 +264,7 @@ function MemoryToolActivityGroup({
   }, [isStreaming])
 
   return (
-    <div className="mb-2">
+    <div className="mb-[3px]">
       <div
         data-testid="memory-tool-activity-card"
         className="overflow-hidden rounded-[16px] border border-[var(--color-memory-border)] bg-[var(--color-memory-surface)]"
@@ -241,7 +272,7 @@ function MemoryToolActivityGroup({
         <button
           type="button"
           onClick={() => setExpanded((value) => !value)}
-          className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-[var(--color-surface-hover)]/50"
+          className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors"
         >
           {expanded ? (
             <ChevronDown size={15} className="shrink-0 text-[var(--color-text-tertiary)]" aria-hidden="true" />
@@ -266,7 +297,7 @@ function MemoryToolActivityGroup({
                   type="button"
                   title={file.path}
                   onClick={() => openMemorySettings(file.path)}
-                  className="group flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-[var(--color-surface-hover)] focus:outline-none focus-visible:shadow-[var(--shadow-focus-ring)]"
+                  className="group flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left transition-colors focus:outline-none focus-visible:shadow-[var(--shadow-focus-ring)]"
                 >
                   <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border border-[var(--color-memory-border)] bg-[var(--color-memory-icon-bg)] text-[var(--color-text-tertiary)] group-hover:text-[var(--color-memory-accent)]">
                     <Settings size={12} aria-hidden="true" />
@@ -300,7 +331,7 @@ function MemoryToolActivityGroup({
             <button
               type="button"
               onClick={() => setDetailsExpanded((value) => !value)}
-              className="mt-2 inline-flex h-7 items-center gap-1.5 rounded-md border border-[var(--color-border)] px-2 text-[11px] font-medium text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
+              className="mt-2 inline-flex h-7 items-center gap-1.5 rounded-md border border-[var(--color-border)] px-2 text-[11px] font-medium text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-text-primary)]"
             >
               {detailsExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
               {t('chat.memoryTechnicalDetails')}
@@ -333,7 +364,7 @@ function AgentToolGroup({
   agentTaskNotifications,
   isStreaming,
 }: Props) {
-  const [expanded, setExpanded] = useState(true)
+  const [expanded, setExpanded] = useState(false)
   const t = useTranslation()
   const statuses = toolCalls.map((toolCall) =>
     getAgentStatus({
@@ -350,24 +381,20 @@ function AgentToolGroup({
   const allComplete = statuses.every((status) => status === 'done')
   const anyStopped = statuses.some((status) => status === 'stopped')
 
-  useEffect(() => {
-    if (isStreaming) {
-      setExpanded(true)
-    }
-  }, [isStreaming])
-
   return (
-    <div className="mb-2">
+    <div className="mb-[3px]">
       <button
         type="button"
         onClick={() => setExpanded((value) => !value)}
-        className="flex w-full items-center gap-2 rounded-[14px] border border-[var(--color-border)]/40 bg-[var(--color-surface-container-low)]/80 px-3 py-2 text-left transition-colors hover:bg-[var(--color-surface-container-high)]/72"
+        className="flex w-full items-center gap-2 rounded-[14px] border border-[var(--color-border)]/40 bg-[var(--color-surface-container-low)]/80 px-3 py-2 text-left transition-colors"
       >
         <span className="material-symbols-outlined text-[14px] text-[var(--color-outline)]">
           {expanded ? 'expand_less' : 'expand_more'}
         </span>
         <span className="flex-1 truncate text-[12px] text-[var(--color-text-secondary)]">
-          {toolCalls.length === 1 ? t('toolGroup.agentOne') : t('toolGroup.agentMany', { count: toolCalls.length })}
+{isAnyRunning
+            ? generateActiveTitle(toolCalls, resultMap) || (toolCalls.length === 1 ? t('toolGroup.agentOne') : t('toolGroup.agentMany', { count: toolCalls.length }))
+            : (toolCalls.length === 1 ? t('toolGroup.agentOne') : t('toolGroup.agentMany', { count: toolCalls.length }))}
         </span>
         {isAnyRunning && (
           <span className="rounded-full bg-[var(--color-warning)]/12 px-2 py-0.5 text-[10px] font-semibold text-[var(--color-warning)]">
@@ -431,11 +458,11 @@ function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isSt
   }, [hasNestedToolCalls, isRunning])
 
   return (
-    <div className="mb-2">
+    <div className="mb-[3px]">
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="flex w-full items-center gap-2 rounded-[14px] border border-[var(--color-border)]/40 bg-[var(--color-surface-container-low)]/80 px-3 py-2 text-left transition-colors hover:bg-[var(--color-surface-container-high)]/72"
+        className="flex w-full items-center gap-2 rounded-[9px] px-2 py-1.5 text-left transition-colors"
       >
         <span className="material-symbols-outlined text-[14px] text-[var(--color-outline)]">
           {expanded ? 'expand_less' : 'expand_more'}
@@ -455,7 +482,7 @@ function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isSt
       </button>
 
       {expanded && (
-        <div className="mt-1.5 space-y-1">
+        <div className="ml-3 mt-1 space-y-1 border-l border-[var(--color-border)]/38 pl-3">
           {toolCalls.map((tc) => {
             return (
               <ToolCallTree
@@ -526,7 +553,7 @@ function AgentCallCard({
 
   return (
     <div className="overflow-hidden rounded-[14px] border border-[var(--color-border)]/50 bg-[var(--color-surface-container-low)]/76 backdrop-blur-[10px]">
-      <div className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--color-surface-hover)]/50">
+      <div className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors">
         <span className="material-symbols-outlined text-[18px] text-[var(--color-outline)]">smart_toy</span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -567,7 +594,7 @@ function AgentCallCard({
               event.stopPropagation()
               setPreviewOpen(true)
             }}
-            className="shrink-0 rounded-md border border-[var(--color-border)] px-2.5 py-1 text-[11px] font-medium text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
+            className="shrink-0 rounded-md border border-[var(--color-border)] px-2.5 py-1 text-[11px] font-medium text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-text-primary)]"
           >
             {t('agentStatus.viewResult')}
           </button>
@@ -578,7 +605,7 @@ function AgentCallCard({
         <button
           type="button"
           onClick={() => setExpanded((value) => !value)}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[var(--color-outline)] transition-colors hover:bg-[var(--color-surface-hover)]"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[var(--color-outline)] transition-colors"
           aria-label={expanded ? 'Collapse agent' : 'Expand agent'}
         >
           <span className="material-symbols-outlined text-[16px]">
@@ -646,7 +673,7 @@ function ToolCallTree({
   const childToolCalls = childToolCallsByParent.get(toolCall.toolUseId) ?? []
 
   return (
-    <div className={compact ? 'space-y-1' : ''}>
+    <div className={compact ? 'space-y-0.5' : ''}>
       <ToolCallBlock
         toolName={toolCall.toolName}
         input={toolCall.input}
@@ -657,7 +684,7 @@ function ToolCallTree({
         partialInput={toolCall.partialInput}
       />
       {childToolCalls.length > 0 && (
-        <div className={compact ? 'ml-4 border-l border-[var(--color-border)]/60 pl-3' : 'mb-2 ml-16 border-l border-[var(--color-border)]/60 pl-3'}>
+        <div className={compact ? 'ml-3 border-l border-[var(--color-border)]/38 pl-3' : 'mb-1.5 ml-6 border-l border-[var(--color-border)]/38 pl-3'}>
           <div className="space-y-1">
             {childToolCalls.map((childToolCall) => (
               <ToolCallTree

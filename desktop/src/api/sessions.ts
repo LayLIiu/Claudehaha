@@ -96,6 +96,7 @@ export type SessionRewindResponse = {
     filesChanged: string[]
     insertions: number
     deletions: number
+    fileStats?: Array<{ path: string; insertions: number; deletions: number }>
   }
 }
 

@@ -241,7 +241,6 @@ export function ContextUsageIndicator({
       ? `conic-gradient(${strokeColor} ${percentage * 3.6}deg, var(--color-surface-container-high) 0deg)`
       : 'var(--color-surface-container-high)',
   }
-  const displayPercent = displayContext ? formatPercent(percentage) : '--'
   const displayModel = firstNonEmpty(context?.model, inspectionModel, fallbackModelLabel)
   const ariaLabel = displayContext
     ? t('contextIndicator.ariaLabel', { percent: formatPercent(percentage) })
@@ -264,32 +263,23 @@ export function ContextUsageIndicator({
         }}
         title={t('contextIndicator.title')}
         data-testid="context-usage-indicator"
-        className={`flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface-container)] text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-focus)] hover:bg-[var(--color-surface-container-high)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-container-lowest)] ${
-          compact ? 'px-2' : 'px-2.5'
-        }`}
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-transparent text-[var(--color-text-secondary)] transition-colors hover:bg-white/[0.055] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
       >
         <span className="relative grid h-[18px] w-[18px] shrink-0 place-items-center rounded-full">
           {loading && !displayContext ? (
             <span className="absolute inset-[2px] rounded-full border-2 border-[var(--color-text-tertiary)] border-t-transparent motion-safe:animate-spin" />
           ) : (
             <span
-              className="relative grid h-[18px] w-[18px] place-items-center rounded-full"
+              className="relative grid h-[18px] w-[18px] place-items-center rounded-full opacity-90"
               style={ringStyle}
             >
-              <span className="absolute inset-[3px] rounded-full bg-[var(--color-surface-container-lowest)]" />
-              <span
-                className="relative h-[5px] w-[5px] rounded-full"
-                style={{ backgroundColor: displayContext ? strokeColor : 'var(--color-text-tertiary)' }}
-              />
+              <span className="absolute inset-[4px] rounded-full bg-[var(--color-surface-glass)]" />
             </span>
           )}
         </span>
-        <span className="font-mono text-[11px] font-semibold tabular-nums">
-          {displayPercent}
-        </span>
       </button>
 
-      <div className={`pointer-events-none absolute bottom-full right-0 z-40 mb-2 w-[320px] max-w-[calc(100vw-2rem)] translate-y-1 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] p-4 text-left opacity-0 shadow-[var(--shadow-dropdown)] transition-all duration-150 group-hover/context:translate-y-0 group-hover/context:opacity-100 group-focus-within/context:translate-y-0 group-focus-within/context:opacity-100 ${
+      <div className={`sidebar-codex-menu pointer-events-none absolute bottom-full right-0 z-40 mb-2 w-[320px] max-w-[calc(100vw-2rem)] translate-y-1 rounded-[18px] border border-[var(--color-border)] p-3 text-left opacity-0 shadow-[var(--shadow-dropdown)] transition-all duration-150 group-hover/context:translate-y-0 group-hover/context:opacity-100 group-focus-within/context:translate-y-0 group-focus-within/context:opacity-100 ${
         compact ? 'hidden' : ''
       }`}>
         <div className="flex items-start justify-between gap-3">
@@ -308,7 +298,7 @@ export function ContextUsageIndicator({
 
         {displayContext ? (
           <>
-            <div className="mt-4 grid grid-cols-2 gap-3 font-mono text-xs">
+            <div className="mt-3 grid grid-cols-2 gap-2.5 font-mono text-xs">
               <div>
                 <div className="text-[var(--color-text-tertiary)]">{t('contextIndicator.used')}</div>
                 <div className="mt-1 text-[var(--color-text-primary)]">{formatNumber(usedTokens)}</div>
@@ -323,7 +313,7 @@ export function ContextUsageIndicator({
               </div>
             </div>
             {details.length > 0 && (
-              <div className="mt-4 space-y-2">
+              <div className="mt-3 space-y-2">
                 {details.map((category) => {
                   const percent = maxTokens > 0 ? Math.max(0.5, Math.min(100, (category.tokens / maxTokens) * 100)) : 0
                   return (
@@ -340,7 +330,7 @@ export function ContextUsageIndicator({
                 })}
               </div>
             )}
-            <div className="mt-4 text-[11px] text-[var(--color-text-tertiary)]">
+            <div className="mt-3 text-[11px] text-[var(--color-text-tertiary)]">
               {formatUpdatedAt(updatedAt, t)}
               {contextSource === 'estimate' && (
                 <span className="ml-2 inline-flex rounded-full border border-[var(--color-border)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em]">
@@ -419,7 +409,7 @@ export function ContextUsageIndicator({
                   })}
                 </div>
               )}
-              <div className="mt-4 text-[11px] text-[var(--color-text-tertiary)]">
+              <div className="mt-3 text-[11px] text-[var(--color-text-tertiary)]">
                 {formatUpdatedAt(updatedAt, t)}
               </div>
             </div>

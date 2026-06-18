@@ -3886,6 +3886,7 @@ describe('Sessions API', () => {
           filesChanged: string[]
           insertions: number
           deletions: number
+          fileStats: Array<{ path: string; insertions: number; deletions: number }>
         }
         workDir: string
       }>
@@ -3905,6 +3906,7 @@ describe('Sessions API', () => {
           filesChanged: [fixture.stepFile],
           insertions: 1,
           deletions: 1,
+          fileStats: [{ path: fixture.stepFile, insertions: 1, deletions: 1 }],
         },
         workDir: fixture.workDir,
       },
@@ -3920,6 +3922,7 @@ describe('Sessions API', () => {
           filesChanged: [fixture.stepFile],
           insertions: 1,
           deletions: 1,
+          fileStats: [{ path: fixture.stepFile, insertions: 1, deletions: 1 }],
         },
         workDir: fixture.workDir,
       },
@@ -3935,6 +3938,10 @@ describe('Sessions API', () => {
           filesChanged: [fixture.stepFile, fixture.createdFile],
           insertions: 2,
           deletions: 1,
+          fileStats: [
+            { path: fixture.stepFile, insertions: 1, deletions: 1 },
+            { path: fixture.createdFile, insertions: 1, deletions: 0 },
+          ],
         },
         workDir: fixture.workDir,
       },
@@ -4035,6 +4042,7 @@ describe('Sessions API', () => {
           filesChanged: string[]
           insertions: number
           deletions: number
+          fileStats: Array<{ path: string; insertions: number; deletions: number }>
         }
         workDir: string
       }>
@@ -4050,6 +4058,10 @@ describe('Sessions API', () => {
     ].sort())
     expect(body.checkpoints[0]!.code.insertions).toBe(5)
     expect(body.checkpoints[0]!.code.deletions).toBe(0)
+    expect(body.checkpoints[0]!.code.fileStats.sort((a, b) => a.path.localeCompare(b.path))).toEqual([
+      { path: path.join(workDir, 'todo-app', 'src', 'App.tsx'), insertions: 3, deletions: 0 },
+      { path: path.join(workDir, 'todo-app', 'vite.config.ts'), insertions: 2, deletions: 0 },
+    ].sort((a, b) => a.path.localeCompare(b.path)))
   })
 
   it('GET /api/sessions/:id/turn-checkpoints/diff should return transcript tool diffs when file snapshots are missing', async () => {

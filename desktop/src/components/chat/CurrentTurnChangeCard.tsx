@@ -1,16 +1,11 @@
 import { useCallback, useMemo, useState } from 'react'
-import type { MouseEvent as ReactMouseEvent } from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, FileDiff, RotateCcw } from 'lucide-react'
 import type { SessionTurnCheckpoint } from '../../api/sessions'
-import { useTranslation, type TranslationKey } from '../../i18n'
-import { OpenWithMenu } from '../common/OpenWithMenu'
-import { buildOpenWithItems, describeFileType, isPreviewableChangedFile, type OpenWithItem } from '../../lib/openWithItems'
-import { openWithContextForWorkspaceFile } from '../../lib/openWithContextForHref'
+import { useTranslation } from '../../i18n'
+import { isPreviewableChangedFile } from '../../lib/openWithItems'
 import { isAbsoluteLocalPath, localFileUrl } from '../../lib/handlePreviewLink'
 import { shouldOfferStaticHtmlPreview } from '../../lib/htmlPreviewPolicy'
 import { getServerBaseUrl } from '../../lib/desktopRuntime'
-import { getDesktopHost } from '../../lib/desktopHost'
-import { useOpenTargetStore } from '../../stores/openTargetStore'
 import { useBrowserPanelStore } from '../../stores/browserPanelStore'
 import { useWorkspacePanelStore } from '../../stores/workspacePanelStore'
 
@@ -27,6 +22,8 @@ type CurrentTurnChangeCardProps = {
 type ChangedFileEntry = {
   apiPath: string
   displayPath: string
+  insertions: number | null
+  deletions: number | null
 }
 
 const COLLAPSED_COUNT = 5
@@ -41,17 +38,38 @@ export function CurrentTurnChangeCard({
   onUndo,
 }: CurrentTurnChangeCardProps) {
   const t = useTranslation()
-  const [openWith, setOpenWith] = useState<{ items: OpenWithItem[]; anchor: DOMRect; triggerEl: HTMLElement } | null>(null)
   const [showAllFiles, setShowAllFiles] = useState(false)
+
+  const fileStatsByPath = useMemo(() => {
+    const stats = new Map<string, { insertions: number; deletions: number }>()
+    for (const item of checkpoint.code.fileStats ?? []) {
+      stats.set(normalizeStatsPath(item.path), {
+        insertions: item.insertions,
+        deletions: item.deletions,
+      })
+      stats.set(normalizeStatsPath(relativizeWorkspacePath(item.path, workDir)), {
+        insertions: item.insertions,
+        deletions: item.deletions,
+      })
+    }
+    return stats
+  }, [checkpoint.code.fileStats, workDir])
 
   const files = useMemo<ChangedFileEntry[]>(
     () => checkpoint.code.filesChanged
-      .map((filePath) => ({
-        apiPath: filePath,
-        displayPath: relativizeWorkspacePath(filePath, workDir),
-      }))
+      .map((filePath) => {
+        const displayPath = relativizeWorkspacePath(filePath, workDir)
+        const stats = fileStatsByPath.get(normalizeStatsPath(filePath))
+          ?? fileStatsByPath.get(normalizeStatsPath(displayPath))
+        return {
+          apiPath: filePath,
+          displayPath,
+          insertions: stats?.insertions ?? null,
+          deletions: stats?.deletions ?? null,
+        }
+      })
       .sort((a, b) => Number(isPreviewableChangedFile(b.displayPath)) - Number(isPreviewableChangedFile(a.displayPath))),
-    [checkpoint.code.filesChanged, workDir],
+    [checkpoint.code.filesChanged, fileStatsByPath, workDir],
   )
 
   const canCollapse = files.length > COLLAPSED_COUNT
@@ -78,121 +96,82 @@ export function CurrentTurnChangeCard({
     void useWorkspacePanelStore.getState().openPreview(sessionId, fileEntry.displayPath, 'diff')
   }, [sessionId, files])
 
-  const handleOpenWith = useCallback((event: ReactMouseEvent<HTMLButtonElement>, fileEntry: ChangedFileEntry) => {
-    event.stopPropagation()
-    // Toggle: if the menu is already open, a second click on the trigger closes it
-    // (the OpenWithMenu's outside-mousedown handler excludes the trigger, so its
-    //  own click is the only thing that can close it on re-click).
-    if (openWith) {
-      setOpenWith(null)
-      return
-    }
-    const triggerEl = event.currentTarget
-    const rect = triggerEl.getBoundingClientRect()
-    void (async () => {
-      await useOpenTargetStore.getState().ensureTargets()
-      const targets = useOpenTargetStore.getState().targets
-      const ctx = openWithContextForWorkspaceFile(fileEntry.displayPath, fileEntry.apiPath, {
-        sessionId,
-        serverBaseUrl: getServerBaseUrl(),
-        siblingFiles: files.map((entry) => entry.displayPath),
-      })
-      const items = buildOpenWithItems(ctx, targets, {
-        openInAppBrowser: (url) => useBrowserPanelStore.getState().open(sessionId, url),
-        openSystem: (p) => { void getDesktopHost().shell.openPath(p).catch(() => {}) },
-        openWorkspacePreview: (rel) => { void useWorkspacePanelStore.getState().openPreview(sessionId, rel, 'file') },
-        openTarget: (id, abs) => { void useOpenTargetStore.getState().openTarget(id, abs) },
-        t: (k, v) => t(k as TranslationKey, v),
-      })
-      setOpenWith({ items, anchor: rect, triggerEl })
-    })()
-  }, [openWith, sessionId, t, files])
-
   const cardLabel = isLatest
     ? t('chat.turnChangesLatestCardLabel')
     : t('chat.turnChangesHistoricalCardLabel')
-  const subtitle = isLatest
-    ? t('chat.turnChangesLatestSubtitle')
-    : t('chat.turnChangesHistoricalSubtitle')
-  const undoLabel = isLatest
-    ? t('chat.turnChangesLatestUndo')
-    : t('chat.turnChangesHistoricalUndo')
   const undoAria = isLatest
     ? t('chat.turnChangesLatestUndoAria')
     : t('chat.turnChangesHistoricalUndoAria')
 
+  const handleReview = useCallback(() => {
+    const firstFile = files[0]
+    if (firstFile) openChangedFile(firstFile)
+  }, [files, openChangedFile])
+
   return (
     <section
-      className="mx-auto mb-5 w-full max-w-[860px] overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm"
+      className="mx-auto mb-4 w-full max-w-[860px] overflow-hidden rounded-[16px] border border-white/12 bg-[#171717] shadow-[0_8px_24px_rgba(0,0,0,0.16)]"
       aria-label={cardLabel}
     >
-      <div className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-4 py-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-baseline gap-2">
-            <span className="text-sm font-semibold text-[var(--color-text-primary)]">
-              {t('chat.turnChangesTitle', { count: files.length })}
-            </span>
-            <span className="font-mono text-sm font-semibold text-[var(--color-success)]">
-              +{checkpoint.code.insertions}
-            </span>
-            <span className="font-mono text-sm font-semibold text-[var(--color-error)]">
-              -{checkpoint.code.deletions}
-            </span>
+      <div className="flex min-h-[74px] items-center justify-between gap-3 border-b border-white/12 px-4 py-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[13px] bg-black/35 text-[var(--color-text-secondary)] shadow-inner shadow-white/[0.03] ring-1 ring-white/[0.04]">
+            <FileDiff size={20} strokeWidth={2.2} />
           </div>
-          <div className="mt-0.5 text-xs text-[var(--color-text-tertiary)]">
-            {subtitle}
+          <div className="min-w-0">
+            <div className="truncate text-[16px] font-semibold leading-5 tracking-[-0.02em] text-[var(--color-text-primary)]">
+              {t('chat.turnChangesTitle', { count: files.length })}
+            </div>
+            <div className="mt-0.5 flex items-center gap-1.5 font-mono text-[14px] font-medium leading-5">
+              <span className="text-[#2fd47e]">+{checkpoint.code.insertions}</span>
+              <span className="text-[#ff5a57]">-{checkpoint.code.deletions}</span>
+            </div>
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={onUndo}
-          disabled={isUndoing}
-          aria-label={undoAria}
-          className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-xs font-medium text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-brand)]/40 hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <span className="material-symbols-outlined text-[15px]">undo</span>
-          {isUndoing ? t('chat.turnChangesUndoing') : undoLabel}
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={onUndo}
+            disabled={isUndoing}
+            aria-label={undoAria}
+            className="inline-flex h-8 items-center gap-1.5 rounded-[10px] px-2 text-[14px] font-semibold text-[var(--color-text-primary)] transition-colors hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isUndoing ? t('chat.turnChangesUndoing') : t('chat.turnChangesUndo')}
+            <RotateCcw size={16} strokeWidth={2.2} />
+          </button>
+          <button
+            type="button"
+            onClick={handleReview}
+            disabled={files.length === 0}
+            className="inline-flex h-9 items-center rounded-[11px] border border-white/12 bg-white/[0.035] px-3 text-[14px] font-semibold text-[var(--color-text-primary)] transition-colors hover:border-white/20 hover:bg-white/[0.065] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {t('chat.turnChangesReview')}
+          </button>
+        </div>
       </div>
 
-      <div className="divide-y divide-[var(--color-border)]">
-        {visibleFiles.map((fileEntry) => {
-          const fileName = fileEntry.displayPath.split('/').pop() || fileEntry.displayPath
-          const typeInfo = describeFileType(fileEntry.displayPath)
-          const previewable = isPreviewableChangedFile(fileEntry.displayPath)
-          return (
-            <div key={fileEntry.apiPath} className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => openChangedFile(fileEntry)}
-                aria-label={t('chat.turnChangesOpenInWorkspaceAria', { path: fileEntry.displayPath })}
-                title={fileEntry.displayPath}
-                className="flex min-h-[52px] min-w-0 flex-1 items-center gap-3 rounded-[var(--radius-md)] px-4 text-left transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-brand)]/35"
-              >
-                <span className="material-symbols-outlined shrink-0 text-[22px] text-[var(--color-text-tertiary)]">{typeInfo.icon}</span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium text-[var(--color-text-primary)]">{fileName}</span>
-                  <span className="block truncate text-xs text-[var(--color-text-tertiary)]">{`${t(typeInfo.categoryKey as Parameters<typeof t>[0])} · ${typeInfo.ext}`}</span>
-                </span>
-                {!previewable && (
-                  <span className="material-symbols-outlined shrink-0 text-[18px] text-[var(--color-text-tertiary)]">chevron_right</span>
-                )}
-              </button>
-              {previewable && (
-                <button
-                  type="button"
-                  aria-label={t('openWith.title')}
-                  onClick={(event) => handleOpenWith(event, fileEntry)}
-                  className="mr-2 inline-flex h-8 shrink-0 items-center gap-1 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 text-xs font-medium text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
-                >
-                  {t('openWith.title')}
-                  <ChevronDown size={14} strokeWidth={1.9} />
-                </button>
-              )}
-            </div>
-          )
-        })}
+      <div className="divide-y divide-white/[0.055]">
+        {visibleFiles.map((fileEntry) => (
+          <button
+            key={fileEntry.apiPath}
+            type="button"
+            onClick={() => openChangedFile(fileEntry)}
+            aria-label={t('chat.turnChangesOpenInWorkspaceAria', { path: fileEntry.displayPath })}
+            title={fileEntry.displayPath}
+            className="flex min-h-[46px] w-full min-w-0 items-center justify-between gap-4 px-4 text-left transition-colors hover:bg-white/[0.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-brand)]/35"
+          >
+            <span className="min-w-0 flex-1 truncate text-[15px] font-normal leading-5 tracking-[-0.01em] text-[var(--color-text-primary)]">
+              {fileEntry.displayPath}
+            </span>
+            {fileEntry.insertions !== null || fileEntry.deletions !== null ? (
+              <span className="flex shrink-0 items-baseline gap-1.5 font-mono text-[15px] font-medium leading-5">
+                <span className="text-[#2fd47e]">+{fileEntry.insertions ?? 0}</span>
+                <span className="text-[#ff5a57]">-{fileEntry.deletions ?? 0}</span>
+              </span>
+            ) : null}
+          </button>
+        ))}
       </div>
 
       {canCollapse && (
@@ -220,8 +199,6 @@ export function CurrentTurnChangeCard({
           {error}
         </div>
       )}
-
-      {openWith && <OpenWithMenu items={openWith.items} anchor={openWith.anchor} triggerEl={openWith.triggerEl} onClose={() => setOpenWith(null)} />}
     </section>
   )
 }
@@ -239,4 +216,8 @@ export function relativizeWorkspacePath(filePath: string, workDir: string | null
     return normalizedPath.slice(normalizedWorkDir.length + 1)
   }
   return normalizedPath
+}
+
+function normalizeStatsPath(filePath: string): string {
+  return filePath.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase()
 }

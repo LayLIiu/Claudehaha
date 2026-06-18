@@ -1167,7 +1167,7 @@ export const zh: Record<TranslationKey, string> = {
   'repoLaunch.checkedOutWarning': '选中的分支已在其他工作树中检出。直接启动可能会被 Git 阻止；使用“独立工作树”可以避免切换当前目录。',
 
   // ─── Chat Input ──────────────────────────────────────
-  'chat.placeholder': '让 Claude 编辑、调试或解释代码...',
+  'chat.placeholder': '要求后续变更',
   'chat.placeholderMissing': '此会话指向的工作目录缺失。请新建会话或选择其他项目。',
   'chat.addFiles': '添加文件或图片',
   'chat.dropFilesTitle': '松手添加文件',
@@ -1344,7 +1344,9 @@ export const zh: Record<TranslationKey, string> = {
   'chat.memoryTechnicalDetails': '工具详情',
   'chat.rewindSuccessWithCode': '已回滚 {count} 条消息，并恢复相关文件。',
   'chat.rewindSuccessConversationOnly': '已回滚 {count} 条消息。这一轮没有可用的文件检查点。',
-  'chat.turnChangesTitle': '{count} 个文件已更改',
+  'chat.turnChangesTitle': '已编辑 {count} 个文件',
+  'chat.turnChangesUndo': '撤销',
+  'chat.turnChangesReview': '审核',
   'chat.turnChangesLatestCardLabel': '轮次已更改文件',
   'chat.turnChangesHistoricalCardLabel': '轮次已更改文件',
   'chat.turnChangesLatestSubtitle': '当前轮次检查点',

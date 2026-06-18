@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ComponentType, type CSSProperties } from 'react'
+import { Check, Copy } from 'lucide-react'
 import { Highlight, type PrismTheme } from 'prism-react-renderer'
 import { CopyButton } from '../shared/CopyButton'
 
@@ -12,60 +13,42 @@ type Props = {
 
 const warmPrismTheme: PrismTheme = {
   plain: {
-    color: 'var(--color-code-fg)',
+    color: '#f2f2f2',
     backgroundColor: 'transparent',
   },
   styles: [
-    { types: ['comment', 'prolog', 'doctype', 'cdata'], style: { color: 'var(--color-code-comment)', fontStyle: 'italic' as const } },
-    { types: ['string', 'attr-value', 'template-string'], style: { color: 'var(--color-code-string)' } },
-    { types: ['keyword', 'selector', 'important', 'atrule'], style: { color: 'var(--color-code-keyword)' } },
-    { types: ['function'], style: { color: 'var(--color-code-function)' } },
-    { types: ['tag'], style: { color: 'var(--color-code-keyword)' } },
-    { types: ['number', 'boolean'], style: { color: 'var(--color-code-number)' } },
-    { types: ['operator'], style: { color: 'var(--color-code-fg)' } },
-    { types: ['punctuation'], style: { color: 'var(--color-code-punctuation)' } },
-    { types: ['variable', 'parameter'], style: { color: 'var(--color-code-fg)' } },
-    { types: ['property', 'attr-name'], style: { color: 'var(--color-code-property)' } },
-    { types: ['builtin', 'class-name', 'constant', 'symbol'], style: { color: 'var(--color-code-type)' } },
-    { types: ['regex'], style: { color: 'var(--color-primary-container)' } },
-    { types: ['inserted'], style: { color: 'var(--color-code-inserted)' } },
-    { types: ['deleted'], style: { color: 'var(--color-code-deleted)' } },
+    { types: ['comment', 'prolog', 'doctype', 'cdata'], style: { color: '#a6a6a6', fontStyle: 'italic' as const } },
+    { types: ['builtin'], style: { color: '#ff9f0a' } },
+    { types: ['keyword', 'selector', 'important', 'atrule'], style: { color: '#ff9f0a' } },
+    { types: ['string', 'attr-value', 'template-string'], style: { color: '#f2f2f2' } },
+    { types: ['function', 'tag', 'number', 'boolean', 'operator', 'punctuation', 'variable', 'parameter', 'property', 'attr-name', 'class-name', 'constant', 'symbol'], style: { color: '#f2f2f2' } },
+    { types: ['regex'], style: { color: '#f2f2f2' } },
+    { types: ['inserted'], style: { color: '#30d158' } },
+    { types: ['deleted'], style: { color: '#ff6961' } },
   ],
 }
 
 const warmShikiTheme = {
   name: 'warm-code',
   type: 'dark' as const,
-  fg: 'var(--color-code-fg)',
+  fg: '#f2f2f2',
   bg: 'transparent',
   tokenColors: [
-    { scope: ['comment', 'punctuation.definition.comment'], settings: { foreground: 'var(--color-code-comment)', fontStyle: 'italic' } },
-    { scope: ['string', 'string.quoted', 'string.template', 'string.other.link'], settings: { foreground: 'var(--color-code-string)' } },
-    { scope: ['string.regexp'], settings: { foreground: 'var(--color-primary-container)' } },
-    { scope: ['keyword', 'keyword.control', 'storage', 'storage.type', 'storage.modifier'], settings: { foreground: 'var(--color-code-keyword)' } },
-    { scope: ['keyword.operator'], settings: { foreground: 'var(--color-code-keyword)' } },
-    { scope: ['entity.name.function', 'support.function'], settings: { foreground: 'var(--color-code-function)' } },
-    { scope: ['entity.name.type', 'support.type', 'support.class', 'entity.name.class', 'entity.other.inherited-class'], settings: { foreground: 'var(--color-code-type)' } },
-    { scope: ['entity.name.type.parameter'], settings: { foreground: 'var(--color-code-number)' } },
-    { scope: ['variable', 'variable.other', 'variable.other.readwrite'], settings: { foreground: 'var(--color-code-fg)' } },
-    { scope: ['variable.parameter'], settings: { foreground: 'var(--color-code-parameter)' } },
-    { scope: ['variable.other.property', 'support.type.property-name', 'meta.object-literal.key'], settings: { foreground: 'var(--color-code-property)' } },
-    { scope: ['variable.other.constant', 'variable.other.enummember'], settings: { foreground: 'var(--color-code-type)' } },
-    { scope: ['constant.numeric', 'constant.language'], settings: { foreground: 'var(--color-code-number)' } },
-    { scope: ['punctuation', 'meta.brace', 'meta.bracket'], settings: { foreground: 'var(--color-code-punctuation)' } },
-    { scope: ['entity.name.tag', 'punctuation.definition.tag'], settings: { foreground: 'var(--color-code-keyword)' } },
-    { scope: ['entity.other.attribute-name'], settings: { foreground: 'var(--color-code-property)' } },
-    { scope: ['meta.decorator', 'punctuation.decorator'], settings: { foreground: 'var(--color-code-type)' } },
-    { scope: ['markup.inserted', 'punctuation.definition.inserted'], settings: { foreground: 'var(--color-code-inserted)' } },
-    { scope: ['markup.deleted', 'punctuation.definition.deleted'], settings: { foreground: 'var(--color-code-deleted)' } },
-    { scope: ['markup.heading', 'entity.name.section'], settings: { foreground: 'var(--color-code-function)', fontStyle: 'bold' } },
+    { scope: ['comment', 'punctuation.definition.comment'], settings: { foreground: '#a6a6a6', fontStyle: 'italic' } },
+    { scope: ['support.function.builtin.shell', 'keyword', 'keyword.control', 'storage', 'storage.type', 'storage.modifier'], settings: { foreground: '#ff9f0a' } },
+    { scope: ['string', 'string.quoted', 'string.template', 'string.other.link', 'string.regexp'], settings: { foreground: '#f2f2f2' } },
+    { scope: ['keyword.operator', 'entity.name.function', 'support.function', 'entity.name.type', 'support.type', 'support.class', 'entity.name.class', 'entity.other.inherited-class', 'entity.name.type.parameter', 'variable', 'variable.other', 'variable.other.readwrite', 'variable.parameter', 'variable.other.property', 'support.type.property-name', 'meta.object-literal.key', 'variable.other.constant', 'variable.other.enummember', 'constant.numeric', 'constant.language', 'punctuation', 'meta.brace', 'meta.bracket', 'entity.name.tag', 'punctuation.definition.tag', 'entity.other.attribute-name', 'meta.decorator', 'punctuation.decorator'], settings: { foreground: '#f2f2f2' } },
+    { scope: ['markup.inserted', 'punctuation.definition.inserted'], settings: { foreground: '#30d158' } },
+    { scope: ['markup.deleted', 'punctuation.definition.deleted'], settings: { foreground: '#ff6961' } },
+    { scope: ['markup.heading', 'entity.name.section'], settings: { foreground: '#f2f2f2', fontStyle: 'bold' } },
     { scope: ['markup.bold'], settings: { fontStyle: 'bold' } },
     { scope: ['markup.italic'], settings: { fontStyle: 'italic' } },
   ],
 }
 
-const CODE_AREA_PADDING = '0.5rem 12px'
-const CODE_LINE_HEIGHT = 1.3
+const CODE_AREA_PADDING = '0.55rem 1.05rem 1rem'
+const CODE_LINE_HEIGHT = 1.48
+const CODE_FONT_FAMILY = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace'
 
 type ShikiHighlighterProps = {
   language: string
@@ -149,12 +132,12 @@ function PrismCodeContent({
           style={{
             margin: 0,
             padding: CODE_AREA_PADDING,
-            fontFamily: 'var(--font-mono)',
-            fontSize: '12px',
+            fontFamily: CODE_FONT_FAMILY,
+            fontSize: '16px',
             lineHeight: String(CODE_LINE_HEIGHT),
             whiteSpace: wrapLongLines ? 'pre-wrap' : 'pre',
             wordBreak: wrapLongLines ? 'break-word' : 'normal',
-            color: 'var(--color-code-fg)',
+            color: '#f2f2f2',
           }}
         >
           {tokens.map((line, index) => (
@@ -231,7 +214,7 @@ function CodeArea({
     <div
       ref={containerRef}
       data-has-line-numbers={showLineNumbers ? 'true' : 'false'}
-      className="code-viewer-area relative max-h-[420px] overflow-auto bg-[var(--color-code-bg)]"
+      className="code-viewer-area relative max-h-[420px] overflow-auto bg-transparent"
     >
       {(!ShikiHighlighter || !loaded) && (
         <PrismCodeContent
@@ -266,8 +249,8 @@ function CodeArea({
             addDefaultStyles={false}
             style={{
               margin: 0,
-              fontFamily: 'var(--font-mono)',
-              fontSize: '12px',
+              fontFamily: CODE_FONT_FAMILY,
+              fontSize: '16px',
               lineHeight: String(CODE_LINE_HEIGHT),
               whiteSpace: wrapLongLines ? 'pre-wrap' : 'pre',
               wordBreak: wrapLongLines ? 'break-word' : 'normal',
@@ -290,24 +273,22 @@ export function CodeViewer({ code, language, maxLines = 20, showLineNumbers = fa
 
   const effectiveShowLineNumbers = showLineNumbers && !!language && language !== 'text'
   const languageLabel = language || 'code'
-  const lineCountLabel = `${allLines.length} ${allLines.length === 1 ? 'line' : 'lines'}`
   const showExpandToggle = allLines.length > maxLines
 
   return (
-    <div className="code-viewer-shell overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-outline-variant)]/50 bg-[var(--color-surface-container-low)]">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-[var(--color-outline-variant)]/40 bg-[var(--color-surface-container)] px-3 py-1.5 text-[11px] text-[var(--color-text-tertiary)]">
-        <div className="flex items-center gap-3">
-          <span className="font-semibold uppercase tracking-[0.14em]">{languageLabel}</span>
-          <span>{lineCountLabel}</span>
-        </div>
+    <div className="code-viewer-shell overflow-hidden rounded-[15px] border border-white/[0.045] bg-[#2f2f2f] shadow-none">
+      <div className="flex items-center justify-between px-4 pb-1.5 pt-3 text-[16px] leading-5 text-[#d6d6d6]">
+        <span className="font-normal lowercase tracking-[-0.01em]">{languageLabel}</span>
         <CopyButton
           text={code}
-          className="rounded-md border border-[var(--color-outline-variant)]/40 bg-[var(--color-surface-container-lowest)] px-2 py-1 text-[11px] text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-container-high)] hover:text-[var(--color-text-primary)]"
+          label="Copy code"
+          copiedLabel="Copied code"
+          displayLabel={<Copy size={18} strokeWidth={1.9} aria-hidden="true" />}
+          displayCopiedLabel={<Check size={18} strokeWidth={2} aria-hidden="true" />}
+          className="inline-flex h-7 w-7 items-center justify-center rounded-[8px] text-[#ababab] transition-colors  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
         />
       </div>
 
-      {/* Code area */}
       <CodeArea
         code={visibleCode}
         language={language}
@@ -315,11 +296,10 @@ export function CodeViewer({ code, language, maxLines = 20, showLineNumbers = fa
         wrapLongLines={wrapLongLines}
       />
 
-      {/* Expand/collapse toggle */}
       {showExpandToggle && (
         <button
           onClick={() => setExpanded((value) => !value)}
-          className="w-full border-t border-[var(--color-outline-variant)]/40 bg-[var(--color-surface-container)] py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-container-high)] hover:text-[var(--color-text-primary)]"
+          className="w-full border-t border-white/[0.07] bg-white/[0.025] py-2 text-[11px] font-medium text-[#b8b8b8] transition-colors "
         >
           {expanded ? 'Collapse' : `Show ${allLines.length - maxLines} more lines`}
         </button>

@@ -19,7 +19,6 @@ import { ModelSelector } from '../controls/ModelSelector'
 import type { AttachmentRef } from '../../types/chat'
 import { AttachmentGallery } from './AttachmentGallery'
 import { ComposerDropOverlay } from './ComposerDropOverlay'
-import { ProjectContextChip } from '../shared/ProjectContextChip'
 import { RepositoryLaunchControls } from '../shared/RepositoryLaunchControls'
 import { FileSearchMenu, type FileSearchMenuHandle } from './FileSearchMenu'
 import { LocalSlashCommandPanel, type LocalSlashCommandName } from './LocalSlashCommandPanel'
@@ -949,8 +948,8 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
         isHeroComposer
           ? `bg-transparent ${isMobileComposer ? 'px-4 pb-3' : 'px-8 pb-4'}`
           : compact
-            ? `bg-transparent ${isMobileComposer ? 'px-3 pb-[calc(env(safe-area-inset-bottom)+10px)] pt-2' : 'px-3 py-3'}`
-            : `bg-transparent ${isMobileComposer ? 'px-3 pb-[calc(env(safe-area-inset-bottom)+10px)] pt-2' : 'px-4 py-4'}`
+            ? `bg-transparent ${isMobileComposer ? 'px-3 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-0' : 'px-2 pb-2 pt-0'}`
+            : `bg-transparent ${isMobileComposer ? 'px-3 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-0' : 'px-2 pb-2 pt-0'}`
       }
     >
       <div
@@ -959,7 +958,7 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
             ? 'mx-auto flex w-full max-w-3xl flex-col'
           : compact
               ? 'mx-auto max-w-full'
-              : `${isMobileComposer ? 'mx-0 max-w-none' : 'mx-auto max-w-[860px]'}`
+              : `${isMobileComposer ? 'mx-0 max-w-none' : 'mx-auto max-w-[1040px]'}`
         }
       >
         <div
@@ -1045,23 +1044,21 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
           {!isMemberSession && slashMenuOpen && filteredCommands.length > 0 && (
             <div
               ref={slashMenuRef}
-              className="absolute bottom-full left-0 right-0 z-50 mb-2 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] shadow-[var(--shadow-dropdown)]"
+              className="sidebar-codex-menu absolute bottom-full left-0 right-0 z-50 mb-2 overflow-hidden rounded-[18px] border border-[var(--color-border)] p-1.5 shadow-[var(--shadow-dropdown)]"
             >
-              <div className="max-h-[300px] overflow-y-auto py-1">
+              <div className="max-h-[300px] overflow-y-auto">
                 {filteredCommands.map((command, index) => (
                   <button
                     key={command.name}
                     ref={(el) => { slashItemRefs.current[index] = el }}
                     onClick={() => selectSlashCommand(command.name)}
                     onMouseEnter={() => setSlashSelectedIndex(index)}
-                    className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                      index === slashSelectedIndex
-                        ? 'bg-[var(--color-surface-hover)]'
-                        : 'hover:bg-[var(--color-surface-hover)]'
+                    className={`sidebar-codex-menu-item items-center gap-2.5 rounded-[12px] px-3 py-2 ${
+                      index === slashSelectedIndex ? 'bg-white/[0.085]' : ''
                     }`}
                   >
                     <span className="flex min-w-0 max-w-[52%] shrink-0 items-baseline gap-1.5">
-                      <span className="shrink-0 text-sm font-semibold text-[var(--color-text-primary)]">
+                      <span className="shrink-0 text-[13px] font-semibold text-[var(--color-text-primary)]">
                         /{command.name}
                       </span>
                       {command.argumentHint ? (
@@ -1070,21 +1067,24 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
                         </span>
                       ) : null}
                     </span>
-                    <span className="min-w-0 flex-1 truncate text-xs text-[var(--color-text-tertiary)]">
+                    <span className="min-w-0 flex-1 truncate text-[12px] text-[var(--color-text-tertiary)]">
                       {command.description}
                     </span>
                   </button>
                 ))}
               </div>
               {!isMobileComposer ? (
-                <div className="flex items-center gap-1.5 border-t border-[var(--color-border)] px-4 py-2 text-xs text-[var(--color-text-tertiary)]">
+                <>
+                  <div className="sidebar-codex-menu-divider" />
+                  <div className="flex items-center gap-1.5 px-2 py-1.5 text-[11px] text-[var(--color-text-tertiary)]">
                   <kbd className="rounded border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-1.5 py-0.5 font-mono text-[10px]">Up/Down</kbd>
                   <span>{t('chat.navigate')}</span>
                   <kbd className="ml-2 rounded border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-1.5 py-0.5 font-mono text-[10px]">Enter</kbd>
                   <span>{t('chat.select')}</span>
                   <kbd className="ml-2 rounded border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-1.5 py-0.5 font-mono text-[10px]">Esc</kbd>
-                  <span>{t('chat.dismiss')}</span>
-                </div>
+                    <span>{t('chat.dismiss')}</span>
+                  </div>
+                </>
               ) : null}
             </div>
           )}
@@ -1240,15 +1240,15 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
               placeholder={composerPlaceholder}
               disabled={isWorkspaceMissing}
               rows={1}
-              className={`w-full resize-none bg-transparent text-[14px] leading-7 text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-tertiary)] disabled:opacity-50 ${
+              className={`w-full resize-none bg-transparent text-[15px] leading-7 text-[var(--color-text-primary)] outline-none placeholder:text-[#8c8c8c] disabled:opacity-50 ${
                 useCompactControls ? 'py-1.5' : 'py-2'
               }`}
             />
           )}
 
           <div data-testid="chat-input-toolbar" className={isHeroComposer
-            ? 'flex items-center justify-between border-t border-[var(--color-border-separator)] pt-3'
-            : `mt-2 flex items-center justify-between border-t border-[var(--color-border-separator)] ${
+            ? 'flex items-center justify-between pt-3'
+            : `mt-2 flex items-center justify-between ${
               useCompactControls ? '-mx-3 -mb-3 gap-2 px-2.5 py-2' : '-mx-4 -mb-4 px-3 py-3'
             }`}>
             <div className="flex min-w-0 items-center gap-2">
@@ -1264,17 +1264,17 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
                     </button>
 
                     {plusMenuOpen && (
-                      <div className={`absolute bottom-full left-0 z-50 mb-2 rounded-[14px] border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] py-1 shadow-[var(--shadow-dropdown)] ${isMobileComposer ? 'w-[min(240px,calc(100vw-32px))]' : 'w-[240px]'}`}>
+                      <div className={`sidebar-codex-menu absolute bottom-full left-0 z-50 mb-2 rounded-[18px] border border-[var(--color-border)] p-1.5 shadow-[var(--shadow-dropdown)] ${isMobileComposer ? 'w-[min(240px,calc(100vw-32px))]' : 'w-[240px]'}`}>
                         <button
                           onClick={openAttachmentPicker}
-                          className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[var(--color-surface-hover)]"
+                          className="sidebar-codex-menu-item rounded-[12px]"
                         >
                           <span className="material-symbols-outlined text-[18px] text-[var(--color-text-secondary)]">attach_file</span>
                           <span className="text-sm text-[var(--color-text-primary)]">{addFilesLabel}</span>
                         </button>
                         <button
                           onClick={insertSlashCommand}
-                          className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[var(--color-surface-hover)]"
+                          className="sidebar-codex-menu-item rounded-[12px]"
                         >
                           <span className="w-[24px] text-center text-[18px] font-bold text-[var(--color-text-secondary)]">/</span>
                           <span className="text-sm text-[var(--color-text-primary)]">{slashCommandsLabel}</span>
@@ -1316,18 +1316,17 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
                         : t('common.run')
                       : undefined
                 }
-                className={`flex shrink-0 items-center justify-center gap-1 rounded-lg text-xs font-semibold transition-all hover:brightness-105 disabled:opacity-30 ${
-                  iconOnlyAction ? `${isMobileComposer ? 'h-11 w-11 rounded-xl px-0 py-0' : 'h-8 w-8 px-0 py-0'}` : 'w-[112px] px-3 py-1.5'
+                className={`flex shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-all hover:scale-[1.04] disabled:opacity-35 ${
+                  isMobileComposer ? 'h-11 w-11' : 'h-10 w-10'
                 } ${
                   !isMemberSession && isActive
-                    ? 'bg-[var(--color-error-container)] text-[var(--color-on-error-container)]'
-                    : 'bg-[image:var(--gradient-btn-primary)] text-[var(--color-btn-primary-fg)] shadow-[var(--shadow-button-primary)]'
+                    ? 'bg-[#ff8a4c] text-[#161616] hover:bg-[#ff9b66]'
+                    : 'bg-[#a7a7a7] text-[#171717] hover:bg-[#b7b7b7]'
                 }`}
               >
                 <span className="material-symbols-outlined text-[14px]">
-                  {!isMemberSession && isActive ? 'stop' : 'arrow_forward'}
+                  {!isMemberSession && isActive ? 'stop' : 'arrow_upward'}
                 </span>
-                {!iconOnlyAction && (!isMemberSession && isActive ? t('common.stop') : isMemberSession ? t('common.send') : t('common.run'))}
               </button>
             </div>
           </div>
@@ -1351,31 +1350,18 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
 
         <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileSelect} />
 
-        {!isMemberSession && !embedLaunchControlsInHero && (
+        {!isMemberSession && !embedLaunchControlsInHero && messageCount === 0 && (
           <div className={useCompactControls ? 'mt-2 flex min-w-0 px-1' : 'mt-3 px-1'}>
-            {messageCount > 0 ? (
-              <ProjectContextChip
-                workDir={resolvedWorkDir}
-                repoName={gitInfo?.repoName || null}
-                branch={gitInfo?.branch || null}
-                sourceWorkDir={gitInfo?.worktree?.sourceWorkDir || null}
-                isWorktree={!!gitInfo?.worktree?.enabled}
-                worktreeSlug={gitInfo?.worktree?.slug || null}
-                worktreePath={gitInfo?.worktree?.path || gitInfo?.worktree?.plannedPath || null}
-                compact={useCompactControls}
-              />
-            ) : (
-              <RepositoryLaunchControls
-                workDir={activeLaunchWorkDir}
-                onWorkDirChange={handleLaunchWorkDirChange}
-                branch={launchBranch}
-                onBranchChange={setLaunchBranch}
-                useWorktree={launchUseWorktree}
-                onUseWorktreeChange={setLaunchUseWorktree}
-                onLaunchReadyChange={setLaunchReady}
-                disabled={isActive || launchTransitioning}
-              />
-            )}
+            <RepositoryLaunchControls
+              workDir={activeLaunchWorkDir}
+              onWorkDirChange={handleLaunchWorkDirChange}
+              branch={launchBranch}
+              onBranchChange={setLaunchBranch}
+              useWorktree={launchUseWorktree}
+              onUseWorktreeChange={setLaunchUseWorktree}
+              onLaunchReadyChange={setLaunchReady}
+              disabled={isActive || launchTransitioning}
+            />
           </div>
         )}
       </div>

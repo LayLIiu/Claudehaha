@@ -19,6 +19,7 @@ type Props = {
   branchAction?: MessageBranchAction
   sessionId?: string
   timestamp?: number
+  showActions?: boolean
   /** This turn's real changed files (absolute), used to anchor output chips onto
    *  files that were actually written instead of guessing from the prose. */
   turnChangedFiles?: string[]
@@ -26,7 +27,7 @@ type Props = {
 
 const MAX_CARDS = 3
 
-export const AssistantMessage = memo(function AssistantMessage({ content, isStreaming, branchAction, sessionId, timestamp, turnChangedFiles }: Props) {
+export const AssistantMessage = memo(function AssistantMessage({ content, isStreaming, branchAction, sessionId, timestamp, showActions = true, turnChangedFiles }: Props) {
   const t = useTranslation()
   const workDir = useWorkspacePanelStore((s) => (sessionId ? s.statusBySession[sessionId]?.workDir : undefined))
 
@@ -67,11 +68,11 @@ export const AssistantMessage = memo(function AssistantMessage({ content, isStre
   const documentLayout = shouldUseDocumentLayout(content)
 
   return (
-    <div className="codex-task-stream-item mb-6 flex justify-start">
+    <div className="codex-task-stream-item mb-[3px] flex justify-start">
       <div
         data-message-shell="assistant"
         data-layout="document"
-        className="assistant-task-block group flex min-w-0 w-full max-w-[960px] flex-col items-start"
+        className="assistant-task-block group/message relative flex min-w-0 w-full max-w-[960px] flex-col items-start"
       >
         <div className="assistant-message-flow w-full text-[14px] leading-7 text-[var(--color-text-primary)]">
           <MarkdownRenderer
@@ -100,13 +101,15 @@ export const AssistantMessage = memo(function AssistantMessage({ content, isStre
           </div>
         )}
 
-        <MessageActionBar
-          copyText={isStreaming ? undefined : content}
-          copyLabel="Copy reply"
-          branchAction={branchAction}
-          align="start"
-          timestamp={timestamp}
-        />
+        {showActions && (
+          <MessageActionBar
+            copyText={isStreaming ? undefined : content}
+            copyLabel="Copy reply"
+            branchAction={branchAction}
+            align="start"
+            timestamp={timestamp}
+          />
+        )}
       </div>
     </div>
   )

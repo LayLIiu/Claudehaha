@@ -207,17 +207,15 @@ export const FileSearchMenu = forwardRef<FileSearchMenuHandle, Props>(({ cwd, fi
       <div
         key={entry.path}
         data-index={index}
-        className={`group flex items-stretch px-1.5 py-0.5 ${
-          selected ? 'bg-[var(--color-surface-hover)]' : ''
-        }`}
+        className="group flex items-stretch px-0.5 py-0.5"
         onMouseEnter={() => setSelectedIndex(index)}
       >
         <button
           type="button"
           onClick={() => selectEntry(entry)}
-          className={`flex min-w-0 flex-1 items-center rounded-lg px-2.5 text-left transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/40 ${
-            isSearchMode ? 'gap-2.5 py-2' : 'gap-3 py-2'
-          }`}
+          className={`flex min-w-0 flex-1 items-center rounded-[12px] px-2.5 text-left transition-colors hover:bg-white/[0.085] focus-visible:bg-white/[0.085] focus-visible:outline-none ${
+            isSearchMode ? 'gap-2.5 py-1.5' : 'gap-2.5 py-1.5'
+          } ${selected ? 'bg-white/[0.085]' : ''}`}
           role="option"
           aria-selected={selected}
         >
@@ -256,7 +254,7 @@ export const FileSearchMenu = forwardRef<FileSearchMenuHandle, Props>(({ cwd, fi
               event.stopPropagation()
               navigateEntry(entry)
             }}
-            className="my-1 flex w-9 shrink-0 items-center justify-center rounded-lg text-[var(--color-text-tertiary)] opacity-70 transition hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/40 group-hover:opacity-100"
+            className="my-0.5 flex w-8 shrink-0 items-center justify-center rounded-[10px] text-[var(--color-text-tertiary)] opacity-70 transition hover:bg-white/[0.085] hover:text-[var(--color-text-primary)] focus-visible:outline-none group-hover:opacity-100"
           >
             <span className="material-symbols-outlined text-[16px]">chevron_right</span>
           </button>
@@ -268,13 +266,13 @@ export const FileSearchMenu = forwardRef<FileSearchMenuHandle, Props>(({ cwd, fi
   return (
     <div
       id="file-search-menu"
-      className={`absolute bottom-full mb-2 z-50 w-full overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] shadow-[var(--shadow-dropdown)] ${
+      className={`sidebar-codex-menu absolute bottom-full mb-2 z-50 w-full overflow-hidden rounded-[18px] border border-[var(--color-border)] p-1.5 shadow-[var(--shadow-dropdown)] ${
         compact ? 'left-0 right-0 min-w-0 max-w-[calc(100vw-32px)]' : 'left-0 min-w-[480px]'
       }`}
       onMouseDown={(e) => e.stopPropagation()}
     >
       {/* Header with path */}
-      <div className="flex items-center gap-1.5 border-b border-[var(--color-border)] px-3 py-2 text-[11px]">
+      <div className="flex items-center gap-1.5 px-2 py-1.5 text-[11px]">
         <span className="material-symbols-outlined text-[14px] text-[var(--color-text-tertiary)]">folder_open</span>
         <span className="text-[var(--color-text-tertiary)] font-mono">{cwd.split('/').pop() || cwd}</span>
         {breadcrumbs.map((seg, i) => (
@@ -292,7 +290,8 @@ export const FileSearchMenu = forwardRef<FileSearchMenuHandle, Props>(({ cwd, fi
       </div>
 
       {/* File list */}
-      <div ref={listRef} className="max-h-[300px] overflow-y-auto py-1">
+      <div className="sidebar-codex-menu-divider" />
+      <div ref={listRef} className="max-h-[300px] overflow-y-auto py-0.5">
         {loading && entries.length === 0 ? (
           <div className="px-4 py-6 text-center text-xs text-[var(--color-text-tertiary)]">{t('fileSearch.searching')}</div>
         ) : (errorKey || errorMessage) ? (
@@ -312,7 +311,9 @@ export const FileSearchMenu = forwardRef<FileSearchMenuHandle, Props>(({ cwd, fi
 
       {/* Footer hint */}
       {!compact ? (
-        <div className="flex items-center gap-1.5 border-t border-[var(--color-border)] px-3 py-1.5 text-[10px] text-[var(--color-text-tertiary)]">
+        <>
+          <div className="sidebar-codex-menu-divider" />
+          <div className="flex items-center gap-1.5 px-2 py-1 text-[10px] text-[var(--color-text-tertiary)]">
           <kbd className="rounded border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-1 py-0.5 font-mono">↑↓</kbd>
           <span>{t('fileSearch.navigate')}</span>
           <kbd className="ml-2 rounded border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-1 py-0.5 font-mono">Enter</kbd>
@@ -320,8 +321,9 @@ export const FileSearchMenu = forwardRef<FileSearchMenuHandle, Props>(({ cwd, fi
           <kbd className="ml-2 rounded border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-1 py-0.5 font-mono">→</kbd>
           <span>{t('fileSearch.open')}</span>
           <kbd className="ml-2 rounded border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-1 py-0.5 font-mono">Esc</kbd>
-          <span>{t('fileSearch.close')}</span>
-        </div>
+            <span>{t('fileSearch.close')}</span>
+          </div>
+        </>
       ) : null}
     </div>
   )

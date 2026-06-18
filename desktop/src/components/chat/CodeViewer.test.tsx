@@ -13,7 +13,7 @@ describe('CodeViewer', () => {
 
     const contentWrapper = container.querySelector('[data-code-viewer-content]') as HTMLElement | null
     expect(contentWrapper).toBeTruthy()
-    expect(contentWrapper?.style.padding).toBe('0.5rem 12px')
+    expect(contentWrapper?.style.padding).toBe('0.55rem 1.05rem 1rem')
     expect(contentWrapper?.style.whiteSpace).toBe('pre')
     expect(contentWrapper?.style.wordBreak).toBe('normal')
 

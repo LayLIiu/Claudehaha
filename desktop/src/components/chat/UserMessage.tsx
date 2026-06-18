@@ -8,16 +8,17 @@ type Props = {
   attachments?: UIAttachment[]
   branchAction?: MessageBranchAction
   timestamp?: number
+  showActions?: boolean
 }
 
-export const UserMessage = memo(function UserMessage({ content, attachments, branchAction, timestamp }: Props) {
+export const UserMessage = memo(function UserMessage({ content, attachments, branchAction, timestamp, showActions = true }: Props) {
   const hasText = content.trim().length > 0
 
   return (
-    <div className="codex-task-stream-item mb-6 flex justify-end">
+    <div className="codex-task-stream-item mb-[3px] flex justify-end">
       <div
         data-message-shell="user"
-        className="group flex min-w-0 max-w-[82%] flex-col items-end sm:max-w-[76%] lg:max-w-[68%]"
+        className="group/message relative flex min-w-0 max-w-[82%] flex-col items-end sm:max-w-[76%] lg:max-w-[68%]"
       >
         <div className="flex max-w-full flex-col items-end gap-2">
           {attachments && attachments.length > 0 && (
@@ -37,7 +38,7 @@ export const UserMessage = memo(function UserMessage({ content, attachments, bra
           )}
         </div>
 
-        {hasText && (
+        {showActions && hasText && (
           <MessageActionBar
             copyText={content}
             copyLabel="Copy prompt"

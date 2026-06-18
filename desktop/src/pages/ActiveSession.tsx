@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Folder, FolderOpen, SquareTerminal, Target } from 'lucide-react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Archive, Folder, FolderOpen, GitBranch, LoaderCircle, MoreHorizontal, Pencil, Pin, PinOff, SquareTerminal, Target } from 'lucide-react'
 import {
   SCHEDULED_TAB_ID,
   SETTINGS_TAB_ID,
@@ -14,6 +14,8 @@ import { useChatStore } from '../stores/chatStore'
 import { useCLITaskStore } from '../stores/cliTaskStore'
 import { useTeamStore } from '../stores/teamStore'
 import { useWorkspacePanelStore } from '../stores/workspacePanelStore'
+import { usePinnedSessionStore } from '../stores/pinnedSessionStore'
+import { useUIStore } from '../stores/uiStore'
 import {
   TERMINAL_PANEL_DEFAULT_HEIGHT,
   TERMINAL_PANEL_MAX_HEIGHT,
@@ -25,15 +27,15 @@ import { MessageList } from '../components/chat/MessageList'
 import { ChatInput } from '../components/chat/ChatInput'
 import { ComputerUsePermissionModal } from '../components/chat/ComputerUsePermissionModal'
 import { SessionTaskBar } from '../components/chat/SessionTaskBar'
+import { ConfirmDialog } from '../components/shared/ConfirmDialog'
 import { WorkbenchPanel } from '../components/workbench/WorkbenchPanel'
 import { TeamStatusBar } from '../components/teams/TeamStatusBar'
 import { TerminalSettings } from './TerminalSettings'
 import { OpenProjectMenu } from '../components/layout/OpenProjectMenu'
 import type { SessionListItem } from '../types/session'
-import type { ActiveGoalState } from '../types/chat'
+import type { ActiveGoalState, UIMessage } from '../types/chat'
 import { useMobileViewport } from '../hooks/useMobileViewport'
 import { isDesktopRuntime } from '../lib/desktopRuntime'
-import { formatTokenCount } from '../lib/formatTokenCount'
 
 const TASK_POLL_INTERVAL_MS = 1000
 const WORKSPACE_RESIZE_STEP = 32
@@ -268,13 +270,120 @@ function TerminalResizeHandle() {
   )
 }
 
+function TitleMenuItem({
+  icon,
+  label,
+  shortcut,
+  disabled = false,
+  onClick,
+}: {
+  icon: ReactNode
+  label: string
+  shortcut?: string
+  disabled?: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      onClick={onClick}
+      disabled={disabled}
+      className="flex w-full items-center gap-3 rounded-[12px] px-3 py-2.5 text-left text-[14px] font-semibold text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:bg-[var(--color-surface-hover)] disabled:cursor-not-allowed disabled:text-[var(--color-text-tertiary)] disabled:opacity-55 disabled:hover:bg-transparent"
+    >
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[var(--color-text-secondary)]">
+        {icon}
+      </span>
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+      {shortcut ? (
+        <span className="shrink-0 font-[var(--font-mono)] text-[12px] font-medium text-[var(--color-text-tertiary)]">
+          {shortcut}
+        </span>
+      ) : null}
+    </button>
+  )
+}
+
+function isBranchTurnResponseMessage(message: UIMessage) {
+  return (
+    message.type === 'assistant_text' ||
+    message.type === 'tool_use' ||
+    message.type === 'tool_result' ||
+    message.type === 'background_task' ||
+    message.type === 'error' ||
+    message.type === 'task_summary'
+  )
+}
+
+function getLatestBranchTarget(messages: UIMessage[]): { uiMessageId: string; transcriptMessageId: string } | null {
+  let currentTurnCandidates: Array<Extract<UIMessage, { type: 'user_text' | 'assistant_text' }>> = []
+  let hasResponseForCurrentTurn = false
+  let latestTarget: { uiMessageId: string; transcriptMessageId: string } | null = null
+
+  const markCurrentTurnBranchable = () => {
+    if (!hasResponseForCurrentTurn) return
+    for (const candidate of currentTurnCandidates) {
+      if (!candidate.transcriptMessageId) continue
+      latestTarget = {
+        uiMessageId: candidate.id,
+        transcriptMessageId: candidate.transcriptMessageId,
+      }
+    }
+  }
+
+  for (const message of messages) {
+    if (message.type === 'user_text') {
+      markCurrentTurnBranchable()
+      currentTurnCandidates = []
+      hasResponseForCurrentTurn = false
+      if (!message.pending && message.transcriptMessageId) {
+        currentTurnCandidates = [message]
+      }
+      continue
+    }
+
+    if (currentTurnCandidates.length === 0) continue
+
+    if (isBranchTurnResponseMessage(message)) {
+      hasResponseForCurrentTurn = true
+    }
+
+    if (message.type === 'assistant_text' && message.transcriptMessageId) {
+      currentTurnCandidates.push(message)
+    }
+  }
+
+  markCurrentTurnBranchable()
+  return latestTarget
+}
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message.trim()) return error.message
+  return '操作失败'
+}
+
 export function ActiveSession() {
   const isMobileLayout = useMobileViewport() && !isDesktopRuntime()
   const [composerDocked, setComposerDocked] = useState(false)
+  const [titleMenuOpen, setTitleMenuOpen] = useState(false)
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false)
+  const [isArchivingSession, setIsArchivingSession] = useState(false)
+  const [isBranchingSession, setIsBranchingSession] = useState(false)
+  const titleMenuRef = useRef<HTMLDivElement>(null)
   const activeTabId = useTabStore((s) => s.activeTabId)
   const activeTabType = useTabStore((s) => s.tabs.find((tab) => tab.sessionId === s.activeTabId)?.type ?? null)
+  const closeTab = useTabStore((s) => s.closeTab)
+  const updateTabTitle = useTabStore((s) => s.updateTabTitle)
   const sessions = useSessionStore((s) => s.sessions)
+  const renameSession = useSessionStore((s) => s.renameSession)
+  const branchSession = useSessionStore((s) => s.branchSession)
+  const deleteSession = useSessionStore((s) => s.deleteSession)
   const connectToSession = useChatStore((s) => s.connectToSession)
+  const disconnectSession = useChatStore((s) => s.disconnectSession)
+  const addToast = useUIStore((s) => s.addToast)
+  const pinnedSessionIds = usePinnedSessionStore((s) => s.pinnedSessionIds)
+  const togglePinnedSession = usePinnedSessionStore((s) => s.togglePinned)
+  const removePinnedSession = usePinnedSessionStore((s) => s.removePinned)
   const sessionState = useChatStore((s) => activeTabId ? s.sessions[activeTabId] : undefined)
   const pendingComputerUsePermission = sessionState?.pendingComputerUsePermission ?? null
   const fetchSessionTasks = useCLITaskStore((s) => s.fetchSessionTasks)
@@ -282,11 +391,11 @@ export function ActiveSession() {
   const hasIncompleteTasks = useCLITaskStore((s) => s.tasks.some((task) => task.status !== 'completed'))
   const hasRunningTasks = useCLITaskStore((s) => s.tasks.some((task) => task.status === 'in_progress'))
   const chatState = sessionState?.chatState ?? 'idle'
-  const tokenUsage = sessionState?.tokenUsage ?? { input_tokens: 0, output_tokens: 0 }
   const hasRunningBackgroundTasks = Object.values(sessionState?.backgroundAgentTasks ?? {})
     .some((task) => task.status === 'running')
 
   const session = sessions.find((s) => s.id === activeTabId)
+  const isSessionPinned = activeTabId ? pinnedSessionIds.includes(activeTabId) : false
   const memberInfo = useTeamStore((s) => activeTabId ? s.getMemberBySessionId(activeTabId) : null)
   const activeTeam = useTeamStore((s) => s.activeTeam)
   const isMemberSession = !!memberInfo
@@ -308,6 +417,95 @@ export function ActiveSession() {
       ? state.panelBySession[activeTabId]?.runtimeId
       : undefined,
   )
+  const messages = sessionState?.messages ?? []
+  const latestBranchTarget = getLatestBranchTarget(messages)
+
+  useEffect(() => {
+    setTitleMenuOpen(false)
+    setArchiveConfirmOpen(false)
+  }, [activeTabId])
+
+  useEffect(() => {
+    if (!titleMenuOpen) return
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null
+      if (target && titleMenuRef.current?.contains(target)) return
+      setTitleMenuOpen(false)
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setTitleMenuOpen(false)
+    }
+    document.addEventListener('pointerdown', handlePointerDown, true)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown, true)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [titleMenuOpen])
+
+  const handleTogglePinnedSession = () => {
+    if (!activeTabId) return
+    const pinned = togglePinnedSession(activeTabId)
+    setTitleMenuOpen(false)
+    addToast({
+      type: 'success',
+      message: pinned ? '已置顶对话' : '已取消置顶',
+    })
+  }
+
+  const handleRenameCurrentSession = async () => {
+    if (!activeTabId || !session) return
+    setTitleMenuOpen(false)
+    const nextTitle = window.prompt('重命名对话', session.title || t('session.untitled'))?.trim()
+    if (!nextTitle || nextTitle === session.title) return
+    try {
+      await renameSession(activeTabId, nextTitle)
+      updateTabTitle(activeTabId, nextTitle)
+      addToast({ type: 'success', message: '已重命名对话' })
+    } catch (error) {
+      addToast({
+        type: 'error',
+        message: error instanceof Error ? error.message : '重命名失败',
+      })
+    }
+  }
+
+  const handleArchiveCurrentSession = async () => {
+    if (!activeTabId) return
+    setIsArchivingSession(true)
+    try {
+      disconnectSession(activeTabId)
+      await deleteSession(activeTabId)
+      removePinnedSession(activeTabId)
+      closeTab(activeTabId)
+      setArchiveConfirmOpen(false)
+      addToast({ type: 'success', message: '已归档对话' })
+    } catch (error) {
+      addToast({
+        type: 'error',
+        message: error instanceof Error ? error.message : '归档失败',
+      })
+    } finally {
+      setIsArchivingSession(false)
+    }
+  }
+
+  const handleBranchCurrentSession = async () => {
+    if (!activeTabId || !latestBranchTarget || isBranchingSession) return
+    setTitleMenuOpen(false)
+    setIsBranchingSession(true)
+    try {
+      const result = await branchSession(activeTabId, latestBranchTarget.transcriptMessageId)
+      const title = result.title.trim() || t('sidebar.newSession')
+      useTabStore.getState().openTab(result.sessionId, title)
+      useChatStore.getState().connectToSession(result.sessionId)
+      addToast({ type: 'success', message: `已创建分支对话“${title}”` })
+    } catch (error) {
+      addToast({ type: 'error', message: `创建分支失败：${getErrorMessage(error)}` })
+    } finally {
+      setIsBranchingSession(false)
+    }
+  }
 
   useEffect(() => {
     if (activeTabId && !isMemberSession) {
@@ -341,7 +539,6 @@ export function ActiveSession() {
   ])
 
   const t = useTranslation()
-  const messages = sessionState?.messages ?? []
   const streamingText = sessionState?.streamingText ?? ''
   const activeGoal = sessionState?.activeGoal ?? null
   const isEmpty = messages.length === 0 && !streamingText && (session?.messageCount ?? 0) === 0
@@ -359,25 +556,13 @@ export function ActiveSession() {
     sessionState?.historyStatus === 'error'
       ? sessionState.historyError || t('session.historyLoadFailed')
       : null
-  const visibleMessageCount = messages.length > 0 ? messages.length : session?.messageCount ?? 0
-
   const isActive = chatState !== 'idle' ||
     (trackedTaskSessionId === activeTabId && hasRunningTasks) ||
     hasRunningBackgroundTasks
-  const totalTokens = tokenUsage.input_tokens + tokenUsage.output_tokens
   const openProjectPath = session?.workDir && session.workDirExists !== false
     ? session.workDir
     : session?.projectPath || null
   const projectLabel = getPathLeaf(openProjectPath)
-
-  const lastUpdated = useMemo(() => {
-    if (!session?.modifiedAt) return ''
-    const diff = Date.now() - new Date(session.modifiedAt).getTime()
-    if (diff < 60000) return t('session.timeJustNow')
-    if (diff < 3600000) return t('session.timeMinutes', { n: Math.floor(diff / 60000) })
-    if (diff < 86400000) return t('session.timeHours', { n: Math.floor(diff / 3600000) })
-    return t('session.timeDays', { n: Math.floor(diff / 86400000) })
-  }, [session?.modifiedAt, t])
 
   useEffect(() => {
     setComposerDocked(false)
@@ -488,57 +673,76 @@ export function ActiveSession() {
               {!isMemberSession && !isMobileLayout && (
                 <div
                   data-desktop-drag-region={isDesktopRuntime() ? true : undefined}
-                  className={
-                    showRightPanel
-                      ? 'relative flex w-full items-center px-4 py-3'
-                      : 'relative flex w-full items-center px-4 py-3'
-                  }
+                  className="session-titlebar relative flex w-full items-center border-b border-[var(--color-border)]/65 px-4"
                 >
-                  <div className="session-header-shell flex w-full items-start justify-between px-4 py-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex min-w-0 items-center gap-3">
+                  <div className="session-header-shell flex w-full items-center justify-between">
+                    <div className="min-w-0 flex-1 pr-3">
+                      <div className="flex min-w-0 items-center gap-2">
                         <h1
                           className={
                             showRightPanel
-                              ? 'min-w-0 flex-1 truncate text-[15px] font-semibold leading-tight tracking-[-0.02em] text-[var(--color-text-primary)]'
-                              : 'min-w-0 flex-1 truncate text-[17px] font-semibold leading-tight tracking-[-0.02em] text-[var(--color-text-primary)]'
+                              ? 'min-w-0 max-w-[min(62vw,620px)] truncate text-[14px] font-semibold leading-5 tracking-[-0.015em] text-[var(--color-text-primary)]'
+                              : 'min-w-0 max-w-[min(68vw,760px)] truncate text-[14px] font-semibold leading-5 tracking-[-0.015em] text-[var(--color-text-primary)]'
                           }
                         >
                           {session?.title || t('session.untitled')}
                         </h1>
-                      </div>
-                      <div
-                        className={
-                          showRightPanel
-                            ? 'mt-1.5 flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap text-[10px] font-medium text-[var(--color-text-tertiary)]'
-                            : 'mt-1.5 flex min-w-0 items-center gap-2 overflow-hidden whitespace-nowrap text-[10px] font-medium text-[var(--color-text-tertiary)]'
-                        }
-                      >
+                        <div ref={titleMenuRef} className="relative shrink-0">
+                          <button
+                            type="button"
+                            aria-label="更多"
+                            title="更多"
+                            aria-haspopup="menu"
+                            aria-expanded={titleMenuOpen}
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              setTitleMenuOpen((open) => !open)
+                            }}
+                            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] data-[state=open]:bg-[var(--color-surface-hover)] data-[state=open]:text-[var(--color-text-primary)]"
+                            data-state={titleMenuOpen ? 'open' : 'closed'}
+                          >
+                            <MoreHorizontal size={16} strokeWidth={2} aria-hidden="true" />
+                          </button>
+                          {titleMenuOpen && (
+                            <div
+                              role="menu"
+                              className="session-title-menu absolute left-0 top-[calc(100%+8px)] z-[320] w-[250px] overflow-hidden rounded-[18px] border border-[var(--color-border)] bg-[var(--color-surface-container-high)] p-1.5 shadow-[0_20px_60px_rgba(0,0,0,0.38)]"
+                              onClick={(event) => event.stopPropagation()}
+                            >
+                              <TitleMenuItem
+                                icon={isSessionPinned ? <PinOff size={18} aria-hidden="true" /> : <Pin size={18} aria-hidden="true" />}
+                                label={isSessionPinned ? '取消置顶对话' : '置顶对话'}
+                                shortcut="⌥⌘P"
+                                onClick={handleTogglePinnedSession}
+                              />
+                              <TitleMenuItem
+                                icon={<Pencil size={18} aria-hidden="true" />}
+                                label="重命名对话"
+                                shortcut="⌥⌘R"
+                                onClick={() => { void handleRenameCurrentSession() }}
+                              />
+                              <TitleMenuItem
+                                icon={<Archive size={18} aria-hidden="true" />}
+                                label="归档对话"
+                                shortcut="⇧⌘A"
+                                onClick={() => {
+                                  setTitleMenuOpen(false)
+                                  setArchiveConfirmOpen(true)
+                                }}
+                              />
+                              <div className="my-1.5 h-px bg-[var(--color-border)]/70" />
+                              <TitleMenuItem
+                                icon={isBranchingSession ? <LoaderCircle size={18} className="animate-spin" aria-hidden="true" /> : <GitBranch size={18} aria-hidden="true" />}
+                                label={isBranchingSession ? '正在创建分支…' : '分支'}
+                                shortcut="⌥⌘B"
+                                disabled={!latestBranchTarget || isActive || isBranchingSession}
+                                onClick={() => { void handleBranchCurrentSession() }}
+                              />
+                            </div>
+                          )}
+                        </div>
                         {isActive && (
-                          <span className="flex shrink-0 items-center gap-1 text-[var(--color-text-secondary)]">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-success)] animate-pulse-dot" />
-                            {t('session.active')}
-                          </span>
-                        )}
-                        {totalTokens > 0 && (
-                          <>
-                            <span className="text-[var(--color-text-tertiary)]">·</span>
-                            <span title={t('common.tokens', { count: totalTokens.toLocaleString() })}>
-                              {t('common.tokens', { count: formatTokenCount(totalTokens) })}
-                            </span>
-                          </>
-                        )}
-                        {lastUpdated && (
-                          <>
-                            <span className="shrink-0 text-[var(--color-text-tertiary)]">·</span>
-                            <span className="truncate">{t('session.lastUpdated', { time: lastUpdated })}</span>
-                          </>
-                        )}
-                        {!showRightPanel && visibleMessageCount > 0 && (
-                          <>
-                            <span className="text-[var(--color-text-tertiary)]">·</span>
-                            <span>{t('session.messages', { count: visibleMessageCount })}</span>
-                          </>
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-success)] animate-pulse-dot" aria-label={t('session.active')} />
                         )}
                       </div>
                       {session?.workDirExists === false && (
@@ -552,10 +756,10 @@ export function ActiveSession() {
                       <ActiveGoalStrip
                         goal={activeGoal}
                         isRunning={isActive}
-                        compact={showRightPanel}
+                        compact
                       />
                     </div>
-                    <div className="session-header-actions flex shrink-0 items-center gap-1 p-1">
+                    <div className="session-header-actions flex shrink-0 items-center gap-1">
                       <OpenProjectMenu path={openProjectPath} />
                       <button
                         type="button"
@@ -600,7 +804,6 @@ export function ActiveSession() {
                       </button>
                     </div>
                   </div>
-                  <div className="absolute left-3 right-3 bottom-0 h-px rounded-full bg-[rgba(255,255,255,0.08)]" />
                 </div>
               )}
 
@@ -691,6 +894,20 @@ export function ActiveSession() {
           request={pendingComputerUsePermission?.request ?? null}
         />
       ) : null}
+
+      <ConfirmDialog
+        open={archiveConfirmOpen}
+        onClose={() => {
+          if (!isArchivingSession) setArchiveConfirmOpen(false)
+        }}
+        onConfirm={() => { void handleArchiveCurrentSession() }}
+        title="归档对话"
+        body={`确定要归档“${session?.title || t('session.untitled')}”吗？归档后它会从当前对话列表中移除。`}
+        confirmLabel="归档"
+        cancelLabel={t('common.cancel')}
+        confirmVariant="danger"
+        loading={isArchivingSession}
+      />
     </div>
   )
 }

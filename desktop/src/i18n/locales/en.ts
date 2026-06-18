@@ -1165,7 +1165,7 @@ export const en = {
   'repoLaunch.checkedOutWarning': 'Selected branch is already checked out in another worktree. Direct launch may be blocked by Git; use "Isolated worktree" to avoid changing directories.',
 
   // ─── Chat Input ──────────────────────────────────────
-  'chat.placeholder': 'Ask Claude to edit, debug or explain...',
+  'chat.placeholder': 'Request follow-up changes',
   'chat.placeholderMissing': 'This session points to a missing workspace. Create a new session or pick another project.',
   'chat.addFiles': 'Add files or photos',
   'chat.dropFilesTitle': 'Drop files here',
@@ -1342,7 +1342,9 @@ export const en = {
   'chat.memoryTechnicalDetails': 'Tool details',
   'chat.rewindSuccessWithCode': 'Rewound {count} messages and restored tracked files.',
   'chat.rewindSuccessConversationOnly': 'Rewound {count} messages. No file checkpoint was available for this turn.',
-  'chat.turnChangesTitle': '{count} files changed',
+  'chat.turnChangesTitle': 'Edited {count} files',
+  'chat.turnChangesUndo': 'Undo',
+  'chat.turnChangesReview': 'Review',
   'chat.turnChangesLatestCardLabel': 'Turn changed files',
   'chat.turnChangesHistoricalCardLabel': 'Turn changed files',
   'chat.turnChangesLatestSubtitle': 'Current turn checkpoint',

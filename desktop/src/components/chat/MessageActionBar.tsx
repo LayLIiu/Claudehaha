@@ -41,7 +41,7 @@ export function MessageActionBar({
     <div
       data-message-actions
       data-align={align}
-      className={`pointer-events-none mt-2 flex h-7 w-full translate-y-0.5 opacity-0 transition-[opacity,transform] duration-200 ease-out group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100 ${
+      className={`pointer-events-none mt-2 flex h-7 w-full translate-y-0.5 opacity-0 transition-[opacity,transform] duration-200 ease-out group-hover/message:pointer-events-auto group-hover/message:translate-y-0 group-hover/message:opacity-100 group-focus-within/message:pointer-events-auto group-focus-within/message:translate-y-0 group-focus-within/message:opacity-100 ${
         align === 'end' ? 'justify-end' : 'justify-start'
       }`}
     >

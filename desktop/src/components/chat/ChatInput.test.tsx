@@ -633,7 +633,7 @@ describe('ChatInput file mentions', () => {
     expect(branchButton.parentElement).toHaveClass('bg-transparent')
   })
 
-  it('uses the persisted message count to keep reopened sessions in context mode while history loads', async () => {
+  it('uses the persisted message count to hide empty-session launch controls while history loads', async () => {
     useSessionStore.setState({
       sessions: [{
         id: sessionId,
@@ -673,9 +673,11 @@ describe('ChatInput file mentions', () => {
 
     render(<ChatInput variant="hero" />)
 
-    expect(await screen.findByText('repo')).toBeInTheDocument()
-    expect(screen.getByText('main')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /Select branch:/ })).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: /Select branch:/ })).not.toBeInTheDocument()
+    })
+    expect(screen.queryByText('repo')).not.toBeInTheDocument()
+    expect(screen.queryByText('main')).not.toBeInTheDocument()
     expect(screen.queryByText('Current worktree')).not.toBeInTheDocument()
   })
 

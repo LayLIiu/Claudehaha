@@ -1681,6 +1681,25 @@ export function MessageList({ sessionId, compact = false }: MessageListProps = {
     completedTurnTargets.length > 0
       ? completedTurnTargets[completedTurnTargets.length - 1]?.messageId ?? null
       : null
+  const turnFinalAssistantMessageIds = useMemo(() => {
+    const ids = new Set<string>()
+    let currentAssistantMessageId: string | null = null
+
+    for (const item of renderItems) {
+      if (item.kind !== 'message') continue
+      if (item.message.type === 'user_text') {
+        if (currentAssistantMessageId) ids.add(currentAssistantMessageId)
+        currentAssistantMessageId = null
+        continue
+      }
+      if (item.message.type === 'assistant_text' && item.message.content.trim()) {
+        currentAssistantMessageId = item.message.id
+      }
+    }
+
+    if (currentAssistantMessageId) ids.add(currentAssistantMessageId)
+    return ids
+  }, [renderItems])
   const turnCardsByRenderIndex = useMemo(
     () => buildTurnCardInsertionMap(renderItems, turnChangeCards),
     [renderItems, turnChangeCards],
@@ -1947,6 +1966,11 @@ export function MessageList({ sessionId, compact = false }: MessageListProps = {
                 : null
             }
             branchAction={branchActionByMessageId.get(item.message.id)}
+            showActions={
+              item.message.type === 'user_text'
+                ? !item.message.pending && item.message.content.trim().length > 0
+                : turnFinalAssistantMessageIds.has(item.message.id)
+            }
             turnChangedFiles={changedFilesByRenderIndex.get(index)}
           />
         )}
@@ -2078,6 +2102,7 @@ export const MessageBlock = memo(function MessageBlock({
   agentTaskNotifications,
   toolResult,
   branchAction,
+  showActions,
   turnChangedFiles,
 }: {
   sessionId?: string | null
@@ -2090,6 +2115,7 @@ export const MessageBlock = memo(function MessageBlock({
     loading?: boolean
     onBranch: () => void
   }
+  showActions?: boolean
   turnChangedFiles?: string[]
 }) {
   const t = useTranslation()
@@ -2106,8 +2132,9 @@ export const MessageBlock = memo(function MessageBlock({
           <UserMessage
             content={message.content}
             attachments={message.attachments}
-            branchAction={branchAction}
-            timestamp={message.timestamp}
+            branchAction={showActions ? branchAction : undefined}
+            timestamp={showActions ? message.timestamp : undefined}
+            showActions={showActions}
           />
         </SelectableChatMessage>
       )
@@ -2121,9 +2148,10 @@ export const MessageBlock = memo(function MessageBlock({
         >
           <AssistantMessage
             content={message.content}
-            branchAction={branchAction}
+            branchAction={showActions ? branchAction : undefined}
             sessionId={sessionId ?? undefined}
-            timestamp={message.timestamp}
+            timestamp={showActions ? message.timestamp : undefined}
+            showActions={showActions}
             turnChangedFiles={turnChangedFiles}
           />
         </SelectableChatMessage>

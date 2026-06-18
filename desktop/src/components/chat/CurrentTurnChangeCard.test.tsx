@@ -1,7 +1,6 @@
 import '@testing-library/jest-dom'
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
-import { act } from 'react'
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Hoisted mocks (vi.hoisted runs before module evaluation)
@@ -90,13 +89,19 @@ import type { SessionTurnCheckpoint } from '../../api/sessions'
 // ──────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ──────────────────────────────────────────────────────────────────────────────
-function makeCheckpoint(filesChanged: string[]): SessionTurnCheckpoint {
+function makeCheckpoint(
+  filesChanged: string[],
+  fileStats: Array<{ path: string; insertions: number; deletions: number }> = [],
+): SessionTurnCheckpoint {
   return {
     code: {
       available: true,
       filesChanged,
-      insertions: 10,
-      deletions: 0,
+      insertions: fileStats.length > 0
+        ? fileStats.reduce((total, item) => total + item.insertions, 0)
+        : 10,
+      deletions: fileStats.reduce((total, item) => total + item.deletions, 0),
+      fileStats,
     },
     target: {
       targetUserMessageId: 'msg-1',
@@ -109,8 +114,11 @@ function makeCheckpoint(filesChanged: string[]): SessionTurnCheckpoint {
   }
 }
 
-function renderCard(filesChanged: string[]) {
-  const checkpoint = makeCheckpoint(filesChanged)
+function renderCard(
+  filesChanged: string[],
+  fileStats: Array<{ path: string; insertions: number; deletions: number }> = [],
+) {
+  const checkpoint = makeCheckpoint(filesChanged, fileStats)
   return render(
     <CurrentTurnChangeCard
       sessionId="s1"
@@ -131,17 +139,34 @@ afterEach(() => {
   cleanup()
 })
 
-describe('CurrentTurnChangeCard – rich file row (icon / name / type)', () => {
+describe('CurrentTurnChangeCard – Codex-style file rows', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     ensureTargetsMock.mockResolvedValue(undefined)
     openPreviewSpy.mockResolvedValue(undefined)
   })
 
-  it('renders the filename (not just full path) for each file', () => {
+  it('renders workdir-relative paths for each file', () => {
     renderCard(['/w/proj/README.md', '/w/proj/src/index.ts'])
     expect(screen.getByText('README.md')).toBeInTheDocument()
-    expect(screen.getByText('index.ts')).toBeInTheDocument()
+    expect(screen.getByText('src/index.ts')).toBeInTheDocument()
+  })
+
+
+
+  it('renders per-file insertion and deletion stats when checkpoint data includes them', () => {
+    renderCard(
+      ['/w/proj/src/App.tsx', '/w/proj/src/index.ts'],
+      [
+        { path: '/w/proj/src/App.tsx', insertions: 21, deletions: 3 },
+        { path: '/w/proj/src/index.ts', insertions: 4, deletions: 0 },
+      ],
+    )
+
+    expect(screen.getByText('+21')).toBeInTheDocument()
+    expect(screen.getAllByText('-3').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText('+4')).toBeInTheDocument()
+    expect(screen.getByText('-0')).toBeInTheDocument()
   })
 
   it('sorts previewable changed files before source-only files', () => {
@@ -163,21 +188,6 @@ describe('CurrentTurnChangeCard – rich file row (icon / name / type)', () => {
     ])
   })
 
-  it('renders the extension badge for a markdown file', () => {
-    renderCard(['/w/proj/README.md'])
-    // The type subtitle contains the ext in uppercase: "· MD"
-    expect(screen.getByText(/MD/)).toBeInTheDocument()
-  })
-
-  it('renders the extension badge for a TypeScript file', () => {
-    renderCard(['/w/proj/src/main.ts'])
-    expect(screen.getByText(/TS/)).toBeInTheDocument()
-  })
-
-  it('renders the extension badge for an HTML file', () => {
-    renderCard(['/w/proj/index.html'])
-    expect(screen.getByText(/HTML/)).toBeInTheDocument()
-  })
 })
 
 describe('CurrentTurnChangeCard – row opens the workspace diff', () => {
@@ -235,131 +245,6 @@ describe('CurrentTurnChangeCard – row opens the workspace diff', () => {
   it('each file row exposes a single "open in workspace" button (no expand/collapse toggle)', () => {
     renderCard(['/w/proj/README.md', '/w/proj/src/index.ts'])
     expect(screen.getAllByRole('button', { name: /turnChangesOpenInWorkspaceAria/ })).toHaveLength(2)
-  })
-})
-
-describe('CurrentTurnChangeCard – open-with buttons', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    ensureTargetsMock.mockResolvedValue(undefined)
-    openPreviewSpy.mockResolvedValue(undefined)
-  })
-
-  it('renders an "open-with" button for each previewable file', () => {
-    renderCard(['/w/proj/README.md', '/w/proj/index.html'])
-    // aria-label is the i18n key itself (identity mock)
-    const buttons = screen.getAllByRole('button', { name: 'openWith.title' })
-    expect(buttons).toHaveLength(2)
-  })
-
-  it('does NOT render an "open-with" button for a source file (row still opens workspace)', () => {
-    renderCard(['/w/proj/src/main.ts'])
-    expect(screen.queryAllByRole('button', { name: 'openWith.title' })).toHaveLength(0)
-    // source files keep their workspace-open row — only the open-with pill is dropped
-    expect(screen.getByRole('button', { name: /turnChangesOpenInWorkspaceAria/ })).toBeInTheDocument()
-  })
-
-  it('mixed turn: only previewable rows (md/html) get the open-with button, not .ts', () => {
-    renderCard(['/w/proj/README.md', '/w/proj/src/main.ts', '/w/proj/index.html'])
-    expect(screen.getAllByRole('button', { name: 'openWith.title' })).toHaveLength(2)
-  })
-
-  it('hides the workspace chevron on rows that already show an open-with button', () => {
-    renderCard(['/w/proj/README.md', '/w/proj/index.html', '/w/proj/src/main.ts'])
-
-    expect(screen.getAllByRole('button', { name: 'openWith.title' })).toHaveLength(2)
-    expect(screen.getAllByText('chevron_right')).toHaveLength(1)
-  })
-
-  it('clicking README.md open-with opens menu with workspace preview item', async () => {
-    renderCard(['/w/proj/README.md'])
-    const [openWithBtn] = screen.getAllByRole('button', { name: 'openWith.title' })
-
-    await act(async () => {
-      fireEvent.click(openWithBtn!)
-    })
-
-    // The menu should show a workspace preview item (i18n key)
-    expect(await screen.findByText('openWith.workspacePreview')).toBeInTheDocument()
-  })
-
-  it('clicking workspace preview item in README.md menu calls openPreview', async () => {
-    renderCard(['/w/proj/README.md'])
-    const [openWithBtn] = screen.getAllByRole('button', { name: 'openWith.title' })
-
-    await act(async () => {
-      fireEvent.click(openWithBtn!)
-    })
-
-    const previewItem = await screen.findByText('openWith.workspacePreview')
-    await act(async () => {
-      fireEvent.click(previewItem)
-    })
-
-    expect(openPreviewSpy).toHaveBeenCalledWith('s1', 'README.md', 'file')
-  })
-
-  it('clicking a standalone index.html (no manifest in change-set) offers both workspace preview and in-app browser', async () => {
-    // A hand-authored single-page index.html is statically previewable, so the
-    // menu offers the in-app browser alongside the workspace source view.
-    renderCard(['/w/proj/index.html'])
-    const [openWithBtn] = screen.getAllByRole('button', { name: 'openWith.title' })
-
-    await act(async () => {
-      fireEvent.click(openWithBtn!)
-    })
-
-    expect(await screen.findByText('openWith.workspacePreview')).toBeInTheDocument()
-    expect(screen.queryByText('openWith.inAppBrowser')).toBeInTheDocument()
-  })
-
-  it('clicking a framework-template index.html (manifest in same change-set) hides the in-app browser', async () => {
-    // With a package.json in the same turn, the root index.html is a build
-    // template that needs a dev server — static preview would render blank — so
-    // only the workspace source view is offered.
-    renderCard(['/w/proj/index.html', '/w/proj/package.json', '/w/proj/vite.config.ts'])
-    const [openWithBtn] = screen.getAllByRole('button', { name: 'openWith.title' })
-
-    await act(async () => {
-      fireEvent.click(openWithBtn!)
-    })
-
-    expect(await screen.findByText('openWith.workspacePreview')).toBeInTheDocument()
-    expect(screen.queryByText('openWith.inAppBrowser')).not.toBeInTheDocument()
-  })
-
-  it('clicking built dist index.html open-with opens menu with in-app browser item', async () => {
-    renderCard(['/w/proj/dist/index.html'])
-    const [openWithBtn] = screen.getAllByRole('button', { name: 'openWith.title' })
-
-    await act(async () => {
-      fireEvent.click(openWithBtn!)
-    })
-
-    expect(await screen.findByText('openWith.inAppBrowser')).toBeInTheDocument()
-  })
-
-  it('ensureTargets is called when open-with button is clicked', async () => {
-    renderCard(['/w/proj/README.md'])
-    const [openWithBtn] = screen.getAllByRole('button', { name: 'openWith.title' })
-
-    await act(async () => {
-      fireEvent.click(openWithBtn!)
-    })
-
-    expect(ensureTargetsMock).toHaveBeenCalledTimes(1)
-  })
-
-  it('open-with button does not also trigger the row workspace-open (stopPropagation)', async () => {
-    renderCard(['/w/proj/README.md'])
-    const [openWithBtn] = screen.getAllByRole('button', { name: 'openWith.title' })
-
-    await act(async () => {
-      fireEvent.click(openWithBtn!)
-    })
-
-    // The diff open (3rd arg 'diff') must not have fired from clicking the pill.
-    expect(openPreviewSpy).not.toHaveBeenCalledWith('s1', 'README.md', 'diff')
   })
 })
 
