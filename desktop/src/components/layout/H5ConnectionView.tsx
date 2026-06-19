@@ -39,12 +39,12 @@ export function H5ConnectionView({
 
   return (
     <div className="h-screen flex items-center justify-center bg-[var(--color-surface)] px-6">
-      <section className="w-full max-w-md rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-container-low)] p-6 shadow-[var(--shadow-md)]">
+      <section className="w-full max-w-md rounded-lg border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] p-6 shadow-[var(--shadow-md)]">
         <div className="mb-5">
-          <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">
+          <h1 className="text-lg font-semibold text-[var(--color-token-foreground)]">
             Connect to H5 Access
           </h1>
-          <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
+          <p className="mt-2 text-sm text-[var(--color-token-text-secondary)]">
             Enter the server URL and H5 access token from the desktop app.
           </p>
         </div>

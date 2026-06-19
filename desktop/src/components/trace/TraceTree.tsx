@@ -79,15 +79,15 @@ export function TraceTree({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-[var(--color-surface-container-lowest)]" data-testid="trace-tree">
-      <div className="shrink-0 border-b border-[var(--color-border)] px-3 py-2.5">
-        <label className="flex h-7 items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-2 text-xs text-[var(--color-text-tertiary)]">
+    <div className="flex min-h-0 flex-1 flex-col bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))]" data-testid="trace-tree">
+      <div className="shrink-0 border-b border-[var(--color-token-border)] px-3 py-2.5">
+        <label className="flex h-7 items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-token-border)] bg-[var(--color-surface)] px-2 text-xs text-[var(--color-token-text-secondary)]">
           <Search size={13} strokeWidth={2} />
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t('trace.searchSpans')}
-            className="min-w-0 flex-1 bg-transparent text-xs text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-tertiary)]"
+            className="min-w-0 flex-1 bg-transparent text-xs text-[var(--color-token-foreground)] outline-none placeholder:text-[var(--color-token-text-secondary)]"
           />
         </label>
         <div className="mt-2 flex flex-wrap gap-1">
@@ -99,7 +99,7 @@ export function TraceTree({
               className={`rounded-[var(--radius-sm)] px-2 py-0.5 text-[10px] font-semibold transition-colors ${
                 filter === value
                   ? 'bg-[var(--color-primary-container)] text-[var(--color-on-primary-container)]'
-                  : 'border border-[var(--color-border)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'
+                  : 'border border-[var(--color-token-border)] text-[var(--color-token-text-secondary)] hover:text-[var(--color-token-foreground)]'
               }`}
             >
               {filterLabel(value, t)}
@@ -113,7 +113,7 @@ export function TraceTree({
         aria-label={t('trace.tree.aria')}
         tabIndex={0}
         onKeyDown={onKeyDown}
-        className="min-h-0 flex-1 overflow-y-auto pb-2 outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--color-border-focus)]"
+        className="min-h-0 flex-1 overflow-y-auto pb-2 outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))]"
       >
         {groups.length > 0 ? (
           groups.map((group) => (
@@ -127,7 +127,7 @@ export function TraceTree({
             />
           ))
         ) : (
-          <div className="px-4 py-8 text-center text-xs text-[var(--color-text-tertiary)]">
+          <div className="px-4 py-8 text-center text-xs text-[var(--color-token-text-secondary)]">
             {t('trace.noMatchingSpans')}
           </div>
         )}
@@ -159,7 +159,7 @@ function TurnGroup({
   return (
     <section>
       <div
-        className={`sticky top-0 z-10 flex items-center gap-1 border-b border-[var(--color-border)]/60 bg-[var(--color-surface-container-lowest)] py-1.5 pl-1.5 pr-3 ${
+        className={`sticky top-0 z-10 flex items-center gap-1 border-b border-[var(--color-token-border)]/60 bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] py-1.5 pl-1.5 pr-3 ${
           selected ? 'shadow-[inset_2px_0_0_var(--color-brand)]' : ''
         }`}
       >
@@ -168,7 +168,7 @@ function TurnGroup({
           onClick={onToggle}
           aria-label={t('trace.tree.toggleTurn')}
           aria-expanded={!collapsed}
-          className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-text-primary)]"
+          className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:text-[var(--color-token-foreground)]"
         >
           {collapsed
             ? <ChevronRight size={13} strokeWidth={2} />
@@ -181,12 +181,12 @@ function TurnGroup({
           className="flex min-w-0 flex-1 items-baseline gap-1.5 text-left"
         >
           <span className={`shrink-0 text-[10px] font-semibold uppercase tracking-[0.08em] ${
-            selected ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-secondary)]'
+            selected ? 'text-[var(--color-token-foreground)]' : 'text-[var(--color-token-text-secondary)]'
           }`}>
             {turnLabel}
           </span>
           {preview && preview !== turnLabel ? (
-            <span className="truncate text-[11px] text-[var(--color-text-tertiary)]">{preview}</span>
+            <span className="truncate text-[11px] text-[var(--color-token-text-secondary)]">{preview}</span>
           ) : null}
         </button>
         {group.errorCount > 0 ? (
@@ -232,21 +232,21 @@ function TreeRowButton({ row, selected, onSelect }: { row: TreeRow; selected: bo
       <TypeIcon span={span} />
       <span className="flex min-w-0 flex-1 items-baseline gap-1.5">
         <span className={`shrink-0 truncate text-xs font-semibold ${
-          selected ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-secondary)]'
+          selected ? 'text-[var(--color-token-foreground)]' : 'text-[var(--color-token-text-secondary)]'
         }`}>
           {spanDisplayTitle(span, t)}
         </span>
         {preview ? (
-          <span className="truncate text-[11px] text-[var(--color-text-tertiary)]">{preview}</span>
+          <span className="truncate text-[11px] text-[var(--color-token-text-secondary)]">{preview}</span>
         ) : null}
         {span.isSidechain ? (
-          <span className="shrink-0 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-1 text-[9px] text-[var(--color-text-tertiary)]">
+          <span className="shrink-0 rounded-[var(--radius-sm)] border border-[var(--color-token-border)] px-1 text-[9px] text-[var(--color-token-text-secondary)]">
             {t('trace.sidechain')}
           </span>
         ) : null}
       </span>
       {duration ? (
-        <span className="shrink-0 font-mono text-[10px] text-[var(--color-text-tertiary)]">{duration}</span>
+        <span className="shrink-0 font-mono text-[10px] text-[var(--color-token-text-secondary)]">{duration}</span>
       ) : null}
       <StatusGlyph status={span.status} />
     </button>

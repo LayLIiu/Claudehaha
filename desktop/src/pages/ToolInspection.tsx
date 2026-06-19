@@ -45,7 +45,7 @@ export function ToolInspection() {
                 Target File
               </span>
               <div className="flex items-center gap-2 text-[var(--color-on-surface)]">
-                <span className="material-symbols-outlined text-[18px]">description</span>
+                <span className="material-symbols-outlined icon-md">description</span>
                 <span className="font-[var(--font-mono)] text-sm">{filePath}</span>
               </div>
             </div>
@@ -56,7 +56,7 @@ export function ToolInspection() {
               </span>
               <div className="flex items-center gap-2 text-[var(--color-tertiary)]">
                 <span
-                  className="material-symbols-outlined text-[18px]"
+                  className="material-symbols-outlined icon-md"
                   style={{ fontVariationSettings: "'FILL' 1" }}
                 >
                   check_circle
@@ -70,7 +70,7 @@ export function ToolInspection() {
                 Lines Modified
               </span>
               <div className="flex items-center gap-2 text-[var(--color-on-surface)]">
-                <span className="material-symbols-outlined text-[18px]">edit_note</span>
+                <span className="material-symbols-outlined icon-md">edit_note</span>
                 <span className="font-semibold text-sm">
                   +{linesChanged.added} / -{linesChanged.removed} lines
                 </span>
@@ -153,7 +153,7 @@ export function ToolInspection() {
           </div>
 
           {/* ── Implementation Context ─────────────────────── */}
-          <div className="p-6 bg-[var(--color-surface-container-lowest)] rounded-2xl border border-[var(--color-outline-variant)]/10">
+          <div className="p-6 bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] rounded-2xl border border-[var(--color-outline-variant)]/10">
             <h3 className="font-[var(--font-headline)] font-bold text-sm text-[var(--color-on-surface)] mb-4">
               Implementation Context
             </h3>
@@ -161,7 +161,7 @@ export function ToolInspection() {
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
                   <div className="mt-1 w-6 h-6 rounded bg-[var(--color-primary-fixed)] flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[14px] text-[var(--color-on-primary)]">
+                    <span className="material-symbols-outlined icon-xs text-[var(--color-on-primary)]">
                       psychology
                     </span>
                   </div>
@@ -180,7 +180,7 @@ export function ToolInspection() {
 
                 <div className="flex items-start gap-3">
                   <div className="mt-1 w-6 h-6 rounded bg-[var(--color-diff-added-bg)] flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[14px] text-[var(--color-diff-added-text)]">
+                    <span className="material-symbols-outlined icon-xs text-[var(--color-diff-added-text)]">
                       science
                     </span>
                   </div>

@@ -152,7 +152,7 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
     }
   }
 
-  const selectClass = 'w-full h-10 px-3 pr-8 rounded-[12px] border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-border-focus)] focus:shadow-[var(--shadow-focus-ring)] transition-[border-color,box-shadow] duration-150 appearance-none cursor-pointer'
+  const selectClass = 'w-full h-10 px-3 pr-8 rounded-[var(--radius-lg)] border border-[var(--color-token-border)] bg-[var(--color-surface)] text-sm text-[var(--color-token-foreground)] outline-none focus:border-[var(--color-token-focus-border,var(--color-border-focus))] focus:shadow-[var(--shadow-focus-ring)] transition-[border-color,box-shadow] duration-150 appearance-none cursor-pointer'
 
   return (
     <Modal
@@ -169,9 +169,9 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
       }
     >
       {/* Info banner */}
-      <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-[12px] glass-panel mb-5">
-        <span className="material-symbols-outlined text-[18px] text-[var(--color-text-secondary)]">info</span>
-        <span className="text-xs text-[var(--color-text-secondary)]">
+      <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-[var(--radius-lg)] glass-panel mb-5">
+        <span className="material-symbols-outlined icon-md text-[var(--color-token-text-secondary)]">info</span>
+        <span className="text-xs text-[var(--color-token-text-secondary)]">
           {t('newTask.localWarning')}
         </span>
       </div>
@@ -210,7 +210,7 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
 
         {/* Frequency */}
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-[var(--color-text-primary)]">{t('newTask.frequency')}</label>
+          <label className="text-sm font-medium text-[var(--color-token-foreground)]">{t('newTask.frequency')}</label>
           <div className="relative">
             <select
               value={frequency}
@@ -221,7 +221,7 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
-            <span className="material-symbols-outlined text-[18px] text-[var(--color-text-tertiary)] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+            <span className="material-symbols-outlined icon-md text-[var(--color-token-text-secondary)] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
               expand_more
             </span>
           </div>
@@ -239,7 +239,7 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
                 <option key={n} value={n}>{t('newTask.intervalMinutes', { n })}</option>
               ))}
             </select>
-            <span className="material-symbols-outlined text-[18px] text-[var(--color-text-tertiary)] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+            <span className="material-symbols-outlined icon-md text-[var(--color-token-text-secondary)] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
               expand_more
             </span>
           </div>
@@ -257,7 +257,7 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
                   <option key={n} value={n}>{t('newTask.intervalHours', { n })}</option>
                 ))}
               </select>
-              <span className="material-symbols-outlined text-[18px] text-[var(--color-text-tertiary)] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+              <span className="material-symbols-outlined icon-md text-[var(--color-token-text-secondary)] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
                 expand_more
               </span>
             </div>
@@ -271,7 +271,7 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
                   <option key={m} value={m}>{t('newTask.atMinute', { m: m.toString().padStart(2, '0') })}</option>
                 ))}
               </select>
-              <span className="material-symbols-outlined text-[18px] text-[var(--color-text-tertiary)] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+              <span className="material-symbols-outlined icon-md text-[var(--color-token-text-secondary)] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
                 expand_more
               </span>
             </div>
@@ -293,7 +293,7 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
                 <option key={d} value={d}>{t('newTask.onMonthDay', { d })}</option>
               ))}
             </select>
-            <span className="material-symbols-outlined text-[18px] text-[var(--color-text-tertiary)] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+            <span className="material-symbols-outlined icon-md text-[var(--color-token-text-secondary)] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
               expand_more
             </span>
           </div>
@@ -306,9 +306,9 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
               value={customCron}
               onChange={(e) => setCustomCron(e.target.value)}
               placeholder={t('newTask.cronFormatHint')}
-              className="w-full h-10 px-3 rounded-[12px] border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text-primary)] font-[var(--font-mono)] outline-none focus:border-[var(--color-border-focus)] focus:shadow-[var(--shadow-focus-ring)] transition-[border-color,box-shadow] duration-150"
+              className="w-full h-10 px-3 rounded-[var(--radius-lg)] border border-[var(--color-token-border)] bg-[var(--color-surface)] text-sm text-[var(--color-token-foreground)] font-[var(--font-mono)] outline-none focus:border-[var(--color-token-focus-border,var(--color-border-focus))] focus:shadow-[var(--shadow-focus-ring)] transition-[border-color,box-shadow] duration-150"
             />
-            <span className="text-xs text-[var(--color-text-tertiary)]">{t('newTask.cronFormatHint')}</span>
+            <span className="text-xs text-[var(--color-token-text-secondary)]">{t('newTask.cronFormatHint')}</span>
             {customCron.trim() && !isValidCron(customCron) && (
               <span className="text-xs text-[var(--color-error)]">{t('newTask.invalidCron')}</span>
             )}
@@ -322,14 +322,14 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
               type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
-              className="w-auto h-10 px-3 rounded-[12px] border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-border-focus)] focus:shadow-[var(--shadow-focus-ring)] transition-[border-color,box-shadow] duration-150"
+              className="w-auto h-10 px-3 rounded-[var(--radius-lg)] border border-[var(--color-token-border)] bg-[var(--color-surface)] text-sm text-[var(--color-token-foreground)] outline-none focus:border-[var(--color-token-focus-border,var(--color-border-focus))] focus:shadow-[var(--shadow-focus-ring)] transition-[border-color,box-shadow] duration-150"
               style={{ maxWidth: 120 }}
             />
           </div>
         )}
 
         {/* Notification */}
-        <div className="flex flex-col gap-3 rounded-[12px] glass-panel p-3">
+        <div className="flex flex-col gap-3 rounded-[var(--radius-lg)] glass-panel p-3">
           <label className="flex items-center gap-3 cursor-pointer">
             <input
               type="checkbox"
@@ -340,11 +340,11 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
                   setNotifyChannels(['desktop'])
                 }
               }}
-              className="w-4 h-4 rounded border-[var(--color-border)] accent-[var(--color-brand)]"
+              className="w-4 h-4 rounded border-[var(--color-token-border)] accent-[var(--color-brand)]"
             />
             <div>
-              <span className="text-sm font-medium text-[var(--color-text-primary)]">{t('newTask.notifyOnComplete')}</span>
-              <p className="text-xs text-[var(--color-text-tertiary)]">{t('newTask.notifyHint')}</p>
+              <span className="text-sm font-medium text-[var(--color-token-foreground)]">{t('newTask.notifyOnComplete')}</span>
+              <p className="text-xs text-[var(--color-token-text-secondary)]">{t('newTask.notifyHint')}</p>
             </div>
           </label>
           {notifyEnabled && (
@@ -359,9 +359,9 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
                         e.target.checked ? [...prev, 'desktop'] : prev.filter((c) => c !== 'desktop'),
                       )
                     }}
-                    className="w-3.5 h-3.5 rounded border-[var(--color-border)] accent-[var(--color-brand)]"
+                    className="w-3.5 h-3.5 rounded border-[var(--color-token-border)] accent-[var(--color-brand)]"
                   />
-                  <span className="text-sm text-[var(--color-text-primary)]">{t('newTask.notifyDesktop')}</span>
+                  <span className="text-sm text-[var(--color-token-foreground)]">{t('newTask.notifyDesktop')}</span>
                 </label>
                 <label className={`flex items-center gap-2 ${isFeishuConfigured ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}>
                   <input
@@ -373,9 +373,9 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
                         e.target.checked ? [...prev, 'feishu'] : prev.filter((c) => c !== 'feishu'),
                       )
                     }}
-                    className="w-3.5 h-3.5 rounded border-[var(--color-border)] accent-[var(--color-brand)]"
+                    className="w-3.5 h-3.5 rounded border-[var(--color-token-border)] accent-[var(--color-brand)]"
                   />
-                  <span className="text-sm text-[var(--color-text-primary)]">{t('settings.adapters.feishu')}</span>
+                  <span className="text-sm text-[var(--color-token-foreground)]">{t('settings.adapters.feishu')}</span>
                   {!isFeishuConfigured && (
                     <span className="text-[10px] text-[var(--color-warning)]">{t('newTask.notConfigured')}</span>
                   )}
@@ -390,9 +390,9 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
                         e.target.checked ? [...prev, 'telegram'] : prev.filter((c) => c !== 'telegram'),
                       )
                     }}
-                    className="w-3.5 h-3.5 rounded border-[var(--color-border)] accent-[var(--color-brand)]"
+                    className="w-3.5 h-3.5 rounded border-[var(--color-token-border)] accent-[var(--color-brand)]"
                   />
-                  <span className="text-sm text-[var(--color-text-primary)]">{t('settings.adapters.telegram')}</span>
+                  <span className="text-sm text-[var(--color-token-foreground)]">{t('settings.adapters.telegram')}</span>
                   {!isTelegramConfigured && (
                     <span className="text-[10px] text-[var(--color-warning)]">{t('newTask.notConfigured')}</span>
                   )}
@@ -400,7 +400,7 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
               </div>
               {notifyChannels.length === 0 && (
                 <p className="text-xs text-[var(--color-warning)]">
-                  <span className="material-symbols-outlined text-[12px] align-middle mr-1">warning</span>
+                  <span className="material-symbols-outlined icon-2xs align-middle mr-1">warning</span>
                   {t('newTask.noChannelSelected')}
                 </p>
               )}
@@ -409,8 +409,8 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
         </div>
 
         {/* Cron preview */}
-        <div className="flex items-center gap-2 px-3 py-2 rounded-[12px] glass-panel text-xs text-[var(--color-text-secondary)]">
-          <span className="material-symbols-outlined text-[16px]">schedule</span>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-[var(--radius-lg)] glass-panel text-xs text-[var(--color-token-text-secondary)]">
+          <span className="material-symbols-outlined icon-sm">schedule</span>
           <span>
             {frequency === 'customCron' && customCron.trim() && !isValidCron(customCron)
               ? t('newTask.invalidCron')
@@ -419,7 +419,7 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
           </span>
         </div>
 
-        <p className="text-xs text-[var(--color-text-tertiary)]">
+        <p className="text-xs text-[var(--color-token-text-secondary)]">
           {t('newTask.delayNote')}
         </p>
       </div>

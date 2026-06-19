@@ -25,7 +25,7 @@ export function MessageDetail({ span }: { span: TraceSpan }) {
         {normalized.content.length > 0 ? (
           <MessageBlocks message={normalized} />
         ) : (
-          <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] px-3 py-3 text-xs text-[var(--color-text-tertiary)]">
+          <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-token-border)] px-3 py-3 text-xs text-[var(--color-token-text-secondary)]">
             {t('trace.noData')}
           </div>
         )}

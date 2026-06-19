@@ -76,13 +76,13 @@ export function TaskRow({ task, showLogs, onToggleLogs }: Props) {
       <div className="flex items-center justify-between px-4 py-3 hover:bg-[var(--color-surface-hover)] transition-colors group">
         {/* Left: status + info */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${task.enabled ? 'bg-[var(--color-success)]' : 'bg-[var(--color-text-tertiary)]'}`} />
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${task.enabled ? 'bg-[var(--color-success)]' : 'bg-[var(--color-token-text-secondary)]'}`} />
           <div className="min-w-0">
-            <div className="text-sm font-medium text-[var(--color-text-primary)] truncate">{task.name}</div>
+            <div className="text-sm font-medium text-[var(--color-token-foreground)] truncate">{task.name}</div>
             {task.description && (
-              <div className="text-xs text-[var(--color-text-secondary)] truncate">{task.description}</div>
+              <div className="text-xs text-[var(--color-token-text-secondary)] truncate">{task.description}</div>
             )}
-            <div className="flex items-center gap-3 text-[11px] text-[var(--color-text-tertiary)] mt-0.5">
+            <div className="flex items-center gap-3 text-[11px] text-[var(--color-token-text-secondary)] mt-0.5">
               <span>{t('tasks.createdAt')}{new Date(task.createdAt).toLocaleDateString()}</span>
               {task.lastFiredAt && (
                 <span>{t('tasks.lastRunAt')}{new Date(task.lastFiredAt).toLocaleDateString()}</span>
@@ -93,7 +93,7 @@ export function TaskRow({ task, showLogs, onToggleLogs }: Props) {
 
         {/* Right: cron + actions */}
         <div className="flex items-center gap-3 flex-shrink-0">
-          <span className="text-xs text-[var(--color-text-tertiary)]" title={task.cron}>
+          <span className="text-xs text-[var(--color-token-text-secondary)]" title={task.cron}>
             {describeCron(task.cron, t)}
           </span>
 
@@ -103,10 +103,10 @@ export function TaskRow({ task, showLogs, onToggleLogs }: Props) {
               <button
                 onClick={() => isRunning || !task.enabled ? undefined : setConfirmAction(confirmAction === 'run' ? null : 'run')}
                 disabled={isRunning || !task.enabled}
-                className={`${iconBtn} ${task.enabled ? 'text-[var(--color-brand)] hover:bg-[var(--color-surface-selected)]' : 'text-[var(--color-text-tertiary)] cursor-not-allowed'} disabled:opacity-50`}
+                className={`${iconBtn} ${task.enabled ? 'text-[var(--color-brand)] hover:bg-[var(--color-surface-selected)]' : 'text-[var(--color-token-text-secondary)] cursor-not-allowed'} disabled:opacity-50`}
                 title={task.enabled ? t('tasks.runNow') : undefined}
               >
-                <span className={`material-symbols-outlined text-[18px] ${isRunning ? 'animate-spin' : ''}`}>
+                <span className={`material-symbols-outlined icon-md ${isRunning ? 'animate-spin' : ''}`}>
                   {isRunning ? 'sync' : 'play_arrow'}
                 </span>
               </button>
@@ -124,38 +124,38 @@ export function TaskRow({ task, showLogs, onToggleLogs }: Props) {
             {/* View Logs */}
             <button
               onClick={onToggleLogs}
-              className={`${iconBtn} ${showLogs ? 'text-[var(--color-brand)] bg-[var(--color-surface-selected)]' : 'text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface-selected)]'}`}
+              className={`${iconBtn} ${showLogs ? 'text-[var(--color-brand)] bg-[var(--color-surface-selected)]' : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-selected)]'}`}
               title={t('tasks.viewLogs')}
             >
-              <span className="material-symbols-outlined text-[18px]">receipt_long</span>
+              <span className="material-symbols-outlined icon-md">receipt_long</span>
             </button>
 
             {/* More menu */}
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => { setShowMenu(!showMenu); setConfirmAction(null) }}
-                className={`${iconBtn} text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface-selected)]`}
+                className={`${iconBtn} text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-selected)]`}
               >
-                <span className="material-symbols-outlined text-[18px]">more_vert</span>
+                <span className="material-symbols-outlined icon-md">more_vert</span>
               </button>
 
               {showMenu && !confirmAction && (
-                <div className="absolute right-0 top-full mt-1 z-50 w-44 glass-panel rounded-[14px] shadow-lg py-1">
+                <div className="absolute right-0 top-full mt-1 z-50 w-44 glass-panel rounded-[var(--radius-xl)] shadow-lg py-1">
                   {/* Edit */}
                   <button
                     onClick={() => { setShowMenu(false); setShowEdit(true) }}
-                    className={`${menuItem} text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]`}
+                    className={`${menuItem} text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]`}
                   >
-                    <span className="material-symbols-outlined text-[16px] text-[var(--color-text-secondary)]">edit</span>
+                    <span className="material-symbols-outlined icon-sm text-[var(--color-token-text-secondary)]">edit</span>
                     {t('tasks.edit')}
                   </button>
 
                   {/* Toggle */}
                   <button
                     onClick={() => setConfirmAction('toggle')}
-                    className={`${menuItem} text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]`}
+                    className={`${menuItem} text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]`}
                   >
-                    <span className="material-symbols-outlined text-[16px] text-[var(--color-text-secondary)]">
+                    <span className="material-symbols-outlined icon-sm text-[var(--color-token-text-secondary)]">
                       {task.enabled ? 'pause_circle' : 'play_circle'}
                     </span>
                     {task.enabled ? t('common.disable') : t('common.enable')}
@@ -168,7 +168,7 @@ export function TaskRow({ task, showLogs, onToggleLogs }: Props) {
                     onClick={() => setConfirmAction('delete')}
                     className={`${menuItem} text-[var(--color-error)] hover:bg-[var(--color-error-container)]/18`}
                   >
-                    <span className="material-symbols-outlined text-[16px]">delete</span>
+                    <span className="material-symbols-outlined icon-sm">delete</span>
                     {t('common.delete')}
                   </button>
                 </div>

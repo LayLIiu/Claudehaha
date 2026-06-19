@@ -61,8 +61,8 @@ export function AttachmentGallery({ attachments, variant = 'message', onRemove }
                   onClick={() => setActiveImageIndex(images.findIndex((image) => image.src === src))}
                   className={
                     isComposer
-                      ? 'overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)]'
-                      : 'overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] text-left shadow-sm transition-transform hover:scale-[1.01]'
+                      ? 'overflow-hidden rounded-xl border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)]'
+                      : 'overflow-hidden rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] text-left shadow-sm transition-transform hover:scale-[1.01]'
                   }
                 >
                   <img
@@ -84,13 +84,13 @@ export function AttachmentGallery({ attachments, variant = 'message', onRemove }
                       tabIndex={0}
                       className={[
                         'inline-flex h-7 max-w-[260px] items-center gap-1.5 rounded-full border',
-                        'border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-2.5',
-                        'text-[12px] font-medium leading-none text-[var(--color-text-primary)] shadow-[0_1px_2px_rgba(0,0,0,0.04)]',
+                        'border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] px-2.5',
+                        'text-[12px] font-medium leading-none text-[var(--color-token-foreground)] shadow-[0_1px_2px_rgba(0,0,0,0.04)]',
                         'transition-colors hover:border-[var(--color-brand)]/45 hover:bg-[var(--color-surface-container)]',
                         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)] focus-visible:ring-offset-2',
                       ].join(' ')}
                     >
-                      <span className="material-symbols-outlined text-[15px] text-[var(--color-text-tertiary)]">
+                      <span className="material-symbols-outlined text-[15px] text-[var(--color-token-text-secondary)]">
                         ads_click
                       </span>
                       <span className="min-w-0 truncate">{attachment.name}</span>
@@ -100,13 +100,13 @@ export function AttachmentGallery({ attachments, variant = 'message', onRemove }
                       role="tooltip"
                       className={[
                         'pointer-events-none invisible absolute bottom-9 right-0 z-30 w-max max-w-[min(340px,calc(100vw-3rem))]',
-                        'translate-y-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-high)] px-3 py-2',
-                        'text-left text-[13px] leading-5 text-[var(--color-text-primary)] opacity-0 shadow-[var(--shadow-dropdown)]',
+                        'translate-y-1 rounded-xl border border-[var(--color-token-border)] bg-[var(--color-surface-container-high)] px-3 py-2',
+                        'text-left text-[13px] leading-5 text-[var(--color-token-foreground)] opacity-0 shadow-[var(--shadow-dropdown)]',
                         'transition-all duration-150 group-hover/selection:visible group-hover/selection:translate-y-0 group-hover/selection:opacity-100',
                         'group-focus-within/selection:visible group-focus-within/selection:translate-y-0 group-focus-within/selection:opacity-100',
                       ].join(' ')}
                     >
-                      <span className="block text-[11px] font-medium uppercase tracking-wide text-[var(--color-text-tertiary)]">
+                      <span className="block text-[11px] font-medium uppercase tracking-wide text-[var(--color-token-text-secondary)]">
                         修改内容
                       </span>
                       <span className="mt-1 block whitespace-pre-wrap break-words">
@@ -139,22 +139,22 @@ export function AttachmentGallery({ attachments, variant = 'message', onRemove }
             <div
               key={attachment.id || `${attachment.name}-${index}`}
               className={[
-                'group/file inline-flex max-w-full min-w-0 border border-[var(--color-border)]',
-                'bg-[var(--color-surface-container-low)] text-[var(--color-text-secondary)] shadow-[0_1px_2px_rgba(0,0,0,0.04)]',
+                'group/file inline-flex max-w-full min-w-0 border border-[var(--color-token-border)]',
+                'bg-[var(--color-surface-container-low)] text-[var(--color-token-text-secondary)] shadow-[0_1px_2px_rgba(0,0,0,0.04)]',
                 hasQuotePreview
-                  ? 'items-start gap-2 rounded-[8px] px-2.5 py-2'
+                  ? 'items-start gap-2 rounded-[var(--radius-sm)] px-2.5 py-2'
                   : 'h-9 items-center gap-2 rounded-full px-3',
               ].join(' ')}
             >
-              <span className={`material-symbols-outlined shrink-0 text-[17px] text-[var(--color-text-tertiary)] ${hasQuotePreview ? 'mt-0.5' : ''}`}>
+              <span className={`material-symbols-outlined shrink-0 text-[17px] text-[var(--color-token-text-secondary)] ${hasQuotePreview ? 'mt-0.5' : ''}`}>
                 {hasQuotePreview ? 'chat_bubble' : attachment.isDirectory ? 'folder' : 'description'}
               </span>
               <span className="min-w-0">
-                <span className="block min-w-0 max-w-[260px] truncate text-[13px] font-medium leading-5 text-[var(--color-text-primary)]">
+                <span className="block min-w-0 max-w-[260px] truncate text-[13px] font-medium leading-5 text-[var(--color-token-foreground)]">
                   {attachment.name}{lineLabel}
                 </span>
                 {hasQuotePreview && (
-                  <span className="mt-0.5 block max-w-[320px] truncate font-[var(--font-mono)] text-[11px] leading-4 text-[var(--color-text-tertiary)]">
+                  <span className="mt-0.5 block max-w-[320px] truncate font-[var(--font-mono)] text-[11px] leading-4 text-[var(--color-token-text-secondary)]">
                     {quotePreview}
                   </span>
                 )}
@@ -163,7 +163,7 @@ export function AttachmentGallery({ attachments, variant = 'message', onRemove }
                 <button
                   type="button"
                   onClick={() => onRemove(attachment.id!)}
-                  className={`${hasQuotePreview ? 'mt-0.5' : 'ml-0.5'} flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-text-primary)]`}
+                  className={`${hasQuotePreview ? 'mt-0.5' : 'ml-0.5'} flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[var(--color-token-text-secondary)] transition-colors hover:text-[var(--color-token-foreground)]`}
                   aria-label={`Remove ${attachment.name}`}
                 >
                   <span className="material-symbols-outlined text-[17px]">close</span>

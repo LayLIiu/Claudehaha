@@ -44,7 +44,7 @@ export function DayOfWeekPicker({ selected, onChange }: Props) {
               w-8 h-8 rounded-full text-xs font-medium transition-colors
               ${isActive
                 ? 'bg-[var(--color-brand)]/12 text-[var(--color-brand)] border border-[var(--color-brand)]/30'
-                : 'glass-panel text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface-hover)]'
+                : 'glass-panel text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)]'
               }
             `}
           >

@@ -83,11 +83,11 @@ export function TraceSplitLayout({ tree, detail }: { tree: ReactNode; detail: Re
         data-testid="trace-split-divider"
         onMouseDown={onDividerMouseDown}
         onDoubleClick={onDividerDoubleClick}
-        className="group relative hidden w-px shrink-0 cursor-col-resize bg-[var(--color-border)] lg:block"
+        className="group relative hidden w-px shrink-0 cursor-col-resize bg-[var(--color-token-border)] lg:block"
       >
         <div className="absolute inset-y-0 -left-[2px] w-[5px] transition-colors group-hover:bg-[var(--color-brand)]/25" />
       </div>
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-t border-[var(--color-border)] lg:border-t-0">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-t border-[var(--color-token-border)] lg:border-t-0">
         {detail}
       </div>
     </div>

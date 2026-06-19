@@ -110,16 +110,16 @@ export function CurrentTurnChangeCard({
 
   return (
     <section
-      className="mx-auto mb-4 w-full max-w-[860px] overflow-hidden rounded-[16px] border border-white/12 bg-[#171717] shadow-[0_8px_24px_rgba(0,0,0,0.16)]"
+      className="mx-auto mb-4 w-full max-w-[860px] overflow-hidden rounded-[var(--radius-xl)] border border-white/12 bg-[#171717] shadow-[0_8px_24px_rgba(0,0,0,0.16)]"
       aria-label={cardLabel}
     >
       <div className="flex min-h-[74px] items-center justify-between gap-3 border-b border-white/12 px-4 py-3">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[13px] bg-black/35 text-[var(--color-text-secondary)] shadow-inner shadow-white/[0.03] ring-1 ring-white/[0.04]">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-black/35 text-[var(--color-token-text-secondary)] shadow-inner shadow-white/[0.03] ring-1 ring-white/[0.04]">
             <FileDiff size={20} strokeWidth={2.2} />
           </div>
           <div className="min-w-0">
-            <div className="truncate text-[16px] font-semibold leading-5 tracking-[-0.02em] text-[var(--color-text-primary)]">
+            <div className="truncate text-[16px] font-semibold leading-5 tracking-[-0.02em] text-[var(--color-token-foreground)]">
               {t('chat.turnChangesTitle', { count: files.length })}
             </div>
             <div className="mt-0.5 flex items-center gap-1.5 font-mono text-[14px] font-medium leading-5">
@@ -135,7 +135,7 @@ export function CurrentTurnChangeCard({
             onClick={onUndo}
             disabled={isUndoing}
             aria-label={undoAria}
-            className="inline-flex h-8 items-center gap-1.5 rounded-[10px] px-2 text-[14px] font-semibold text-[var(--color-text-primary)] transition-colors hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-8 items-center gap-1.5 rounded-[var(--radius-md)] px-2 text-[14px] font-semibold text-[var(--color-token-foreground)] transition-colors hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isUndoing ? t('chat.turnChangesUndoing') : t('chat.turnChangesUndo')}
             <RotateCcw size={16} strokeWidth={2.2} />
@@ -144,7 +144,7 @@ export function CurrentTurnChangeCard({
             type="button"
             onClick={handleReview}
             disabled={files.length === 0}
-            className="inline-flex h-9 items-center rounded-[11px] border border-white/12 bg-white/[0.035] px-3 text-[14px] font-semibold text-[var(--color-text-primary)] transition-colors hover:border-white/20 hover:bg-white/[0.065] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-9 items-center rounded-[var(--radius-md)] border border-white/12 bg-white/[0.035] px-3 text-[14px] font-semibold text-[var(--color-token-foreground)] transition-colors hover:border-white/20 hover:bg-white/[0.065] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {t('chat.turnChangesReview')}
           </button>
@@ -161,7 +161,7 @@ export function CurrentTurnChangeCard({
             title={fileEntry.displayPath}
             className="flex min-h-[46px] w-full min-w-0 items-center justify-between gap-4 px-4 text-left transition-colors hover:bg-white/[0.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-brand)]/35"
           >
-            <span className="min-w-0 flex-1 truncate text-[15px] font-normal leading-5 tracking-[-0.01em] text-[var(--color-text-primary)]">
+            <span className="min-w-0 flex-1 truncate text-[15px] font-normal leading-5 tracking-[-0.01em] text-[var(--color-token-foreground)]">
               {fileEntry.displayPath}
             </span>
             {fileEntry.insertions !== null || fileEntry.deletions !== null ? (
@@ -178,7 +178,7 @@ export function CurrentTurnChangeCard({
         <button
           type="button"
           onClick={() => setShowAllFiles((current) => !current)}
-          className="flex w-full items-center justify-center gap-1 border-t border-[var(--color-border)] px-4 py-2 text-xs text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-brand)]/35"
+          className="flex w-full items-center justify-center gap-1 border-t border-[var(--color-token-border)] px-4 py-2 text-xs text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-brand)]/35"
         >
           {showAllFiles ? (
             <>

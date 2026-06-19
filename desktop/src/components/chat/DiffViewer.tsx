@@ -2,6 +2,7 @@ import ReactDiffViewer, { DiffMethod } from 'react-diff-viewer-continued'
 import { Highlight, type PrismTheme } from 'prism-react-renderer'
 import { CopyButton } from '../shared/CopyButton'
 import { useUIStore } from '../../stores/uiStore'
+import { calculateDiffStats } from './diffStats'
 
 type Props = {
   filePath: string
@@ -107,10 +108,10 @@ const diffStyles = {
       codeFoldGutterBackground: 'var(--color-surface-container-high)',
       codeFoldBackground: 'var(--color-surface-container-highest)',
       emptyLineBackground: 'var(--color-surface-container-low)',
-      gutterColor: 'var(--color-text-tertiary)',
+      gutterColor: 'var(--color-token-text-secondary)',
       addedGutterColor: 'var(--color-diff-added-text)',
       removedGutterColor: 'var(--color-diff-removed-text)',
-      codeFoldContentColor: 'var(--color-text-tertiary)',
+      codeFoldContentColor: 'var(--color-token-text-secondary)',
       diffViewerTitleBackground: 'var(--color-diff-title-bg)',
       diffViewerTitleColor: 'var(--color-diff-title-color)',
       diffViewerTitleBorderColor: 'var(--color-diff-title-border)',
@@ -132,7 +133,7 @@ const diffStyles = {
   },
   wordDiff: {
     padding: '1px 2px',
-    borderRadius: '2px',
+    borderRadius: 'var(--radius-2xs)',
   },
 }
 
@@ -201,23 +202,20 @@ export function DiffViewer({ filePath, oldString, newString, monochrome = false 
   const theme = useUIStore((state) => state.theme)
   const language = inferLanguage(filePath)
 
-  const oldLines = oldString.split('\n')
-  const newLines = newString.split('\n')
-  const additions = newLines.filter((l, i) => l !== (oldLines[i] ?? null)).length
-  const deletions = oldLines.filter((l, i) => l !== (newLines[i] ?? null)).length
+  const { additions, deletions } = calculateDiffStats(oldString, newString)
 
   return (
     <div className={monochrome
-      ? 'overflow-hidden rounded-[16px] border border-white/8 bg-[rgba(255,255,255,0.02)]'
-      : 'overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-outline-variant)]/50 bg-[var(--color-surface-container-low)]'}>
+      ? 'overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--color-token-border)] bg-[rgba(255,255,255,0.02)]'
+      : 'overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-token-border)] bg-[var(--color-token-dropdown-background)]'}>
       {/* Header */}
       <div className={monochrome
-        ? 'flex items-center justify-between border-b border-white/8 bg-[rgba(255,255,255,0.02)] px-3 py-1.5'
-        : 'flex items-center justify-between border-b border-[var(--color-outline-variant)]/40 bg-[var(--color-surface-container)] px-3 py-1.5'}>
+        ? 'flex items-center justify-between border-b border-[var(--color-token-border)] bg-[rgba(255,255,255,0.02)] px-3 py-1.5'
+        : 'flex items-center justify-between border-b border-[var(--color-token-border)] bg-[var(--color-token-dropdown-background)] px-3 py-1.5'}>
         <div className="min-w-0">
           <div className={monochrome
             ? 'truncate font-[var(--font-mono)] text-[11px] text-[rgba(255,255,255,0.38)]'
-            : 'truncate font-[var(--font-mono)] text-[11px] text-[var(--color-text-tertiary)]'}>
+            : 'truncate font-[var(--font-mono)] text-[11px] text-[var(--color-token-description-foreground)]'}>
             {filePath}
           </div>
           <div className="mt-1 flex items-center gap-2 text-[10px] uppercase tracking-[0.14em]">
@@ -233,8 +231,8 @@ export function DiffViewer({ filePath, oldString, newString, monochrome = false 
           text={`--- ${filePath}\n+++ ${filePath}`}
           label="Copy path"
           className={monochrome
-            ? 'rounded-md border border-white/8 bg-[rgba(255,255,255,0.02)] px-2 py-1 text-[11px] text-[rgba(255,255,255,0.42)] transition-colors hover:bg-[rgba(255,255,255,0.05)] hover:text-[rgba(255,255,255,0.78)]'
-            : 'rounded-md border border-[var(--color-outline-variant)]/40 bg-[var(--color-surface-container-lowest)] px-2 py-1 text-[11px] text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-container-high)] hover:text-[var(--color-text-primary)]'}
+            ? 'rounded-md border border-[var(--color-token-border)] bg-[rgba(255,255,255,0.02)] px-2 py-1 text-[11px] text-[rgba(255,255,255,0.42)] transition-colors hover:bg-[rgba(255,255,255,0.05)] hover:text-[rgba(255,255,255,0.78)]'
+            : 'rounded-md border border-[var(--color-token-border)] bg-[var(--color-token-editor-background)] px-2 py-1 text-[11px] text-[var(--color-token-description-foreground)] transition-colors hover:bg-[var(--color-token-bg-secondary)] hover:text-[var(--color-token-foreground)]'}
         />
       </div>
 

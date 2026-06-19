@@ -34,11 +34,11 @@ function toneForStatus(status: McpServerRecord['status']) {
     case 'connected':
       return 'bg-[var(--color-inspector-success-bg)] text-[var(--color-inspector-success)] border-[var(--color-inspector-border)]'
     case 'needs-auth':
-      return 'bg-[var(--color-surface-container-low)] text-[var(--color-warning)] border-[var(--color-border)]'
+      return 'bg-[var(--color-surface-container-low)] text-[var(--color-warning)] border-[var(--color-token-border)]'
     case 'failed':
       return 'bg-[var(--color-inspector-danger-bg)] text-[var(--color-inspector-danger)] border-[var(--color-inspector-border)]'
     case 'disabled':
-      return 'bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] border-[var(--color-border)]'
+      return 'bg-[var(--color-surface-hover)] text-[var(--color-token-text-secondary)] border-[var(--color-token-border)]'
     default:
       return ''
   }
@@ -75,18 +75,18 @@ function PanelShell({
   onClose: () => void
 }) {
   return (
-    <div className="sidebar-codex-menu glass-panel absolute bottom-full left-0 right-0 z-50 mb-3 overflow-hidden rounded-[18px] p-1.5 shadow-[var(--shadow-dropdown)]">
+    <div className="sidebar-codex-menu glass-panel absolute bottom-full left-0 right-0 z-50 mb-3 overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)]">
       <div className="flex items-start justify-between gap-4 px-3 py-3">
         <div>
-          <h3 className="text-base font-semibold text-[var(--color-text-primary)]">{title}</h3>
-          <p className="mt-1 text-xs text-[var(--color-text-tertiary)]">{subtitle}</p>
+          <h3 className="text-base font-semibold text-[var(--color-token-foreground)]">{title}</h3>
+          <p className="mt-1 text-xs text-[var(--color-token-text-secondary)]">{subtitle}</p>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="flex h-8 w-8 items-center justify-center rounded-[10px] text-[var(--color-text-secondary)] transition-colors hover:bg-white/[0.085] hover:text-[var(--color-text-primary)]"
+          className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-white/[0.085] hover:text-[var(--color-token-foreground)]"
         >
-          <span className="material-symbols-outlined text-[18px]">close</span>
+          <span className="material-symbols-outlined icon-md">close</span>
         </button>
       </div>
       <div className="sidebar-codex-menu-divider" />
@@ -97,7 +97,7 @@ function PanelShell({
 
 function LoadingState({ label }: { label: string }) {
   return (
-    <div className="flex items-center justify-center py-12 text-sm text-[var(--color-text-tertiary)]">
+    <div className="flex items-center justify-center py-12 text-sm text-[var(--color-token-text-secondary)]">
       <div className="mr-3 h-5 w-5 animate-spin rounded-full border-2 border-[var(--color-brand)] border-t-transparent" />
       {label}
     </div>
@@ -106,9 +106,9 @@ function LoadingState({ label }: { label: string }) {
 
 function EmptyState({ title, body }: { title: string; body: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-10 text-center">
-      <div className="text-sm font-semibold text-[var(--color-text-primary)]">{title}</div>
-      <div className="mt-2 text-xs leading-6 text-[var(--color-text-tertiary)]">{body}</div>
+    <div className="rounded-2xl border border-dashed border-[var(--color-token-border)] bg-[var(--color-surface)] px-5 py-10 text-center">
+      <div className="text-sm font-semibold text-[var(--color-token-foreground)]">{title}</div>
+      <div className="mt-2 text-xs leading-6 text-[var(--color-token-text-secondary)]">{body}</div>
     </div>
   )
 }
@@ -186,7 +186,7 @@ function MetricCard({ label, value, detail }: { label: string; value: React.Reac
 function InspectorNotice({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3 rounded-md border border-[var(--color-inspector-border)] bg-[var(--color-inspector-surface)] px-4 py-3 text-[14px] text-[var(--color-inspector-heading)]">
-      <span className="material-symbols-outlined text-[18px] text-[var(--color-inspector-muted)]">info</span>
+      <span className="material-symbols-outlined icon-md text-[var(--color-inspector-muted)]">info</span>
       <span>{children}</span>
     </div>
   )
@@ -516,7 +516,7 @@ function McpServerIcon({ status }: { status: string }) {
   const isFailed = status === 'failed'
   const icon = isFailed ? 'power_off' : 'dns'
   return (
-    <span className={`material-symbols-outlined text-[20px] ${isFailed ? 'text-[var(--color-inspector-danger)]' : 'text-[var(--color-inspector-success)]'}`}>
+    <span className={`material-symbols-outlined icon-md ${isFailed ? 'text-[var(--color-inspector-danger)]' : 'text-[var(--color-inspector-success)]'}`}>
       {icon}
     </span>
   )
@@ -698,7 +698,7 @@ function SessionInspectorShell({
 }) {
   return (
     <div
-      className="sidebar-codex-menu absolute bottom-full left-0 right-0 z-50 mb-4 overflow-hidden rounded-[18px] border border-[var(--color-border)] p-1.5 text-[var(--color-inspector-text)] shadow-[var(--shadow-dropdown)]"
+      className="sidebar-codex-menu absolute bottom-full left-0 right-0 z-50 mb-4 overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--color-token-border)] p-1.5 text-[var(--color-inspector-text)] shadow-[var(--shadow-dropdown)]"
     >
       <div className="grid min-h-[54px] grid-cols-[1fr_auto_1fr] items-center px-4">
         <div className="font-mono text-[16px] font-semibold uppercase text-[var(--color-inspector-accent)]">{t('slash.inspector.title')}</div>
@@ -912,10 +912,10 @@ function McpPanel({ cwd, onClose }: { cwd?: string; onClose: () => void }) {
           {['user', 'local', 'project'].filter((scope) => grouped.has(scope)).map((scope) => (
             <section key={scope}>
               <div className="mb-2 flex items-center justify-between">
-                <div className="text-sm font-semibold text-[var(--color-text-primary)]">{scopeLabel(scope, t)}</div>
-                <div className="text-xs text-[var(--color-text-tertiary)]">{grouped.get(scope)?.length ?? 0}</div>
+                <div className="text-sm font-semibold text-[var(--color-token-foreground)]">{scopeLabel(scope, t)}</div>
+                <div className="text-xs text-[var(--color-token-text-secondary)]">{grouped.get(scope)?.length ?? 0}</div>
               </div>
-              <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+              <div className="overflow-hidden rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-surface)]">
                 {grouped.get(scope)?.map((server) => (
                   <button
                     type="button"
@@ -926,15 +926,15 @@ function McpPanel({ cwd, onClose }: { cwd?: string; onClose: () => void }) {
                       useTabStore.getState().openTab(SETTINGS_TAB_ID, 'Settings', 'settings')
                       onClose()
                     }}
-                    className="block w-full border-t border-[var(--color-border)] px-4 py-4 text-left first:border-t-0 hover:bg-[var(--color-surface-hover)]"
+                    className="block w-full border-t border-[var(--color-token-border)] px-4 py-4 text-left first:border-t-0 hover:bg-[var(--color-surface-hover)]"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="text-sm font-semibold text-[var(--color-text-primary)]">{server.name}</div>
+                      <div className="text-sm font-semibold text-[var(--color-token-foreground)]">{server.name}</div>
                       <span className={`inline-flex items-center rounded-full border px-2 py-1 text-[11px] font-semibold ${toneForStatus(server.status)}`}>
                         {server.statusLabel}
                       </span>
                     </div>
-                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-tertiary)]">
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[var(--color-token-text-secondary)]">
                       <span className="rounded-full bg-[var(--color-surface-hover)] px-2 py-1">{server.transport}</span>
                       {server.projectPath && (
                         <span className="rounded-full bg-[var(--color-surface-hover)] px-2 py-1" title={server.projectPath}>
@@ -990,7 +990,7 @@ function SkillsPanel({ cwd, onClose }: { cwd?: string; onClose: () => void }) {
       ) : skills.length === 0 ? (
         <EmptyState title={t('slash.skills.emptyTitle')} body={t('slash.skills.emptyBody')} />
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+        <div className="overflow-hidden rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-surface)]">
           {skills.map((skill) => (
             <button
               type="button"
@@ -1001,15 +1001,15 @@ function SkillsPanel({ cwd, onClose }: { cwd?: string; onClose: () => void }) {
                 useTabStore.getState().openTab(SETTINGS_TAB_ID, 'Settings', 'settings')
                 onClose()
               }}
-              className="block w-full border-t border-[var(--color-border)] px-4 py-4 text-left first:border-t-0 hover:bg-[var(--color-surface-hover)]"
+              className="block w-full border-t border-[var(--color-token-border)] px-4 py-4 text-left first:border-t-0 hover:bg-[var(--color-surface-hover)]"
             >
               <div className="flex items-center gap-3">
-                <div className="text-sm font-semibold text-[var(--color-text-primary)]">/{skill.name}</div>
-                <span className="rounded-full bg-[var(--color-surface-hover)] px-2 py-1 text-[11px] text-[var(--color-text-secondary)]">
+                <div className="text-sm font-semibold text-[var(--color-token-foreground)]">/{skill.name}</div>
+                <span className="rounded-full bg-[var(--color-surface-hover)] px-2 py-1 text-[11px] text-[var(--color-token-text-secondary)]">
                   {skill.source}
                 </span>
               </div>
-              <div className="mt-2 text-xs leading-6 text-[var(--color-text-tertiary)]">{skill.description}</div>
+              <div className="mt-2 text-xs leading-6 text-[var(--color-token-text-secondary)]">{skill.description}</div>
             </button>
           ))}
         </div>
@@ -1059,14 +1059,14 @@ function HelpPanel({
   )
 
   const renderCommand = (command: SlashCommandOption) => (
-    <div key={command.name} className="flex min-w-0 items-start gap-3 border-t border-[var(--color-border)] px-4 py-3 first:border-t-0">
+    <div key={command.name} className="flex min-w-0 items-start gap-3 border-t border-[var(--color-token-border)] px-4 py-3 first:border-t-0">
       <div className="flex min-w-[120px] max-w-[45%] shrink-0 flex-wrap items-baseline gap-x-1.5 font-mono">
-        <span className="text-sm font-semibold text-[var(--color-text-primary)]">/{command.name}</span>
+        <span className="text-sm font-semibold text-[var(--color-token-foreground)]">/{command.name}</span>
         {command.argumentHint ? (
-          <span className="text-[11px] leading-5 text-[var(--color-text-tertiary)]">{command.argumentHint}</span>
+          <span className="text-[11px] leading-5 text-[var(--color-token-text-secondary)]">{command.argumentHint}</span>
         ) : null}
       </div>
-      <div className="min-w-0 flex-1 text-xs leading-5 text-[var(--color-text-tertiary)]">{command.description}</div>
+      <div className="min-w-0 flex-1 text-xs leading-5 text-[var(--color-token-text-secondary)]">{command.description}</div>
     </div>
   )
 
@@ -1084,8 +1084,8 @@ function HelpPanel({
           if (entries.length === 0) return null
           return (
             <section key={group.titleKey}>
-              <div className="mb-2 text-sm font-semibold text-[var(--color-text-primary)]">{t(group.titleKey)}</div>
-              <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+              <div className="mb-2 text-sm font-semibold text-[var(--color-token-foreground)]">{t(group.titleKey)}</div>
+              <div className="overflow-hidden rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-surface)]">
                 {entries.map(renderCommand)}
               </div>
             </section>
@@ -1094,12 +1094,12 @@ function HelpPanel({
 
         {otherCommands.length > 0 && (
           <section>
-            <div className="mb-2 text-sm font-semibold text-[var(--color-text-primary)]">{t('slash.help.group.more')}</div>
-            <div className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+            <div className="mb-2 text-sm font-semibold text-[var(--color-token-foreground)]">{t('slash.help.group.more')}</div>
+            <div className="overflow-hidden rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-surface)]">
               {otherCommands.map(renderCommand)}
             </div>
             {hiddenOtherCommandCount > 0 && (
-              <p className="mt-2 text-xs leading-5 text-[var(--color-text-tertiary)]">
+              <p className="mt-2 text-xs leading-5 text-[var(--color-token-text-secondary)]">
                 {t('slash.help.moreAvailable', { count: hiddenOtherCommandCount })}
               </p>
             )}

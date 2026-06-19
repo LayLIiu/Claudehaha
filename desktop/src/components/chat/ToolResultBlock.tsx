@@ -27,7 +27,7 @@ export const ToolResultBlock = memo(function ToolResultBlock({ content, isError,
   const hasMore = text.length > 200
 
   return (
-    <div className={`mb-2 overflow-hidden rounded-xl border ${
+    <div className={`mb-2 overflow-hidden rounded-[var(--radius-xl)] border ${
       isError
         ? 'border-[var(--color-error)]/20'
         : 'border-[var(--color-outline-variant)]/20'
@@ -43,7 +43,7 @@ export const ToolResultBlock = memo(function ToolResultBlock({ content, isError,
       }`}
       >
         <span className="flex items-center gap-1.5">
-          <span className="material-symbols-outlined text-[12px]">
+          <span className="material-symbols-outlined icon-2xs">
             {isError ? 'error' : 'check_circle'}
           </span>
           {toolName ? t('tool.result', { toolName }) : t('tool.resultGeneric')}
@@ -74,7 +74,7 @@ export const ToolResultBlock = memo(function ToolResultBlock({ content, isError,
           />
         )
       ) : (
-        <div className="bg-[var(--color-surface-container-lowest)] px-3 py-2 font-[var(--font-mono)] text-[10px] leading-[1.35] text-[var(--color-text-tertiary)]">
+        <div className="bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3 py-2 font-[var(--font-mono)] text-[10px] leading-[1.35] text-[var(--color-token-text-secondary)]">
           {preview}
           {hasMore ? '…' : ''}
         </div>

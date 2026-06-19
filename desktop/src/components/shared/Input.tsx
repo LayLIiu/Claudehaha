@@ -11,7 +11,7 @@ export function Input({ label, error, required, className = '', id, ...props }: 
   return (
     <div className="settings-field-group flex flex-col gap-1.5">
       {label && (
-        <label htmlFor={inputId} className="text-[12px] font-semibold tracking-[0.01em] text-[var(--color-text-secondary)]">
+        <label htmlFor={inputId} className="text-[12px] font-semibold tracking-[0.01em] text-[var(--color-token-text-secondary)]">
           {label}
           {required && <span className="text-[var(--color-error)] ml-0.5">*</span>}
         </label>
@@ -19,13 +19,13 @@ export function Input({ label, error, required, className = '', id, ...props }: 
       <input
         id={inputId}
         className={`
-          settings-input h-10 px-3 rounded-[12px] border text-sm
-          bg-[var(--color-surface)] text-[var(--color-text-primary)]
-          placeholder:text-[var(--color-text-tertiary)]
+          settings-input h-10 px-3 rounded-[var(--radius-lg)] border text-sm
+          bg-[var(--color-surface)] text-[var(--color-token-foreground)]
+          placeholder:text-[var(--color-token-text-secondary)]
           transition-[border-color,background-color,box-shadow] duration-150
           ${error
             ? 'border-[var(--color-error)] focus:shadow-[var(--shadow-error-ring)]'
-            : 'border-[var(--color-border)] focus:border-[var(--color-border-focus)] focus:shadow-[var(--shadow-focus-ring)]'
+            : 'border-[var(--color-token-border)] focus:border-[var(--color-token-focus-border,var(--color-border-focus))] focus:shadow-[var(--shadow-focus-ring)]'
           }
           outline-none
           ${className}

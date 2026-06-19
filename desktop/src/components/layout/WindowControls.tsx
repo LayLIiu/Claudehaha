@@ -108,7 +108,7 @@ export function WindowControls() {
             onClick={handleSidebarToggle}
             aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
             title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-            className="flex h-[26px] w-[26px] items-center justify-center rounded-md text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+            className="flex h-[26px] w-[26px] items-center justify-center rounded-md text-[var(--color-token-text-secondary)] hover:text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)] transition-colors"
           >
             <CodexSidebarToggleIcon collapsed={!sidebarOpen} />
           </button>
@@ -122,9 +122,9 @@ export function WindowControls() {
               disabled={!canGoBack}
               aria-label="Back"
               title="Back"
-              className="flex h-[26px] w-[26px] items-center justify-center rounded-md text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-[var(--color-text-tertiary)]"
+              className="flex h-[26px] w-[26px] items-center justify-center rounded-md text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-[var(--color-token-text-secondary)]"
             >
-              <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 300" }}>chevron_left</span>
+              <span className="material-symbols-outlined icon-md" style={{ fontVariationSettings: "'FILL' 0, 'wght' 300" }}>chevron_left</span>
             </button>
             <button
               type="button"
@@ -132,9 +132,9 @@ export function WindowControls() {
               disabled={!canGoForward}
               aria-label="Forward"
               title="Forward"
-              className="flex h-[26px] w-[26px] items-center justify-center rounded-md text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-[var(--color-text-tertiary)]"
+              className="flex h-[26px] w-[26px] items-center justify-center rounded-md text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] disabled:cursor-default disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-[var(--color-token-text-secondary)]"
             >
-              <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 0, 'wght' 300" }}>chevron_right</span>
+              <span className="material-symbols-outlined icon-md" style={{ fontVariationSettings: "'FILL' 0, 'wght' 300" }}>chevron_right</span>
             </button>
           </>
         )}
@@ -151,9 +151,9 @@ export function WindowControls() {
             }}
             aria-label="New conversation"
             title="New conversation"
-            className="flex h-[26px] w-[26px] items-center justify-center rounded-md text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+            className="flex h-[26px] w-[26px] items-center justify-center rounded-md text-[var(--color-token-text-secondary)] hover:text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)] transition-colors"
           >
-            <span className="material-symbols-outlined text-[18px]">add</span>
+            <span className="material-symbols-outlined icon-md">add</span>
           </button>
         )}
       </div>
@@ -190,7 +190,7 @@ function CodexSidebarToggleIcon({ collapsed }: { collapsed: boolean }) {
       <button
         onClick={() => runWindowAction(() => win.minimize())}
         aria-label="Minimize window"
-        className="w-[46px] h-full flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+        className="w-[46px] h-full flex items-center justify-center text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
       >
         <svg width="10" height="1" viewBox="0 0 10 1">
           <rect width="10" height="1" fill="currentColor" />
@@ -201,7 +201,7 @@ function CodexSidebarToggleIcon({ collapsed }: { collapsed: boolean }) {
       <button
         onClick={() => runWindowAction(() => win.toggleMaximize())}
         aria-label={maximized ? 'Restore window' : 'Maximize window'}
-        className="w-[46px] h-full flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+        className="w-[46px] h-full flex items-center justify-center text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
       >
         {maximized ? (
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1">
@@ -219,7 +219,7 @@ function CodexSidebarToggleIcon({ collapsed }: { collapsed: boolean }) {
       <button
         onClick={() => runWindowAction(() => win.close())}
         aria-label="Close window"
-        className="w-[46px] h-full flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-window-close-hover)] hover:text-white transition-colors"
+        className="w-[46px] h-full flex items-center justify-center text-[var(--color-token-text-secondary)] hover:bg-[var(--color-window-close-hover)] hover:text-white transition-colors"
       >
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.2">
           <line x1="0" y1="0" x2="10" y2="10" />

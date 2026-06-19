@@ -69,11 +69,11 @@ const MCP_GROUP_ORDER: McpGroupKey[] = [
 const WRITABLE_SCOPES: McpWritableScope[] = ['local', 'project', 'user']
 
 const STATUS_TONE: Record<McpServerRecord['status'], string> = {
-  connected: 'bg-[var(--color-inspector-success-bg)] text-[var(--color-inspector-success)] border-[var(--color-border)]',
-  checking: 'bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] border-[var(--color-border)]',
-  'needs-auth': 'bg-[var(--color-surface-container-low)] text-[var(--color-warning)] border-[var(--color-border)]',
-  failed: 'bg-[var(--color-inspector-danger-bg)] text-[var(--color-inspector-danger)] border-[var(--color-border)]',
-  disabled: 'bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] border-[var(--color-border)]',
+  connected: 'bg-[var(--color-inspector-success-bg)] text-[var(--color-inspector-success)] border-[var(--color-token-border)]',
+  checking: 'bg-[var(--color-surface-hover)] text-[var(--color-token-text-secondary)] border-[var(--color-token-border)]',
+  'needs-auth': 'bg-[var(--color-surface-container-low)] text-[var(--color-warning)] border-[var(--color-token-border)]',
+  failed: 'bg-[var(--color-inspector-danger-bg)] text-[var(--color-inspector-danger)] border-[var(--color-token-border)]',
+  disabled: 'bg-[var(--color-surface-hover)] text-[var(--color-token-text-secondary)] border-[var(--color-token-border)]',
 }
 
 function createId() {
@@ -286,7 +286,7 @@ function ToggleSwitch({
       disabled={disabled}
       onClick={onChange}
       className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
-        checked ? 'bg-[var(--color-switch-checked-bg)]' : 'bg-[var(--color-border)]'
+        checked ? 'bg-[var(--color-switch-checked-bg)]' : 'bg-[var(--color-token-border)]'
       } ${disabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
     >
       <span
@@ -320,8 +320,8 @@ function ArraySection({
   addLabel: string
 }) {
   return (
-    <section className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
-      <div className="text-sm font-semibold text-[var(--color-text-primary)] mb-4">{title}</div>
+    <section className="rounded-[var(--radius-xl)] border border-[var(--color-token-border)] bg-[var(--color-surface)] p-5">
+      <div className="text-sm font-semibold text-[var(--color-token-foreground)] mb-4">{title}</div>
       <div className="space-y-3">
         {rows.map((row) => (
           <div key={row.id} className={`grid gap-3 ${singleValue ? 'grid-cols-[minmax(0,1fr)_32px]' : 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)_32px]'}`}>
@@ -340,19 +340,19 @@ function ArraySection({
             <button
               type="button"
               onClick={() => onRemove(row.id)}
-              className="mt-1 flex h-10 w-8 items-center justify-center rounded-[var(--radius-md)] text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
+              className="mt-1 flex h-10 w-8 items-center justify-center rounded-[var(--radius-md)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]"
               aria-label={addLabel}
             >
-              <span className="material-symbols-outlined text-[18px]">delete</span>
+              <span className="material-symbols-outlined icon-md">delete</span>
             </button>
           </div>
         ))}
         <button
           type="button"
           onClick={onAdd}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-[var(--radius-lg)] bg-[var(--color-surface-hover)] text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-text-primary)]"
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-[var(--radius-lg)] bg-[var(--color-surface-hover)] text-[var(--color-token-text-secondary)] transition-colors hover:text-[var(--color-token-foreground)]"
         >
-          <span className="material-symbols-outlined text-[18px]">add</span>
+          <span className="material-symbols-outlined icon-md">add</span>
           {addLabel}
         </button>
       </div>
@@ -362,12 +362,12 @@ function ArraySection({
 
 function StatCard({ label, value, icon }: { label: string; value: number; icon: string }) {
   return (
-    <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-5 py-4">
-      <div className="flex items-center gap-2 text-[var(--color-text-tertiary)] mb-2">
-        <span className="material-symbols-outlined text-[18px]">{icon}</span>
+    <div className="rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] px-5 py-4">
+      <div className="flex items-center gap-2 text-[var(--color-token-text-secondary)] mb-2">
+        <span className="material-symbols-outlined icon-md">{icon}</span>
         <span className="text-xs uppercase tracking-[0.18em] font-semibold">{label}</span>
       </div>
-      <div className="text-3xl font-semibold text-[var(--color-text-primary)]">{value}</div>
+      <div className="text-3xl font-semibold text-[var(--color-token-foreground)]">{value}</div>
     </div>
   )
 }
@@ -377,10 +377,10 @@ function LoadingState({ label }: { label: string }) {
     <div
       role="status"
       aria-live="polite"
-      className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-container-low)] text-center"
+      className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] text-center"
     >
       <div className="h-7 w-7 animate-spin rounded-full border-2 border-[var(--color-brand)] border-t-transparent" />
-      <div className="text-sm font-medium text-[var(--color-text-secondary)]">{label}</div>
+      <div className="text-sm font-medium text-[var(--color-token-text-secondary)]">{label}</div>
     </div>
   )
 }
@@ -399,22 +399,22 @@ function ServerRow({
   t: ReturnType<typeof useTranslation>
 }) {
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-4 px-6 py-5 border-t border-[var(--color-border)] first:border-t-0">
+    <div className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-4 px-6 py-5 border-t border-[var(--color-token-border)] first:border-t-0">
       <div className="min-w-0">
         <div className="flex items-center gap-3 mb-2 min-w-0">
-          <div className="text-[1.05rem] font-semibold text-[var(--color-text-primary)] truncate">{server.name}</div>
+          <div className="text-[1.05rem] font-semibold text-[var(--color-token-foreground)] truncate">{server.name}</div>
           <StatusBadge server={server} />
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-tertiary)]">
-          <span className="rounded-full bg-[var(--color-surface-hover)] px-2 py-1 font-medium text-[var(--color-text-secondary)]">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--color-token-text-secondary)]">
+          <span className="rounded-full bg-[var(--color-surface-hover)] px-2 py-1 font-medium text-[var(--color-token-text-secondary)]">
             {transportLabel(server.transport, t)}
           </span>
-          <span className="rounded-full bg-[var(--color-surface-hover)] px-2 py-1 font-medium text-[var(--color-text-secondary)]">
+          <span className="rounded-full bg-[var(--color-surface-hover)] px-2 py-1 font-medium text-[var(--color-token-text-secondary)]">
             {scopeLabel(server, t)}
           </span>
           {serverHasProjectContext(server) && (
             <span
-              className="max-w-full truncate rounded-full bg-[var(--color-surface-hover)] px-2 py-1 font-[var(--font-mono)] text-[11px] text-[var(--color-text-tertiary)]"
+              className="max-w-full truncate rounded-full bg-[var(--color-surface-hover)] px-2 py-1 font-[var(--font-mono)] text-[11px] text-[var(--color-token-text-secondary)]"
               title={server.projectPath}
             >
               {server.projectPath}
@@ -423,17 +423,17 @@ function ServerRow({
           <span className="truncate">{server.summary}</span>
         </div>
         {server.statusDetail && (
-          <div className="mt-2 text-xs text-[var(--color-text-tertiary)] truncate">{server.statusDetail}</div>
+          <div className="mt-2 text-xs text-[var(--color-token-text-secondary)] truncate">{server.statusDetail}</div>
         )}
       </div>
 
       <button
         type="button"
         onClick={onOpen}
-        className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
+        className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]"
         aria-label={`Open ${server.name}`}
       >
-        <span className="material-symbols-outlined text-[20px]">settings</span>
+        <span className="material-symbols-outlined icon-md">settings</span>
       </button>
 
       <ToggleSwitch checked={server.enabled} disabled={isBusy || !server.canToggle} onChange={onToggle} />
@@ -757,32 +757,32 @@ export function McpSettings() {
               setView({ type: 'list' })
               selectServer(null)
             }}
-            className="mb-5 inline-flex items-center gap-2 text-sm text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-text-primary)]"
+            className="mb-5 inline-flex items-center gap-2 text-sm text-[var(--color-token-text-secondary)] transition-colors hover:text-[var(--color-token-foreground)]"
           >
-            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+            <span className="material-symbols-outlined icon-md">arrow_back</span>
             {t('settings.mcp.form.back')}
           </button>
 
           <div className="flex items-start justify-between gap-4 mb-8">
             <div>
-              <h2 className="text-[2.2rem] font-semibold tracking-[-0.03em] text-[var(--color-text-primary)]">{server.name}</h2>
-              <p className="mt-3 text-base text-[var(--color-text-secondary)]">{server.summary}</p>
+              <h2 className="text-[2.2rem] font-semibold tracking-[-0.03em] text-[var(--color-token-foreground)]">{server.name}</h2>
+              <p className="mt-3 text-base text-[var(--color-token-text-secondary)]">{server.summary}</p>
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <StatusBadge server={server} />
                 {server.statusDetail && (
-                  <span className="text-sm text-[var(--color-text-tertiary)]">{server.statusDetail}</span>
+                  <span className="text-sm text-[var(--color-token-text-secondary)]">{server.statusDetail}</span>
                 )}
               </div>
             </div>
             {server.canReconnect && (
               <Button variant="secondary" onClick={() => handleReconnect(server)} loading={busyServerKey === getServerIdentityKey(server)}>
-                <span className="material-symbols-outlined text-[16px]">sync</span>
+                <span className="material-symbols-outlined icon-sm">sync</span>
                 {t('settings.mcp.form.reconnect')}
               </Button>
             )}
           </div>
 
-          <section className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
+          <section className="rounded-[var(--radius-xl)] border border-[var(--color-token-border)] bg-[var(--color-surface)] p-6">
             <div className="grid gap-4 md:grid-cols-2">
               <InfoPair label={t('settings.mcp.form.transport')} value={transportLabel(server.transport, t)} />
               <InfoPair label={t('settings.mcp.form.scope')} value={scopeLabel(server, t)} />
@@ -790,8 +790,8 @@ export function McpSettings() {
               <InfoPair label={t('settings.mcp.form.location')} value={server.configLocation} />
             </div>
             <div className="mt-5">
-              <div className="text-sm font-semibold text-[var(--color-text-primary)] mb-2">{t('settings.mcp.form.rawConfig')}</div>
-              <pre className="overflow-x-auto rounded-[var(--radius-lg)] bg-[var(--color-surface-hover)] p-4 text-xs text-[var(--color-text-secondary)]">
+              <div className="text-sm font-semibold text-[var(--color-token-foreground)] mb-2">{t('settings.mcp.form.rawConfig')}</div>
+              <pre className="overflow-x-auto rounded-[var(--radius-lg)] bg-[var(--color-surface-hover)] p-4 text-xs text-[var(--color-token-text-secondary)]">
                 {JSON.stringify(server.config, null, 2)}
               </pre>
             </div>
@@ -832,25 +832,25 @@ export function McpSettings() {
               setView({ type: 'list' })
               selectServer(null)
             }}
-            className="mb-5 inline-flex items-center gap-2 text-sm text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-text-primary)]"
+            className="mb-5 inline-flex items-center gap-2 text-sm text-[var(--color-token-text-secondary)] transition-colors hover:text-[var(--color-token-foreground)]"
           >
-            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+            <span className="material-symbols-outlined icon-md">arrow_back</span>
             {t('settings.mcp.form.back')}
           </button>
 
           <div className="flex items-start justify-between gap-4 mb-8">
             <div>
-              <h2 className="text-[2.2rem] font-semibold tracking-[-0.03em] text-[var(--color-text-primary)]">
+              <h2 className="text-[2.2rem] font-semibold tracking-[-0.03em] text-[var(--color-token-foreground)]">
                 {editing ? t('settings.mcp.form.editTitle', { name: targetServer!.name }) : t('settings.mcp.form.createTitle')}
               </h2>
-              <p className="mt-3 text-base text-[var(--color-text-secondary)]">
+              <p className="mt-3 text-base text-[var(--color-token-text-secondary)]">
                 {editing ? t('settings.mcp.form.editHint') : t('settings.mcp.form.createHint')}
               </p>
               {editing && targetServer && (
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <StatusBadge server={targetServer} />
                   {targetServer.statusDetail && (
-                    <span className="text-sm text-[var(--color-text-tertiary)]">{targetServer.statusDetail}</span>
+                    <span className="text-sm text-[var(--color-token-text-secondary)]">{targetServer.statusDetail}</span>
                   )}
                 </div>
               )}
@@ -859,7 +859,7 @@ export function McpSettings() {
             <div className="flex items-center gap-3">
               {editing && targetServer?.canReconnect && (
                 <Button variant="secondary" onClick={() => handleReconnect(targetServer)} loading={busyServerKey === getServerIdentityKey(targetServer)}>
-                  <span className="material-symbols-outlined text-[16px]">sync</span>
+                  <span className="material-symbols-outlined icon-sm">sync</span>
                   {t('settings.mcp.form.reconnect')}
                 </Button>
               )}
@@ -870,7 +870,7 @@ export function McpSettings() {
                   onClick={() => handleDelete(targetServer)}
                   loading={isDeleting}
                 >
-                  <span className="material-symbols-outlined text-[16px]">delete</span>
+                  <span className="material-symbols-outlined icon-sm">delete</span>
                   {t('settings.mcp.form.uninstall')}
                 </Button>
               )}
@@ -878,7 +878,7 @@ export function McpSettings() {
           </div>
 
           <div className="space-y-4">
-          <section className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+          <section className="rounded-[var(--radius-xl)] border border-[var(--color-token-border)] bg-[var(--color-surface)] p-5">
             <Input
               label={t('settings.mcp.form.name')}
               value={draft.name}
@@ -889,8 +889,8 @@ export function McpSettings() {
             />
           </section>
 
-          <section className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
-            <div className="text-sm font-semibold text-[var(--color-text-primary)] mb-2">
+          <section className="rounded-[var(--radius-xl)] border border-[var(--color-token-border)] bg-[var(--color-surface)] p-5">
+            <div className="text-sm font-semibold text-[var(--color-token-foreground)] mb-2">
               {t('settings.mcp.form.scope')}
             </div>
             <div className="grid gap-2 md:grid-cols-3">
@@ -903,12 +903,12 @@ export function McpSettings() {
                     onClick={() => setDraftField('scope', scope)}
                     className={`rounded-[var(--radius-md)] border p-3 text-left transition-colors ${
                       active
-                        ? 'border-[var(--color-border-focus)] bg-[var(--color-surface-selected)] text-[var(--color-text-primary)]'
-                        : 'border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                        ? 'border-[var(--color-token-focus-border,var(--color-border-focus))] bg-[var(--color-surface-selected)] text-[var(--color-token-foreground)]'
+                        : 'border-[var(--color-token-border)] bg-[var(--color-surface)] text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)]'
                     }`}
                   >
                     <span className="block text-sm font-semibold">{t(`settings.mcp.scope.${scope}`)}</span>
-                    <span className="mt-1 block text-xs leading-5 text-[var(--color-text-tertiary)]">
+                    <span className="mt-1 block text-xs leading-5 text-[var(--color-token-text-secondary)]">
                       {t(`settings.mcp.scopeDesc.${scope}`)}
                     </span>
                   </button>
@@ -917,13 +917,13 @@ export function McpSettings() {
             </div>
           </section>
 
-          <section className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+          <section className="rounded-[var(--radius-xl)] border border-[var(--color-token-border)] bg-[var(--color-surface)] p-5">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <div className="text-sm font-semibold text-[var(--color-text-primary)]">
+                <div className="text-sm font-semibold text-[var(--color-token-foreground)]">
                   {needsProjectTarget ? t('settings.mcp.targetProject.title') : t('settings.mcp.targetProject.globalTitle')}
                 </div>
-                <p className="mt-1 text-xs leading-5 text-[var(--color-text-tertiary)]">
+                <p className="mt-1 text-xs leading-5 text-[var(--color-token-text-secondary)]">
                   {targetProjectHint}
                 </p>
               </div>
@@ -936,7 +936,7 @@ export function McpSettings() {
             </div>
           </section>
 
-          <section className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
+          <section className="rounded-[var(--radius-xl)] border border-[var(--color-token-border)] bg-[var(--color-surface)] overflow-hidden">
             <div className="grid grid-cols-3">
               {(['stdio', 'http', 'sse'] as TransportKind[]).map((transport) => {
                 const active = draft.transport === transport
@@ -948,8 +948,8 @@ export function McpSettings() {
                     onClick={() => setDraftField('transport', transport)}
                     className={`h-14 text-sm font-semibold transition-colors ${
                       active
-                        ? 'bg-[var(--color-surface-selected)] text-[var(--color-text-primary)]'
-                        : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                        ? 'bg-[var(--color-surface-selected)] text-[var(--color-token-foreground)]'
+                        : 'bg-[var(--color-surface)] text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)]'
                     } ${transportLocked ? 'cursor-not-allowed opacity-70' : ''}`}
                   >
                     {transport === 'stdio' ? 'STDIO' : transportLabel(transport, t)}
@@ -960,14 +960,14 @@ export function McpSettings() {
           </section>
 
           {editing && (
-            <div className="text-sm text-[var(--color-text-tertiary)]">
+            <div className="text-sm text-[var(--color-token-text-secondary)]">
               {t('settings.mcp.form.transportLocked')}
             </div>
           )}
 
           {draft.transport === 'stdio' ? (
             <>
-              <section className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+              <section className="rounded-[var(--radius-xl)] border border-[var(--color-token-border)] bg-[var(--color-surface)] p-5">
                 <Input
                   label={t('settings.mcp.form.command')}
                   value={draft.command}
@@ -975,7 +975,7 @@ export function McpSettings() {
                   placeholder={t('settings.mcp.form.commandPlaceholder')}
                   required
                 />
-                <p className="mt-2 text-xs leading-5 text-[var(--color-text-tertiary)]">
+                <p className="mt-2 text-xs leading-5 text-[var(--color-token-text-secondary)]">
                   {t('settings.mcp.form.commandHostHint')}
                 </p>
               </section>
@@ -1004,7 +1004,7 @@ export function McpSettings() {
             </>
           ) : (
             <>
-              <section className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+              <section className="rounded-[var(--radius-xl)] border border-[var(--color-token-border)] bg-[var(--color-surface)] p-5">
                 <Input
                   label={draft.transport === 'http' ? t('settings.mcp.form.url') : t('settings.mcp.form.sseUrl')}
                   value={draft.url}
@@ -1025,7 +1025,7 @@ export function McpSettings() {
                 addLabel={t('settings.mcp.form.addHeader')}
               />
 
-              <section className="rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+              <section className="rounded-[var(--radius-xl)] border border-[var(--color-token-border)] bg-[var(--color-surface)] p-5">
                 <div className="grid gap-4 md:grid-cols-2">
                   <Input
                     label={t('settings.mcp.form.oauthClientId')}
@@ -1068,15 +1068,15 @@ export function McpSettings() {
     <div className="max-w-5xl min-w-0">
       <div className="flex items-start justify-between gap-6 mb-8">
         <div>
-          <h2 className="text-[2.2rem] font-semibold tracking-[-0.03em] text-[var(--color-text-primary)]">
+          <h2 className="text-[2.2rem] font-semibold tracking-[-0.03em] text-[var(--color-token-foreground)]">
             {t('settings.mcp.title')}
           </h2>
-          <p className="mt-3 text-base text-[var(--color-text-secondary)]">
+          <p className="mt-3 text-base text-[var(--color-token-text-secondary)]">
             {t('settings.mcp.description')}
           </p>
         </div>
         <Button variant="secondary" size="lg" onClick={beginCreate}>
-          <span className="material-symbols-outlined text-[18px]">add</span>
+          <span className="material-symbols-outlined icon-md">add</span>
           {t('settings.mcp.addServer')}
         </Button>
       </div>
@@ -1092,7 +1092,7 @@ export function McpSettings() {
           </div>
 
           {error ? (
-            <div className="text-center py-16 rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-container-low)]">
+            <div className="text-center py-16 rounded-2xl border border-dashed border-[var(--color-token-border)] bg-[var(--color-surface-container-low)]">
               <span className="material-symbols-outlined text-[40px] text-[var(--color-error)] mb-3 block">error</span>
               <p className="text-sm text-[var(--color-error)] mb-3">{error}</p>
               <button
@@ -1104,10 +1104,10 @@ export function McpSettings() {
               </button>
             </div>
           ) : servers.length === 0 ? (
-            <div className="text-center py-16 rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-container-low)]">
-              <span className="material-symbols-outlined text-[40px] text-[var(--color-text-tertiary)] mb-3 block">dns</span>
-              <p className="text-sm text-[var(--color-text-secondary)] mb-1">{t('settings.mcp.empty')}</p>
-              <p className="text-xs text-[var(--color-text-tertiary)]">{t('settings.mcp.emptyHint')}</p>
+            <div className="text-center py-16 rounded-2xl border border-dashed border-[var(--color-token-border)] bg-[var(--color-surface-container-low)]">
+              <span className="material-symbols-outlined text-[40px] text-[var(--color-token-text-secondary)] mb-3 block">dns</span>
+              <p className="text-sm text-[var(--color-token-text-secondary)] mb-1">{t('settings.mcp.empty')}</p>
+              <p className="text-xs text-[var(--color-token-text-secondary)]">{t('settings.mcp.emptyHint')}</p>
             </div>
           ) : (
             <div className="flex flex-col gap-6">
@@ -1118,12 +1118,12 @@ export function McpSettings() {
                 return (
                   <section key={group}>
                     <div className="flex items-center justify-between mb-3">
-                      <div className="text-[1.35rem] font-semibold text-[var(--color-text-primary)]">
+                      <div className="text-[1.35rem] font-semibold text-[var(--color-token-foreground)]">
                         {group === 'plugin' ? t('settings.mcp.scope.plugin') : t(`settings.mcp.scope.${group}`)}
                       </div>
-                      <div className="text-sm text-[var(--color-text-tertiary)]">{groupServers.length}</div>
+                      <div className="text-sm text-[var(--color-token-text-secondary)]">{groupServers.length}</div>
                     </div>
-                    <div className="rounded-[28px] border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
+                    <div className="rounded-[var(--radius-3xl)] border border-[var(--color-token-border)] bg-[var(--color-surface)] overflow-hidden">
                       {groupServers.map((server) => (
                         <ServerRow
                           key={getServerIdentityKey(server)}
@@ -1150,8 +1150,8 @@ export function McpSettings() {
 function InfoPair({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[var(--radius-lg)] bg-[var(--color-surface-hover)] px-4 py-3">
-      <div className="text-xs uppercase tracking-[0.16em] font-semibold text-[var(--color-text-tertiary)] mb-2">{label}</div>
-      <div className="text-sm text-[var(--color-text-primary)] break-all">{value}</div>
+      <div className="text-xs uppercase tracking-[0.16em] font-semibold text-[var(--color-token-text-secondary)] mb-2">{label}</div>
+      <div className="text-sm text-[var(--color-token-foreground)] break-all">{value}</div>
     </div>
   )
 }

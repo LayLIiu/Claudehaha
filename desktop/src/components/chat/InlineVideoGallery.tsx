@@ -59,7 +59,7 @@ export function InlineVideoGallery({ text, sessionId, workDir }: Props) {
       {videos.map((video) => (
         <div
           key={video.src}
-          className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] shadow-sm"
+          className="overflow-hidden rounded-xl border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] shadow-sm"
         >
           <video
             src={video.src}
@@ -73,8 +73,8 @@ export function InlineVideoGallery({ text, sessionId, workDir }: Props) {
               (e.target as HTMLVideoElement).closest('div')!.style.display = 'none'
             }}
           />
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-medium text-[var(--color-text-tertiary)]">
-            <span className="material-symbols-outlined text-[12px]">movie</span>
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-medium text-[var(--color-token-text-secondary)]">
+            <span className="material-symbols-outlined icon-2xs">movie</span>
             <span className="truncate">{video.name}</span>
           </div>
         </div>

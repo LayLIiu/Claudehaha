@@ -401,6 +401,43 @@ export const sessionsApi = {
     return api.get<WorkspaceDiffResult>(buildWorkspacePath(sessionId, 'diff', workspacePath))
   },
 
+  gitAdd(sessionId: string, paths: string[]) {
+    return api.post<{ success: boolean; error?: string }>(
+      `/api/sessions/${sessionId}/git/add`,
+      { paths },
+    )
+  },
+
+  gitCommit(sessionId: string, message?: string, paths?: string[]) {
+    return api.post<{ success: boolean; hash?: string; error?: string }>(
+      `/api/sessions/${sessionId}/git/commit`,
+      { message, paths },
+    )
+  },
+
+  gitPush(sessionId: string) {
+    return api.post<{ success: boolean; error?: string }>(
+      `/api/sessions/${sessionId}/git/push`,
+      {},
+    )
+  },
+
+  gitSyncStatus(sessionId: string) {
+    return api.post<{
+      branch: string | null
+      remoteBranch: string | null
+      ahead: number
+      behind: number
+    }>(`/api/sessions/${sessionId}/git/sync-status`, {})
+  },
+
+  gitCreateBranch(sessionId: string, branchName: string) {
+    return api.post<{ success: boolean; error?: string }>(
+      `/api/sessions/${sessionId}/git/create-branch`,
+      { branchName },
+    )
+  },
+
   getTurnCheckpoints(sessionId: string) {
     return api.get<SessionTurnCheckpointsResponse>(`/api/sessions/${sessionId}/turn-checkpoints`)
   },

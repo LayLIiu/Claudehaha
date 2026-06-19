@@ -26,7 +26,7 @@ export function TypeIcon({ span, size = 14 }: { span: TraceSpan; size?: number }
 }
 
 function iconForSpan(span: TraceSpan, size: number): { icon: ReactNode; className: string } {
-  const tertiary = 'text-[var(--color-text-tertiary)]'
+  const tertiary = 'text-[var(--color-token-text-secondary)]'
   switch (span.kind) {
     case 'llm':
       return { icon: <Sparkles size={size} strokeWidth={2} />, className: 'text-[var(--color-brand)]' }
@@ -100,8 +100,8 @@ export function MetaChip({
       className="inline-flex min-w-0 items-center gap-1 text-[10px]"
       {...(title ? { title } : {})}
     >
-      <span className="shrink-0 text-[var(--color-text-tertiary)]">{label}</span>
-      <span className={`truncate font-mono ${tone === 'danger' ? 'text-[var(--color-error)]' : 'text-[var(--color-text-secondary)]'}`}>
+      <span className="shrink-0 text-[var(--color-token-text-secondary)]">{label}</span>
+      <span className={`truncate font-mono ${tone === 'danger' ? 'text-[var(--color-error)]' : 'text-[var(--color-token-text-secondary)]'}`}>
         {value}
       </span>
     </span>

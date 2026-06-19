@@ -58,11 +58,11 @@ export function WorkbenchPanel({ sessionId, variant = 'panel', onClose }: Workbe
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col bg-[var(--color-surface)]">
-      <div className="flex h-10 shrink-0 items-center gap-2 border-b border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] px-2.5">
+      <div className="flex h-10 shrink-0 items-center gap-2 border-b border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-2.5">
         <div
           role="tablist"
           aria-label={t('workbench.modeSwitch')}
-          className="inline-flex items-center gap-0.5 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)] p-0.5"
+          className="inline-flex items-center gap-0.5 rounded-[var(--radius-sm)] border border-[var(--color-token-border)] bg-[var(--color-surface)] p-0.5"
         >
           {MODE_ITEMS.map(({ mode: itemMode, labelKey, Icon }) => {
             const isActive = mode === itemMode
@@ -73,10 +73,10 @@ export function WorkbenchPanel({ sessionId, variant = 'panel', onClose }: Workbe
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => handleModeSelect(itemMode)}
-                className={`inline-flex h-7 items-center gap-1.5 rounded-[6px] px-2.5 text-[12px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35 ${
+                className={`inline-flex h-7 items-center gap-1.5 rounded-[var(--radius-xs)] px-2.5 text-[12px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35 ${
                   isActive
-                    ? 'bg-[var(--color-surface-selected)] text-[var(--color-text-primary)] shadow-[inset_0_0_0_1px_var(--color-border-focus)]'
-                    : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]'
+                    ? 'bg-[var(--color-surface-selected)] text-[var(--color-token-foreground)] shadow-[inset_0_0_0_1px_var(--color-token-focus-border,var(--color-border-focus))]'
+                    : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]'
                 }`}
               >
                 <Icon size={15} strokeWidth={2} aria-hidden="true" className="shrink-0" />
@@ -93,7 +93,7 @@ export function WorkbenchPanel({ sessionId, variant = 'panel', onClose }: Workbe
               aria-label={t('workbench.expand')}
               title={t('workbench.expand')}
               onClick={handleExpand}
-              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[7px] text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
+              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
             >
               <Maximize2 size={15} strokeWidth={2} aria-hidden="true" />
             </button>
@@ -102,7 +102,7 @@ export function WorkbenchPanel({ sessionId, variant = 'panel', onClose }: Workbe
             type="button"
             aria-label={t('workbench.close')}
             onClick={handleClose}
-            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[7px] text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
+            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
           >
             <X size={16} strokeWidth={2} aria-hidden="true" />
           </button>

@@ -329,12 +329,12 @@ export function TabBar() {
     <div
       data-testid="tab-bar"
       data-desktop-drag-region={isDesktopRuntime ? true : undefined}
-      className="flex min-h-11 items-stretch bg-[var(--color-surface-container)] select-none border-b border-[var(--color-border)]"
+      className="flex h-[var(--height-toolbar)] items-stretch bg-[var(--color-surface-container)] select-none border-b border-[var(--color-token-border)]"
     >
 
       {canScrollLeft && (
-        <button onClick={() => scroll('left')} className="flex h-11 w-7 flex-shrink-0 items-center justify-center text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]">
-          <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+        <button onClick={() => scroll('left')} className="flex h-[var(--height-toolbar)] w-7 flex-shrink-0 items-center justify-center text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]">
+          <span className="material-symbols-outlined icon-sm">chevron_left</span>
         </button>
       )}
 
@@ -364,7 +364,7 @@ export function TabBar() {
         ))}
       </div>
 
-      <div className="flex shrink-0 items-center gap-1 border-l border-[var(--color-border)]/70 px-2">
+      <div className="flex shrink-0 items-center gap-1 border-l border-[var(--color-token-border)]/70 px-2">
         {isDesktopRuntime && isActiveSessionTab && (
           <OpenProjectMenu path={openProjectPath} />
         )}
@@ -403,13 +403,13 @@ export function TabBar() {
           data-testid="tab-bar-drag-gutter"
           data-desktop-drag-region
           aria-hidden="true"
-          className={`min-h-11 flex-shrink-0 ${showWindowControls ? 'w-3' : 'w-4'}`}
+          className={`min-h-[var(--height-toolbar)] flex-shrink-0 ${showWindowControls ? 'w-3' : 'w-4'}`}
         />
       )}
 
       {canScrollRight && (
-        <button onClick={() => scroll('right')} className="flex h-11 w-7 flex-shrink-0 items-center justify-center text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]">
-          <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+        <button onClick={() => scroll('right')} className="flex h-[var(--height-toolbar)] w-7 flex-shrink-0 items-center justify-center text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]">
+          <span className="material-symbols-outlined icon-sm">chevron_right</span>
         </button>
       )}
 
@@ -417,37 +417,37 @@ export function TabBar() {
 
       {contextMenu && (
         <div
-          className="fixed z-50 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-md)] py-1 min-w-[160px]"
+          className="fixed z-50 bg-[var(--color-token-dropdown-background,var(--color-surface))] border border-[var(--color-token-border)] rounded-[var(--radius-md)] py-1 min-w-[160px]"
           style={{ left: contextMenu.x, top: contextMenu.y, boxShadow: 'var(--shadow-dropdown)' }}
         >
           <button
             onClick={() => { handleClose(contextMenu.sessionId); setContextMenu(null) }}
-            className="w-full px-3 py-1.5 text-xs text-left text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]"
-          >
-            {t('tabs.close')}
-          </button>
-          <button
-            onClick={() => handleCloseOthers(contextMenu.sessionId)}
-            className="w-full px-3 py-1.5 text-xs text-left text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]"
-          >
-            {t('tabs.closeOthers')}
-          </button>
-          <button
-            onClick={() => handleCloseLeft(contextMenu.sessionId)}
-            className="w-full px-3 py-1.5 text-xs text-left text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]"
-          >
-            {t('tabs.closeLeft')}
-          </button>
-          <button
-            onClick={() => handleCloseRight(contextMenu.sessionId)}
-            className="w-full px-3 py-1.5 text-xs text-left text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]"
-          >
-            {t('tabs.closeRight')}
-          </button>
-          <div className="my-1 border-t border-[var(--color-border)]" />
-          <button
-            onClick={handleCloseAll}
-            className="w-full px-3 py-1.5 text-xs text-left text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]"
+	            className="w-full px-3 py-1.5 text-xs text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
+	          >
+	            {t('tabs.close')}
+	          </button>
+	          <button
+	            onClick={() => handleCloseOthers(contextMenu.sessionId)}
+	            className="w-full px-3 py-1.5 text-xs text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
+	          >
+	            {t('tabs.closeOthers')}
+	          </button>
+	          <button
+	            onClick={() => handleCloseLeft(contextMenu.sessionId)}
+	            className="w-full px-3 py-1.5 text-xs text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
+	          >
+	            {t('tabs.closeLeft')}
+	          </button>
+	          <button
+	            onClick={() => handleCloseRight(contextMenu.sessionId)}
+	            className="w-full px-3 py-1.5 text-xs text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
+	          >
+	            {t('tabs.closeRight')}
+	          </button>
+	          <div className="my-1 border-t border-[var(--color-token-border)]" />
+	          <button
+	            onClick={handleCloseAll}
+	            className="w-full px-3 py-1.5 text-xs text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
           >
             {t('tabs.closeAll')}
           </button>
@@ -515,17 +515,17 @@ const TabItem = forwardRef<HTMLDivElement, {
       onClick={onClick}
       onMouseDown={onMouseDown}
       onContextMenu={onContextMenu}
-      className={`
-        tab-bar-interactive group relative flex min-h-11 flex-shrink-0 items-center gap-1.5 px-3
-        ${isDragging ? 'z-20 cursor-grabbing' : 'cursor-grab'}
-        transition-[background-color,box-shadow,opacity,transform] duration-150 ease-out
-        ${isActive
-          ? 'bg-[var(--color-surface)] shadow-[inset_0_-2px_0_var(--color-brand)]'
-          : 'bg-transparent hover:bg-[var(--color-surface-hover)]'
-        }
-        ${isDragging ? 'opacity-95 shadow-[0_10px_24px_rgba(0,0,0,0.18)] ring-1 ring-[var(--color-border)]' : ''}
-        ${isDragOver ? 'before:absolute before:left-0 before:top-[4px] before:bottom-[4px] before:w-[3px] before:bg-[var(--color-brand)] before:rounded-full before:shadow-[0_0_0_1px_rgba(255,255,255,0.25)]' : ''}
-      `}
+	      className={`
+	        tab-bar-interactive group relative flex min-h-[var(--height-toolbar)] flex-shrink-0 items-center gap-1.5 px-3
+	        ${isDragging ? 'z-20 cursor-grabbing' : 'cursor-grab'}
+	        transition-[background-color,box-shadow,opacity,transform] duration-150 ease-out
+	        ${isActive
+	          ? 'bg-[var(--color-surface)] shadow-[inset_0_-2px_0_var(--color-brand)]'
+	          : 'bg-transparent hover:bg-[var(--color-surface-hover)]'
+	        }
+	        ${isDragging ? 'opacity-95 shadow-[0_10px_24px_rgba(0,0,0,0.18)] ring-1 ring-[var(--color-token-border)]' : ''}
+	        ${isDragOver ? 'before:absolute before:left-0 before:top-[4px] before:bottom-[4px] before:w-[3px] before:bg-[var(--color-brand)] before:rounded-full before:shadow-[0_0_0_1px_rgba(255,255,255,0.25)]' : ''}
+	      `}
       style={{
         width: TAB_WIDTH,
         maxWidth: TAB_WIDTH,
@@ -543,19 +543,19 @@ const TabItem = forwardRef<HTMLDivElement, {
         <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-error)] flex-shrink-0" />
       )}
       {tab.type === 'settings' && (
-        <span className="material-symbols-outlined text-[14px] flex-shrink-0 text-[var(--color-text-tertiary)]">settings</span>
-      )}
-      {tab.type === 'scheduled' && (
-        <span className="material-symbols-outlined text-[14px] flex-shrink-0 text-[var(--color-text-tertiary)]">schedule</span>
-      )}
-      {tab.type === 'terminal' && (
-        <span className="material-symbols-outlined text-[14px] flex-shrink-0 text-[var(--color-text-tertiary)]">terminal</span>
-      )}
-      {tab.type === 'workbench' && (
-        <span className="material-symbols-outlined text-[14px] flex-shrink-0 text-[var(--color-text-tertiary)]">view_sidebar</span>
-      )}
+	        <span className="material-symbols-outlined icon-xs flex-shrink-0 text-[var(--color-token-text-secondary)]">settings</span>
+	      )}
+	      {tab.type === 'scheduled' && (
+	        <span className="material-symbols-outlined icon-xs flex-shrink-0 text-[var(--color-token-text-secondary)]">schedule</span>
+	      )}
+	      {tab.type === 'terminal' && (
+	        <span className="material-symbols-outlined icon-xs flex-shrink-0 text-[var(--color-token-text-secondary)]">terminal</span>
+	      )}
+	      {tab.type === 'workbench' && (
+	        <span className="material-symbols-outlined icon-xs flex-shrink-0 text-[var(--color-token-text-secondary)]">view_sidebar</span>
+	      )}
 
-      <span className={`flex-1 truncate text-xs ${isActive ? 'text-[var(--color-text-primary)] font-medium' : 'text-[var(--color-text-secondary)]'}`}>
+	      <span className={`flex-1 truncate text-xs ${isActive ? 'text-[var(--color-token-foreground)] font-medium' : 'text-[var(--color-token-text-secondary)]'}`}>
         {tab.title || 'Untitled'}
       </span>
 
@@ -564,7 +564,7 @@ const TabItem = forwardRef<HTMLDivElement, {
         aria-label={`Close ${tab.title || 'Untitled'}`}
         onMouseDown={(e) => { e.stopPropagation() }}
         onClick={(e) => { e.stopPropagation(); onClose() }}
-        className="flex-shrink-0 -mr-0.5 inline-flex h-3 w-3 items-center justify-center bg-transparent p-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-[opacity,color] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] focus-visible:outline-none"
+	        className="flex-shrink-0 -mr-0.5 inline-flex h-3 w-3 items-center justify-center bg-transparent p-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-[opacity,color] text-[var(--color-token-text-secondary)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none"
       >
         <span className="material-symbols-outlined text-[11px] leading-none">close</span>
       </button>
@@ -591,10 +591,10 @@ function ToolbarIconButton({
       title={label}
       onClick={onClick}
       data-active={active ? 'true' : 'false'}
-      className={`inline-flex h-8 w-8 items-center justify-center rounded-[10px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] ${
-        active
-          ? 'bg-[var(--color-surface-hover)] text-[var(--color-text-primary)]'
-          : 'text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]'
+	      className={`inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] ${
+	        active
+	          ? 'bg-[var(--color-surface-hover)] text-[var(--color-token-foreground)]'
+	          : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]'
       }`}
     >
       {icon}

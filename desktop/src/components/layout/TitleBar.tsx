@@ -7,7 +7,7 @@ export function TitleBar() {
 
   return (
     <div
-      className="h-[var(--titlebar-height)] flex items-center border-b border-[var(--color-border)] bg-[var(--color-surface)] select-none"
+      className="h-[var(--titlebar-height)] flex items-center border-b border-[var(--color-token-border)] bg-[var(--color-surface)] select-none"
       data-desktop-drag-region
     >
       {/* macOS traffic light spacer */}
@@ -20,12 +20,12 @@ export function TitleBar() {
 
       {/* Navigation arrows */}
       <div className="flex items-center gap-1 mr-4">
-        <button className="p-1 rounded-[var(--radius-md)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] transition-colors">
+        <button className="p-1 rounded-[var(--radius-md)] text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] transition-colors">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 18l-6-6 6-6" />
           </svg>
         </button>
-        <button className="p-1 rounded-[var(--radius-md)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] transition-colors">
+        <button className="p-1 rounded-[var(--radius-md)] text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] transition-colors">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 18l6-6-6-6" />
           </svg>
@@ -59,8 +59,8 @@ export function TitleBar() {
 
       {/* Right: Settings */}
       <div className="flex items-center gap-2 mr-4">
-        <button className="p-1.5 rounded-[var(--radius-md)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] transition-colors">
-          <span className="material-symbols-outlined text-[18px]">settings</span>
+        <button className="p-1.5 rounded-[var(--radius-md)] text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] transition-colors">
+          <span className="material-symbols-outlined icon-md">settings</span>
         </button>
       </div>
     </div>
@@ -84,12 +84,12 @@ function TabButton({
       className={`
         flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-[var(--radius-md)] transition-colors duration-200
         ${active
-          ? 'bg-[var(--color-surface-selected)] text-[var(--color-text-primary)]'
-          : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
+          ? 'bg-[var(--color-surface-selected)] text-[var(--color-token-foreground)]'
+          : 'text-[var(--color-token-text-secondary)] hover:text-[var(--color-token-foreground)]'
         }
       `}
     >
-      <span className="material-symbols-outlined text-[16px]">{icon}</span>
+      <span className="material-symbols-outlined icon-sm">{icon}</span>
       {children}
     </button>
   )

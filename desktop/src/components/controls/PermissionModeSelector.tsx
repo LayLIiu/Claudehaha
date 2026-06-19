@@ -65,7 +65,7 @@ export function PermissionModeSelector({ workDir: workDirProp, compact = false, 
       label: t('permMode.planMode'),
       description: t('permMode.planModeDesc'),
       icon: 'architecture',
-      color: 'text-[var(--color-text-tertiary)]',
+      color: 'text-[var(--color-token-text-secondary)]',
     },
     {
       value: 'bypassPermissions',
@@ -141,19 +141,19 @@ export function PermissionModeSelector({ workDir: workDirProp, compact = false, 
             setOpen(false)
           }}
           className={`
-            sidebar-codex-menu-item items-start gap-2.5 rounded-[12px] px-3 py-2
+            sidebar-codex-menu-item items-start gap-2.5 rounded-[var(--radius-lg)] px-3 py-2
             ${item.value === currentMode ? 'bg-white/[0.085]' : ''}
           `}
         >
-          <span className={`material-symbols-outlined mt-0.5 text-[20px] ${item.color || 'text-[var(--color-text-secondary)]'}`}>
+          <span className={`material-symbols-outlined mt-0.5 text-[20px] ${item.color || 'text-[var(--color-token-text-secondary)]'}`}>
             {item.icon}
           </span>
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold text-[var(--color-text-primary)]">{item.label}</div>
-            <div className="mt-0.5 text-xs text-[var(--color-text-tertiary)]">{item.description}</div>
+            <div className="text-sm font-semibold text-[var(--color-token-foreground)]">{item.label}</div>
+            <div className="mt-0.5 text-xs text-[var(--color-token-text-secondary)]">{item.description}</div>
           </div>
           {item.value === currentMode && (
-            <span className="material-symbols-outlined mt-0.5 text-[16px] text-[var(--color-brand)]" style={{ fontVariationSettings: "'FILL' 1" }}>
+            <span className="material-symbols-outlined icon-sm text-[var(--color-brand)]" style={{ fontVariationSettings: "'FILL' 1" }}>
               check_circle
             </span>
           )}
@@ -164,7 +164,7 @@ export function PermissionModeSelector({ workDir: workDirProp, compact = false, 
 
   const menuContent = (
     <>
-      <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
+      <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-[var(--color-token-text-secondary)]">
         {t('permMode.executionPermissions')}
       </div>
       {permissionOptions}
@@ -180,15 +180,15 @@ export function PermissionModeSelector({ workDir: workDirProp, compact = false, 
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
         title={compact ? MODE_LABELS[currentMode] : undefined}
-        className={`flex items-center bg-transparent font-semibold text-[var(--color-text-secondary)] transition-colors hover:bg-white/[0.055] hover:text-[var(--color-text-primary)] ${
+        className={`flex items-center bg-transparent font-semibold text-[var(--color-token-text-secondary)] transition-colors hover:bg-white/[0.055] hover:text-[var(--color-token-foreground)] ${
           currentMode === 'bypassPermissions' ? 'text-[#ff8a4c] hover:text-[#ff9b66]' : ''
         } ${compactButtonClass}`}
       >
-        <span className="material-symbols-outlined text-[16px]">{MODE_ICONS[currentMode]}</span>
+        <span className="material-symbols-outlined icon-sm">{MODE_ICONS[currentMode]}</span>
         {!compact && (
           <>
             <span>{MODE_LABELS[currentMode]}</span>
-            <span className="material-symbols-outlined text-[12px]">expand_more</span>
+            <span className="material-symbols-outlined icon-2xs">expand_more</span>
           </>
         )}
       </button>
@@ -206,7 +206,7 @@ export function PermissionModeSelector({ workDir: workDirProp, compact = false, 
             {permissionOptions}
           </MobileBottomSheet>
         ) : (
-          <div id={menuId} ref={menuRef} role="menu" className="sidebar-codex-menu glass-panel absolute bottom-full left-0 z-50 mb-2 w-[320px] rounded-[18px] p-1.5 shadow-[var(--shadow-dropdown)]">
+          <div id={menuId} ref={menuRef} role="menu" className="sidebar-codex-menu glass-panel absolute bottom-full left-0 z-50 mb-2 w-[320px] rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)]">
             {menuContent}
           </div>
         )
@@ -223,14 +223,14 @@ export function PermissionModeSelector({ workDir: workDirProp, compact = false, 
               {t('permMode.enableBypassSubtitle')}
             </p>
             <p
-              className="text-xs leading-relaxed text-[var(--color-text-secondary)]"
+              className="text-xs leading-relaxed text-[var(--color-token-text-secondary)]"
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(t('permMode.enableBypassBody')) }}
             />
-            <div className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-container)] px-3 py-2" title={workDir}>
-              <span className="material-symbols-outlined shrink-0 text-[16px] text-[var(--color-text-tertiary)]">folder</span>
-              <code className="truncate text-xs font-[var(--font-mono)] text-[var(--color-text-primary)]">{workDir}</code>
+            <div className="flex items-center gap-2 rounded-lg border border-[var(--color-token-border)] bg-[var(--color-surface-container)] px-3 py-2" title={workDir}>
+              <span className="material-symbols-outlined icon-sm text-[var(--color-token-text-secondary)]">folder</span>
+              <code className="truncate text-xs font-[var(--font-mono)] text-[var(--color-token-foreground)]">{workDir}</code>
             </div>
-            <ul className="space-y-1.5 text-xs text-[var(--color-text-secondary)]">
+            <ul className="space-y-1.5 text-xs text-[var(--color-token-text-secondary)]">
               <li className="flex items-start gap-2">
                 <span className="material-symbols-outlined mt-0.5 text-[14px] text-[var(--color-error)]">check</span>
                 {t('permMode.permReadWrite')}

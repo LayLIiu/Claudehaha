@@ -11,7 +11,7 @@ const memberStatusConfig = {
   },
   idle: {
     icon: 'radio_button_unchecked',
-    color: 'var(--color-text-tertiary)',
+    color: 'var(--color-token-text-secondary)',
     pulse: false,
   },
   completed: {
@@ -45,22 +45,22 @@ export function TeamStatusBar() {
 
   return (
     <div className="shrink-0 px-8">
-      <div className="mx-auto max-w-[860px] rounded-[var(--radius-lg)] border border-[var(--color-outline-variant)]/40 bg-[var(--color-surface-container-lowest)] overflow-hidden mb-2">
+      <div className="mx-auto max-w-[860px] rounded-[var(--radius-lg)] border border-[var(--color-outline-variant)]/40 bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] overflow-hidden mb-2">
         {/* Header */}
         <button
           onClick={() => setExpanded((v) => !v)}
           className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--color-surface-container-low)] transition-colors bg-[var(--color-surface-container)]"
         >
           <div className="flex items-center justify-center w-6 h-6 rounded-[var(--radius-md)] bg-[var(--color-brand)]/10">
-            <span className="material-symbols-outlined text-[14px] text-[var(--color-brand)]">groups</span>
+            <span className="material-symbols-outlined icon-xs text-[var(--color-brand)]">groups</span>
           </div>
 
-          <span className="text-xs font-semibold text-[var(--color-text-primary)]">
+          <span className="text-xs font-semibold text-[var(--color-token-foreground)]">
             {t('teams.team')} {activeTeam.name}
           </span>
 
           {/* Progress bar */}
-          <div className="flex-1 h-1.5 rounded-full bg-[var(--color-border)] overflow-hidden max-w-[200px]">
+          <div className="flex-1 h-1.5 rounded-full bg-[var(--color-token-border)] overflow-hidden max-w-[200px]">
             <div
               className="h-full rounded-full transition-all duration-300"
               style={{
@@ -70,7 +70,7 @@ export function TeamStatusBar() {
             />
           </div>
 
-          <span className="text-[10px] text-[var(--color-text-tertiary)] tabular-nums">
+          <span className="text-[10px] text-[var(--color-token-text-secondary)] tabular-nums">
             {completedCount}/{totalCount}
           </span>
 
@@ -82,7 +82,7 @@ export function TeamStatusBar() {
           )}
 
           <span
-            className="material-symbols-outlined text-[14px] text-[var(--color-text-tertiary)] transition-transform duration-200"
+            className="material-symbols-outlined icon-xs text-[var(--color-token-text-secondary)] transition-transform duration-200"
             style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
           >
             expand_less
@@ -111,7 +111,7 @@ function MemberRow({ member, onView }: { member: TeamMember; onView: () => void 
       className="w-full flex items-center gap-2 py-1.5 px-1 rounded-md text-left hover:bg-[var(--color-surface-container-low)] transition-colors group"
     >
       <span
-        className={`material-symbols-outlined text-[16px] shrink-0 ${config.pulse ? 'animate-pulse-dot' : ''}`}
+        className={`material-symbols-outlined icon-sm shrink-0 ${config.pulse ? 'animate-pulse-dot' : ''}`}
         style={{ color: config.color, fontVariationSettings: "'FILL' 1" }}
       >
         {config.icon}
@@ -119,11 +119,11 @@ function MemberRow({ member, onView }: { member: TeamMember; onView: () => void 
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
-          <span className="material-symbols-outlined text-[12px] text-[var(--color-text-tertiary)]">smart_toy</span>
+          <span className="material-symbols-outlined icon-2xs text-[var(--color-token-text-secondary)]">smart_toy</span>
           <span className={`text-xs ${
             member.status === 'completed'
-              ? 'text-[var(--color-text-tertiary)]'
-              : 'text-[var(--color-text-primary)]'
+              ? 'text-[var(--color-token-text-secondary)]'
+              : 'text-[var(--color-token-foreground)]'
           }`}>
             {member.role}
           </span>
@@ -139,7 +139,7 @@ function MemberRow({ member, onView }: { member: TeamMember; onView: () => void 
         )}
       </div>
 
-      <span className="material-symbols-outlined text-[14px] text-[var(--color-text-tertiary)] opacity-0 group-hover:opacity-100 transition-opacity">
+      <span className="material-symbols-outlined icon-xs text-[var(--color-token-text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity">
         open_in_new
       </span>
     </button>

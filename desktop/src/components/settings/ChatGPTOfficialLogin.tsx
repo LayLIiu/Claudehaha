@@ -89,7 +89,7 @@ export function ChatGPTOfficialLogin() {
       )
     }
     return (
-      <div data-testid="chatgpt-official-login" className="text-xs text-[var(--color-text-tertiary)]">
+      <div data-testid="chatgpt-official-login" className="text-xs text-[var(--color-token-text-secondary)]">
         {t('common.loading')}
       </div>
     )
@@ -119,7 +119,7 @@ export function ChatGPTOfficialLogin() {
 
   return (
     <div data-testid="chatgpt-official-login" className="flex flex-col gap-2">
-      <div className="text-sm text-[var(--color-text-secondary)]">
+      <div className="text-sm text-[var(--color-token-text-secondary)]">
         {t('settings.chatgptOfficialLogin.intro')}
       </div>
       <button

@@ -379,7 +379,7 @@ export function ModelSelector({
     <>
       <div className={`overflow-y-auto ${isMobileBrowser ? 'p-1' : 'p-1.5'}`} style={{ maxHeight: isMobileBrowser ? undefined : dropdownPosition?.maxHeight }}>
         {!isMobileBrowser && (
-          <div className="mb-1.5 px-2 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
+          <div className="mb-1.5 px-2 text-[10px] font-bold uppercase tracking-widest text-[var(--color-token-text-secondary)]">
             {t('model.configuration')}
           </div>
         )}
@@ -389,11 +389,11 @@ export function ModelSelector({
             {providerChoices.map((choice) => (
               <div key={choice.providerId ?? 'official'} className="space-y-1">
                 <div className="flex items-center justify-between px-2 pt-1">
-                  <span className="truncate text-[11px] font-semibold tracking-[0.01em] text-[var(--color-text-secondary)]">
+                  <span className="truncate text-[11px] font-semibold tracking-[0.01em] text-[var(--color-token-text-secondary)]">
                     {choice.providerName}
                   </span>
                   {choice.isDefault && (
-                    <span className="flex-shrink-0 text-[10px] font-medium text-[var(--color-text-tertiary)]">
+                    <span className="flex-shrink-0 text-[10px] font-medium text-[var(--color-token-text-secondary)]">
                       {t('settings.providers.default')}
                     </span>
                   )}
@@ -413,7 +413,7 @@ export function ModelSelector({
                           effortLevel: selectedRuntimeEffort,
                         })}
                         className={`
-                          w-full rounded-[12px] px-2.5 text-left transition-colors
+                          w-full rounded-[var(--radius-lg)] px-2.5 text-left transition-colors
                           ${isMobileBrowser ? 'min-h-[56px] py-3' : 'py-2'}
                           ${isSelected ? 'bg-white/[0.085]' : 'hover:bg-white/[0.085]'}
                         `}
@@ -428,11 +428,11 @@ export function ModelSelector({
                           </div>
 
                           <div className="min-w-0 flex-1">
-                            <div className="truncate text-sm font-semibold text-[var(--color-text-primary)]">
+                            <div className="truncate text-sm font-semibold text-[var(--color-token-foreground)]">
                               {model.name}
                             </div>
                             {model.description && (
-                              <div className="mt-0.5 truncate pr-[6px] text-[10px] text-[var(--color-text-tertiary)]">
+                              <div className="mt-0.5 truncate pr-[6px] text-[10px] text-[var(--color-token-text-secondary)]">
                                 {model.description}
                               </div>
                             )}
@@ -461,7 +461,7 @@ export function ModelSelector({
                     setOpen(false)
                   }}
                   className={`
-                    w-full rounded-[12px] px-2.5 text-left transition-colors
+                    w-full rounded-[var(--radius-lg)] px-2.5 text-left transition-colors
                     ${isMobileBrowser ? 'min-h-[56px] py-3' : 'py-2'}
                     ${isSelected ? 'bg-white/[0.085]' : 'hover:bg-white/[0.085]'}
                   `}
@@ -476,9 +476,9 @@ export function ModelSelector({
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-semibold text-[var(--color-text-primary)]">{model.name}</div>
+                      <div className="text-sm font-semibold text-[var(--color-token-foreground)]">{model.name}</div>
                       {model.description && (
-                        <div className="mt-0.5 truncate text-[10px] text-[var(--color-text-tertiary)]">
+                        <div className="mt-0.5 truncate text-[10px] text-[var(--color-token-text-secondary)]">
                           {model.description}
                         </div>
                       )}
@@ -493,7 +493,7 @@ export function ModelSelector({
 
       {canEditRuntimeEffort && (
         <div className="border-t border-white/[0.14] p-2">
-          <div className="mb-1.5 px-2 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
+          <div className="mb-1.5 px-2 text-[10px] font-bold uppercase tracking-widest text-[var(--color-token-text-secondary)]">
             {t('model.effort')}
           </div>
           <div className="grid grid-cols-4 gap-1.5">
@@ -508,8 +508,8 @@ export function ModelSelector({
                   className={`
                     rounded-lg py-2 text-center text-xs font-semibold transition-colors
                     ${isSelected
-                      ? 'bg-white/[0.12] text-[var(--color-text-primary)]'
-                      : 'bg-transparent text-[var(--color-text-secondary)] hover:bg-white/[0.085]'
+                      ? 'bg-white/[0.12] text-[var(--color-token-foreground)]'
+                      : 'bg-transparent text-[var(--color-token-text-secondary)] hover:bg-white/[0.085]'
                     }
                   `}
                 >
@@ -541,7 +541,7 @@ export function ModelSelector({
       <div
         ref={dropdownRef}
         data-testid="model-selector-dropdown"
-        className="sidebar-codex-menu glass-panel fixed z-[80] overflow-hidden rounded-[18px] p-1.5 shadow-[var(--shadow-dropdown)]"
+        className="sidebar-codex-menu glass-panel fixed z-[80] overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)]"
         style={{
           top: dropdownPosition.top,
           bottom: dropdownPosition.bottom,
@@ -560,21 +560,21 @@ export function ModelSelector({
       <button
         onClick={() => !disabled && setOpen(!open)}
         disabled={disabled}
-        className={`flex items-center gap-1.5 rounded-full bg-transparent text-xs font-medium text-[var(--color-text-secondary)] transition-colors hover:bg-white/[0.055] hover:text-[var(--color-text-primary)] disabled:cursor-not-allowed disabled:opacity-50 ${
+        className={`flex items-center gap-1.5 rounded-full bg-transparent text-xs font-medium text-[var(--color-token-text-secondary)] transition-colors hover:bg-white/[0.055] hover:text-[var(--color-token-foreground)] disabled:cursor-not-allowed disabled:opacity-50 ${
           compact ? 'max-w-[136px] px-1.5 py-1.5' : 'max-w-[240px] px-1.5 py-1.5'
         }`}
       >
         <div className="flex min-w-0 flex-1 items-center gap-1.5">
-          <span className={`${compact ? 'text-xs' : 'text-sm'} min-w-0 truncate font-semibold text-[var(--color-text-primary)]`}>
+          <span className={`${compact ? 'text-xs' : 'text-sm'} min-w-0 truncate font-semibold text-[var(--color-token-foreground)]`}>
             {buttonModelLabel}
           </span>
           {isRuntimeScoped && selectedRuntimeEffortLabel ? (
-            <span className="shrink-0 text-[12px] font-semibold text-[var(--color-text-tertiary)]">
+            <span className="shrink-0 text-[12px] font-semibold text-[var(--color-token-text-secondary)]">
               {selectedRuntimeEffortLabel}
             </span>
           ) : null}
         </div>
-        <span className="material-symbols-outlined flex-shrink-0 text-[16px] text-[var(--color-text-tertiary)]">expand_more</span>
+        <span className="material-symbols-outlined icon-sm text-[var(--color-token-text-secondary)]">expand_more</span>
       </button>
       {dropdown}
     </div>

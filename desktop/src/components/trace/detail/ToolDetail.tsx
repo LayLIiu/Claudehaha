@@ -20,7 +20,7 @@ export function ToolDetail({ span }: { span: TraceSpan }) {
 
       <Section sectionKey="tool.result" title={t('trace.section.result')} defaultOpen>
         {pending ? (
-          <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] px-3 py-3 text-xs text-[var(--color-text-tertiary)]">
+          <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-token-border)] px-3 py-3 text-xs text-[var(--color-token-text-secondary)]">
             {t('trace.waitingForResult')}
           </div>
         ) : outputs.length > 0 ? (
@@ -28,7 +28,7 @@ export function ToolDetail({ span }: { span: TraceSpan }) {
             {outputs.map((output, index) => <OutputView key={index} value={output} />)}
           </div>
         ) : (
-          <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] px-3 py-3 text-xs text-[var(--color-text-tertiary)]">
+          <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-token-border)] px-3 py-3 text-xs text-[var(--color-token-text-secondary)]">
             {t('trace.noData')}
           </div>
         )}
@@ -62,8 +62,8 @@ export function ToolDetail({ span }: { span: TraceSpan }) {
 function MetaRow({ label, value }: { label: string; value: string }) {
   return (
     <>
-      <dt className="text-[var(--color-text-tertiary)]">{label}</dt>
-      <dd className="min-w-0 truncate font-mono text-[var(--color-text-secondary)]">{value}</dd>
+      <dt className="text-[var(--color-token-text-secondary)]">{label}</dt>
+      <dd className="min-w-0 truncate font-mono text-[var(--color-token-text-secondary)]">{value}</dd>
     </>
   )
 }
@@ -73,7 +73,7 @@ function OutputView({ value }: { value: unknown }) {
   if (text !== null) {
     if (!text.trim()) return null
     return (
-      <pre className="max-h-[400px] overflow-y-auto whitespace-pre-wrap break-words rounded-[var(--radius-sm)] bg-[var(--color-surface-container-low)] px-2 py-1.5 font-mono text-[11px] leading-5 text-[var(--color-text-secondary)]">
+      <pre className="max-h-[400px] overflow-y-auto whitespace-pre-wrap break-words rounded-[var(--radius-sm)] bg-[var(--color-surface-container-low)] px-2 py-1.5 font-mono text-[11px] leading-5 text-[var(--color-token-text-secondary)]">
         {text}
       </pre>
     )

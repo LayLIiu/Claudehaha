@@ -47,6 +47,7 @@ import { TerminalSettings } from './TerminalSettings'
 import { DiagnosticsSettings } from './DiagnosticsSettings'
 import { TraceList } from './TraceList'
 import { ActivitySettings } from './ActivitySettings'
+import { SettingsCard, SettingsRow } from '../components/shared/SettingsCard'
 import { MemorySettings } from './MemorySettings'
 import { useUIStore, type SettingsTab } from '../stores/uiStore'
 import { useTabStore, SETTINGS_TAB_ID } from '../stores/tabStore'
@@ -190,96 +191,102 @@ export function Settings() {
     useUIStore.getState().setPendingSettingsTab(null)
   }, [pendingSettingsTab])
 
+  const tabs: Array<{ id: SettingsTab; icon: string; label: string }> = [
+    { id: 'providers', icon: 'dns', label: t('settings.tab.providers') },
+    { id: 'general', icon: 'tune', label: t('settings.tab.general') },
+    { id: 'h5Access', icon: 'qr_code_2', label: t('settings.tab.h5Access') },
+    { id: 'adapters', icon: 'chat', label: t('settings.tab.adapters') },
+    { id: 'terminal', icon: 'terminal', label: t('settings.tab.terminal') },
+    { id: 'mcp', icon: 'dns', label: t('settings.tab.mcp') },
+    { id: 'agents', icon: 'smart_toy', label: t('settings.tab.agents') },
+    { id: 'skills', icon: 'auto_awesome', label: t('settings.tab.skills') },
+    { id: 'memory', icon: 'history_edu', label: t('settings.tab.memory') },
+    { id: 'plugins', icon: 'extension', label: t('settings.tab.plugins') },
+    { id: 'computerUse', icon: 'mouse', label: t('settings.tab.computerUse') },
+    { id: 'activity', icon: 'monitoring', label: t('settings.tab.activity') },
+    { id: 'trace', icon: 'account_tree', label: t('settings.tab.trace') },
+    { id: 'diagnostics', icon: 'monitor_heart', label: t('settings.tab.diagnostics') },
+  ]
+
   return (
-    <div className="settings-page-root flex-1 flex min-h-0 flex-col overflow-hidden">
-      <div className="flex-1 flex overflow-hidden">
-        {/* Tab navigation */}
-        <div
-          data-testid="settings-sidebar-panel"
-          className="settings-sidebar-panel relative flex w-[300px] flex-shrink-0 flex-col py-3"
-        >
-          <div className="px-3 mb-2 pt-[28px]">
-            <button
-              type="button"
-              onClick={() => {
-                const prevSession = useUIStore.getState().settingsEntrySessionId
-                useTabStore.getState().closeTab(SETTINGS_TAB_ID)
-                if (prevSession) {
-                  useTabStore.getState().setActiveTab(prevSession)
-                  useChatStore.getState().connectToSession(prevSession)
-                }
-                useUIStore.getState().setSidebarOpen(true)
-              }}
-              className="flex w-full items-center gap-2 rounded-[7px] px-2.5 py-1.5 text-[13px] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] transition-colors"
-            >
-              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-              {t('settings.backToApp')}
-            </button>
-          </div>
-          <div className="flex-1 px-3">
-            <TabButton icon="dns" label={t('settings.tab.providers')} active={activeTab === 'providers'} onClick={() => setActiveTab('providers')} />
-            <TabButton icon="tune" label={t('settings.tab.general')} active={activeTab === 'general'} onClick={() => setActiveTab('general')} />
-            <TabButton icon="qr_code_2" label={t('settings.tab.h5Access')} active={activeTab === 'h5Access'} onClick={() => setActiveTab('h5Access')} />
-            <TabButton icon="chat" label={t('settings.tab.adapters')} active={activeTab === 'adapters'} onClick={() => setActiveTab('adapters')} />
-            <TabButton icon="terminal" label={t('settings.tab.terminal')} active={activeTab === 'terminal'} onClick={() => setActiveTab('terminal')} />
-            <TabButton icon="dns" label={t('settings.tab.mcp')} active={activeTab === 'mcp'} onClick={() => setActiveTab('mcp')} />
-            <TabButton icon="smart_toy" label={t('settings.tab.agents')} active={activeTab === 'agents'} onClick={() => setActiveTab('agents')} />
-            <TabButton icon="auto_awesome" label={t('settings.tab.skills')} active={activeTab === 'skills'} onClick={() => setActiveTab('skills')} />
-            <TabButton icon="history_edu" label={t('settings.tab.memory')} active={activeTab === 'memory'} onClick={() => setActiveTab('memory')} />
-            <TabButton icon="extension" label={t('settings.tab.plugins')} active={activeTab === 'plugins'} onClick={() => setActiveTab('plugins')} />
-            <TabButton icon="mouse" label={t('settings.tab.computerUse')} active={activeTab === 'computerUse'} onClick={() => setActiveTab('computerUse')} />
-            <TabButton icon="monitoring" label={t('settings.tab.activity')} active={activeTab === 'activity'} onClick={() => setActiveTab('activity')} />
-            <TabButton icon="account_tree" label={t('settings.tab.trace')} active={activeTab === 'trace'} onClick={() => setActiveTab('trace')} />
-            <TabButton icon="monitor_heart" label={t('settings.tab.diagnostics')} active={activeTab === 'diagnostics'} onClick={() => setActiveTab('diagnostics')} />
-          </div>
+    <div className="settings-page-root flex-1 grid min-h-0 grid-cols-[64px_minmax(0,1fr)] lg:grid-cols-[264px_minmax(0,1fr)] overflow-hidden">
+      {/* Sidebar navigation */}
+      <aside
+        data-testid="settings-sidebar-panel"
+        className="settings-sidebar-panel relative flex flex-col py-2 pt-[36px]"
+      >
+        {/* Back button */}
+        <div className="px-3 mb-1">
+          <button
+            type="button"
+            onClick={() => {
+              const prevSession = useUIStore.getState().settingsEntrySessionId
+              useTabStore.getState().closeTab(SETTINGS_TAB_ID)
+              if (prevSession) {
+                useTabStore.getState().setActiveTab(prevSession)
+                useChatStore.getState().connectToSession(prevSession)
+              }
+              useUIStore.getState().setSidebarOpen(true)
+            }}
+            className="settings-nav-item flex h-8 w-full items-center gap-2 rounded-xl px-2.5 text-[13px] text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] transition-colors"
+          >
+            <span className="material-symbols-outlined text-[17px]">arrow_back</span>
+            <span className="settings-nav-label truncate">{t('settings.backToApp')}</span>
+          </button>
         </div>
 
-        {/* Tab content; trace embeds a full-bleed page that manages its own scroll */}
-        <div
-          data-testid="settings-content-panel"
-          className={
-            activeTab === 'trace'
-              ? 'settings-content-panel flex-1 flex min-h-0 flex-col overflow-hidden'
-              : 'settings-content-panel flex-1 overflow-y-auto px-10 py-10 flex justify-center'
-          }
-        >
-          <div className={activeTab === 'trace' ? undefined : 'w-full max-w-[620px]'}>
-          {activeTab === 'providers' && <ProviderSettings />}
-          {activeTab === 'activity' && <ActivitySettings />}
-          {activeTab === 'general' && <GeneralSettings />}
-          {activeTab === 'h5Access' && <H5AccessSettings />}
-          {activeTab === 'adapters' && <AdapterSettings />}
-          {activeTab === 'terminal' && <TerminalSettings showPreferences />}
-          {activeTab === 'mcp' && <McpSettings />}
-          {activeTab === 'agents' && <AgentsSettings />}
-          {activeTab === 'skills' && <SkillSettings />}
-          {activeTab === 'memory' && <MemorySettings />}
-          {activeTab === 'plugins' && <PluginSettings />}
-          {activeTab === 'computerUse' && <ComputerUseSettings />}
-          {activeTab === 'trace' && <TraceList />}
-          </div>
-          {activeTab === 'diagnostics' && <DiagnosticsSettings />}
+        {/* Tab list */}
+        <div className="flex-1 px-3 space-y-0.5">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`settings-nav-item flex h-8 w-full items-center gap-2 rounded-xl px-2.5 text-[13px] transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-[var(--color-surface-hover)] text-[var(--color-token-foreground)] font-medium'
+                  : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[17px]">{tab.icon}</span>
+              <span className="settings-nav-label truncate">{tab.label}</span>
+            </button>
+          ))}
         </div>
+      </aside>
+
+      {/* Content area */}
+      <div
+        data-testid="settings-content-panel"
+        className={
+          activeTab === 'trace'
+            ? 'settings-content-panel flex-1 flex min-h-0 flex-col overflow-hidden'
+            : 'settings-content-panel flex-1 overflow-y-auto'
+        }
+      >
+        {activeTab === 'trace' ? (
+          <TraceList />
+        ) : (
+          <div className="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-6 pb-8 lg:px-8 lg:py-10">
+            {activeTab === 'providers' && <ProviderSettings />}
+            {activeTab === 'activity' && <ActivitySettings />}
+            {activeTab === 'general' && <GeneralSettings />}
+            {activeTab === 'h5Access' && <H5AccessSettings />}
+            {activeTab === 'adapters' && <AdapterSettings />}
+            {activeTab === 'terminal' && <TerminalSettings showPreferences />}
+            {activeTab === 'mcp' && <McpSettings />}
+            {activeTab === 'agents' && <AgentsSettings />}
+            {activeTab === 'skills' && <SkillSettings />}
+            {activeTab === 'memory' && <MemorySettings />}
+            {activeTab === 'plugins' && <PluginSettings />}
+            {activeTab === 'computerUse' && <ComputerUseSettings />}
+            {activeTab === 'diagnostics' && <DiagnosticsSettings />}
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-function TabButton({ icon, label, active, onClick }: { icon: string; label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-[13px] text-left rounded-[7px] border transition-colors ${
-        active
-          ? 'border-transparent bg-[var(--color-sidebar-item-active)] text-[var(--color-text-primary)] font-medium'
-          : 'border-transparent text-[var(--color-text-secondary)] hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-text-primary)]'
-      }`}
-    >
-      <span className="material-symbols-outlined text-[17px]">{icon}</span>
-      {label}
-    </button>
-  )
-}
 
 // ─── Provider Settings ──────────────────────────────────────
 
@@ -456,11 +463,11 @@ function ProviderSettings() {
     <div className="max-w-2xl">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-base font-semibold text-[var(--color-text-primary)]">{t('settings.providers.title')}</h2>
-          <p className="text-sm text-[var(--color-text-tertiary)] mt-0.5">{t('settings.providers.description')}</p>
+          <h2 className="text-base font-semibold text-[var(--color-token-foreground)]">{t('settings.providers.title')}</h2>
+          <p className="text-sm text-[var(--color-token-text-secondary)] mt-0.5">{t('settings.providers.description')}</p>
         </div>
         <Button size="sm" onClick={() => setShowCreateModal(true)} disabled={isPresetsLoading || presets.length === 0}>
-          <span className="material-symbols-outlined text-[16px]">add</span>
+          <span className="material-symbols-outlined icon-sm">add</span>
           {t('settings.providers.addProvider')}
         </Button>
       </div>
@@ -537,7 +544,7 @@ function ProviderSettings() {
                   badges={(
                     <>
                       {preset && preset.id !== 'custom' && (
-                        <span className="rounded bg-[var(--color-surface-container-high)] px-1.5 py-0.5 text-[10px] font-medium leading-none text-[var(--color-text-tertiary)]">{preset.name}</span>
+                        <span className="rounded bg-[var(--color-surface-container-high)] px-1.5 py-0.5 text-[10px] font-medium leading-none text-[var(--color-token-text-secondary)]">{preset.name}</span>
                       )}
                       {provider.apiFormat && provider.apiFormat !== 'anthropic' && (
                         <span className="rounded bg-[var(--color-surface-container-high)] px-1.5 py-0.5 text-[10px] font-medium leading-none text-[var(--color-warning)]">
@@ -662,10 +669,10 @@ function SortableProviderCard({
       ref={setNodeRef}
       style={style}
       data-testid={providerItemTestId(item)}
-      className={`group relative flex flex-col rounded-[8px] border transition-colors ${
+      className={`group relative flex flex-col rounded-[var(--radius-sm)] border transition-colors ${
         isActive
-          ? 'border-[var(--color-border-focus)] bg-[var(--color-surface-container-low)]'
-          : 'border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] hover:border-[var(--color-border-focus)] hover:bg-[var(--color-surface-hover)]'
+          ? 'border-[var(--color-token-focus-border,var(--color-border-focus))] bg-[var(--color-surface-container-low)]'
+          : 'border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] hover:border-[var(--color-token-focus-border,var(--color-border-focus))] hover:bg-[var(--color-surface-hover)]'
       } ${isDragging ? 'shadow-[var(--shadow-dropdown)] opacity-90' : ''}`}
     >
       <div className="flex items-center gap-2 px-3 py-3">
@@ -675,7 +682,7 @@ function SortableProviderCard({
           {...listeners}
           aria-label={dragLabel}
           title={dragLabel}
-          className="flex h-8 w-8 shrink-0 cursor-grab items-center justify-center rounded-[6px] text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-container-high)] hover:text-[var(--color-text-secondary)] focus:outline-none focus-visible:shadow-[var(--shadow-focus-ring)] active:cursor-grabbing"
+          className="flex h-8 w-8 shrink-0 cursor-grab items-center justify-center rounded-[var(--radius-xs)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-container-high)] hover:text-[var(--color-token-text-secondary)] focus:outline-none focus-visible:shadow-[var(--shadow-focus-ring)] active:cursor-grabbing"
           style={{ touchAction: 'none' }}
         >
           <GripVertical className="h-4 w-4" />
@@ -684,17 +691,17 @@ function SortableProviderCard({
           type="button"
           onClick={onActivate}
           aria-disabled={!onActivate}
-          className={`flex min-w-0 flex-1 items-center gap-3 rounded-[6px] text-left focus:outline-none focus-visible:shadow-[var(--shadow-focus-ring)] ${
+          className={`flex min-w-0 flex-1 items-center gap-3 rounded-[var(--radius-xs)] text-left focus:outline-none focus-visible:shadow-[var(--shadow-focus-ring)] ${
             onActivate ? 'cursor-pointer' : 'cursor-default'
           }`}
         >
-          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${isActive ? 'bg-[var(--color-success)]' : 'bg-[var(--color-text-tertiary)]'}`} />
+          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${isActive ? 'bg-[var(--color-success)]' : 'bg-[var(--color-token-text-secondary)]'}`} />
           <span className="min-w-0 flex-1">
             <span className="flex min-w-0 items-center gap-2">
-              <span className="truncate text-sm font-semibold text-[var(--color-text-primary)]">{title}</span>
+              <span className="truncate text-sm font-semibold text-[var(--color-token-foreground)]">{title}</span>
               {badges}
             </span>
-            <span className="mt-0.5 block truncate text-xs text-[var(--color-text-tertiary)]">{subtitle}</span>
+            <span className="mt-0.5 block truncate text-xs text-[var(--color-token-text-secondary)]">{subtitle}</span>
             {result}
           </span>
         </button>
@@ -1389,7 +1396,7 @@ function ProviderFormModal({ open, onClose, mode, provider, presets }: ProviderF
       className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
         selectedPreset.id === preset.id
           ? 'border-[var(--color-brand)] bg-[var(--color-surface-container-high)] text-[var(--color-brand)] shadow-[var(--shadow-focus-ring)]'
-          : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-border-focus)] hover:bg-[var(--color-surface-hover)]'
+          : 'border-[var(--color-token-border)] text-[var(--color-token-text-secondary)] hover:border-[var(--color-token-focus-border,var(--color-border-focus))] hover:bg-[var(--color-surface-hover)]'
       }`}
     >
       {preset.name}
@@ -1510,13 +1517,13 @@ function ProviderFormModal({ open, onClose, mode, provider, presets }: ProviderF
         {/* Preset chips */}
         {mode === 'create' && (
           <div>
-            <label className="text-sm font-medium text-[var(--color-text-primary)] mb-2 block">{t('settings.providers.preset')}</label>
+            <label className="text-sm font-medium text-[var(--color-token-foreground)] mb-2 block">{t('settings.providers.preset')}</label>
             <div className="flex flex-col gap-2">
               <div className="flex flex-wrap gap-2">
                 {regularPresets.map(renderPresetButton)}
               </div>
               {featuredPresets.length > 0 && (
-                <div className="flex flex-wrap gap-2 border-t border-[var(--color-border)]/60 pt-2">
+                <div className="flex flex-wrap gap-2 border-t border-[var(--color-token-border)]/60 pt-2">
                   {featuredPresets.map(renderPresetButton)}
                 </div>
               )}
@@ -1533,7 +1540,7 @@ function ProviderFormModal({ open, onClose, mode, provider, presets }: ProviderF
         {/* API Format */}
         {(isCustom || mode === 'edit') ? (
           <div>
-            <label className="text-sm font-medium text-[var(--color-text-primary)] mb-1 block">{t('settings.providers.apiFormat')}</label>
+            <label className="text-sm font-medium text-[var(--color-token-foreground)] mb-1 block">{t('settings.providers.apiFormat')}</label>
             <Dropdown<ApiFormat>
               items={apiFormatItems}
               value={apiFormat}
@@ -1543,21 +1550,21 @@ function ProviderFormModal({ open, onClose, mode, provider, presets }: ProviderF
               trigger={
                 <button
                   type="button"
-                  className="flex h-10 w-full items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-left text-sm text-[var(--color-text-primary)] outline-none transition-colors hover:border-[var(--color-border-focus)] hover:bg-[var(--color-surface-container-low)] focus-visible:border-[var(--color-border-focus)] focus-visible:shadow-[var(--shadow-focus-ring)]"
+                  className="flex h-10 w-full items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-token-border)] bg-[var(--color-surface)] px-3 text-left text-sm text-[var(--color-token-foreground)] outline-none transition-colors hover:border-[var(--color-token-focus-border,var(--color-border-focus))] hover:bg-[var(--color-surface-container-low)] focus-visible:border-[var(--color-token-focus-border,var(--color-border-focus))] focus-visible:shadow-[var(--shadow-focus-ring)]"
                 >
                   <span className="min-w-0 flex-1 truncate">{selectedApiFormatLabel}</span>
-                  <span className="material-symbols-outlined flex-shrink-0 text-[18px] text-[var(--color-text-secondary)]">expand_more</span>
+                  <span className="material-symbols-outlined flex-shrink-0 icon-md text-[var(--color-token-text-secondary)]">expand_more</span>
                 </button>
               }
             />
             {apiFormat !== 'anthropic' && (
-              <p className="text-[11px] text-[var(--color-text-tertiary)] mt-1">{t('settings.providers.proxyHint')}</p>
+              <p className="text-[11px] text-[var(--color-token-text-secondary)] mt-1">{t('settings.providers.proxyHint')}</p>
             )}
           </div>
         ) : apiFormat !== 'anthropic' ? (
           <div>
-            <label className="text-sm font-medium text-[var(--color-text-primary)] mb-1 block">{t('settings.providers.apiFormat')}</label>
-            <div className="text-xs text-[var(--color-text-tertiary)] px-3 py-2 rounded-[var(--radius-md)] bg-[var(--color-surface-container-low)] border border-[var(--color-border)]">
+            <label className="text-sm font-medium text-[var(--color-token-foreground)] mb-1 block">{t('settings.providers.apiFormat')}</label>
+            <div className="text-xs text-[var(--color-token-text-secondary)] px-3 py-2 rounded-[var(--radius-md)] bg-[var(--color-surface-container-low)] border border-[var(--color-token-border)]">
               {apiFormat === 'openai_chat' ? t('settings.providers.apiFormatOpenaiChat') : t('settings.providers.apiFormatOpenaiResponses')}
             </div>
           </div>
@@ -1565,7 +1572,7 @@ function ProviderFormModal({ open, onClose, mode, provider, presets }: ProviderF
 
         {apiFormat === 'anthropic' && (
           <div>
-            <label className="text-sm font-medium text-[var(--color-text-primary)] mb-1 block">{t('settings.providers.authStrategy')}</label>
+            <label className="text-sm font-medium text-[var(--color-token-foreground)] mb-1 block">{t('settings.providers.authStrategy')}</label>
             <Dropdown<ProviderAuthStrategy>
               items={authStrategyItems}
               value={authStrategy}
@@ -1575,10 +1582,10 @@ function ProviderFormModal({ open, onClose, mode, provider, presets }: ProviderF
               trigger={
                 <button
                   type="button"
-                  className="flex min-h-10 w-full items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-left text-sm text-[var(--color-text-primary)] outline-none transition-colors hover:border-[var(--color-border-focus)] hover:bg-[var(--color-surface-container-low)] focus-visible:border-[var(--color-border-focus)] focus-visible:shadow-[var(--shadow-focus-ring)]"
+                  className="flex min-h-10 w-full items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-token-border)] bg-[var(--color-surface)] px-3 py-2 text-left text-sm text-[var(--color-token-foreground)] outline-none transition-colors hover:border-[var(--color-token-focus-border,var(--color-border-focus))] hover:bg-[var(--color-surface-container-low)] focus-visible:border-[var(--color-token-focus-border,var(--color-border-focus))] focus-visible:shadow-[var(--shadow-focus-ring)]"
                 >
                   <span className="min-w-0 flex-1 truncate">{selectedAuthStrategyLabel}</span>
-                  <span className="material-symbols-outlined flex-shrink-0 text-[18px] text-[var(--color-text-secondary)]">expand_more</span>
+                  <span className="material-symbols-outlined flex-shrink-0 icon-md text-[var(--color-token-text-secondary)]">expand_more</span>
                 </button>
               }
             />
@@ -1586,10 +1593,10 @@ function ProviderFormModal({ open, onClose, mode, provider, presets }: ProviderF
         )}
 
         <label
-          className={`relative flex items-start gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-3 py-3 transition-colors ${
+          className={`relative flex items-start gap-3 rounded-[var(--radius-md)] border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] px-3 py-3 transition-colors ${
             toolSearchUnsupported
               ? 'cursor-not-allowed opacity-70'
-              : 'cursor-pointer hover:border-[var(--color-border-focus)] hover:bg-[var(--color-surface-hover)]'
+              : 'cursor-pointer hover:border-[var(--color-token-focus-border,var(--color-border-focus))] hover:bg-[var(--color-surface-hover)]'
           }`}
         >
           <input
@@ -1602,17 +1609,17 @@ function ProviderFormModal({ open, onClose, mode, provider, presets }: ProviderF
           />
           <SettingsCheckboxMark checked={toolSearchEnabled && !toolSearchUnsupported} disabled={toolSearchUnsupported} />
           <div className="min-w-0">
-            <div className="text-sm font-medium text-[var(--color-text-primary)]">
+            <div className="text-sm font-medium text-[var(--color-token-foreground)]">
               {t('settings.providers.toolSearchEnabled')}
             </div>
-            <div className="mt-1 text-xs leading-5 text-[var(--color-text-tertiary)]">
+            <div className="mt-1 text-xs leading-5 text-[var(--color-token-text-secondary)]">
               {toolSearchDescription}
             </div>
           </div>
         </label>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="provider-api-key" className="text-sm font-medium text-[var(--color-text-primary)]">
+          <label htmlFor="provider-api-key" className="text-sm font-medium text-[var(--color-token-foreground)]">
             {t('settings.providers.apiKey')}
             {mode === 'create' && requiresApiKey && <span className="text-[var(--color-error)] ml-0.5">*</span>}
           </label>
@@ -1623,15 +1630,15 @@ function ProviderFormModal({ open, onClose, mode, provider, presets }: ProviderF
               value={apiKey}
               onChange={(e) => handleApiKeyChange(e.target.value)}
               placeholder="sk-..."
-              className="h-10 w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 pr-10 text-sm text-[var(--color-text-primary)] outline-none transition-colors duration-150 placeholder:text-[var(--color-text-tertiary)] focus:border-[var(--color-border-focus)] focus:shadow-[var(--shadow-focus-ring)]"
+              className="h-10 w-full rounded-[var(--radius-md)] border border-[var(--color-token-border)] bg-[var(--color-surface)] px-3 pr-10 text-sm text-[var(--color-token-foreground)] outline-none transition-colors duration-150 placeholder:text-[var(--color-token-text-secondary)] focus:border-[var(--color-token-focus-border,var(--color-border-focus))] focus:shadow-[var(--shadow-focus-ring)]"
             />
             <button
               type="button"
               onClick={() => setShowApiKey((visible) => !visible)}
               aria-label={showApiKey ? 'Hide API Key' : 'Show API Key'}
-              className="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 cursor-pointer items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] focus:outline-none focus:shadow-[var(--shadow-focus-ring)]"
+              className="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 cursor-pointer items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] focus:outline-none focus:shadow-[var(--shadow-focus-ring)]"
             >
-              <span className="material-symbols-outlined text-[16px]">
+              <span className="material-symbols-outlined icon-sm">
                 {showApiKey ? 'visibility_off' : 'visibility'}
               </span>
             </button>
@@ -1644,7 +1651,7 @@ function ProviderFormModal({ open, onClose, mode, provider, presets }: ProviderF
               <button
                 type="button"
                 onClick={() => openExternalUrl(apiKeyUrl)}
-                className="group inline-flex h-6 w-fit cursor-pointer items-center gap-1 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-1.5 text-[11px] font-medium leading-none text-[var(--color-brand)] transition-colors hover:border-[var(--color-border-focus)] hover:bg-[var(--color-surface-hover)] focus:outline-none focus:shadow-[var(--shadow-focus-ring)]"
+                className="group inline-flex h-6 w-fit cursor-pointer items-center gap-1 rounded-[var(--radius-sm)] border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] px-1.5 text-[11px] font-medium leading-none text-[var(--color-brand)] transition-colors hover:border-[var(--color-token-focus-border,var(--color-border-focus))] hover:bg-[var(--color-surface-hover)] focus:outline-none focus:shadow-[var(--shadow-focus-ring)]"
               >
                 <span className="material-symbols-outlined text-[13px]">key</span>
                 {t('settings.providers.getApiKey')}
@@ -1656,7 +1663,7 @@ function ProviderFormModal({ open, onClose, mode, provider, presets }: ProviderF
                 type="button"
                 onClick={() => apiKeyUrl && openExternalUrl(apiKeyUrl)}
                 disabled={!apiKeyUrl}
-                className="group flex w-full cursor-pointer items-start gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-brand)]/25 bg-[var(--color-brand)]/8 px-2.5 py-1.5 text-left text-[11px] leading-5 text-[var(--color-text-primary)] transition-colors hover:border-[var(--color-brand)]/45 hover:bg-[var(--color-brand)]/12 focus:outline-none focus:shadow-[var(--shadow-focus-ring)] disabled:cursor-default disabled:hover:border-[var(--color-brand)]/25 disabled:hover:bg-[var(--color-brand)]/8"
+                className="group flex w-full cursor-pointer items-start gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-brand)]/25 bg-[var(--color-brand)]/8 px-2.5 py-1.5 text-left text-[11px] leading-5 text-[var(--color-token-foreground)] transition-colors hover:border-[var(--color-brand)]/45 hover:bg-[var(--color-brand)]/12 focus:outline-none focus:shadow-[var(--shadow-focus-ring)] disabled:cursor-default disabled:hover:border-[var(--color-brand)]/25 disabled:hover:bg-[var(--color-brand)]/8"
               >
                 <span className="material-symbols-outlined mt-0.5 text-[13px] text-[var(--color-brand)]">tips_and_updates</span>
                 <span>{promoText}</span>
@@ -1670,7 +1677,7 @@ function ProviderFormModal({ open, onClose, mode, provider, presets }: ProviderF
 
         {/* Model Mapping */}
         <div>
-          <label className="text-sm font-medium text-[var(--color-text-primary)] mb-2 block">{t('settings.providers.modelMapping')}</label>
+          <label className="text-sm font-medium text-[var(--color-token-foreground)] mb-2 block">{t('settings.providers.modelMapping')}</label>
           <div className="grid grid-cols-2 gap-2">
             {MODEL_SLOTS.map((slot) => {
               const labelKey = slot === 'main'
@@ -1690,13 +1697,13 @@ function ProviderFormModal({ open, onClose, mode, provider, presets }: ProviderF
                     onChange={(e) => handleModelChange(slot, e.target.value)}
                     placeholder={slot === 'main' ? 'Model ID' : t('settings.providers.sameAsMain')}
                   />
-                  <label className="mt-1 inline-flex h-6 w-fit cursor-pointer items-center gap-1.5 rounded-[var(--radius-sm)] px-1 text-xs text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]">
+                  <label className="mt-1 inline-flex h-6 w-fit cursor-pointer items-center gap-1.5 rounded-[var(--radius-sm)] px-1 text-xs text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]">
                     <input
                       type="checkbox"
                       checked={model1mSupport[slot]}
                       onChange={(e) => handleModel1mSupportChange(slot, e.target.checked)}
                       aria-label={`1M support: ${slot}`}
-                      className="h-3.5 w-3.5 rounded border-[var(--color-border)] text-[var(--color-brand)] focus:ring-[var(--color-brand)]"
+                      className="h-3.5 w-3.5 rounded border-[var(--color-token-border)] text-[var(--color-brand)] focus:ring-[var(--color-brand)]"
                     />
                     <span>{t('settings.providers.model1mSupportShort')}</span>
                   </label>
@@ -1706,22 +1713,22 @@ function ProviderFormModal({ open, onClose, mode, provider, presets }: ProviderF
           </div>
         </div>
 
-        <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-container-low)]">
+        <div className="rounded-[var(--radius-md)] border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)]">
           <button
             type="button"
             onClick={() => setShowContextSettings((visible) => !visible)}
             className="flex w-full items-start gap-3 px-3 py-3 text-left outline-none transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:shadow-[var(--shadow-focus-ring)]"
             aria-expanded={shouldShowContextFields}
           >
-            <span className="material-symbols-outlined mt-0.5 text-[18px] text-[var(--color-brand)]">compress</span>
+            <span className="material-symbols-outlined mt-0.5 icon-md text-[var(--color-brand)]">compress</span>
             <span className="min-w-0 flex-1">
-              <span className="block text-sm font-medium text-[var(--color-text-primary)]">
+              <span className="block text-sm font-medium text-[var(--color-token-foreground)]">
                 {t('settings.providers.contextSettingsTitle')}
               </span>
-              <span className="mt-1 block truncate text-xs text-[var(--color-text-secondary)]">
+              <span className="mt-1 block truncate text-xs text-[var(--color-token-text-secondary)]">
                 {contextSummary}
               </span>
-              <span className="mt-1 block text-[11px] leading-5 text-[var(--color-text-tertiary)]">
+              <span className="mt-1 block text-[11px] leading-5 text-[var(--color-token-text-secondary)]">
                 {t('settings.providers.contextSettingsDesc')}
               </span>
             </span>
@@ -1729,16 +1736,16 @@ function ProviderFormModal({ open, onClose, mode, provider, presets }: ProviderF
               {shouldShowContextFields
                 ? t('settings.providers.contextSettingsHide')
                 : t('settings.providers.contextSettingsEdit')}
-              <span className="material-symbols-outlined text-[16px]">
+              <span className="material-symbols-outlined icon-sm">
                 {shouldShowContextFields ? 'expand_less' : 'expand_more'}
               </span>
             </span>
           </button>
 
           {shouldShowContextFields && (
-            <div className="border-t border-[var(--color-border)] px-3 pb-3 pt-3">
+            <div className="border-t border-[var(--color-token-border)] px-3 pb-3 pt-3">
               <div>
-                <label className="text-sm font-medium text-[var(--color-text-primary)] mb-2 block">{t('settings.providers.modelContextWindows')}</label>
+                <label className="text-sm font-medium text-[var(--color-token-foreground)] mb-2 block">{t('settings.providers.modelContextWindows')}</label>
                 <div className="grid grid-cols-2 gap-2">
                   {MODEL_SLOTS.map((slot) => {
                     const errorKey = getModelContextWindowErrorKey(modelContextInputs[slot])
@@ -1768,7 +1775,7 @@ function ProviderFormModal({ open, onClose, mode, provider, presets }: ProviderF
                     )
                   })}
                 </div>
-                <p className="text-[11px] text-[var(--color-text-tertiary)] mt-1">
+                <p className="text-[11px] text-[var(--color-token-text-secondary)] mt-1">
                   {t('settings.providers.modelContextWindowsDesc')}
                 </p>
               </div>
@@ -1787,7 +1794,7 @@ function ProviderFormModal({ open, onClose, mode, provider, presets }: ProviderF
                       : t('settings.providers.autoCompactWindowRangeError')}
                   </p>
                 ) : (
-                  <p className="text-[11px] text-[var(--color-text-tertiary)] mt-1">
+                  <p className="text-[11px] text-[var(--color-token-text-secondary)] mt-1">
                     {t('settings.providers.autoCompactWindowDesc')}
                   </p>
                 )}
@@ -1821,7 +1828,7 @@ function ProviderFormModal({ open, onClose, mode, provider, presets }: ProviderF
 
         {/* Settings JSON — editable, shown for all presets including official */}
         <div>
-          <label className="text-sm font-medium text-[var(--color-text-primary)] mb-2 block">{t('settings.providers.settingsJson')}</label>
+          <label className="text-sm font-medium text-[var(--color-token-foreground)] mb-2 block">{t('settings.providers.settingsJson')}</label>
           <textarea
             value={displayedSettingsJson}
             onChange={(e) => {
@@ -1912,16 +1919,16 @@ function ProviderFormModal({ open, onClose, mode, provider, presets }: ProviderF
             }}
             rows={16}
             spellCheck={false}
-            className={`w-full text-xs px-3 py-3 rounded-[var(--radius-md)] bg-[var(--color-surface-container-low)] border font-mono leading-relaxed resize-y text-[var(--color-text-secondary)] outline-none ${
+            className={`w-full text-xs px-3 py-3 rounded-[var(--radius-md)] bg-[var(--color-surface-container-low)] border font-mono leading-relaxed resize-y text-[var(--color-token-text-secondary)] outline-none ${
               settingsJsonError
                 ? 'border-[var(--color-error)] focus:border-[var(--color-error)]'
-                : 'border-[var(--color-border)] focus:border-[var(--color-border-focus)]'
+                : 'border-[var(--color-token-border)] focus:border-[var(--color-token-focus-border,var(--color-border-focus))]'
             }`}
           />
           {settingsJsonError && (
             <p className="text-[11px] text-[var(--color-error)] mt-1">{t('settings.providers.jsonError', { error: settingsJsonError })}</p>
           )}
-          <p className="text-[11px] text-[var(--color-text-tertiary)] mt-1">{t('settings.providers.settingsJsonDesc')}</p>
+          <p className="text-[11px] text-[var(--color-token-text-secondary)] mt-1">{t('settings.providers.settingsJsonDesc')}</p>
         </div>
       </div>
     </Modal>
@@ -2368,40 +2375,40 @@ export function GeneralSettings() {
   }
 
   const uiZoomSection = (
-    <div className="mt-8">
-      <div className="mb-3 flex items-end justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.uiZoom')}</h2>
-          <p className="text-sm text-[var(--color-text-tertiary)]">{t('settings.general.uiZoomDescription')}</p>
-          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[var(--color-text-tertiary)]">
-            <span>{t('settings.general.uiZoomShortcutHint')}</span>
-            <span className="inline-flex items-center gap-1">
-              <span className="font-medium text-[var(--color-text-secondary)]">{t('settings.general.uiZoomShortcutMac')}</span>
-              <kbd className="settings-zoom-kbd">⌘</kbd>
-              <kbd className="settings-zoom-kbd">+</kbd>
-              <span>/</span>
-              <kbd className="settings-zoom-kbd">⌘</kbd>
-              <kbd className="settings-zoom-kbd">-</kbd>
-              <span>/</span>
-              <kbd className="settings-zoom-kbd">⌘</kbd>
-              <kbd className="settings-zoom-kbd">0</kbd>
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <span className="font-medium text-[var(--color-text-secondary)]">{t('settings.general.uiZoomShortcutWindows')}</span>
-              <kbd className="settings-zoom-kbd">Ctrl</kbd>
-              <kbd className="settings-zoom-kbd">+</kbd>
-              <span>/</span>
-              <kbd className="settings-zoom-kbd">Ctrl</kbd>
-              <kbd className="settings-zoom-kbd">-</kbd>
-              <span>/</span>
-              <kbd className="settings-zoom-kbd">Ctrl</kbd>
-              <kbd className="settings-zoom-kbd">0</kbd>
-            </span>
-            <span>{t('settings.general.uiZoomShortcutResetHint')}</span>
-          </div>
+    <SettingsCard>
+      <SettingsRow
+        label={t('settings.general.uiZoom')}
+        description={t('settings.general.uiZoomDescription')}
+        full
+      >
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[var(--color-token-text-secondary)]">
+          <span>{t('settings.general.uiZoomShortcutHint')}</span>
+          <span className="inline-flex items-center gap-1">
+            <span className="font-medium text-[var(--color-token-text-secondary)]">{t('settings.general.uiZoomShortcutMac')}</span>
+            <kbd className="settings-zoom-kbd">⌘</kbd>
+            <kbd className="settings-zoom-kbd">+</kbd>
+            <span>/</span>
+            <kbd className="settings-zoom-kbd">⌘</kbd>
+            <kbd className="settings-zoom-kbd">-</kbd>
+            <span>/</span>
+            <kbd className="settings-zoom-kbd">⌘</kbd>
+            <kbd className="settings-zoom-kbd">0</kbd>
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="font-medium text-[var(--color-token-text-secondary)]">{t('settings.general.uiZoomShortcutWindows')}</span>
+            <kbd className="settings-zoom-kbd">Ctrl</kbd>
+            <kbd className="settings-zoom-kbd">+</kbd>
+            <span>/</span>
+            <kbd className="settings-zoom-kbd">Ctrl</kbd>
+            <kbd className="settings-zoom-kbd">-</kbd>
+            <span>/</span>
+            <kbd className="settings-zoom-kbd">Ctrl</kbd>
+            <kbd className="settings-zoom-kbd">0</kbd>
+          </span>
+          <span>{t('settings.general.uiZoomShortcutResetHint')}</span>
         </div>
-        <div className="flex flex-shrink-0 items-center gap-2">
-          <span className="min-w-[48px] rounded-md bg-[var(--color-surface-container-low)] px-2 py-1 text-center text-sm font-medium text-[var(--color-text-secondary)]">
+        <div className="mt-3 flex items-center gap-3">
+          <span className="min-w-[48px] rounded-md bg-[var(--color-surface-container-low)] px-2 py-1 text-center text-sm font-medium text-[var(--color-token-text-secondary)]">
             {uiZoomPercent}%
           </span>
           <button
@@ -2413,269 +2420,253 @@ export function GeneralSettings() {
               setUiZoomDraft(UI_ZOOM_DEFAULT)
               setUiZoom(UI_ZOOM_DEFAULT)
             }}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[var(--color-border)] px-2 text-xs font-medium text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-focus)] hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[var(--color-token-border)] px-2 text-xs font-medium text-[var(--color-token-text-secondary)] transition-colors hover:border-[var(--color-token-focus-border,var(--color-border-focus))] hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))]"
           >
             <RotateCw className="h-3.5 w-3.5" aria-hidden="true" />
             100%
           </button>
         </div>
-      </div>
-      <div
-        className={`settings-zoom-control flex items-center gap-3 ${isUiZoomDragging ? 'is-dragging' : ''}`}
-        style={{ '--settings-zoom-range-progress': uiZoomRangeProgress } as CSSProperties}
-      >
-        <span className="w-9 text-right text-xs text-[var(--color-text-tertiary)]">{Math.round(UI_ZOOM_MIN * 100)}%</span>
-        <div className="settings-zoom-range-wrap flex-1">
-          <div className="settings-zoom-preview" aria-hidden="true">
-            {uiZoomPercent}%
-          </div>
-          <input
-            type="range"
-            aria-label={t('settings.general.uiZoom')}
-            min={UI_ZOOM_MIN}
-            max={UI_ZOOM_MAX}
-            step={UI_ZOOM_STEP}
-            value={uiZoomDraft}
-            onPointerDown={() => {
-              setUiZoomDraggingState(true)
-            }}
-            onPointerUp={(e) => commitUiZoom(e.currentTarget.valueAsNumber)}
-            onPointerCancel={() => {
-              setUiZoomDraggingState(false)
-              setUiZoomDraft(uiZoom)
-            }}
-            onChange={(e) => {
-              const nextZoom = Number.isFinite(e.currentTarget.valueAsNumber)
-                ? e.currentTarget.valueAsNumber
-                : UI_ZOOM_DEFAULT
-              setUiZoomDraft(nextZoom)
-              if (!isUiZoomDraggingRef.current) {
-                setUiZoom(nextZoom)
-              }
-            }}
-            onBlur={(e) => {
-              if (uiZoomDraft !== uiZoom) {
-                commitUiZoom(e.currentTarget.valueAsNumber)
-              } else {
+        <div
+          className={`settings-zoom-control mt-2 flex items-center gap-3 ${isUiZoomDragging ? 'is-dragging' : ''}`}
+          style={{ '--settings-zoom-range-progress': uiZoomRangeProgress } as CSSProperties}
+        >
+          <span className="w-9 text-right text-xs text-[var(--color-token-text-secondary)]">{Math.round(UI_ZOOM_MIN * 100)}%</span>
+          <div className="settings-zoom-range-wrap flex-1">
+            <div className="settings-zoom-preview" aria-hidden="true">
+              {uiZoomPercent}%
+            </div>
+            <input
+              type="range"
+              aria-label={t('settings.general.uiZoom')}
+              min={UI_ZOOM_MIN}
+              max={UI_ZOOM_MAX}
+              step={UI_ZOOM_STEP}
+              value={uiZoomDraft}
+              onPointerDown={() => {
+                setUiZoomDraggingState(true)
+              }}
+              onPointerUp={(e) => commitUiZoom(e.currentTarget.valueAsNumber)}
+              onPointerCancel={() => {
                 setUiZoomDraggingState(false)
-              }
-            }}
-            className="settings-zoom-range w-full"
-          />
+                setUiZoomDraft(uiZoom)
+              }}
+              onChange={(e) => {
+                const nextZoom = Number.isFinite(e.currentTarget.valueAsNumber)
+                  ? e.currentTarget.valueAsNumber
+                  : UI_ZOOM_DEFAULT
+                setUiZoomDraft(nextZoom)
+                if (!isUiZoomDraggingRef.current) {
+                  setUiZoom(nextZoom)
+                }
+              }}
+              onBlur={(e) => {
+                if (uiZoomDraft !== uiZoom) {
+                  commitUiZoom(e.currentTarget.valueAsNumber)
+                } else {
+                  setUiZoomDraggingState(false)
+                }
+              }}
+              className="settings-zoom-range w-full"
+            />
+          </div>
+          <span className="w-9 text-xs text-[var(--color-token-text-secondary)]">{Math.round(UI_ZOOM_MAX * 100)}%</span>
         </div>
-        <span className="w-9 text-xs text-[var(--color-text-tertiary)]">{Math.round(UI_ZOOM_MAX * 100)}%</span>
-      </div>
-    </div>
+      </SettingsRow>
+    </SettingsCard>
   )
 
   return (
-    <div className="general-settings-view max-w-[620px] pb-10">
-      <section className="general-settings-section general-settings-section--compact">
-      {/* Appearance selector */}
-      <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.appearanceTitle')}</h2>
-      <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.appearanceDescription')}</p>
-      <div className="flex gap-2 mb-8">
-        {THEMES.map(({ value, label }) => (
-          <button
-            key={value}
-            onClick={() => void setTheme(value)}
-            aria-pressed={theme === value}
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg border transition-all ${
-              theme === value
-                ? 'bg-[image:var(--gradient-btn-primary)] text-[var(--color-btn-primary-fg)] border-transparent shadow-[var(--shadow-button-primary)]'
-                : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-      </section>
+    <div className="general-settings-view pb-10">
+      {/* ─── Appearance ─── */}
+      <SettingsCard>
+        <SettingsRow
+          label={t('settings.general.appearanceTitle')}
+          description={t('settings.general.appearanceDescription')}
+        >
+          <div className="flex gap-1.5">
+            {THEMES.map(({ value, label }) => (
+              <button
+                key={value}
+                onClick={() => void setTheme(value)}
+                aria-pressed={theme === value}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                  theme === value
+                    ? 'bg-[image:var(--gradient-btn-primary)] text-[var(--color-btn-primary-fg)] border-transparent shadow-[var(--shadow-button-primary)]'
+                    : 'border-[var(--color-token-border)] text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </SettingsRow>
 
-      <section className="general-settings-section general-settings-section--compact">
-      {/* Language selector */}
-      <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.languageTitle')}</h2>
-      <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.languageDescription')}</p>
-      <div className="flex gap-2 mb-8">
-        {LANGUAGES.map(({ value, label }) => (
-          <button
-            key={value}
-            onClick={() => setLocale(value)}
-            className={`flex-1 py-2 text-xs font-semibold rounded-lg border transition-all ${
-              locale === value
-                ? 'bg-[var(--color-brand)] text-white border-[var(--color-brand)]'
-                : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-      </section>
+        {/* Language selector */}
+        <SettingsRow
+          label={t('settings.general.languageTitle')}
+          description={t('settings.general.languageDescription')}
+        >
+          <div className="flex gap-1.5">
+            {LANGUAGES.map(({ value, label }) => (
+              <button
+                key={value}
+                onClick={() => setLocale(value)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                  locale === value
+                    ? 'bg-[var(--color-brand)] text-white border-[var(--color-brand)]'
+                    : 'border-[var(--color-token-border)] text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </SettingsRow>
 
-      <section className="general-settings-section general-settings-section--compact">
-      {/* Response Language */}
-      <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.responseLangTitle')}</h2>
-      <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.responseLangDescription')}</p>
-      <Dropdown<string>
-        items={RESPONSE_LANGUAGES}
-        value={responseLanguage}
-        onChange={(value) => void setResponseLanguage(value)}
-        width="100%"
-        maxHeight={320}
-        className="mb-8 block w-full"
-        trigger={
-          <button
-            type="button"
-            aria-label={t('settings.general.responseLangTitle')}
-            className="flex h-10 w-full items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-left text-sm text-[var(--color-text-primary)] outline-none transition-colors hover:border-[var(--color-border-focus)] hover:bg-[var(--color-surface-container-low)] focus-visible:border-[var(--color-border-focus)] focus-visible:shadow-[var(--shadow-focus-ring)]"
-          >
-            <span className="min-w-0 flex-1 truncate">{selectedResponseLanguageLabel}</span>
-            <span className="material-symbols-outlined flex-shrink-0 text-[18px] text-[var(--color-text-secondary)]">expand_more</span>
-          </button>
-        }
-      />
-      </section>
+        {/* Response Language */}
+        <SettingsRow
+          label={t('settings.general.responseLangTitle')}
+          description={t('settings.general.responseLangDescription')}
+        >
+          <Dropdown<string>
+            items={RESPONSE_LANGUAGES}
+            value={responseLanguage}
+            onChange={(value) => void setResponseLanguage(value)}
+            width={192}
+            maxHeight={320}
+            trigger={
+              <button
+                type="button"
+                aria-label={t('settings.general.responseLangTitle')}
+                className="flex h-8 min-w-[160px] items-center gap-2 rounded-lg border border-[var(--color-token-border)] bg-[var(--color-surface)] px-3 text-left text-[13px] text-[var(--color-token-foreground)] outline-none transition-colors hover:border-[var(--color-token-focus-border,var(--color-border-focus))] focus-visible:border-[var(--color-token-focus-border,var(--color-border-focus))] focus-visible:shadow-[var(--shadow-focus-ring)]"
+              >
+                <span className="min-w-0 flex-1 truncate">{selectedResponseLanguageLabel}</span>
+                <span className="material-symbols-outlined flex-shrink-0 icon-xs text-[var(--color-token-text-secondary)]">expand_more</span>
+              </button>
+            }
+          />
+        </SettingsRow>
+      </SettingsCard>
 
-      <section className="general-settings-section general-settings-section--compact">
-      {/* Output style */}
-      <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.outputStyleTitle')}</h2>
-      <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.outputStyleDescription')}</p>
-      <div className="mb-8 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-4 py-4">
-        <Dropdown<string>
-          items={outputStyleItems}
-          value={outputStyle}
-          onChange={(value) => void handleOutputStyleChange(value)}
-          width="100%"
-          maxHeight={360}
-          className="block w-full"
-          trigger={
-            <button
-              type="button"
-              aria-label={t('settings.general.outputStyleSelectLabel')}
-              disabled={outputStylesLoading}
-              className="flex min-h-10 w-full items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-left text-sm text-[var(--color-text-primary)] outline-none transition-colors hover:border-[var(--color-border-focus)] hover:bg-[var(--color-surface-container-low)] focus-visible:border-[var(--color-border-focus)] focus-visible:shadow-[var(--shadow-focus-ring)] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <span className="material-symbols-outlined flex-shrink-0 text-[18px] text-[var(--color-text-secondary)]">format_paint</span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate font-medium">
-                  {outputStylesLoading
-                    ? t('settings.general.outputStyleLoading')
-                    : selectedOutputStyle?.label ?? outputStyle}
-                </span>
-                {selectedOutputStyle?.description && (
-                  <span className="mt-0.5 block truncate text-xs text-[var(--color-text-tertiary)]">
-                    {selectedOutputStyle.description}
+      {/* ─── Output Style ─── */}
+      <SettingsCard>
+        <SettingsRow
+          label={t('settings.general.outputStyleTitle')}
+          description={t('settings.general.outputStyleDescription')}
+          full
+        >
+          <Dropdown<string>
+            items={outputStyleItems}
+            value={outputStyle}
+            onChange={(value) => void handleOutputStyleChange(value)}
+            width="100%"
+            maxHeight={360}
+            className="block w-full"
+            trigger={
+              <button
+                type="button"
+                aria-label={t('settings.general.outputStyleSelectLabel')}
+                disabled={outputStylesLoading}
+                className="flex min-h-9 w-full items-center gap-3 rounded-lg border border-[var(--color-token-border)] bg-[var(--color-surface)] px-3 py-2 text-left text-[13px] text-[var(--color-token-foreground)] outline-none transition-colors hover:border-[var(--color-token-focus-border,var(--color-border-focus))] hover:bg-[var(--color-surface-container-low)] focus-visible:border-[var(--color-token-focus-border,var(--color-border-focus))] focus-visible:shadow-[var(--shadow-focus-ring)] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <span className="material-symbols-outlined flex-shrink-0 icon-sm text-[var(--color-token-text-secondary)]">format_paint</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-medium">
+                    {outputStylesLoading
+                      ? t('settings.general.outputStyleLoading')
+                      : selectedOutputStyle?.label ?? outputStyle}
                   </span>
-                )}
-              </span>
-              <span className="material-symbols-outlined flex-shrink-0 text-[18px] text-[var(--color-text-secondary)]">expand_more</span>
-            </button>
-          }
-        />
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[var(--color-text-tertiary)]">
-          <span className="inline-flex items-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 font-medium text-[var(--color-text-secondary)]">
-            {outputStyleScopeLabel}
-          </span>
-          {selectedOutputStyle && (
-            <span className="inline-flex items-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1">
-              {getOutputStyleSourceLabel(selectedOutputStyle.source, t)}
+                  {selectedOutputStyle?.description && (
+                    <span className="mt-0.5 block truncate text-xs text-[var(--color-token-text-secondary)]">
+                      {selectedOutputStyle.description}
+                    </span>
+                  )}
+                </span>
+                <span className="material-symbols-outlined flex-shrink-0 icon-xs text-[var(--color-token-text-secondary)]">expand_more</span>
+              </button>
+            }
+          />
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[var(--color-token-text-secondary)]">
+            <span className="inline-flex items-center rounded-md border border-[var(--color-token-border)] bg-[var(--color-surface)] px-2 py-0.5 font-medium text-[var(--color-token-text-secondary)]">
+              {outputStyleScopeLabel}
             </span>
-          )}
-          <span className="min-w-0 flex-1 leading-5">{outputStyleScopeHint}</span>
-        </div>
-        <p className="mt-2 text-xs leading-5 text-[var(--color-text-tertiary)]">
-          {t('settings.general.outputStyleRestartHint')}
-        </p>
-        {outputStyleError && (
-          <p className="mt-2 text-xs leading-5 text-[var(--color-error)]">
-            {outputStyleError}
-          </p>
-        )}
-      </div>
-      </section>
-
-      <div className="general-settings-section general-settings-section--compact mt-8">
-        <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.thinkingTitle')}</h2>
-        <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.thinkingDescription')}</p>
-        <label className="relative flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-4 py-3 cursor-pointer hover:border-[var(--color-border-focus)] transition-colors">
-          <input
-            type="checkbox"
-            aria-label={t('settings.general.thinkingEnabled')}
-            checked={thinkingEnabled}
-            onChange={(e) => void setThinkingEnabled(e.target.checked)}
-            className={SETTINGS_CHECKBOX_INPUT_CLASS}
-          />
-          <SettingsCheckboxMark checked={thinkingEnabled} />
-          <div className="min-w-0">
-            <div className="text-sm font-medium text-[var(--color-text-primary)]">
-              {t('settings.general.thinkingEnabled')}
-            </div>
-            <div className="text-xs text-[var(--color-text-tertiary)] mt-1 leading-5">
-              {t('settings.general.thinkingHint')}
-            </div>
-          </div>
-        </label>
-      </div>
-
-      <div className="general-settings-section general-settings-section--compact mt-8">
-        <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.autoDreamTitle')}</h2>
-        <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.autoDreamDescription')}</p>
-        <label className="relative flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-4 py-3 cursor-pointer hover:border-[var(--color-border-focus)] transition-colors">
-          <input
-            type="checkbox"
-            aria-label={t('settings.general.autoDreamEnabled')}
-            checked={autoDreamEnabled}
-            onChange={(e) => handleAutoDreamToggle(e.target.checked)}
-            className={SETTINGS_CHECKBOX_INPUT_CLASS}
-          />
-          <SettingsCheckboxMark checked={autoDreamEnabled} />
-          <div className="min-w-0">
-            <div className="text-sm font-medium text-[var(--color-text-primary)]">
-              {t('settings.general.autoDreamEnabled')}
-            </div>
-            <div className="text-xs text-[var(--color-text-tertiary)] mt-1 leading-5">
-              {autoDreamEnabled
-                ? t('settings.general.autoDreamHintOn')
-                : t('settings.general.autoDreamHintOff')}
-            </div>
-          </div>
-        </label>
-      </div>
-
-      <div className="general-settings-section general-settings-section--compact mt-8">
-        <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.traceTitle')}</h2>
-        <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.traceDescription')}</p>
-        <label className="relative flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-4 py-3 cursor-pointer hover:border-[var(--color-border-focus)] transition-colors">
-          <input
-            type="checkbox"
-            aria-label={t('settings.general.traceEnabled')}
-            checked={traceCapture.enabled}
-            onChange={(e) => void setTraceCaptureEnabled(e.target.checked)}
-            className={SETTINGS_CHECKBOX_INPUT_CLASS}
-          />
-          <SettingsCheckboxMark checked={traceCapture.enabled} />
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-medium text-[var(--color-text-primary)]">
-              {t('settings.general.traceEnabled')}
-            </div>
-            <div className="text-xs text-[var(--color-text-tertiary)] mt-1 leading-5">
-              {traceCapture.enabled ? t('settings.general.traceHintOn') : t('settings.general.traceHintOff')}
-            </div>
-            {traceCapture.storageDir && (
-              <div className="mt-2 truncate rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 font-mono text-[11px] text-[var(--color-text-secondary)]">
-                {traceCapture.storageDir}
-              </div>
+            {selectedOutputStyle && (
+              <span className="inline-flex items-center rounded-md border border-[var(--color-token-border)] bg-[var(--color-surface)] px-2 py-0.5">
+                {getOutputStyleSourceLabel(selectedOutputStyle.source, t)}
+              </span>
             )}
+            <span className="min-w-0 flex-1 leading-5">{outputStyleScopeHint}</span>
           </div>
-        </label>
-      </div>
+          <p className="mt-1 text-xs leading-5 text-[var(--color-token-text-secondary)]">
+            {t('settings.general.outputStyleRestartHint')}
+          </p>
+          {outputStyleError && (
+            <p className="mt-1 text-xs leading-5 text-[var(--color-error)]">
+              {outputStyleError}
+            </p>
+          )}
+        </SettingsRow>
+      </SettingsCard>
 
-      <div className="general-settings-section general-settings-section--compact mt-8">
-        <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.notificationsTitle')}</h2>
-        <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.notificationsDescription')}</p>
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-4 py-3">
-          <label className="relative flex items-start gap-3 cursor-pointer">
+      {/* ─── Toggles: Thinking / Auto Dream / Trace / Web Fetch Preflight ─── */}
+      <SettingsCard>
+        <SettingsRow label={t('settings.general.thinkingEnabled')} description={t('settings.general.thinkingHint')}>
+          <label className="relative flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              aria-label={t('settings.general.thinkingEnabled')}
+              checked={thinkingEnabled}
+              onChange={(e) => void setThinkingEnabled(e.target.checked)}
+              className={SETTINGS_CHECKBOX_INPUT_CLASS}
+            />
+            <SettingsCheckboxMark checked={thinkingEnabled} />
+          </label>
+        </SettingsRow>
+
+        <SettingsRow label={t('settings.general.autoDreamEnabled')} description={autoDreamEnabled ? t('settings.general.autoDreamHintOn') : t('settings.general.autoDreamHintOff')}>
+          <label className="relative flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              aria-label={t('settings.general.autoDreamEnabled')}
+              checked={autoDreamEnabled}
+              onChange={(e) => handleAutoDreamToggle(e.target.checked)}
+              className={SETTINGS_CHECKBOX_INPUT_CLASS}
+            />
+            <SettingsCheckboxMark checked={autoDreamEnabled} />
+          </label>
+        </SettingsRow>
+
+        <SettingsRow label={t('settings.general.traceEnabled')} description={traceCapture.enabled ? t('settings.general.traceHintOn') : t('settings.general.traceHintOff')}>
+          <label className="relative flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              aria-label={t('settings.general.traceEnabled')}
+              checked={traceCapture.enabled}
+              onChange={(e) => void setTraceCaptureEnabled(e.target.checked)}
+              className={SETTINGS_CHECKBOX_INPUT_CLASS}
+            />
+            <SettingsCheckboxMark checked={traceCapture.enabled} />
+          </label>
+        </SettingsRow>
+
+        <SettingsRow label={t('settings.general.webFetchPreflightEnabled')} description={t('settings.general.webFetchPreflightHint')}>
+          <label className="relative flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              aria-label={t('settings.general.webFetchPreflightEnabled')}
+              checked={skipWebFetchPreflight}
+              onChange={(e) => void setSkipWebFetchPreflight(e.target.checked)}
+              className={SETTINGS_CHECKBOX_INPUT_CLASS}
+            />
+            <SettingsCheckboxMark checked={skipWebFetchPreflight} />
+          </label>
+        </SettingsRow>
+      </SettingsCard>
+
+      {/* ─── Notifications ─── */}
+      <SettingsCard>
+        <SettingsRow label={t('settings.general.notificationsEnabled')} description={desktopNotificationsEnabled ? t('settings.general.notificationsHintOn') : t('settings.general.notificationsHintOff')}>
+          <label className="relative flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               aria-label={t('settings.general.notificationsEnabled')}
@@ -2684,20 +2675,12 @@ export function GeneralSettings() {
               className={SETTINGS_CHECKBOX_INPUT_CLASS}
             />
             <SettingsCheckboxMark checked={desktopNotificationsEnabled} />
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-medium text-[var(--color-text-primary)]">
-                {t('settings.general.notificationsEnabled')}
-              </div>
-              <div className="text-xs text-[var(--color-text-tertiary)] mt-1 leading-5">
-                {desktopNotificationsEnabled
-                  ? t('settings.general.notificationsHintOn')
-                  : t('settings.general.notificationsHintOff')}
-              </div>
-            </div>
           </label>
-          {desktopNotificationsEnabled && (
-            <div className="mt-3 flex items-center justify-between gap-3 border-t border-[var(--color-border)]/60 pt-3">
-              <div className="min-w-0 text-xs text-[var(--color-text-tertiary)]">
+        </SettingsRow>
+        {desktopNotificationsEnabled && (
+          <div className="settings-row border-t border-[rgba(255,255,255,0.06)] px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0 text-[13px] text-[var(--color-token-text-secondary)]">
                 {t('settings.general.notificationsStatus')}: {notificationStatusLabel[notificationPermission]}
               </div>
               {notificationPermission !== 'granted' && notificationPermission !== 'unsupported' && (
@@ -2714,41 +2697,50 @@ export function GeneralSettings() {
                 </Button>
               )}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        )}
+      </SettingsCard>
 
-      <div className="general-settings-section general-settings-section--compact mt-8">
-        <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.chatSendBehaviorTitle')}</h2>
-        <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.chatSendBehaviorDescription')}</p>
-        <div className="grid grid-cols-2 gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] p-2">
-          {CHAT_SEND_BEHAVIORS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => void setChatSendBehavior(option.value)}
-              aria-pressed={chatSendBehavior === option.value}
-              className={`rounded-lg border px-3 py-2 text-left transition-colors ${
-                chatSendBehavior === option.value
-                  ? 'border-[var(--color-brand)] bg-[var(--color-surface-selected)] text-[var(--color-text-primary)]'
-                  : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
-              }`}
-            >
-              <div className="text-xs font-semibold">{option.label}</div>
-              <div className="mt-1 text-[11px] leading-4 text-[var(--color-text-tertiary)]">
-                {option.description}
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* ─── Chat Send Behavior ─── */}
+      <SettingsCard>
+        <SettingsRow
+          label={t('settings.general.chatSendBehaviorTitle')}
+          description={t('settings.general.chatSendBehaviorDescription')}
+          full
+        >
+          <div className="grid grid-cols-2 gap-2">
+            {CHAT_SEND_BEHAVIORS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => void setChatSendBehavior(option.value)}
+                aria-pressed={chatSendBehavior === option.value}
+                className={`rounded-lg border px-3 py-2 text-left transition-colors ${
+                  chatSendBehavior === option.value
+                    ? 'border-[var(--color-brand)] bg-[var(--color-surface-selected)] text-[var(--color-token-foreground)]'
+                    : 'border-[var(--color-token-border)] text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                }`}
+              >
+                <div className="text-xs font-semibold">{option.label}</div>
+                <div className="mt-1 text-[11px] leading-4 text-[var(--color-token-text-secondary)]">
+                  {option.description}
+                </div>
+              </button>
+            ))}
+          </div>
+        </SettingsRow>
+      </SettingsCard>
 
+      {/* ─── UI Zoom ─── */}
       {uiZoomSection}
 
-      <div className="general-settings-section general-settings-section--compact mt-8">
-        <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.networkTitle')}</h2>
-        <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.networkDescription')}</p>
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-4 py-4">
+      {/* ─── Network ─── */}
+      <SettingsCard>
+        <SettingsRow
+          label={t('settings.general.networkTitle')}
+          description={t('settings.general.networkDescription')}
+          full
+        >
           <div className="grid grid-cols-2 gap-2">
             {NETWORK_PROXY_MODES.map((mode) => (
               <button
@@ -2764,12 +2756,12 @@ export function GeneralSettings() {
                 aria-pressed={networkDraft.proxy.mode === mode.value}
                 className={`rounded-lg border px-3 py-2 text-left transition-colors ${
                   networkDraft.proxy.mode === mode.value
-                    ? 'border-[var(--color-brand)] bg-[var(--color-surface-selected)] text-[var(--color-text-primary)]'
-                    : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                    ? 'border-[var(--color-brand)] bg-[var(--color-surface-selected)] text-[var(--color-token-foreground)]'
+                    : 'border-[var(--color-token-border)] text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)]'
                 }`}
               >
                 <div className="text-xs font-semibold">{mode.label}</div>
-                <div className="mt-1 text-[11px] leading-4 text-[var(--color-text-tertiary)]">
+                <div className="mt-1 text-[11px] leading-4 text-[var(--color-token-text-secondary)]">
                   {mode.description}
                 </div>
               </button>
@@ -2777,7 +2769,7 @@ export function GeneralSettings() {
           </div>
 
           {networkDraft.proxy.mode === 'manual' && (
-            <div className="mt-4">
+            <div className="mt-3">
               <Input
                 id="network-proxy-url"
                 label={t('settings.general.networkProxyUrl')}
@@ -2792,18 +2784,18 @@ export function GeneralSettings() {
                   setNetworkSaveError(null)
                 }}
               />
-              <p className={`mt-1 text-[11px] leading-4 ${networkProxyError ? 'text-[var(--color-error)]' : 'text-[var(--color-text-tertiary)]'}`}>
+              <p className={`mt-1 text-[11px] leading-4 ${networkProxyError ? 'text-[var(--color-error)]' : 'text-[var(--color-token-text-secondary)]'}`}>
                 {networkProxyError ?? t('settings.general.networkProxyUrlHint')}
               </p>
             </div>
           )}
 
-          <div className="mt-4">
+          <div className="mt-3">
             <div className="mb-2 flex items-center justify-between gap-3">
-              <label htmlFor="network-timeout-seconds" className="text-sm font-medium text-[var(--color-text-primary)]">
+              <label htmlFor="network-timeout-seconds" className="text-[13px] font-medium text-[var(--color-token-foreground)]">
                 {t('settings.general.networkTimeout')}
               </label>
-              <span className="rounded-md bg-[var(--color-surface)] px-2 py-1 text-xs font-medium text-[var(--color-text-secondary)]">
+              <span className="rounded-md bg-[var(--color-surface)] px-2 py-1 text-xs font-medium text-[var(--color-token-text-secondary)]">
                 {t('settings.general.networkTimeoutValue', { seconds: String(timeoutSeconds) })}
               </span>
             </div>
@@ -2842,13 +2834,13 @@ export function GeneralSettings() {
                     }
                     setNetworkSaveError(null)
                   }}
-                  className={`h-10 w-full rounded-[var(--radius-md)] border bg-[var(--color-surface)] px-3 pr-12 text-sm text-[var(--color-text-primary)] outline-none transition-colors duration-150 placeholder:text-[var(--color-text-tertiary)] ${
+                  className={`h-10 w-full rounded-[var(--radius-md)] border bg-[var(--color-surface)] px-3 pr-12 text-sm text-[var(--color-token-foreground)] outline-none transition-colors duration-150 placeholder:text-[var(--color-token-text-secondary)] ${
                     networkTimeoutError
                       ? 'border-[var(--color-error)] focus:shadow-[var(--shadow-error-ring)]'
-                      : 'border-[var(--color-border)] focus:border-[var(--color-border-focus)] focus:shadow-[var(--shadow-focus-ring)]'
+                      : 'border-[var(--color-token-border)] focus:border-[var(--color-token-focus-border,var(--color-border-focus))] focus:shadow-[var(--shadow-focus-ring)]'
                   }`}
                 />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--color-text-tertiary)]">
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--color-token-text-secondary)]">
                   {t('settings.general.networkTimeoutUnit')}
                 </span>
               </div>
@@ -2865,14 +2857,14 @@ export function GeneralSettings() {
             </div>
             <p
               id="network-timeout-help"
-              className={`mt-2 text-xs leading-5 ${networkTimeoutError ? 'text-[var(--color-error)]' : 'text-[var(--color-text-tertiary)]'}`}
+              className={`mt-2 text-xs leading-5 ${networkTimeoutError ? 'text-[var(--color-error)]' : 'text-[var(--color-token-text-secondary)]'}`}
             >
               {networkTimeoutError ?? t('settings.general.networkTimeoutHint')}
             </p>
           </div>
 
           <div className="mt-4 flex items-center justify-between gap-3">
-            <p className="min-w-0 text-[11px] leading-4 text-[var(--color-text-tertiary)]">
+            <p className="min-w-0 text-[11px] leading-4 text-[var(--color-token-text-secondary)]">
               {t('settings.general.networkScopeHint')}
             </p>
             <Button
@@ -2892,36 +2884,16 @@ export function GeneralSettings() {
               {networkSaveError}
             </p>
           )}
-        </div>
-      </div>
+        </SettingsRow>
+      </SettingsCard>
 
-      <div className="general-settings-section general-settings-section--compact mt-8">
-        <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.webFetchPreflightTitle')}</h2>
-        <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.webFetchPreflightDescription')}</p>
-        <label className="relative flex items-start gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-4 py-3 cursor-pointer hover:border-[var(--color-border-focus)] transition-colors">
-          <input
-            type="checkbox"
-            aria-label={t('settings.general.webFetchPreflightEnabled')}
-            checked={skipWebFetchPreflight}
-            onChange={(e) => void setSkipWebFetchPreflight(e.target.checked)}
-            className={SETTINGS_CHECKBOX_INPUT_CLASS}
-          />
-          <SettingsCheckboxMark checked={skipWebFetchPreflight} />
-          <div className="min-w-0">
-            <div className="text-sm font-medium text-[var(--color-text-primary)]">
-              {t('settings.general.webFetchPreflightEnabled')}
-            </div>
-            <div className="text-xs text-[var(--color-text-tertiary)] mt-1 leading-5">
-              {t('settings.general.webFetchPreflightHint')}
-            </div>
-          </div>
-        </label>
-      </div>
-
-      <div className="general-settings-section general-settings-section--compact mt-8">
-        <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.webSearchTitle')}</h2>
-        <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.webSearchDescription')}</p>
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-4 py-4">
+      {/* ─── Web Search ─── */}
+      <SettingsCard>
+        <SettingsRow
+          label={t('settings.general.webSearchTitle')}
+          description={t('settings.general.webSearchDescription')}
+          full
+        >
           <div className="grid grid-cols-5 gap-1.5 mb-4">
             {WEB_SEARCH_MODES.map(({ value, label }) => (
               <button
@@ -2930,7 +2902,7 @@ export function GeneralSettings() {
                 className={`h-9 px-2 text-xs font-semibold rounded-lg border transition-all truncate ${
                   (webSearchDraft.mode ?? 'auto') === value
                     ? 'bg-[var(--color-brand)] text-white border-[var(--color-brand)]'
-                    : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                    : 'border-[var(--color-token-border)] text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)]'
                 }`}
                 title={label}
               >
@@ -2953,7 +2925,7 @@ export function GeneralSettings() {
                 })
               }
             />
-            <div className="-mt-1 flex items-center justify-between gap-3 text-xs text-[var(--color-text-tertiary)]">
+            <div className="-mt-1 flex items-center justify-between gap-3 text-xs text-[var(--color-token-text-secondary)]">
               <span>{t('settings.general.webSearchTavilyFreeHint')}</span>
               <a
                 href="https://app.tavily.com/home"
@@ -2979,7 +2951,7 @@ export function GeneralSettings() {
                 })
               }
             />
-            <div className="-mt-1 flex items-center justify-between gap-3 text-xs text-[var(--color-text-tertiary)]">
+            <div className="-mt-1 flex items-center justify-between gap-3 text-xs text-[var(--color-token-text-secondary)]">
               <span>{t('settings.general.webSearchBraveFreeHint')}</span>
               <a
                 href="https://api-dashboard.search.brave.com/app/keys"
@@ -2993,7 +2965,7 @@ export function GeneralSettings() {
             </div>
           </div>
           <div className="mt-4 flex flex-col gap-3">
-            <p className="text-xs text-[var(--color-text-tertiary)] leading-5">
+            <p className="text-xs text-[var(--color-token-text-secondary)] leading-5">
               {t('settings.general.webSearchHint')}
             </p>
             <div className="flex justify-end">
@@ -3008,15 +2980,17 @@ export function GeneralSettings() {
               </Button>
             </div>
           </div>
-        </div>
-      </div>
+        </SettingsRow>
+      </SettingsCard>
 
+      {/* ─── Storage (desktop only) ─── */}
       {isDesktopRuntime() && (
-        <div className="general-settings-section general-settings-section--compact mt-8">
-          <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">{t('settings.general.storageTitle')}</h2>
-          <p className="text-sm text-[var(--color-text-tertiary)] mb-3">{t('settings.general.storageDescription')}</p>
-
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-4 py-4">
+        <SettingsCard>
+          <SettingsRow
+            label={t('settings.general.storageTitle')}
+            description={t('settings.general.storageDescription')}
+            full
+          >
             <div className="flex flex-col gap-3">
               <button
                 type="button"
@@ -3033,13 +3007,13 @@ export function GeneralSettings() {
                 className={`flex items-start gap-3 rounded-lg border px-3 py-3 text-left transition-all ${
                   appMode.mode === 'default' && !isEnvironmentConfigDir
                     ? 'border-[var(--color-brand)] bg-[var(--color-surface)] shadow-[var(--shadow-focus-ring)]'
-                    : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-border-focus)]'
+                    : 'border-[var(--color-token-border)] bg-[var(--color-surface)] hover:border-[var(--color-token-focus-border,var(--color-border-focus))]'
                 }`}
               >
-                <span className="material-symbols-outlined mt-0.5 text-[20px] text-[var(--color-text-secondary)]">settings_applications</span>
+                <span className="material-symbols-outlined mt-0.5 text-[20px] text-[var(--color-token-text-secondary)]">settings_applications</span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold text-[var(--color-text-primary)]">{t('settings.general.storageSystemTitle')}</span>
-                  <span className="mt-1 block text-xs leading-5 text-[var(--color-text-tertiary)]">{t('settings.general.storageSystemDescription')}</span>
+                  <span className="block text-sm font-semibold text-[var(--color-token-foreground)]">{t('settings.general.storageSystemTitle')}</span>
+                  <span className="mt-1 block text-xs leading-5 text-[var(--color-token-text-secondary)]">{t('settings.general.storageSystemDescription')}</span>
                 </span>
               </button>
 
@@ -3047,14 +3021,14 @@ export function GeneralSettings() {
                 className={`rounded-lg border px-3 py-3 transition-all ${
                   appMode.mode === 'portable' && !isEnvironmentConfigDir
                     ? 'border-[var(--color-brand)] bg-[var(--color-surface)] shadow-[var(--shadow-focus-ring)]'
-                    : 'border-[var(--color-border)] bg-[var(--color-surface)]'
+                    : 'border-[var(--color-token-border)] bg-[var(--color-surface)]'
                 }`}
               >
                 <div className="mb-3 flex items-start gap-3">
-                  <span className="material-symbols-outlined mt-0.5 text-[20px] text-[var(--color-text-secondary)]">drive_file_move</span>
+                  <span className="material-symbols-outlined mt-0.5 text-[20px] text-[var(--color-token-text-secondary)]">drive_file_move</span>
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-semibold text-[var(--color-text-primary)]">{t('settings.general.storagePortableTitle')}</div>
-                    <div className="mt-1 text-xs leading-5 text-[var(--color-text-tertiary)]">{t('settings.general.storagePortableDescription')}</div>
+                    <div className="text-sm font-semibold text-[var(--color-token-foreground)]">{t('settings.general.storagePortableTitle')}</div>
+                    <div className="mt-1 text-xs leading-5 text-[var(--color-token-text-secondary)]">{t('settings.general.storagePortableDescription')}</div>
                   </div>
                 </div>
 
@@ -3107,25 +3081,25 @@ export function GeneralSettings() {
             </div>
 
             {activeConfigDir && (
-              <div className="mt-3 rounded-lg border border-[var(--color-border)]/70 bg-[var(--color-surface)] px-3 py-2">
-                <div className="text-[11px] font-medium uppercase tracking-wide text-[var(--color-text-tertiary)]">{t('settings.general.storageActiveDir')}</div>
-                <div className="mt-1 break-all font-mono text-xs text-[var(--color-text-secondary)]">{activeConfigDir}</div>
+              <div className="mt-3 rounded-lg border border-[var(--color-token-border)]/70 bg-[var(--color-surface)] px-3 py-2">
+                <div className="text-[11px] font-medium uppercase tracking-wide text-[var(--color-token-text-secondary)]">{t('settings.general.storageActiveDir')}</div>
+                <div className="mt-1 break-all font-mono text-xs text-[var(--color-token-text-secondary)]">{activeConfigDir}</div>
               </div>
             )}
 
             {isEnvironmentConfigDir && (
-              <div className="mt-3 rounded-lg border border-[var(--color-warning)] bg-[var(--color-warning)]/10 px-3 py-2 text-xs leading-5 text-[var(--color-text-secondary)]">
+              <div className="mt-3 rounded-lg border border-[var(--color-warning)] bg-[var(--color-warning)]/10 px-3 py-2 text-xs leading-5 text-[var(--color-token-text-secondary)]">
                 {t('settings.general.storageEnvironmentHint')}
               </div>
             )}
 
             {appModeRequiresRestart && (
-              <div className="mt-3 rounded-lg border border-[var(--color-warning)] bg-[var(--color-warning)]/10 px-3 py-2 text-xs leading-5 text-[var(--color-text-secondary)]">
+              <div className="mt-3 rounded-lg border border-[var(--color-warning)] bg-[var(--color-warning)]/10 px-3 py-2 text-xs leading-5 text-[var(--color-token-text-secondary)]">
                 {t('settings.general.storageRestartHint')}
               </div>
             )}
 
-            <div className="mt-3 text-xs leading-5 text-[var(--color-text-tertiary)]">
+            <div className="mt-3 text-xs leading-5 text-[var(--color-token-text-secondary)]">
               {t('settings.general.storageMoveHint')}
             </div>
 
@@ -3134,8 +3108,8 @@ export function GeneralSettings() {
                 {modeError}
               </div>
             )}
-          </div>
-        </div>
+          </SettingsRow>
+        </SettingsCard>
       )}
 
       {/* Confirm dialog for mode switch */}
@@ -3145,14 +3119,14 @@ export function GeneralSettings() {
         onConfirm={() => void confirmModeSwitch()}
         title={t('settings.general.modeSwitchTitle')}
         body={(
-          <div className="space-y-3 text-sm leading-6 text-[var(--color-text-secondary)]">
+          <div className="space-y-3 text-sm leading-6 text-[var(--color-token-text-secondary)]">
             <p>
               {pendingMode === 'portable'
                 ? t('settings.general.storageSwitchPortableBody')
                 : t('settings.general.storageSwitchDefaultBody')}
             </p>
             {pendingMode === 'portable' && pendingPortableDir && (
-              <div className="rounded-lg bg-[var(--color-surface-container-low)] px-3 py-2 font-mono text-xs break-all text-[var(--color-text-secondary)]">
+              <div className="rounded-lg bg-[var(--color-surface-container-low)] px-3 py-2 font-mono text-xs break-all text-[var(--color-token-text-secondary)]">
                 {pendingPortableDir}
               </div>
             )}
@@ -3355,28 +3329,28 @@ function H5AccessSettings() {
     <div className="max-w-3xl">
       <section aria-labelledby="h5-access-title" role="region">
         <div className="mb-5 flex items-start gap-3">
-          <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-container-low)] text-[var(--color-brand)]">
+          <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] text-[var(--color-brand)]">
             <QrCode className="h-5 w-5" aria-hidden="true" />
           </div>
           <div className="min-w-0">
             <h2
               id="h5-access-title"
-              className="text-base font-semibold text-[var(--color-text-primary)] mb-1"
+              className="text-base font-semibold text-[var(--color-token-foreground)] mb-1"
             >
               {t('settings.general.h5AccessTitle')}
             </h2>
-            <p className="text-sm text-[var(--color-text-tertiary)]">
+            <p className="text-sm text-[var(--color-token-text-secondary)]">
               {t('settings.general.h5AccessDescription')}
             </p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-4 py-4">
+        <div className="rounded-xl border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] px-4 py-4">
           <div className="flex items-start justify-between gap-4">
             <label className="flex min-w-0 items-start gap-3">
               <input
                 type="checkbox"
-                className="mt-1 h-4 w-4 rounded border-[var(--color-border)] accent-[var(--color-primary)]"
+                className="mt-1 h-4 w-4 rounded border-[var(--color-token-border)] accent-[var(--color-primary)]"
                 checked={h5Access.enabled}
                 disabled={h5ActionRunning}
                 aria-label={t('settings.general.h5AccessEnabled')}
@@ -3389,10 +3363,10 @@ function H5AccessSettings() {
                 }}
               />
               <span className="min-w-0">
-                <span className="block text-sm font-medium text-[var(--color-text-primary)]">
+                <span className="block text-sm font-medium text-[var(--color-token-foreground)]">
                   {t('settings.general.h5AccessEnabled')}
                 </span>
-                <span className="mt-1 block text-xs leading-5 text-[var(--color-text-tertiary)]">
+                <span className="mt-1 block text-xs leading-5 text-[var(--color-token-text-secondary)]">
                   {t('settings.general.h5AccessEnabledHint')}
                 </span>
               </span>
@@ -3401,7 +3375,7 @@ function H5AccessSettings() {
               className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
                 h5Access.enabled
                   ? 'bg-[var(--color-success)]/10 text-[var(--color-success)]'
-                  : 'bg-[var(--color-surface)] text-[var(--color-text-tertiary)] border border-[var(--color-border)]'
+                  : 'bg-[var(--color-surface)] text-[var(--color-token-text-secondary)] border border-[var(--color-token-border)]'
               }`}
             >
               {h5Access.enabled ? t('settings.general.h5AccessStatusEnabled') : t('settings.general.h5AccessDisabledValue')}
@@ -3411,12 +3385,12 @@ function H5AccessSettings() {
           {h5AccessDiagnostics?.storedHostStaleness === 'unreachable' && h5AccessDiagnostics.storedPublicBaseUrl ? (
             <div
               data-testid="h5-access-stale-host-banner"
-              className="mt-4 rounded-lg border border-[var(--color-warning)]/40 bg-[var(--color-warning)]/10 px-3 py-3 text-xs leading-5 text-[var(--color-text-primary)]"
+              className="mt-4 rounded-lg border border-[var(--color-warning)]/40 bg-[var(--color-warning)]/10 px-3 py-3 text-xs leading-5 text-[var(--color-token-foreground)]"
             >
               <div className="font-semibold">
                 {t('settings.general.h5AccessStaleHostTitle')}
               </div>
-              <div className="mt-1 text-[var(--color-text-secondary)]">
+              <div className="mt-1 text-[var(--color-token-text-secondary)]">
                 {h5AccessDiagnostics.suggestedHost
                   ? t('settings.general.h5AccessStaleHostBody', {
                       storedHost: extractHostnameFromUrl(h5AccessDiagnostics.storedPublicBaseUrl) ?? h5AccessDiagnostics.storedPublicBaseUrl,
@@ -3446,7 +3420,7 @@ function H5AccessSettings() {
           {h5AccessDiagnostics?.storedHostStaleness === 'proxy' ? (
             <div
               data-testid="h5-access-proxy-note"
-              className="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] px-3 py-2 text-xs leading-5 text-[var(--color-text-tertiary)]"
+              className="mt-4 rounded-lg border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3 py-2 text-xs leading-5 text-[var(--color-token-text-secondary)]"
             >
               {t('settings.general.h5AccessProxyNote')}
             </div>
@@ -3475,7 +3449,7 @@ function H5AccessSettings() {
                 label={t('settings.general.h5AccessCurrentPort')}
                 value={h5ActivePort ?? t('settings.general.h5AccessCurrentPortUnknown')}
                 readOnly
-                className="text-[var(--color-text-tertiary)]"
+                className="text-[var(--color-token-text-secondary)]"
               />
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-[9rem_minmax(0,1fr)] sm:items-start">
@@ -3488,12 +3462,12 @@ function H5AccessSettings() {
                 error={h5GraceInvalid ? t('settings.general.h5AccessDisconnectGraceInvalid') : undefined}
                 onChange={(event) => setH5GraceDraft(event.target.value)}
               />
-              <p className="text-xs leading-5 text-[var(--color-text-tertiary)] sm:pt-7">
+              <p className="text-xs leading-5 text-[var(--color-token-text-secondary)] sm:pt-7">
                 {t('settings.general.h5AccessDisconnectGraceHint')}
               </p>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs text-[var(--color-text-tertiary)]">
+              <p className="text-xs text-[var(--color-token-text-secondary)]">
                 {t('settings.general.h5AccessOpenHint')}
                 {' '}
                 {t('settings.general.h5AccessFixedPortHint')}
@@ -3511,7 +3485,7 @@ function H5AccessSettings() {
             {h5FixedPortPendingRestart && (
               <div
                 data-testid="h5-access-fixed-port-restart-note"
-                className="rounded-lg border border-[var(--color-warning)]/40 bg-[var(--color-warning)]/10 px-3 py-2 text-xs leading-5 text-[var(--color-text-primary)]"
+                className="rounded-lg border border-[var(--color-warning)]/40 bg-[var(--color-warning)]/10 px-3 py-2 text-xs leading-5 text-[var(--color-token-foreground)]"
               >
                 {t('settings.general.h5AccessFixedPortRestartNote', {
                   fixedPort: String(h5Access.fixedPort),
@@ -3522,13 +3496,13 @@ function H5AccessSettings() {
           </div>
 
           {h5AccessUrl && (
-            <div className="mt-4 border-t border-[var(--color-border)]/60 pt-4">
+            <div className="mt-4 border-t border-[var(--color-token-border)]/60 pt-4">
               <div className="flex items-center gap-2">
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">
+                  <div className="text-xs uppercase tracking-[0.08em] text-[var(--color-token-text-secondary)]">
                     {t('settings.general.h5AccessUrl')}
                   </div>
-                  <div className="mt-1 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text-primary)] break-all">
+                  <div className="mt-1 rounded-md border border-[var(--color-token-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-token-foreground)] break-all">
                     {h5AccessUrl}
                   </div>
                 </div>
@@ -3547,9 +3521,9 @@ function H5AccessSettings() {
           )}
 
           {h5Access.enabled && h5AccessUrl && (
-            <div className="mt-4 border-t border-[var(--color-border)]/60 pt-4">
+            <div className="mt-4 border-t border-[var(--color-token-border)]/60 pt-4">
               <div className="flex flex-col gap-4 sm:flex-row">
-                <div className="flex h-48 w-48 shrink-0 items-center justify-center rounded-lg border border-[var(--color-border)] bg-white p-3">
+                <div className="flex h-48 w-48 shrink-0 items-center justify-center rounded-lg border border-[var(--color-token-border)] bg-white p-3">
                   {h5QrDataUrl ? (
                     <img
                       src={h5QrDataUrl}
@@ -3566,16 +3540,16 @@ function H5AccessSettings() {
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-xs font-medium uppercase text-[var(--color-text-tertiary)]">
+                  <div className="text-xs font-medium uppercase text-[var(--color-token-text-secondary)]">
                     {t('settings.general.h5AccessQrTitle')}
                   </div>
-                  <p className="mt-1 text-xs leading-5 text-[var(--color-text-tertiary)]">
+                  <p className="mt-1 text-xs leading-5 text-[var(--color-token-text-secondary)]">
                     {h5Token
                       ? t('settings.general.h5AccessQrHint')
                       : t('settings.general.h5AccessQrRefreshHint')}
                   </p>
                   {h5LaunchUrl && (
-                    <div className="mt-3 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text-primary)] break-all">
+                    <div className="mt-3 rounded-md border border-[var(--color-token-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-token-foreground)] break-all">
                       {h5LaunchUrl}
                     </div>
                   )}
@@ -3605,13 +3579,13 @@ function H5AccessSettings() {
           )}
 
           {h5Access.enabled && (
-            <div className="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-3">
+            <div className="mt-4 rounded-lg border border-[var(--color-token-border)] bg-[var(--color-surface)] px-3 py-3">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="text-xs font-medium uppercase text-[var(--color-text-tertiary)]">
+                  <div className="text-xs font-medium uppercase text-[var(--color-token-text-secondary)]">
                     {t('settings.general.h5AccessTokenPreview')}
                   </div>
-                  <div className="mt-1 break-all text-sm text-[var(--color-text-primary)]">
+                  <div className="mt-1 break-all text-sm text-[var(--color-token-foreground)]">
                     {h5TokenVisible && h5Token
                       ? h5Token
                       : h5Access.tokenPreview || t('settings.general.h5AccessTokenNotAvailable')}
@@ -3641,7 +3615,7 @@ function H5AccessSettings() {
             </div>
           )}
 
-          <p className="mt-4 text-xs text-[var(--color-text-tertiary)] leading-5">
+          <p className="mt-4 text-xs text-[var(--color-token-text-secondary)] leading-5">
             {t('settings.general.h5AccessSafetyNote')}
           </p>
           {h5AccessError && (
@@ -3676,10 +3650,10 @@ function SettingsCheckboxMark({ checked, disabled = false }: { checked: boolean;
       className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-all peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--color-brand)]/40 ${
         checked
           ? 'border-[var(--color-brand)] bg-[var(--color-brand)] text-white shadow-[var(--shadow-button-primary)]'
-          : 'border-[var(--color-border-focus)] bg-[var(--color-surface)] text-transparent'
+          : 'border-[var(--color-token-focus-border,var(--color-border-focus))] bg-[var(--color-surface)] text-transparent'
       } ${disabled ? 'opacity-50' : ''}`}
     >
-      <span className="material-symbols-outlined text-[16px] leading-none" style={{ fontVariationSettings: "'FILL' 1" }}>
+      <span className="material-symbols-outlined icon-sm leading-none" style={{ fontVariationSettings: "'FILL' 1" }}>
         check
       </span>
     </span>
@@ -3775,28 +3749,28 @@ function AgentsSettings() {
           </button>
         </div>
       ) : allAgents.length === 0 ? (
-        <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-container-low)]">
-          <span className="material-symbols-outlined text-[40px] text-[var(--color-text-tertiary)] mb-3 block">smart_toy</span>
-          <p className="text-sm text-[var(--color-text-secondary)] mb-1">{t('settings.agents.empty')}</p>
-          <p className="text-xs text-[var(--color-text-tertiary)]">{t('settings.agents.emptyHint')}</p>
+        <div className="text-center py-12 px-4 rounded-2xl border border-dashed border-[var(--color-token-border)] bg-[var(--color-surface-container-low)]">
+          <span className="material-symbols-outlined text-[40px] text-[var(--color-token-text-secondary)] mb-3 block">smart_toy</span>
+          <p className="text-sm text-[var(--color-token-text-secondary)] mb-1">{t('settings.agents.empty')}</p>
+          <p className="text-xs text-[var(--color-token-text-secondary)]">{t('settings.agents.emptyHint')}</p>
         </div>
       ) : (
         <div className="flex flex-col gap-6 min-w-0">
-          <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] overflow-hidden">
+          <section className="rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] overflow-hidden">
             <div className="grid gap-4 px-5 py-5 min-w-0 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,1fr)] xl:items-end">
               <div className="min-w-0">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-text-tertiary)] mb-2">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-token-text-secondary)] mb-2">
                   {t('settings.agents.browserEyebrow')}
                 </div>
                 <div className="flex items-center gap-3 mb-2">
                   <span className="material-symbols-outlined text-[22px] text-[var(--color-brand)]">
                     smart_toy
                   </span>
-                  <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                  <h3 className="text-lg font-semibold text-[var(--color-token-foreground)]">
                     {t('settings.agents.browserTitle')}
                   </h3>
                 </div>
-                <p className="text-sm leading-6 text-[var(--color-text-secondary)] max-w-3xl">
+                <p className="text-sm leading-6 text-[var(--color-token-text-secondary)] max-w-3xl">
                   {t('settings.agents.description')}
                 </p>
               </div>
@@ -3831,24 +3805,24 @@ function AgentsSettings() {
               return (
                 <section
                   key={source}
-                  className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden min-w-0"
+                  className="rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-surface)] overflow-hidden min-w-0"
                 >
-                  <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-[var(--color-border)] bg-[var(--color-surface-container-low)]">
+                  <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-[var(--color-token-border)] bg-[var(--color-surface-container-low)]">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full ${getAgentSourceAccentClass(source)}`}>
-                          <span className="material-symbols-outlined text-[16px]">
+                          <span className="material-symbols-outlined icon-sm">
                             {getAgentSourceIcon(source)}
                           </span>
                         </span>
-                        <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">
+                        <h4 className="text-sm font-semibold text-[var(--color-token-foreground)]">
                           {sourceLabel}
                         </h4>
-                        <span className="text-xs text-[var(--color-text-tertiary)]">
+                        <span className="text-xs text-[var(--color-token-text-secondary)]">
                           {group.length}
                         </span>
                       </div>
-                      <p className="text-xs leading-5 text-[var(--color-text-tertiary)]">
+                      <p className="text-xs leading-5 text-[var(--color-token-text-secondary)]">
                         {t('settings.agents.groupHint', {
                           source: sourceLabel,
                           count: String(group.length),
@@ -3862,18 +3836,18 @@ function AgentsSettings() {
                       <button
                         key={`${agent.source}-${agent.agentType}`}
                         onClick={() => selectAgent(agent, 'agents')}
-                        className="group rounded-xl border border-transparent px-3 py-3 text-left transition-all hover:border-[var(--color-border-focus)] hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface)]"
+                        className="group rounded-xl border border-transparent px-3 py-3 text-left transition-all hover:border-[var(--color-token-focus-border,var(--color-border-focus))] hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface)]"
                       >
                         <div className="flex items-start gap-3">
                           <span
                             className="mt-0.5 flex-shrink-0 inline-flex items-center justify-center"
                             style={{ color: getAgentDotColor(agent.color) }}
                           >
-                            <span className="material-symbols-outlined text-[18px]">smart_toy</span>
+                            <span className="material-symbols-outlined icon-md">smart_toy</span>
                           </span>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm font-bold text-[var(--color-text-primary)] break-all">
+                              <span className="text-sm font-bold text-[var(--color-token-foreground)] break-all">
                                 {agent.agentType}
                               </span>
                               {agent.modelDisplay && (
@@ -3893,12 +3867,12 @@ function AgentsSettings() {
                                 </MetaPill>
                               )}
                             </div>
-                            <div className="mt-1 text-xs leading-5 text-[var(--color-text-secondary)] break-words [&_.prose]:text-xs [&_.prose]:leading-5 [&_.prose]:text-[var(--color-text-secondary)]">
+                            <div className="mt-1 text-xs leading-5 text-[var(--color-token-text-secondary)] break-words [&_.prose]:text-xs [&_.prose]:leading-5 [&_.prose]:text-[var(--color-token-text-secondary)]">
                               <MarkdownRenderer
                                 content={agent.description || t('settings.agents.noDescription')}
                               />
                             </div>
-                            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[var(--color-text-tertiary)]">
+                            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[var(--color-token-text-secondary)]">
                               <span>
                                 {agent.tools?.length
                                   ? t('settings.agents.toolCount', { count: String(agent.tools.length) })
@@ -3909,7 +3883,7 @@ function AgentsSettings() {
                               )}
                             </div>
                           </div>
-                          <span className="material-symbols-outlined text-[18px] text-[var(--color-text-tertiary)] opacity-60 transition-transform group-hover:translate-x-0.5 group-hover:opacity-100">
+                          <span className="material-symbols-outlined icon-md text-[var(--color-token-text-secondary)] opacity-60 transition-transform group-hover:translate-x-0.5 group-hover:opacity-100">
                             chevron_right
                           </span>
                         </div>
@@ -3935,17 +3909,17 @@ function AgentDetailView({ agent, onBack }: { agent: AgentDefinition; onBack: ()
       <div>
         <button
           onClick={onBack}
-          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]"
+          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]"
         >
-          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+          <span className="material-symbols-outlined icon-sm">arrow_back</span>
           {t('settings.agents.backToList')}
         </button>
       </div>
 
-      <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] overflow-hidden">
+      <section className="rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] overflow-hidden">
         <div className="grid gap-4 px-5 py-5 lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,0.9fr)] lg:items-start">
           <div className="min-w-0">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-text-tertiary)] mb-2">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-token-text-secondary)] mb-2">
               {t('settings.agents.entryEyebrow')}
             </div>
             <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -3953,7 +3927,7 @@ function AgentDetailView({ agent, onBack }: { agent: AgentDefinition; onBack: ()
                 className="h-3 w-3 rounded-full flex-shrink-0"
                 style={{ backgroundColor: getAgentDotColor(agent.color) }}
               />
-              <h3 className="text-[22px] font-semibold leading-tight text-[var(--color-text-primary)] break-all">
+              <h3 className="text-[22px] font-semibold leading-tight text-[var(--color-token-foreground)] break-all">
                 {agent.agentType}
               </h3>
               <MetaPill>{sourceLabel}</MetaPill>
@@ -3971,12 +3945,12 @@ function AgentDetailView({ agent, onBack }: { agent: AgentDefinition; onBack: ()
                 </MetaPill>
               )}
             </div>
-            <div className="max-w-4xl text-sm leading-6 text-[var(--color-text-secondary)]">
+            <div className="max-w-4xl text-sm leading-6 text-[var(--color-token-text-secondary)]">
               <MarkdownRenderer
                 content={agent.description || t('settings.agents.noDescription')}
               />
             </div>
-            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-[var(--color-text-tertiary)]">
+            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs text-[var(--color-token-text-secondary)]">
               <span>
                 {agent.tools?.length
                   ? t('settings.agents.toolCount', { count: String(agent.tools.length) })
@@ -4012,12 +3986,12 @@ function AgentDetailView({ agent, onBack }: { agent: AgentDefinition; onBack: ()
       </section>
 
       {agent.tools && agent.tools.length > 0 && (
-        <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-4">
+        <section className="rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-surface)] px-5 py-4">
           <div className="flex items-center gap-2 mb-3">
-            <span className="material-symbols-outlined text-[18px] text-[var(--color-text-tertiary)]">
+            <span className="material-symbols-outlined icon-md text-[var(--color-token-text-secondary)]">
               build
             </span>
-            <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">
+            <h4 className="text-sm font-semibold text-[var(--color-token-foreground)]">
               {t('settings.agents.tools')}
             </h4>
           </div>
@@ -4029,27 +4003,27 @@ function AgentDetailView({ agent, onBack }: { agent: AgentDefinition; onBack: ()
         </section>
       )}
 
-      <section className="flex flex-1 min-h-0 min-w-0 overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+      <section className="flex flex-1 min-h-0 min-w-0 overflow-hidden rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-surface)]">
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] px-4 py-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-mono text-[var(--color-text-secondary)] break-all">
+                <span className="text-xs font-mono text-[var(--color-token-text-secondary)] break-all">
                   {agent.baseDir || sourceLabel}
                 </span>
               </div>
-              <div className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">
+              <div className="mt-1 text-[11px] text-[var(--color-token-text-secondary)]">
                 {t('settings.agents.promptHint')}
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="rounded-full bg-[var(--color-surface)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-text-tertiary)] border border-[var(--color-border)]">
+              <span className="rounded-full bg-[var(--color-surface)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-token-text-secondary)] border border-[var(--color-token-border)]">
                 {t('settings.agents.systemPrompt')}
               </span>
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto bg-[var(--color-surface-container-lowest)]">
+          <div className="min-h-0 flex-1 overflow-y-auto bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))]">
             {agent.systemPrompt ? (
               <div className="px-6 py-5 lg:px-8">
                 <MarkdownRenderer
@@ -4060,10 +4034,10 @@ function AgentDetailView({ agent, onBack }: { agent: AgentDefinition; onBack: ()
               </div>
             ) : (
               <div className="px-6 py-10 text-center">
-                <span className="material-symbols-outlined text-[32px] text-[var(--color-text-tertiary)] mb-2 block">
+                <span className="material-symbols-outlined text-[32px] text-[var(--color-token-text-secondary)] mb-2 block">
                   article
                 </span>
-                <p className="text-sm text-[var(--color-text-tertiary)]">
+                <p className="text-sm text-[var(--color-token-text-secondary)]">
                   {t('settings.agents.noSystemPrompt')}
                 </p>
               </div>
@@ -4076,7 +4050,7 @@ function AgentDetailView({ agent, onBack }: { agent: AgentDefinition; onBack: ()
 }
 
 function getAgentDotColor(color?: string) {
-  return color && AGENT_COLORS[color] ? AGENT_COLORS[color] : 'var(--color-text-tertiary)'
+  return color && AGENT_COLORS[color] ? AGENT_COLORS[color] : 'var(--color-token-text-secondary)'
 }
 
 function getAgentSourceIcon(source: AgentSource) {
@@ -4113,13 +4087,13 @@ function getAgentSourceAccentClass(source: AgentSource) {
     case 'flagSettings':
       return 'bg-[var(--color-error)]/10 text-[var(--color-error)]'
     case 'built-in':
-      return 'bg-[var(--color-surface-container-high)] text-[var(--color-text-tertiary)]'
+      return 'bg-[var(--color-surface-container-high)] text-[var(--color-token-text-secondary)]'
   }
 }
 
 function MetaPill({ children }: { children: ReactNode }) {
   return (
-    <span className="rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-text-tertiary)]">
+    <span className="rounded-full border border-[var(--color-token-border)] bg-[var(--color-surface)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-token-text-secondary)]">
       {children}
     </span>
   )
@@ -4137,12 +4111,12 @@ function SummaryCard({
   className?: string
 }) {
   return (
-    <div className={`rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-3 min-w-0 ${className}`}>
-      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-[var(--color-text-tertiary)] min-w-0">
-        <span className="material-symbols-outlined text-[14px] flex-shrink-0">{icon}</span>
+    <div className={`rounded-xl border border-[var(--color-token-border)] bg-[var(--color-surface)] px-3 py-3 min-w-0 ${className}`}>
+      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.12em] text-[var(--color-token-text-secondary)] min-w-0">
+        <span className="material-symbols-outlined icon-xs flex-shrink-0">{icon}</span>
         <span className="truncate">{label}</span>
       </div>
-      <div className="mt-2 text-lg font-semibold text-[var(--color-text-primary)] truncate">
+      <div className="mt-2 text-lg font-semibold text-[var(--color-token-foreground)] truncate">
         {value}
       </div>
     </div>
@@ -4159,12 +4133,12 @@ function DetailStat({
   icon: string
 }) {
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-3">
-      <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-tertiary)]">
-        <span className="material-symbols-outlined text-[14px]">{icon}</span>
+    <div className="rounded-xl border border-[var(--color-token-border)] bg-[var(--color-surface)] px-3 py-3">
+      <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-[var(--color-token-text-secondary)]">
+        <span className="material-symbols-outlined icon-xs">{icon}</span>
         <span>{label}</span>
       </div>
-      <div className="mt-2 text-base font-semibold text-[var(--color-text-primary)] break-all">
+      <div className="mt-2 text-base font-semibold text-[var(--color-token-foreground)] break-all">
         {value}
       </div>
     </div>
@@ -4186,10 +4160,10 @@ function SkillSettings() {
 
   return (
     <div className="w-full min-w-0">
-      <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">
+      <h2 className="text-base font-semibold text-[var(--color-token-foreground)] mb-1">
         {t('settings.skills.title')}
       </h2>
-      <p className="text-sm text-[var(--color-text-tertiary)] mb-4">
+      <p className="text-sm text-[var(--color-token-text-secondary)] mb-4">
         {t('settings.skills.description')}
       </p>
       <SkillList />
@@ -4211,10 +4185,10 @@ function PluginSettings() {
 
   return (
     <div className="w-full min-w-0">
-      <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-1">
+      <h2 className="text-base font-semibold text-[var(--color-token-foreground)] mb-1">
         {t('settings.plugins.title')}
       </h2>
-      <p className="text-sm text-[var(--color-text-tertiary)] mb-4">
+      <p className="text-sm text-[var(--color-token-text-secondary)] mb-4">
         {t('settings.plugins.description')}
       </p>
       <PluginList />

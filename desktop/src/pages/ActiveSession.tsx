@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { Archive, Folder, FolderOpen, GitBranch, LoaderCircle, MoreHorizontal, Pencil, Pin, PinOff, SquareTerminal, Target } from 'lucide-react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+import { Archive, Download, Folder, FolderOpen, GitBranch, LoaderCircle, MoreHorizontal, Pencil, Pin, PinOff, SquareTerminal, Target } from 'lucide-react'
 import {
   SCHEDULED_TAB_ID,
   SETTINGS_TAB_ID,
@@ -28,7 +29,9 @@ import { ChatInput } from '../components/chat/ChatInput'
 import { PermissionDialog } from '../components/chat/PermissionDialog'
 import { StickyThinkingIndicator } from '../components/chat/StreamingIndicator'
 import { ComputerUsePermissionModal } from '../components/chat/ComputerUsePermissionModal'
-import { SessionTaskBar } from '../components/chat/SessionTaskBar'
+import { CurrentTurnLiveChangePill } from '../components/chat/CurrentTurnLiveChangePill'
+import { getCurrentTurnLiveChangeSummary } from '../components/chat/turnLiveChangeSummary'
+
 import { ConfirmDialog } from '../components/shared/ConfirmDialog'
 import { WorkbenchPanel } from '../components/workbench/WorkbenchPanel'
 import { TeamStatusBar } from '../components/teams/TeamStatusBar'
@@ -38,6 +41,7 @@ import type { SessionListItem } from '../types/session'
 import type { ActiveGoalState, UIMessage } from '../types/chat'
 import { useMobileViewport } from '../hooks/useMobileViewport'
 import { isDesktopRuntime } from '../lib/desktopRuntime'
+import { conversationToMarkdown, downloadMarkdownFile } from '../lib/conversationExport'
 
 const TASK_POLL_INTERVAL_MS = 1000
 const WORKSPACE_RESIZE_STEP = 32
@@ -99,21 +103,21 @@ function ActiveGoalStrip({
     <div
       data-testid="active-goal-strip"
       className={[
-        'mt-2 flex max-w-full items-center gap-2 rounded-[8px] border border-[var(--color-memory-border)] bg-[var(--color-memory-surface)] px-2.5 py-1.5',
+        'mt-2 flex max-w-full items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-memory-border)] bg-[var(--color-memory-surface)] px-2.5 py-1.5',
         compact ? 'text-[11px]' : 'text-[12px]',
       ].join(' ')}
     >
       <Target size={compact ? 13 : 14} className="shrink-0 text-[var(--color-memory-accent)]" strokeWidth={2.25} aria-hidden="true" />
-      <span className="shrink-0 font-semibold text-[var(--color-text-primary)]">
+      <span className="shrink-0 font-semibold text-[var(--color-token-foreground)]">
         {t('chat.activeGoal.title')}
       </span>
       <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-memory-accent)]" aria-hidden="true" />
-      <span className="shrink-0 text-[var(--color-text-tertiary)]">{statusLabel}</span>
-      <span className="min-w-0 flex-1 truncate font-medium text-[var(--color-text-primary)]" title={objective}>
+      <span className="shrink-0 text-[var(--color-token-text-secondary)]">{statusLabel}</span>
+      <span className="min-w-0 flex-1 truncate font-medium text-[var(--color-token-foreground)]" title={objective}>
         {objective}
       </span>
       {meta.length > 0 ? (
-        <span className="hidden shrink-0 items-center gap-1.5 text-[11px] text-[var(--color-text-tertiary)] lg:flex">
+        <span className="hidden shrink-0 items-center gap-1.5 text-[11px] text-[var(--color-token-text-secondary)] lg:flex">
           {meta.map((item) => (
             <span key={item} className="max-w-[140px] truncate">{item}</span>
           ))}
@@ -187,7 +191,7 @@ function WorkspaceResizeHandle() {
       }}
       className="group relative z-10 flex w-2 shrink-0 cursor-col-resize items-stretch justify-center outline-none"
     >
-      <div className="my-3 w-px rounded-full bg-[var(--color-border)] transition-colors group-hover:bg-[var(--color-border-focus)] group-focus-visible:bg-[var(--color-border-focus)]" />
+      <div className="my-3 w-px rounded-full bg-[var(--color-token-border)] transition-colors group-hover:bg-[var(--color-token-focus-border,var(--color-border-focus))] group-focus-visible:bg-[var(--color-token-focus-border,var(--color-border-focus))]" />
     </div>
   )
 }
@@ -267,7 +271,7 @@ function TerminalResizeHandle() {
       onDoubleClick={() => setHeight(TERMINAL_PANEL_DEFAULT_HEIGHT)}
       className="group flex h-2.5 shrink-0 cursor-row-resize items-center bg-[var(--color-surface)] outline-none focus-visible:bg-[var(--color-surface-container)]"
     >
-      <div className="mx-3 h-px flex-1 rounded-full bg-[var(--color-border)] transition-colors group-hover:bg-[var(--color-border-focus)] group-focus-visible:bg-[var(--color-border-focus)]" />
+      <div className="mx-3 h-px flex-1 rounded-full bg-[var(--color-token-border)] transition-colors group-hover:bg-[var(--color-token-focus-border,var(--color-border-focus))] group-focus-visible:bg-[var(--color-token-focus-border,var(--color-border-focus))]" />
     </div>
   )
 }
@@ -291,14 +295,14 @@ function TitleMenuItem({
       role="menuitem"
       onClick={onClick}
       disabled={disabled}
-      className="flex w-full items-center gap-3 rounded-[12px] px-3 py-2.5 text-left text-[14px] font-semibold text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:bg-[var(--color-surface-hover)] disabled:cursor-not-allowed disabled:text-[var(--color-text-tertiary)] disabled:opacity-55 disabled:hover:bg-transparent"
+      className="flex w-full items-center gap-3 rounded-[var(--radius-lg)] px-3 py-2.5 text-left text-[14px] font-semibold text-[var(--color-token-foreground)] transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:bg-[var(--color-surface-hover)] disabled:cursor-not-allowed disabled:text-[var(--color-token-text-secondary)] disabled:opacity-55 disabled:hover:bg-transparent"
     >
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[var(--color-text-secondary)]">
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[var(--color-token-text-secondary)]">
         {icon}
       </span>
       <span className="min-w-0 flex-1 truncate">{label}</span>
       {shortcut ? (
-        <span className="shrink-0 font-[var(--font-mono)] text-[12px] font-medium text-[var(--color-text-tertiary)]">
+        <span className="shrink-0 font-[var(--font-mono)] text-[12px] font-medium text-[var(--color-token-text-secondary)]">
           {shortcut}
         </span>
       ) : null}
@@ -368,10 +372,14 @@ export function ActiveSession() {
   const isMobileLayout = useMobileViewport() && !isDesktopRuntime()
   const [composerDocked, setComposerDocked] = useState(false)
   const [titleMenuOpen, setTitleMenuOpen] = useState(false)
+  const [titleMenuPos, setTitleMenuPos] = useState<{ top: number; right: number } | null>(null)
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false)
   const [isArchivingSession, setIsArchivingSession] = useState(false)
   const [isBranchingSession, setIsBranchingSession] = useState(false)
+  const [envPanelOpen, setEnvPanelOpen] = useState(false)
   const titleMenuRef = useRef<HTMLDivElement>(null)
+  const titleMenuBtnRef = useRef<HTMLButtonElement>(null)
+  const titleMenuPortalRef = useRef<HTMLDivElement>(null)
   const activeTabId = useTabStore((s) => s.activeTabId)
   const activeTabType = useTabStore((s) => s.tabs.find((tab) => tab.sessionId === s.activeTabId)?.type ?? null)
   const closeTab = useTabStore((s) => s.closeTab)
@@ -393,8 +401,6 @@ export function ActiveSession() {
   const trackedTaskSessionId = useCLITaskStore((s) => s.sessionId)
   const hasIncompleteTasks = useCLITaskStore((s) => s.tasks.some((task) => task.status !== 'completed'))
   const hasRunningTasks = useCLITaskStore((s) => s.tasks.some((task) => task.status === 'in_progress'))
-  const taskBarOpen = useCLITaskStore((s) => s.taskBarOpen)
-  const toggleTaskBar = useCLITaskStore((s) => s.toggleTaskBar)
   const chatState = sessionState?.chatState ?? 'idle'
   const hasRunningBackgroundTasks = Object.values(sessionState?.backgroundAgentTasks ?? {})
     .some((task) => task.status === 'running')
@@ -423,6 +429,10 @@ export function ActiveSession() {
       : undefined,
   )
   const messages = sessionState?.messages ?? []
+  const liveTurnChangeSummary = useMemo(
+    () => chatState === 'idle' ? null : getCurrentTurnLiveChangeSummary(messages),
+    [chatState, messages],
+  )
   const latestBranchTarget = getLatestBranchTarget(messages)
 
   useEffect(() => {
@@ -430,11 +440,33 @@ export function ActiveSession() {
     setArchiveConfirmOpen(false)
   }, [activeTabId])
 
+  useLayoutEffect(() => {
+    if (!titleMenuOpen) {
+      setTitleMenuPos(null)
+      return
+    }
+    const anchor = titleMenuBtnRef.current
+    if (!anchor) return
+    const rect = anchor.getBoundingClientRect()
+    const viewportWidth = window.innerWidth
+    const viewportHeight = window.innerHeight
+    const menuRight = viewportWidth - rect.right
+    const top = rect.bottom + 8
+    // If menu would overflow bottom, flip above
+    const finalTop = top + 200 > viewportHeight
+      ? rect.top - 8
+      : top
+    setTitleMenuPos({ top: finalTop, right: menuRight })
+  }, [titleMenuOpen])
+
   useEffect(() => {
     if (!titleMenuOpen) return
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as Node | null
-      if (target && titleMenuRef.current?.contains(target)) return
+      if (target && (
+        titleMenuBtnRef.current?.contains(target) ||
+        titleMenuPortalRef.current?.contains(target)
+      )) return
       setTitleMenuOpen(false)
     }
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -592,19 +624,19 @@ export function ActiveSession() {
                       <span className="flex h-2 w-2 rounded-full bg-[var(--color-warning)] animate-pulse-dot" />
                     )}
                     {memberInfo?.status === 'completed' && (
-                      <span className="material-symbols-outlined text-[14px] text-[var(--color-success)]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                      <span className="material-symbols-outlined icon-xs text-[var(--color-success)]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                     )}
-                    <span className="material-symbols-outlined text-[14px] text-[var(--color-text-tertiary)]">smart_toy</span>
-                    <span className="text-sm font-semibold text-[var(--color-text-primary)]">
-                      {memberInfo?.role}
-                    </span>
-                    {activeTeam && (
-                      <span className="text-[10px] text-[var(--color-text-tertiary)]">
-                        @ {activeTeam.name}
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">
+                    <span className="material-symbols-outlined icon-xs text-[var(--color-token-text-secondary)]">smart_toy</span>
+	                    <span className="text-sm font-semibold text-[var(--color-token-foreground)]">
+	                      {memberInfo?.role}
+	                    </span>
+	                    {activeTeam && (
+	                      <span className="text-[10px] text-[var(--color-token-text-secondary)]">
+	                        @ {activeTeam.name}
+	                      </span>
+	                    )}
+	                  </div>
+	                  <p className="mt-1 text-[11px] text-[var(--color-token-text-secondary)]">
                     {t('teams.memberSessionHint')}
                   </p>
                 </div>
@@ -619,9 +651,9 @@ export function ActiveSession() {
                     }
                   }}
                   disabled={!activeTeam?.leadSessionId}
-                  className="flex shrink-0 items-center gap-1 text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors disabled:opacity-50 disabled:hover:text-[var(--color-text-secondary)]"
+	                  className="flex shrink-0 items-center gap-1 text-xs font-medium text-[var(--color-token-text-secondary)] hover:text-[var(--color-token-foreground)] transition-colors disabled:opacity-50 disabled:hover:text-[var(--color-token-text-secondary)]"
                 >
-                  <span className="material-symbols-outlined text-[14px]">arrow_back</span>
+                  <span className="material-symbols-outlined icon-xs">arrow_back</span>
                   {t('teams.backToLeader')}
                 </button>
               </div>
@@ -639,8 +671,8 @@ export function ActiveSession() {
               <div className="empty-session-hero-panel flex w-full max-w-[760px] flex-col items-center text-center">
                 {isMemberSession ? (
                   <>
-                    <span className={`material-symbols-outlined mb-4 text-[var(--color-text-tertiary)] ${compactEmptyHero ? 'text-[36px]' : 'text-[48px]'}`}>smart_toy</span>
-                    <p className="text-[var(--color-text-secondary)]">
+	                    <span className={`material-symbols-outlined mb-4 text-[var(--color-token-text-secondary)] ${compactEmptyHero ? 'text-[36px]' : 'text-[48px]'}`}>smart_toy</span>
+	                    <p className="text-[var(--color-token-text-secondary)]">
                       {memberInfo?.status === 'running'
                         ? `${memberInfo.role} ${t('teams.working')}`
                         : t('teams.noMessages')}
@@ -648,24 +680,24 @@ export function ActiveSession() {
                   </>
                 ) : (
                   <>
-                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-3 py-1 text-[11px] font-medium text-[var(--color-text-secondary)]">
+	                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3 py-1 text-[11px] font-medium text-[var(--color-token-text-secondary)]">
                       <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-brand)]" />
                       {projectLabel ?? t('empty.title')}
                     </div>
-                    <h1 className={`${compactEmptyHero ? 'mb-2 text-[28px]' : 'mb-3 text-[34px]'} font-semibold tracking-[-0.03em] text-[var(--color-text-primary)]`}>
+	                    <h1 className={`${compactEmptyHero ? 'mb-2 text-[28px]' : 'mb-3 text-[34px]'} font-semibold tracking-[-0.03em] text-[var(--color-token-foreground)]`}>
                       {t('empty.title')}
                     </h1>
-                    <p className={`mx-auto max-w-[520px] text-[var(--color-text-secondary)] ${compactEmptyHero ? 'text-sm leading-6' : 'text-[15px] leading-7'}`}>
+	                    <p className={`mx-auto max-w-[520px] text-[var(--color-token-text-secondary)] ${compactEmptyHero ? 'text-sm leading-6' : 'text-[15px] leading-7'}`}>
                       {t('empty.subtitle')}
                     </p>
-                    <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-                      <span className="inline-flex items-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-3 py-1.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
-                        {t('chat.addFiles')}
-                      </span>
-                      <span className="inline-flex items-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-3 py-1.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
-                        {t('chat.slashCommands')}
-                      </span>
-                      <span className="inline-flex items-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-3 py-1.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
+	                    <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+	                      <span className="inline-flex items-center rounded-full border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3 py-1.5 text-[11px] font-medium text-[var(--color-token-text-secondary)]">
+	                        {t('chat.addFiles')}
+	                      </span>
+	                      <span className="inline-flex items-center rounded-full border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3 py-1.5 text-[11px] font-medium text-[var(--color-token-text-secondary)]">
+	                        {t('chat.slashCommands')}
+	                      </span>
+	                      <span className="inline-flex items-center rounded-full border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3 py-1.5 text-[11px] font-medium text-[var(--color-token-text-secondary)]">
                         {t('tabs.showWorkspace')}
                       </span>
                     </div>
@@ -678,7 +710,7 @@ export function ActiveSession() {
               {!isMemberSession && !isMobileLayout && (
                 <div
                   data-desktop-drag-region={isDesktopRuntime() ? true : undefined}
-                  className="session-titlebar relative flex w-full items-center border-b border-[var(--color-border)]/65 px-4"
+                  className="session-titlebar relative flex w-full items-center border-b border-[var(--color-token-border)]/65 px-4"
                 >
                   <div className="session-header-shell flex w-full items-center justify-between">
                     <div className="min-w-0 flex-1 pr-3">
@@ -686,14 +718,15 @@ export function ActiveSession() {
                         <h1
                           className={
                             showRightPanel
-                              ? 'min-w-0 max-w-[min(62vw,620px)] truncate text-[14px] font-semibold leading-5 tracking-[-0.015em] text-[var(--color-text-primary)]'
-                              : 'min-w-0 max-w-[min(68vw,760px)] truncate text-[14px] font-semibold leading-5 tracking-[-0.015em] text-[var(--color-text-primary)]'
+                              ? 'min-w-0 max-w-[min(62vw,620px)] truncate text-[14px] font-semibold leading-5 tracking-[-0.015em] text-[var(--color-token-foreground)]'
+                              : 'min-w-0 max-w-[min(68vw,760px)] truncate text-[14px] font-semibold leading-5 tracking-[-0.015em] text-[var(--color-token-foreground)]'
                           }
                         >
                           {session?.title || t('session.untitled')}
                         </h1>
                         <div ref={titleMenuRef} className="relative shrink-0">
                           <button
+                            ref={titleMenuBtnRef}
                             type="button"
                             aria-label="更多"
                             title="更多"
@@ -703,15 +736,17 @@ export function ActiveSession() {
                               event.stopPropagation()
                               setTitleMenuOpen((open) => !open)
                             }}
-                            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] data-[state=open]:bg-[var(--color-surface-hover)] data-[state=open]:text-[var(--color-text-primary)]"
+                            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] data-[state=open]:bg-[var(--color-surface-hover)] data-[state=open]:text-[var(--color-token-foreground)]"
                             data-state={titleMenuOpen ? 'open' : 'closed'}
                           >
                             <MoreHorizontal size={16} strokeWidth={2} aria-hidden="true" />
                           </button>
-                          {titleMenuOpen && (
+                          {titleMenuOpen && titleMenuPos && createPortal(
                             <div
+                              ref={titleMenuPortalRef}
                               role="menu"
-                              className="session-title-menu absolute left-0 top-[calc(100%+8px)] z-[320] w-[250px] overflow-hidden rounded-[18px] border border-[var(--color-border)] bg-[var(--color-surface-container-high)] p-1.5 shadow-[0_20px_60px_rgba(0,0,0,0.38)]"
+                              className="session-title-menu glass-panel fixed z-[80] w-[250px] overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)]"
+                              style={{ top: titleMenuPos.top, right: titleMenuPos.right }}
                               onClick={(event) => event.stopPropagation()}
                             >
                               <TitleMenuItem
@@ -735,7 +770,19 @@ export function ActiveSession() {
                                   setArchiveConfirmOpen(true)
                                 }}
                               />
-                              <div className="my-1.5 h-px bg-[var(--color-border)]/70" />
+                              <TitleMenuItem
+                                icon={<Download size={18} aria-hidden="true" />}
+                                label={t('session.exportMarkdown')}
+                                shortcut="⌥⌘E"
+                                disabled={messages.length === 0}
+                                onClick={() => {
+                                  setTitleMenuOpen(false)
+                                  const md = conversationToMarkdown(messages, session?.title)
+                                  const safeName = (session?.title || 'conversation').replace(/[^a-zA-Z0-9_\-\u4e00-\u9fff]/g, '_').slice(0, 80)
+                                  downloadMarkdownFile(md, `${safeName}.md`)
+                                }}
+                              />
+                              <div className="my-1.5 h-px bg-[var(--color-token-border)]/70" />
                               <TitleMenuItem
                                 icon={isBranchingSession ? <LoaderCircle size={18} className="animate-spin" aria-hidden="true" /> : <GitBranch size={18} aria-hidden="true" />}
                                 label={isBranchingSession ? '正在创建分支…' : '分支'}
@@ -743,8 +790,7 @@ export function ActiveSession() {
                                 disabled={!latestBranchTarget || isActive || isBranchingSession}
                                 onClick={() => { void handleBranchCurrentSession() }}
                               />
-                            </div>
-                          )}
+                            </div>, document.body)}
                         </div>
                         {isActive && (
                           <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-success)] animate-pulse-dot" aria-label={t('session.active')} />
@@ -752,7 +798,7 @@ export function ActiveSession() {
                       </div>
                       {session?.workDirExists === false && (
                         <div className="mt-2 inline-flex max-w-full items-center gap-2 rounded-lg border border-[var(--color-error)]/20 bg-[var(--color-error)]/8 px-3 py-1.5 text-[11px] text-[var(--color-error)]">
-                          <span className="material-symbols-outlined text-[14px]">warning</span>
+                          <span className="material-symbols-outlined icon-xs">warning</span>
                           <span className="truncate">
                             {t('session.workspaceUnavailable', { dir: session.workDir || 'directory no longer exists' })}
                           </span>
@@ -765,22 +811,21 @@ export function ActiveSession() {
                       />
                     </div>
                     <div className="session-header-actions relative flex shrink-0 items-center gap-1">
-                      <OpenProjectMenu path={openProjectPath} sessionId={activeTabId} variant="environment" />
+                      <OpenProjectMenu path={openProjectPath} sessionId={activeTabId} variant="environment" externalOpen={envPanelOpen} onExternalClose={() => setEnvPanelOpen(false)} />
                       <button
                         type="button"
                         aria-label={t('tasks.toggleSummary')}
                         title={t('tasks.toggleSummary')}
-                        onClick={toggleTaskBar}
-                        data-active={taskBarOpen ? 'true' : 'false'}
-                        className={`inline-flex h-7 w-7 items-center justify-center rounded-[8px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] spring-bounce-btn ${
-                          taskBarOpen
-                            ? 'bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-[0_8px_18px_rgba(0,0,0,0.12)]'
-                            : 'text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-primary)]'
-                        }`}
+                        onClick={() => setEnvPanelOpen((v) => !v)}
+                        data-active={envPanelOpen ? 'true' : 'false'}
+	                        className={`inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] spring-bounce-btn ${
+	                          envPanelOpen
+	                            ? 'bg-[var(--color-surface)] text-[var(--color-token-foreground)] shadow-[0_8px_18px_rgba(0,0,0,0.12)]'
+	                            : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-token-foreground)]'
+	                        }`}
                       >
-                        <span className="material-symbols-outlined text-[14px]">checklist</span>
+                        <span className="material-symbols-outlined icon-xs">checklist</span>
                       </button>
-                      {!isMemberSession && <SessionTaskBar variant="popover" />}
                       <button
                         type="button"
                         aria-label={t('tabs.openTerminal')}
@@ -791,11 +836,11 @@ export function ActiveSession() {
                           }
                         }}
                         data-active={showTerminalPanel ? 'true' : 'false'}
-                        className={`inline-flex h-7 w-7 items-center justify-center rounded-[8px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] spring-bounce-btn ${
-                          showTerminalPanel
-                            ? 'bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-[0_8px_18px_rgba(0,0,0,0.12)]'
-                            : 'text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-primary)]'
-                        }`}
+	                        className={`inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] spring-bounce-btn ${
+	                          showTerminalPanel
+	                            ? 'bg-[var(--color-surface)] text-[var(--color-token-foreground)] shadow-[0_8px_18px_rgba(0,0,0,0.12)]'
+	                            : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-token-foreground)]'
+	                        }`}
                       >
                         <SquareTerminal size={15} strokeWidth={1.9} />
                       </button>
@@ -814,11 +859,11 @@ export function ActiveSession() {
                           }
                         }}
                         data-active={showWorkbench ? 'true' : 'false'}
-                        className={`inline-flex h-7 w-7 items-center justify-center rounded-[8px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] spring-bounce-btn ${
-                          showWorkbench
-                            ? 'bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-[0_8px_18px_rgba(0,0,0,0.12)]'
-                            : 'text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-primary)]'
-                        }`}
+	                        className={`inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] spring-bounce-btn ${
+	                          showWorkbench
+	                            ? 'bg-[var(--color-surface)] text-[var(--color-token-foreground)] shadow-[0_8px_18px_rgba(0,0,0,0.12)]'
+	                            : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-token-foreground)]'
+	                        }`}
                       >
                         {showWorkbench ? <FolderOpen size={15} strokeWidth={1.9} /> : <Folder size={15} strokeWidth={1.9} />}
                       </button>
@@ -828,8 +873,8 @@ export function ActiveSession() {
               )}
 
               {isHistoryLoading ? (
-                <div role="status" className="flex flex-1 items-center justify-center p-8 text-sm text-[var(--color-text-secondary)]">
-                  <span className="material-symbols-outlined mr-2 animate-spin text-[18px]">progress_activity</span>
+                <div role="status" className="flex flex-1 items-center justify-center p-8 text-sm text-[var(--color-token-text-secondary)]">
+                  <span className="material-symbols-outlined mr-2 animate-spin icon-md">progress_activity</span>
                   {t('common.loading')}
                 </div>
               ) : historyError ? (
@@ -852,6 +897,7 @@ export function ActiveSession() {
                 : 'chat-input-dock-region'
             }
           >
+            <CurrentTurnLiveChangePill summary={liveTurnChangeSummary} compact={showRightPanel} />
             <StickyThinkingIndicator visible={chatState === 'tool_executing' || chatState === 'thinking' || chatState === 'streaming'} compact={showRightPanel} />
             <div
               className="chat-input-covered-shell"
@@ -889,7 +935,7 @@ export function ActiveSession() {
           {terminalPanelRuntimeId && activeTabId ? (
             <div
               data-testid="session-terminal-panel"
-              className="flex shrink-0 flex-col border-t border-[var(--color-border)] bg-[var(--color-surface-container-lowest)]"
+              className="flex shrink-0 flex-col border-t border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))]"
               style={{ height: terminalPanelHeight }}
             >
               <TerminalResizeHandle />

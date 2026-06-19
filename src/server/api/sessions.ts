@@ -197,6 +197,10 @@ export async function handleSessionsApi(
       return await handleSessionWorkspaceRoute(sessionId, url, segments[4])
     }
 
+    if (subResource === 'git') {
+      return await handleSessionGitRoute(sessionId, req, segments[4])
+    }
+
     // Route to conversations handler if sub-resource is 'chat'
     if (subResource === 'chat') {
       // This is handled by the conversations API, but in case the router
@@ -323,6 +327,54 @@ async function handleSessionWorkspaceRoute(
       ))
     default:
       throw ApiError.notFound(`Unknown workspace resource: ${workspaceResource || 'workspace'}`)
+  }
+}
+
+async function handleSessionGitRoute(
+  sessionId: string,
+  req: Request,
+  gitAction?: string,
+): Promise<Response> {
+  if (req.method !== 'POST') {
+    return Response.json(
+      { error: 'METHOD_NOT_ALLOWED', message: `Method ${req.method} not allowed` },
+      { status: 405 },
+    )
+  }
+
+  switch (gitAction) {
+    case 'add': {
+      const body = (await req.json()) as { paths?: string[] }
+      if (!body.paths || !Array.isArray(body.paths) || body.paths.length === 0) {
+        throw ApiError.badRequest('paths is required and must be a non-empty array')
+      }
+      const result = await workspaceService.gitAdd(sessionId, body.paths)
+      return Response.json(result)
+    }
+    case 'commit': {
+      const body = (await req.json()) as { message?: string; paths?: string[] }
+      const message = typeof body.message === 'string' ? body.message : ''
+      const result = await workspaceService.gitCommit(sessionId, message, body.paths)
+      return Response.json(result)
+    }
+    case 'push': {
+      const result = await workspaceService.gitPush(sessionId)
+      return Response.json(result)
+    }
+    case 'sync-status': {
+      const result = await workspaceService.gitSyncStatus(sessionId)
+      return Response.json(result)
+    }
+    case 'create-branch': {
+      const body = (await req.json()) as { branchName?: string }
+      if (!body.branchName || typeof body.branchName !== 'string' || body.branchName.trim().length === 0) {
+        throw ApiError.badRequest('branchName is required and must be a non-empty string')
+      }
+      const result = await workspaceService.gitCreateBranch(sessionId, body.branchName.trim())
+      return Response.json(result)
+    }
+    default:
+      throw ApiError.notFound(`Unknown git action: ${gitAction || 'git'}`)
   }
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   ChevronDown,
@@ -12,16 +12,23 @@ import {
 } from 'lucide-react'
 import { sessionsApi, type RepositoryContextResult } from '../../api/sessions'
 import { useTranslation } from '../../i18n'
+import { getDesktopHost } from '../../lib/desktopHost'
 import { useOpenTargetStore } from '../../stores/openTargetStore'
-import { useTerminalPanelStore } from '../../stores/terminalPanelStore'
 import { useWorkspaceChatContextStore } from '../../stores/workspaceChatContextStore'
 import { useWorkspacePanelStore } from '../../stores/workspacePanelStore'
+import { useCLITaskStore } from '../../stores/cliTaskStore'
+import { useChatStore } from '../../stores/chatStore'
 import { TargetIcon } from '../common/TargetIcon'
+import { GitActionsDialog } from './GitActionsDialog'
 
 type Props = {
   path: string | null | undefined
   sessionId?: string | null
   variant?: 'simple' | 'environment'
+  /** When true, forces the environment panel open (controlled by external button). */
+  externalOpen?: boolean
+  /** Called when the panel closes itself (click-away, Escape). Use to sync external state. */
+  onExternalClose?: () => void
 }
 
 function getPathLeaf(path: string | null | undefined) {
@@ -39,6 +46,8 @@ export function OpenProjectMenu({
   path,
   sessionId = null,
   variant = 'simple',
+  externalOpen,
+  onExternalClose,
 }: Props) {
   const t = useTranslation()
   const targets = useOpenTargetStore((state) => state.targets)
@@ -51,13 +60,30 @@ export function OpenProjectMenu({
   const setWorkspaceMode = useWorkspacePanelStore((state) => state.setMode)
   const setWorkspaceView = useWorkspacePanelStore((state) => state.setActiveView)
   const referencesBySession = useWorkspaceChatContextStore((state) => state.referencesBySession)
+  const tasks = useCLITaskStore((state) => state.tasks)
+  const resetCompletedTasks = useCLITaskStore((state) => state.resetCompletedTasks)
+  const sessionState = useChatStore((state) => sessionId ? state.sessions[sessionId] : undefined)
+  const stopGeneration = useChatStore((state) => state.stopGeneration)
+  const activeGoal = sessionState?.activeGoal ?? null
+  const backgroundTasks = sessionState?.backgroundAgentTasks ?? {}
   const [open, setOpen] = useState(false)
-  const [targetsExpanded, setTargetsExpanded] = useState(false)
   const [branchesExpanded, setBranchesExpanded] = useState(false)
+  const [gitDialogOpen, setGitDialogOpen] = useState(false)
   const [repoLoading, setRepoLoading] = useState(false)
   const [repoContext, setRepoContext] = useState<RepositoryContextResult | null>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  // External open control: when externalOpen becomes true, open the panel
+  useEffect(() => {
+    if (externalOpen) setOpen(true)
+  }, [externalOpen])
+
+  // Wrap setOpen to notify parent when panel closes
+  const handleClose = useCallback(() => {
+    setOpen(false)
+    onExternalClose?.()
+  }, [onExternalClose])
 
   useEffect(() => {
     if (!path) {
@@ -73,11 +99,11 @@ export function OpenProjectMenu({
     const handleDocumentMouseDown = (event: MouseEvent) => {
       const target = event.target as Node
       if (buttonRef.current?.contains(target) || menuRef.current?.contains(target)) return
-      setOpen(false)
+      handleClose()
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false)
+      if (event.key === 'Escape') handleClose()
     }
 
     document.addEventListener('mousedown', handleDocumentMouseDown)
@@ -126,7 +152,7 @@ export function OpenProjectMenu({
     } catch {
       // Store state already records the failure; keep the control responsive.
     } finally {
-      if (variant === 'simple') setOpen(false)
+      if (variant === 'simple') handleClose()
     }
   }
 
@@ -139,6 +165,8 @@ export function OpenProjectMenu({
   const rect = buttonRef.current?.getBoundingClientRect()
   const workspaceStatus = sessionId ? statusBySession[sessionId] : undefined
   const changeCount = workspaceStatus?.changedFiles.length ?? 0
+  const totalAdditions = workspaceStatus?.changedFiles.reduce((sum, f) => sum + f.additions, 0) ?? 0
+  const totalDeletions = workspaceStatus?.changedFiles.reduce((sum, f) => sum + f.deletions, 0) ?? 0
   const branchLabel = repoContext?.currentBranch || workspaceStatus?.branch || '无分支'
   const localLabel = primaryTarget.label || '本地'
   const references = sessionId ? (referencesBySession[sessionId] ?? []) : []
@@ -161,10 +189,10 @@ export function OpenProjectMenu({
             }
             void handleOpenTarget(primaryTarget.id)
           }}
-          className={`inline-flex h-8 items-center justify-center gap-1 rounded-[10px] border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] text-[var(--color-text-tertiary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] ${
+          className={`inline-flex h-8 items-center justify-center gap-1 rounded-[var(--radius-md)] border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] text-[var(--color-token-text-secondary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] ${
             hasMenu
-              ? 'min-w-[2.75rem] px-2 hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]'
-              : 'w-8 hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]'
+              ? 'min-w-[2.75rem] px-2 hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]'
+              : 'w-8 hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]'
           }`}
         >
           <TargetIcon target={primaryTarget} />
@@ -175,7 +203,7 @@ export function OpenProjectMenu({
           <div
             ref={menuRef}
             role="menu"
-            className="fixed z-50 min-w-[220px] overflow-hidden rounded-[12px] border border-[var(--color-border)] bg-[var(--color-surface)] py-1 shadow-[var(--shadow-dropdown)]"
+            className="fixed z-50 min-w-[220px] overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-token-border)] bg-[var(--color-surface)] py-1 shadow-[var(--shadow-dropdown)]"
             style={{ top: rect.bottom + 6, right: Math.max(12, window.innerWidth - rect.right) }}
           >
             {targets.map((target) => (
@@ -184,9 +212,9 @@ export function OpenProjectMenu({
                 type="button"
                 role="menuitem"
                 onClick={() => void handleOpenTarget(target.id)}
-                className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:bg-[var(--color-surface-hover)]"
+                className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-[var(--color-token-foreground)] transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:bg-[var(--color-surface-hover)]"
               >
-                <span className="flex h-7 w-7 items-center justify-center text-[var(--color-text-secondary)]">
+                <span className="flex h-7 w-7 items-center justify-center text-[var(--color-token-text-secondary)]">
                   <TargetIcon target={target} size={24} />
                 </span>
                 <span className="min-w-0 truncate">{target.label}</span>
@@ -209,7 +237,7 @@ export function OpenProjectMenu({
         aria-expanded={open}
         title={buttonLabel}
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex h-7 w-7 items-center justify-center rounded-[8px] text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
+        className="inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))]"
       >
         <TargetIcon target={primaryTarget} size={17} />
       </button>
@@ -219,15 +247,15 @@ export function OpenProjectMenu({
           ref={menuRef}
           role="dialog"
           aria-label="环境信息"
-          className="fixed z-[340] w-[min(630px,calc(100vw-32px))] overflow-hidden rounded-[32px] border border-[rgba(255,255,255,0.1)] bg-[rgba(48,48,50,0.94)] shadow-[0_26px_90px_rgba(0,0,0,0.45)] backdrop-blur-[24px]"
+          className="fixed z-[340] w-[min(280px,calc(100vw-32px))] overflow-hidden rounded-[var(--radius-lg)] border border-[rgba(255,255,255,0.1)] bg-[rgba(48,48,50,0.94)] shadow-[0_12px_36px_rgba(0,0,0,0.4)] backdrop-blur-[24px]"
           style={{
-            top: rect.bottom + 12,
-            right: Math.max(16, window.innerWidth - rect.right),
+            top: rect.bottom + 6,
+            right: Math.max(12, window.innerWidth - rect.right),
           }}
         >
-          <div className="px-8 pb-8 pt-8">
-            <div className="flex items-start justify-between gap-3">
-              <div className="text-[17px] font-semibold tracking-[-0.02em] text-[rgba(255,255,255,0.88)]">
+          <div className="px-2.5 py-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-[11px] font-semibold text-[rgba(255,255,255,0.88)]">
                 环境信息
               </div>
               <button
@@ -238,16 +266,16 @@ export function OpenProjectMenu({
                   setWorkspaceView(sessionId, 'all')
                   openWorkspacePanel(sessionId)
                   void loadStatus(sessionId)
-                  setOpen(false)
+                  handleClose()
                 }}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-[12px] text-[rgba(255,255,255,0.7)] transition-colors hover:bg-[rgba(255,255,255,0.06)] hover:text-[rgba(255,255,255,0.95)]"
+                className="inline-flex h-5 w-5 items-center justify-center rounded-[var(--radius-xs)] text-[rgba(255,255,255,0.7)] transition-colors hover:bg-[rgba(255,255,255,0.06)] hover:text-[rgba(255,255,255,0.95)]"
                 title="打开工作区"
               >
-                <Plus size={22} />
+                <Plus size={12} />
               </button>
             </div>
 
-            <div className="mt-6 space-y-4">
+            <div className="mt-1.5 space-y-px">
               <button
                 type="button"
                 onClick={() => {
@@ -256,14 +284,14 @@ export function OpenProjectMenu({
                   setWorkspaceView(sessionId, 'changed')
                   openWorkspacePanel(sessionId)
                   void loadStatus(sessionId)
-                  setOpen(false)
+                  handleClose()
                 }}
-                className="flex w-full items-center gap-4 rounded-[14px] px-2 py-1 text-left transition-colors hover:bg-[rgba(255,255,255,0.04)]"
+                className="flex w-full items-center gap-1.5 rounded-[var(--radius-xs)] px-1.5 py-1 text-left transition-colors hover:bg-[rgba(255,255,255,0.04)]"
               >
-                <SquarePen size={28} className="shrink-0 text-[rgba(255,255,255,0.9)]" />
-                <span className="flex min-w-0 flex-1 items-center gap-3">
-                  <span className="text-[18px] font-semibold text-[rgba(255,255,255,0.96)]">变更</span>
-                  <span className="rounded-full bg-[rgba(255,255,255,0.08)] px-2.5 py-0.5 text-[12px] text-[rgba(255,255,255,0.68)]">
+                <SquarePen size={13} className="shrink-0 text-[rgba(255,255,255,0.9)]" />
+                <span className="flex min-w-0 flex-1 items-center gap-1.5">
+                  <span className="text-[11px] font-medium text-[rgba(255,255,255,0.96)]">变更</span>
+                  <span className="rounded-full bg-[rgba(255,255,255,0.08)] px-1.5 py-px text-[9px] text-[rgba(255,255,255,0.68)]">
                     {changeCount}
                   </span>
                 </span>
@@ -273,40 +301,16 @@ export function OpenProjectMenu({
                 <button
                   type="button"
                   onClick={() => {
-                    if (hasMenu) {
-                      setTargetsExpanded((value) => !value)
-                      return
-                    }
-                    void handleOpenTarget(primaryTarget.id)
+                    if (path) void getDesktopHost().shell.openPath(path)
+                    handleClose()
                   }}
-                  className="flex w-full items-center gap-4 rounded-[14px] px-2 py-1 text-left transition-colors hover:bg-[rgba(255,255,255,0.04)]"
+                  className="flex w-full items-center gap-1.5 rounded-[var(--radius-xs)] px-1.5 py-1 text-left transition-colors hover:bg-[rgba(255,255,255,0.04)]"
                 >
-                  <FolderOpen size={28} className="shrink-0 text-[rgba(255,255,255,0.9)]" />
-                  <span className="min-w-0 flex-1 truncate text-[18px] font-semibold text-[rgba(255,255,255,0.96)]">
+                  <FolderOpen size={13} className="shrink-0 text-[rgba(255,255,255,0.9)]" />
+                  <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-[rgba(255,255,255,0.96)]">
                     {localLabel}
                   </span>
-                  {hasMenu ? <ChevronDown size={18} className={`shrink-0 text-[rgba(255,255,255,0.7)] transition-transform ${targetsExpanded ? 'rotate-180' : ''}`} /> : null}
                 </button>
-
-                {targetsExpanded ? (
-                  <div className="ml-11 mt-2 space-y-1">
-                    {targets.map((target) => (
-                      <button
-                        key={target.id}
-                        type="button"
-                        onClick={() => void handleOpenTarget(target.id)}
-                        className="flex w-full items-center gap-3 rounded-[12px] px-3 py-2 text-left transition-colors hover:bg-[rgba(255,255,255,0.04)]"
-                      >
-                        <span className="flex h-6 w-6 items-center justify-center text-[rgba(255,255,255,0.8)]">
-                          <TargetIcon target={target} size={18} />
-                        </span>
-                        <span className="min-w-0 flex-1 truncate text-[14px] text-[rgba(255,255,255,0.76)]">
-                          {target.label}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
               </div>
 
               <div>
@@ -314,24 +318,24 @@ export function OpenProjectMenu({
                   type="button"
                   disabled={repoContext?.state !== 'ok' || (repoContext?.branches.length ?? 0) === 0}
                   onClick={() => setBranchesExpanded((value) => !value)}
-                  className="flex w-full items-center gap-4 rounded-[14px] px-2 py-1 text-left transition-colors hover:bg-[rgba(255,255,255,0.04)] disabled:cursor-default disabled:opacity-70 disabled:hover:bg-transparent"
+                  className="flex w-full items-center gap-1.5 rounded-[var(--radius-xs)] px-1.5 py-1 text-left transition-colors hover:bg-[rgba(255,255,255,0.04)] disabled:cursor-default disabled:opacity-70 disabled:hover:bg-transparent"
                 >
-                  <GitBranch size={28} className="shrink-0 text-[rgba(255,255,255,0.9)]" />
-                  <span className="min-w-0 flex-1 truncate text-[18px] font-semibold text-[rgba(255,255,255,0.96)]">
+                  <GitBranch size={13} className="shrink-0 text-[rgba(255,255,255,0.9)]" />
+                  <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-[rgba(255,255,255,0.96)]">
                     {repoLoading ? '加载分支中…' : branchLabel}
                   </span>
-                  {(repoContext?.branches.length ?? 0) > 0 ? <ChevronDown size={18} className={`shrink-0 text-[rgba(255,255,255,0.7)] transition-transform ${branchesExpanded ? 'rotate-180' : ''}`} /> : null}
+                  {(repoContext?.branches.length ?? 0) > 0 ? <ChevronDown size={12} className={`shrink-0 text-[rgba(255,255,255,0.7)] transition-transform ${branchesExpanded ? 'rotate-180' : ''}`} /> : null}
                 </button>
 
                 {branchesExpanded && repoContext?.state === 'ok' ? (
-                  <div className="ml-11 mt-2 max-h-[180px] space-y-1 overflow-y-auto">
+                  <div className="ml-5 mt-0.5 max-h-[120px] space-y-px overflow-y-auto">
                     {repoContext.branches.slice(0, 12).map((branch) => (
                       <div
                         key={branch.name}
-                        className="flex items-center gap-3 rounded-[12px] px-3 py-2"
+                        className="flex items-center gap-1.5 rounded-[var(--radius-xs)] px-1.5 py-1"
                       >
-                        <span className={`h-2 w-2 rounded-full ${branch.current ? 'bg-[rgba(255,255,255,0.86)]' : 'bg-[rgba(255,255,255,0.18)]'}`} />
-                        <span className="min-w-0 flex-1 truncate text-[14px] text-[rgba(255,255,255,0.76)]">
+                        <span className={`h-1 w-1 rounded-full ${branch.current ? 'bg-[rgba(255,255,255,0.86)]' : 'bg-[rgba(255,255,255,0.18)]'}`} />
+                        <span className="min-w-0 flex-1 truncate text-[10px] text-[rgba(255,255,255,0.76)]">
                           {branch.name}
                         </span>
                       </div>
@@ -343,71 +347,219 @@ export function OpenProjectMenu({
               <button
                 type="button"
                 disabled={!sessionId}
-                onClick={() => {
-                  if (!sessionId) return
-                  useTerminalPanelStore.getState().openPanel(sessionId)
-                  setOpen(false)
-                }}
-                className="flex w-full items-center gap-4 rounded-[14px] px-2 py-1 text-left transition-colors hover:bg-[rgba(255,255,255,0.04)] disabled:cursor-default disabled:opacity-70 disabled:hover:bg-transparent"
+                onClick={() => setGitDialogOpen((v) => !v)}
+                className="flex w-full items-center gap-1.5 rounded-[var(--radius-xs)] px-1.5 py-1 text-left transition-colors hover:bg-[rgba(255,255,255,0.04)] disabled:cursor-default disabled:opacity-70 disabled:hover:bg-transparent"
               >
-                <GitCommitHorizontal size={28} className="shrink-0 text-[rgba(255,255,255,0.9)]" />
-                <span className="min-w-0 flex-1 truncate text-[18px] font-semibold text-[rgba(255,255,255,0.96)]">
-                  提交或推送
+                <GitCommitHorizontal size={13} className="shrink-0 text-[rgba(255,255,255,0.9)]" />
+                <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-[rgba(255,255,255,0.96)]">
+                  提交更改…
                 </span>
+                {changeCount > 0 && (
+                  <span className="rounded-full bg-[rgba(255,255,255,0.08)] px-1.5 py-px text-[9px] text-[rgba(255,255,255,0.68)]">
+                    {changeCount}
+                  </span>
+                )}
               </button>
 
-              <div className="flex items-center gap-4 rounded-[14px] px-2 py-1 opacity-80">
-                <Github size={28} className="shrink-0 text-[rgba(255,255,255,0.6)]" />
-                <span className="min-w-0 flex-1 truncate text-[18px] font-semibold text-[rgba(255,255,255,0.6)]">
+              <div className="flex items-center gap-1.5 rounded-[var(--radius-xs)] px-1.5 py-1 opacity-80">
+                <Github size={13} className="shrink-0 text-[rgba(255,255,255,0.6)]" />
+                <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-[rgba(255,255,255,0.6)]">
                   GitHub CLI 不可用
                 </span>
               </div>
             </div>
 
-            <div className="my-7 h-px rounded-full bg-[rgba(255,255,255,0.08)]" />
+            <div className="my-2 h-px rounded-full bg-[rgba(255,255,255,0.08)]" />
 
-            <div className="text-[17px] font-semibold tracking-[-0.02em] text-[rgba(255,255,255,0.7)]">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-[10px] font-semibold text-[rgba(255,255,255,0.7)]">
+                任务
+              </div>
+              {tasks.length > 0 && tasks.every((tk) => tk.status === 'completed') ? (
+                <button
+                  type="button"
+                  onClick={() => { void resetCompletedTasks(sessionId ?? undefined) }}
+                  className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[var(--radius-2xs)] text-[rgba(255,255,255,0.5)] transition-colors hover:bg-[rgba(255,255,255,0.06)] hover:text-[rgba(255,255,255,0.8)]"
+                >
+                  <span className="material-symbols-outlined text-[10px]">close</span>
+                </button>
+              ) : null}
+            </div>
+            <div className="mt-1 space-y-px">
+              {tasks.length > 0 ? tasks.map((task) => {
+                const isCompleted = task.status === 'completed'
+                const isActive = task.status === 'in_progress'
+                const icon = isCompleted ? 'check_circle' : isActive ? 'pending' : 'radio_button_unchecked'
+                const color = isCompleted ? 'var(--color-success)' : isActive ? 'var(--color-warning)' : 'rgba(255,255,255,0.5)'
+                return (
+                  <div key={task.id} className="flex items-center gap-1.5 rounded-[var(--radius-xs)] px-1.5 py-1">
+                    <span
+                      className="material-symbols-outlined shrink-0 text-[13px]"
+                      style={{ color, fontVariationSettings: "'FILL' 1" }}
+                    >
+                      {icon}
+                    </span>
+                    <span className="text-[9px] font-mono text-[rgba(255,255,255,0.4)]">
+                      #{task.id}
+                    </span>
+                    <span className={`text-[11px] ${
+                      isCompleted
+                        ? 'text-[rgba(255,255,255,0.5)] line-through'
+                        : 'text-[rgba(255,255,255,0.92)]'
+                    }`}>
+                      {task.subject}
+                    </span>
+                    {isActive && task.activeForm && (
+                      <span className="text-[9px] text-[var(--color-warning)] truncate">
+                        {task.activeForm}
+                      </span>
+                    )}
+                  </div>
+                )
+              }) : (
+                <div className="text-[10px] text-[rgba(255,255,255,0.45)] px-1.5 py-1">
+                  暂无任务
+                </div>
+              )}
+            </div>
+
+            {activeGoal && activeGoal.action !== 'completed' ? (
+              <>
+                <div className="my-2 h-px rounded-full bg-[rgba(255,255,255,0.08)]" />
+
+                <div className="text-[10px] font-semibold text-[rgba(255,255,255,0.7)]">
+                  目标
+                </div>
+                <div className="mt-1 space-y-px">
+                  <div className="flex items-center gap-1.5 rounded-[var(--radius-xs)] px-1.5 py-1">
+                    <span
+                      className="material-symbols-outlined shrink-0 text-[13px]"
+                      style={{
+                        color: activeGoal.status === 'paused' ? 'var(--color-warning)' : 'var(--color-success)',
+                        fontVariationSettings: "'FILL' 1",
+                      }}
+                    >
+                      {activeGoal.status === 'paused' ? 'pause_circle' : 'target'}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-[rgba(255,255,255,0.92)]">
+                      {activeGoal.objective ?? activeGoal.message ?? '—'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 px-1.5">
+                    {activeGoal.status && (
+                      <span className={`text-[9px] font-medium ${
+                        activeGoal.status === 'paused' ? 'text-[var(--color-warning)]' : 'text-[var(--color-success)]'
+                      }`}>
+                        {activeGoal.status === 'paused' ? '已暂停' : activeGoal.status === 'running' ? '运行中' : activeGoal.status}
+                      </span>
+                    )}
+                    {activeGoal.budget && (
+                      <span className="text-[9px] text-[rgba(255,255,255,0.46)]">
+                        预算 {activeGoal.budget}
+                      </span>
+                    )}
+                    {activeGoal.elapsed && (
+                      <span className="text-[9px] text-[rgba(255,255,255,0.46)]">
+                        已用 {activeGoal.elapsed}
+                      </span>
+                    )}
+                    {activeGoal.continuations && (
+                      <span className="text-[9px] text-[rgba(255,255,255,0.46)]">
+                        续轮 {activeGoal.continuations}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : null}
+
+            {Object.values(backgroundTasks).some((t) => t.status === 'running') ? (
+              <>
+                <div className="my-2 h-px rounded-full bg-[rgba(255,255,255,0.08)]" />
+
+                <div className="text-[10px] font-semibold text-[rgba(255,255,255,0.7)]">
+                  运行中
+                </div>
+                <div className="mt-1 space-y-px">
+                  {Object.values(backgroundTasks)
+                    .filter((t) => t.status === 'running')
+                    .map((task) => {
+                      const elapsedMs = Date.now() - task.startedAt
+                      const elapsedStr = elapsedMs < 60000
+                        ? `${Math.floor(elapsedMs / 1000)}秒`
+                        : elapsedMs < 3600000
+                          ? `${Math.floor(elapsedMs / 60000)}分${Math.floor((elapsedMs % 60000) / 1000)}秒`
+                          : `${Math.floor(elapsedMs / 3600000)}时${Math.floor((elapsedMs % 3600000) / 60000)}分`
+                      return (
+                        <div key={task.taskId} className="flex items-center gap-1.5 rounded-[var(--radius-xs)] px-1.5 py-1">
+                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-success)] animate-pulse-dot" />
+                          <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-[rgba(255,255,255,0.92)]">
+                            {task.description ?? task.workflowName ?? task.taskId}
+                          </span>
+                          <span className="shrink-0 text-[9px] text-[rgba(255,255,255,0.46)] tabular-nums">
+                            {elapsedStr}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (sessionId) stopGeneration(sessionId)
+                            }}
+                            className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[var(--radius-2xs)] text-[rgba(255,255,255,0.5)] transition-colors hover:bg-[rgba(255,255,255,0.06)] hover:text-[rgba(255,255,255,0.8)]"
+                            title="停止"
+                          >
+                            <span className="material-symbols-outlined text-[10px]">stop</span>
+                          </button>
+                        </div>
+                      )
+                    })}
+                </div>
+              </>
+            ) : null}
+
+            <div className="my-2 h-px rounded-full bg-[rgba(255,255,255,0.08)]" />
+
+            <div className="text-[10px] font-semibold text-[rgba(255,255,255,0.7)]">
               来源
             </div>
-            <div className="mt-4 space-y-2">
+            <div className="mt-1 space-y-px">
               {sources.length > 0 ? sources.map((reference) => (
                 <div
                   key={reference.id}
-                  className="rounded-[14px] bg-[rgba(255,255,255,0.03)] px-4 py-3"
+                  className="rounded-[var(--radius-xs)] bg-[rgba(255,255,255,0.03)] px-2 py-1.5"
                 >
-                  <div className="truncate text-[14px] font-medium text-[rgba(255,255,255,0.86)]">
+                  <div className="truncate text-[11px] font-medium text-[rgba(255,255,255,0.86)]">
                     {reference.name}
                   </div>
-                  <div className="mt-1 truncate text-[12px] text-[rgba(255,255,255,0.52)]">
+                  <div className="mt-0.5 truncate text-[9px] text-[rgba(255,255,255,0.52)]">
                     {formatReferenceLocation(reference.path, reference.lineStart, reference.lineEnd)}
                   </div>
                 </div>
               )) : (
-                <div className="text-[16px] font-medium text-[rgba(255,255,255,0.6)]">
+                <div className="text-[10px] font-medium text-[rgba(255,255,255,0.6)]">
                   暂无来源
                 </div>
               )}
               {sources.length < references.length ? (
-                <div className="text-[12px] text-[rgba(255,255,255,0.46)]">
+                <div className="text-[9px] text-[rgba(255,255,255,0.46)]">
                   还有 {references.length - sources.length} 项未显示
                 </div>
               ) : null}
               {workspaceStatus?.changedFiles.length ? (
-                <div className="pt-2">
-                  <div className="mb-2 text-[12px] text-[rgba(255,255,255,0.46)]">
+                <div className="pt-0.5">
+                  <div className="mb-0.5 text-[9px] text-[rgba(255,255,255,0.46)]">
                     最近变更
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-px">
                     {workspaceStatus.changedFiles.slice(0, 4).map((file) => (
                       <div
                         key={file.path}
-                        className="flex items-center gap-3 rounded-[12px] bg-[rgba(255,255,255,0.025)] px-3 py-2"
+                        className="flex items-center gap-1.5 rounded-[var(--radius-xs)] bg-[rgba(255,255,255,0.025)] px-2 py-1"
                       >
-                        <FolderGit2 size={16} className="shrink-0 text-[rgba(255,255,255,0.6)]" />
-                        <span className="min-w-0 flex-1 truncate text-[13px] text-[rgba(255,255,255,0.76)]">
+                        <FolderGit2 size={11} className="shrink-0 text-[rgba(255,255,255,0.6)]" />
+                        <span className="min-w-0 flex-1 truncate text-[10px] text-[rgba(255,255,255,0.76)]">
                           {getPathLeaf(file.path)}
                         </span>
-                        <span className="shrink-0 text-[12px] text-[rgba(255,255,255,0.52)] tabular-nums">
+                        <span className="shrink-0 text-[9px] text-[rgba(255,255,255,0.52)] tabular-nums">
                           +{file.additions} -{file.deletions}
                         </span>
                       </div>
@@ -419,6 +571,18 @@ export function OpenProjectMenu({
           </div>
         </div>,
         document.body,
+      ) : null}
+
+      {gitDialogOpen && sessionId && rect ? (
+        <GitActionsDialog
+          sessionId={sessionId}
+          anchorRect={rect}
+          onClose={() => setGitDialogOpen(false)}
+          branch={branchLabel}
+          changeCount={changeCount}
+          totalAdditions={totalAdditions}
+          totalDeletions={totalDeletions}
+        />
       ) : null}
     </div>
   )

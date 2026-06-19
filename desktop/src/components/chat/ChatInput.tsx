@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo, useLayoutEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from '../../i18n'
 import { useChatStore } from '../../stores/chatStore'
 import { SETTINGS_TAB_ID, useTabStore } from '../../stores/tabStore'
@@ -90,6 +91,7 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
   const [input, setInput] = useState('')
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [plusMenuOpen, setPlusMenuOpen] = useState(false)
+  const [plusMenuPos, setPlusMenuPos] = useState<{ bottom: number; left: number } | null>(null)
   const [slashMenuOpen, setSlashMenuOpen] = useState(false)
   const [fileSearchOpen, setFileSearchOpen] = useState(false)
   const [localSlashPanel, setLocalSlashPanel] = useState<LocalSlashCommandName | null>(null)
@@ -110,6 +112,8 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
   const panelRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const plusMenuRef = useRef<HTMLDivElement>(null)
+  const plusMenuBtnRef = useRef<HTMLButtonElement>(null)
+  const plusMenuPortalRef = useRef<HTMLDivElement>(null)
   const slashMenuRef = useRef<HTMLDivElement>(null)
   const fileSearchRef = useRef<FileSearchMenuHandle>(null)
   const slashItemRefs = useRef<(HTMLButtonElement | null)[]>([])
@@ -393,12 +397,28 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
     el.style.height = `${Math.min(el.scrollHeight, 200)}px`
   }, [input])
 
+  useLayoutEffect(() => {
+    if (!plusMenuOpen) {
+      setPlusMenuPos(null)
+      return
+    }
+    const anchor = plusMenuBtnRef.current
+    if (!anchor) return
+    const rect = anchor.getBoundingClientRect()
+    setPlusMenuPos({
+      bottom: window.innerHeight - rect.top + 8,
+      left: rect.left,
+    })
+  }, [plusMenuOpen])
+
   useEffect(() => {
     if (!plusMenuOpen) return
     const handleClick = (event: MouseEvent) => {
-      if (plusMenuRef.current && !plusMenuRef.current.contains(event.target as Node)) {
-        setPlusMenuOpen(false)
-      }
+      if (
+        plusMenuBtnRef.current?.contains(event.target as Node) ||
+        plusMenuPortalRef.current?.contains(event.target as Node)
+      ) return
+      setPlusMenuOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
@@ -965,10 +985,10 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
           ref={panelRef}
           data-testid="chat-input-panel"
           className={isHeroComposer
-            ? `glass-panel relative flex flex-col gap-3 overflow-visible ${embedLaunchControlsInHero ? 'rounded-[18px]' : 'rounded-t-[18px] rounded-b-none'} p-4 transition-colors ${isDragActive ? 'composer-drop-target-active' : ''}`
+            ? `glass-panel relative flex flex-col gap-3 overflow-visible ${embedLaunchControlsInHero ? 'rounded-[var(--radius-4xl)]' : 'rounded-t-[var(--radius-4xl)] rounded-b-none'} p-4 transition-colors ${isDragActive ? 'composer-drop-target-active' : ''}`
             : compact
-              ? `glass-panel relative overflow-visible p-3 transition-colors ${isMobileComposer ? 'rounded-2xl shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[16px]'} ${isDragActive ? 'composer-drop-target-active' : ''}`
-              : `glass-panel relative overflow-visible transition-colors ${isMobileComposer ? 'rounded-2xl p-3 shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[16px] pt-[24px] pb-4 px-4 -ml-[8px] w-[calc(100%+8px)]'} ${isDragActive ? 'composer-drop-target-active' : ''}`}
+              ? `glass-panel relative overflow-visible p-3 transition-colors ${isMobileComposer ? 'rounded-[var(--radius-2xl)] shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[var(--radius-3xl)]'} ${isDragActive ? 'composer-drop-target-active' : ''}`
+              : `glass-panel relative overflow-visible transition-colors ${isMobileComposer ? 'rounded-[var(--radius-2xl)] p-3 shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[var(--radius-3xl)] pt-[24px] pb-4 px-4 -ml-[8px] w-[calc(100%+8px)]'} ${isDragActive ? 'composer-drop-target-active' : ''}`}
           {...dragHandlers}
         >
           {isDragActive && (
@@ -1042,9 +1062,9 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
           )}
 
           {!isMemberSession && slashMenuOpen && filteredCommands.length > 0 && (
-            <div
+              <div
               ref={slashMenuRef}
-              className="sidebar-codex-menu absolute bottom-full left-0 right-0 z-50 mb-2 overflow-hidden rounded-[18px] border border-[var(--color-border)] p-1.5 shadow-[var(--shadow-dropdown)]"
+              className="composer-top-tray-panel absolute bottom-full left-0 right-0 z-50 mb-2 overflow-hidden p-1.5 shadow-[var(--shadow-dropdown)]"
             >
               <div className="max-h-[300px] overflow-y-auto">
                 {filteredCommands.map((command, index) => (
@@ -1053,21 +1073,21 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
                     ref={(el) => { slashItemRefs.current[index] = el }}
                     onClick={() => selectSlashCommand(command.name)}
                     onMouseEnter={() => setSlashSelectedIndex(index)}
-                    className={`sidebar-codex-menu-item items-center gap-2.5 rounded-[12px] px-3 py-2 ${
+                    className={`sidebar-codex-menu-item items-center gap-2.5 rounded-[var(--radius-md)] px-3 py-2 ${
                       index === slashSelectedIndex ? 'bg-white/[0.085]' : ''
                     }`}
                   >
                     <span className="flex min-w-0 max-w-[52%] shrink-0 items-baseline gap-1.5">
-                      <span className="shrink-0 text-[13px] font-semibold text-[var(--color-text-primary)]">
-                        /{command.name}
-                      </span>
-                      {command.argumentHint ? (
-                        <span className="min-w-0 truncate font-mono text-[11px] text-[var(--color-text-tertiary)]">
-                          {command.argumentHint}
-                        </span>
-                      ) : null}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate text-[12px] text-[var(--color-text-tertiary)]">
+                      <span className="shrink-0 text-[13px] font-semibold text-[var(--color-token-foreground)]">
+	                        /{command.name}
+	                      </span>
+	                      {command.argumentHint ? (
+	                        <span className="min-w-0 truncate font-mono text-[11px] text-[var(--color-token-text-secondary)]">
+	                          {command.argumentHint}
+	                        </span>
+	                      ) : null}
+	                    </span>
+	                    <span className="min-w-0 flex-1 truncate text-[12px] text-[var(--color-token-text-secondary)]">
                       {command.description}
                     </span>
                   </button>
@@ -1076,12 +1096,12 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
               {!isMobileComposer ? (
                 <>
                   <div className="sidebar-codex-menu-divider" />
-                  <div className="flex items-center gap-1.5 px-2 py-1.5 text-[11px] text-[var(--color-text-tertiary)]">
-                  <kbd className="rounded border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-1.5 py-0.5 font-mono text-[10px]">Up/Down</kbd>
-                  <span>{t('chat.navigate')}</span>
-                  <kbd className="ml-2 rounded border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-1.5 py-0.5 font-mono text-[10px]">Enter</kbd>
-                  <span>{t('chat.select')}</span>
-                  <kbd className="ml-2 rounded border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-1.5 py-0.5 font-mono text-[10px]">Esc</kbd>
+                  <div className="flex items-center gap-1.5 px-2 py-1.5 text-[11px] text-[var(--color-token-text-secondary)]">
+	                  <kbd className="rounded border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-1.5 py-0.5 font-mono text-[10px]">Up/Down</kbd>
+	                  <span>{t('chat.navigate')}</span>
+	                  <kbd className="ml-2 rounded border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-1.5 py-0.5 font-mono text-[10px]">Enter</kbd>
+	                  <span>{t('chat.select')}</span>
+	                  <kbd className="ml-2 rounded border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-1.5 py-0.5 font-mono text-[10px]">Esc</kbd>
                     <span>{t('chat.dismiss')}</span>
                   </div>
                 </>
@@ -1093,7 +1113,7 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
             <div
               data-testid="pending-user-message-list"
               className={[
-                'overflow-hidden border-b border-[var(--color-border-separator)]',
+	                'overflow-hidden border-b border-[var(--color-token-border)]',
                 isHeroComposer ? '-mx-4 -mt-4' : useCompactControls ? '-mx-3 -mt-3' : '-mx-4 -mt-4',
               ].join(' ')}
             >
@@ -1105,11 +1125,11 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
                     data-testid="pending-user-message"
                     className={[
                       'flex min-w-0 items-center gap-2 px-3 py-2 text-xs',
-                      'border-t border-[var(--color-border-separator)] first:border-t-0',
-                      'bg-[var(--color-surface-container-lowest)]/70 text-[var(--color-text-secondary)]',
+	                    'border-t border-[var(--color-token-border)] first:border-t-0',
+	                    'bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))]/70 text-[var(--color-token-text-secondary)]',
                     ].join(' ')}
                   >
-                    <span className="material-symbols-outlined shrink-0 text-[16px] text-[var(--color-text-tertiary)]" aria-hidden="true">
+	                    <span className="material-symbols-outlined icon-sm shrink-0 text-[var(--color-token-text-secondary)]" aria-hidden="true">
                       subdirectory_arrow_right
                     </span>
                     {isEditing ? (
@@ -1128,21 +1148,21 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
                             }
                           }}
                           aria-label={t('chat.pendingMessageEditInput')}
-                          className="min-w-0 flex-1 rounded-[6px] border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 text-xs text-[var(--color-text-primary)] outline-none focus:border-[var(--color-border-focus)]"
+                          className="min-w-0 flex-1 rounded-[var(--radius-2xs)] border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-2 py-1 text-xs text-[var(--color-token-foreground)] outline-none focus:border-[var(--color-token-focus-border,var(--color-border-focus))]"
                           autoFocus
                         />
                         <button
                           type="button"
                           onClick={saveQueuedMessageEdit}
                           disabled={!editingQueuedMessageText.trim()}
-                          className="shrink-0 rounded-[6px] px-2 py-1 font-semibold text-[var(--color-brand)] hover:bg-[var(--color-surface-hover)] disabled:opacity-40"
+                          className="shrink-0 rounded-[var(--radius-2xs)] px-2 py-1 font-semibold text-[var(--color-brand)] hover:bg-[var(--color-surface-hover)] disabled:opacity-40"
                         >
                           {t('common.save')}
                         </button>
                         <button
                           type="button"
                           onClick={cancelQueuedMessageEdit}
-                          className="shrink-0 rounded-[6px] px-2 py-1 font-medium text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface-hover)]"
+                          className="shrink-0 rounded-[var(--radius-2xs)] px-2 py-1 font-medium text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)]"
                         >
                           {t('common.cancel')}
                         </button>
@@ -1157,7 +1177,7 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
                           onClick={() => sendQueuedUserMessage(activeTabId, message.id)}
                           aria-label={t('chat.pendingMessageGuideNow')}
                           title={t('chat.pendingMessageGuideNow')}
-                          className="inline-flex h-7 shrink-0 items-center gap-1 rounded-[6px] px-2 font-semibold text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
+                          className="inline-flex h-7 shrink-0 items-center gap-1 rounded-[var(--radius-2xs)] px-2 font-semibold text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]"
                         >
                           <span className="material-symbols-outlined text-[15px]" aria-hidden="true">subdirectory_arrow_right</span>
                           <span>{t('chat.pendingMessageGuide')}</span>
@@ -1167,7 +1187,7 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
                           onClick={() => startEditingQueuedMessage(message.id, message.displayContent)}
                           aria-label={t('chat.pendingMessageEdit')}
                           title={t('chat.pendingMessageEdit')}
-                          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
+                          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-2xs)] text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]"
                         >
                           <span className="material-symbols-outlined text-[15px]" aria-hidden="true">edit</span>
                         </button>
@@ -1176,7 +1196,7 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
                           onClick={() => removeQueuedUserMessage(activeTabId, message.id)}
                           aria-label={t('chat.pendingMessageDelete')}
                           title={t('chat.pendingMessageDelete')}
-                          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-error)]"
+                          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-2xs)] text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-error)]"
                         >
                           <span className="material-symbols-outlined text-[15px]" aria-hidden="true">delete</span>
                         </button>
@@ -1190,9 +1210,11 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
 
           {composerAttachments.length > 0 && (
             isHeroComposer ? (
-              <AttachmentGallery attachments={composerAttachments} variant="composer" onRemove={removeAttachment} />
+              <div className="composer-attachments-area">
+                <AttachmentGallery attachments={composerAttachments} variant="composer" onRemove={removeAttachment} />
+              </div>
             ) : (
-              <div className="px-3 pt-3">
+              <div className="composer-attachments-area px-1 pt-1">
                 <AttachmentGallery attachments={composerAttachments} variant="composer" onRemove={removeAttachment} />
               </div>
             )
@@ -1212,7 +1234,7 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
                   placeholder={composerPlaceholder}
                   disabled={isWorkspaceMissing}
                   rows={2}
-                  className="flex-1 resize-none border-none bg-transparent py-2 leading-7 text-[15px] text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-tertiary)] disabled:opacity-50"
+                  className="flex-1 resize-none border-none bg-transparent py-2 leading-7 text-[15px] text-[var(--color-token-foreground)] outline-none placeholder:text-[var(--color-token-input-placeholder-foreground)] disabled:opacity-50"
                 />
               </div>
               {!input.trim() && composerAttachments.length === 0 && !embedLaunchControlsInHero ? (
@@ -1220,7 +1242,7 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
                   {heroHintLabels.map((label) => (
                     <span
                       key={label}
-                      className="inline-flex items-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface-container-low)]/85 px-2.5 py-1 text-[11px] font-medium text-[var(--color-text-secondary)]"
+                      className="inline-flex items-center rounded-full border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-2.5 py-1 text-[11px] font-medium text-[var(--color-token-text-secondary)]"
                     >
                       {label}
                     </span>
@@ -1240,46 +1262,52 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
               placeholder={composerPlaceholder}
               disabled={isWorkspaceMissing}
               rows={1}
-              className={`w-full resize-none bg-transparent text-[15px] leading-7 text-[var(--color-text-primary)] outline-none placeholder:text-[#8c8c8c] disabled:opacity-50 ${
+              className={`w-full resize-none bg-transparent text-[15px] leading-7 text-[var(--color-token-foreground)] outline-none placeholder:text-[var(--color-token-input-placeholder-foreground)] disabled:opacity-50 ${
                 useCompactControls ? 'py-1.5' : 'py-2'
               }`}
             />
           )}
 
-          <div data-testid="chat-input-toolbar" className={isHeroComposer
+          <div data-testid="chat-input-toolbar" className={`composer-footer ${isHeroComposer
             ? 'flex items-center justify-between pt-3'
             : `mt-2 flex items-center justify-between ${
               useCompactControls ? '-mx-3 -mb-3 gap-2 px-2.5 py-2' : '-mx-4 -mb-4 px-3 py-3'
-            }`}>
+            }`}`}>
             <div className="flex min-w-0 items-center gap-2">
               {!isMemberSession && (
                 <>
                   <div ref={plusMenuRef} className="relative">
                     <button
+                      ref={plusMenuBtnRef}
                       onClick={() => setPlusMenuOpen((value) => !value)}
                       aria-label="Open composer tools"
-                      className={`text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] ${isMobileComposer ? 'inline-flex h-11 w-11 items-center justify-center rounded-xl' : 'rounded-[10px] p-1.5'}`}
+                      className={`text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] ${isMobileComposer ? 'inline-flex h-11 w-11 items-center justify-center rounded-xl' : 'rounded-[var(--radius-sm)] p-1.5'}`}
                     >
-                      <span className="material-symbols-outlined text-[18px]">add</span>
+                      <span className="material-symbols-outlined icon-md">add</span>
                     </button>
 
-                    {plusMenuOpen && (
-                      <div className={`sidebar-codex-menu absolute bottom-full left-0 z-50 mb-2 rounded-[18px] border border-[var(--color-border)] p-1.5 shadow-[var(--shadow-dropdown)] ${isMobileComposer ? 'w-[min(240px,calc(100vw-32px))]' : 'w-[240px]'}`}>
+                    {plusMenuOpen && plusMenuPos && createPortal(
+                      <div
+                        ref={plusMenuPortalRef}
+                        className="glass-panel fixed z-[80] w-[240px] overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)]"
+                        style={{ bottom: plusMenuPos.bottom, left: plusMenuPos.left }}
+                      >
                         <button
-                          onClick={openAttachmentPicker}
-                          className="sidebar-codex-menu-item rounded-[12px]"
+                          onClick={() => { openAttachmentPicker(); setPlusMenuOpen(false) }}
+                          className="sidebar-codex-menu-item w-full rounded-[var(--radius-md)]"
                         >
-                          <span className="material-symbols-outlined text-[18px] text-[var(--color-text-secondary)]">attach_file</span>
-                          <span className="text-sm text-[var(--color-text-primary)]">{addFilesLabel}</span>
+                          <span className="material-symbols-outlined icon-md text-[var(--color-token-text-secondary)]">attach_file</span>
+                          <span className="text-sm text-[var(--color-token-foreground)]">{addFilesLabel}</span>
                         </button>
                         <button
-                          onClick={insertSlashCommand}
-                          className="sidebar-codex-menu-item rounded-[12px]"
+                          onClick={() => { insertSlashCommand(); setPlusMenuOpen(false) }}
+                          className="sidebar-codex-menu-item w-full rounded-[var(--radius-md)]"
                         >
-                          <span className="w-[24px] text-center text-[18px] font-bold text-[var(--color-text-secondary)]">/</span>
-                          <span className="text-sm text-[var(--color-text-primary)]">{slashCommandsLabel}</span>
+                          <span className="w-[24px] text-center text-[18px] font-bold text-[var(--color-token-text-secondary)]">/</span>
+                          <span className="text-sm text-[var(--color-token-foreground)]">{slashCommandsLabel}</span>
                         </button>
-                      </div>
+                      </div>,
+                      document.body,
                     )}
                   </div>
 
@@ -1317,14 +1345,14 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
                       : undefined
                 }
                 className={`flex shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-all hover:scale-[1.04] disabled:opacity-35 ${
-                  isMobileComposer ? 'h-11 w-11' : 'h-10 w-10'
+                  isMobileComposer ? 'h-12 w-12' : 'h-11 w-11'
                 } ${
                   !isMemberSession && isActive
-                    ? 'bg-[#ff8a4c] text-[#161616] hover:bg-[#ff9b66]'
-                    : 'bg-[#a7a7a7] text-[#171717] hover:bg-[#b7b7b7]'
+                    ? 'bg-[var(--color-brand)] text-[var(--color-token-main-surface-primary)] hover:brightness-110'
+                    : 'bg-[var(--color-token-input-placeholder-foreground)] text-[var(--color-token-main-surface-primary)] hover:brightness-110'
                 }`}
               >
-                <span className="material-symbols-outlined text-[14px]">
+                <span className="material-symbols-outlined icon-sm">
                   {!isMemberSession && isActive ? 'stop' : 'arrow_upward'}
                 </span>
               </button>

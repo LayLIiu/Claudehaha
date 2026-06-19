@@ -59,6 +59,10 @@ async function handleGetNetworkInfo(): Promise<Response> {
 }
 
 async function handleCreatePairingCode(req: Request): Promise<Response> {
+  // Only local (desktop) requests can generate pairing codes — remote clients must
+  // have the user generate a code from the desktop UI.  When iOS auto-pairs, it
+  // calls this from the LAN, which is allowed as a convenience (the user already
+  // knows the desktop IP).  If stricter security is needed, add a desktop-only flag.
   let body: { ttlHours?: number } = {}
   try {
     body = await req.json()
@@ -119,8 +123,11 @@ async function handlePair(req: Request): Promise<Response> {
   }
 
   await managedSettingsService.updateSettings(async (current) => ({
-    ...current,
-    h5Access: nextSettings,
+    settings: {
+      ...current,
+      h5Access: nextSettings,
+    },
+    result: undefined as void,
   }))
 
   return Response.json({ ok: true, token })

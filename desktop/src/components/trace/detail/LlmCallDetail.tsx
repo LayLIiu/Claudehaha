@@ -109,11 +109,11 @@ export function LlmCallDetail({ sessionId, span }: { sessionId: string; span: Tr
             <CopyButton
               text={parsed.request.system}
               copiedLabel={t('common.copied')}
-              className="rounded-[var(--radius-sm)] border border-[var(--color-border)] px-1.5 py-0.5 text-[10px] text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-text-primary)]"
+              className="rounded-[var(--radius-sm)] border border-[var(--color-token-border)] px-1.5 py-0.5 text-[10px] text-[var(--color-token-text-secondary)] transition-colors hover:text-[var(--color-token-foreground)]"
             />
           }
         >
-          <pre className="max-h-[400px] overflow-y-auto whitespace-pre-wrap break-words text-[11px] leading-5 text-[var(--color-text-secondary)]">
+          <pre className="max-h-[400px] overflow-y-auto whitespace-pre-wrap break-words text-[11px] leading-5 text-[var(--color-token-text-secondary)]">
             {parsed.request.system}
           </pre>
         </Section>
@@ -178,18 +178,18 @@ function ResponseContent({
             </span>
           ) : null}
         </div>
-        <div className="mt-1 text-xs leading-5 text-[var(--color-text-secondary)]">{call.error.message}</div>
+        <div className="mt-1 text-xs leading-5 text-[var(--color-token-text-secondary)]">{call.error.message}</div>
         {aborted ? (
-          <div className="mt-1 text-[11px] leading-4 text-[var(--color-text-tertiary)]">
+          <div className="mt-1 text-[11px] leading-4 text-[var(--color-token-text-secondary)]">
             {t('trace.detail.aborted')}
           </div>
         ) : null}
         {call.error.stack ? (
           <details className="mt-1.5">
-            <summary className="cursor-pointer text-[10px] uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">
+            <summary className="cursor-pointer text-[10px] uppercase tracking-[0.08em] text-[var(--color-token-text-secondary)]">
               stack
             </summary>
-            <pre className="mt-1 max-h-[240px] overflow-y-auto whitespace-pre-wrap break-words font-mono text-[10px] leading-4 text-[var(--color-text-tertiary)]">
+            <pre className="mt-1 max-h-[240px] overflow-y-auto whitespace-pre-wrap break-words font-mono text-[10px] leading-4 text-[var(--color-token-text-secondary)]">
               {call.error.stack}
             </pre>
           </details>
@@ -199,7 +199,7 @@ function ResponseContent({
   }
   if (pending) {
     return (
-      <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] px-3 py-3 text-xs text-[var(--color-text-tertiary)]">
+      <div className="flex items-center gap-2 rounded-[var(--radius-md)] border border-dashed border-[var(--color-token-border)] px-3 py-3 text-xs text-[var(--color-token-text-secondary)]">
         <Loader2 size={13} strokeWidth={2} className="animate-spin" />
         {t('trace.detail.streaming')}
       </div>
@@ -207,7 +207,7 @@ function ResponseContent({
   }
   if (!parsedMessage) {
     return (
-      <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] px-3 py-3 text-xs text-[var(--color-text-tertiary)]">
+      <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-token-border)] px-3 py-3 text-xs text-[var(--color-token-text-secondary)]">
         {call.response ? t('trace.detail.legacyTruncated') : t('trace.noResponse')}
       </div>
     )
@@ -243,7 +243,7 @@ function MessageList({ messages }: { messages: NormalizedMessage[] }) {
       <button
         type="button"
         onClick={() => setShowAll(true)}
-        className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] px-3 py-1.5 text-[11px] text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-text-primary)] active:scale-[0.98]"
+        className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-token-border)] px-3 py-1.5 text-[11px] text-[var(--color-token-text-secondary)] transition-colors hover:text-[var(--color-token-foreground)] active:scale-[0.98]"
       >
         {t('trace.detail.earlierMessages', { count: hiddenCount })}
       </button>
@@ -267,8 +267,8 @@ function ToolDefinitions({ tools }: { tools: Array<{ name: string; description?:
             {...(tool.description ? { title: tool.description } : {})}
             className={`rounded-[var(--radius-sm)] border px-1.5 py-0.5 font-mono text-[10px] transition-colors ${
               expanded === tool.name
-                ? 'border-[var(--color-border-focus)] text-[var(--color-text-primary)]'
-                : 'border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
+                ? 'border-[var(--color-token-focus-border,var(--color-border-focus))] text-[var(--color-token-foreground)]'
+                : 'border-[var(--color-token-border)] text-[var(--color-token-text-secondary)] hover:text-[var(--color-token-foreground)]'
             }`}
           >
             {tool.name}
@@ -278,7 +278,7 @@ function ToolDefinitions({ tools }: { tools: Array<{ name: string; description?:
       {active ? (
         <div className="mt-2">
           {active.description ? (
-            <p className="mb-1.5 text-[11px] leading-5 text-[var(--color-text-secondary)]">{active.description}</p>
+            <p className="mb-1.5 text-[11px] leading-5 text-[var(--color-token-text-secondary)]">{active.description}</p>
           ) : null}
           <CodeViewer code={formatTraceJson(active.schema ?? null)} language="json" maxLines={24} showLineNumbers />
         </div>
@@ -290,8 +290,8 @@ function ToolDefinitions({ tools }: { tools: Array<{ name: string; description?:
 function ParamRow({ name, value }: { name: string; value: unknown }) {
   return (
     <>
-      <dt className="font-mono text-[var(--color-text-tertiary)]">{name}</dt>
-      <dd className="min-w-0 truncate font-mono text-[var(--color-text-secondary)]" title={stringifyParam(value)}>
+      <dt className="font-mono text-[var(--color-token-text-secondary)]">{name}</dt>
+      <dd className="min-w-0 truncate font-mono text-[var(--color-token-text-secondary)]" title={stringifyParam(value)}>
         {stringifyParam(value)}
       </dd>
     </>
@@ -329,15 +329,15 @@ function RawBody({ title, body, maxLines }: { title: string; body: TraceBodySnap
   return (
     <div>
       <div className="mb-1 flex items-center justify-between gap-2">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">{title}</span>
-        <span className="font-mono text-[10px] text-[var(--color-text-tertiary)]">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--color-token-text-secondary)]">{title}</span>
+        <span className="font-mono text-[10px] text-[var(--color-token-text-secondary)]">
           {formatBytes(body.bytes)}{body.truncated ? ` · ${t('trace.truncatedShort')}` : ''}
         </span>
       </div>
       {code ? (
         <CodeViewer code={code} language={body.contentType === 'json' ? 'json' : 'text'} maxLines={maxLines} showLineNumbers={body.contentType === 'json'} />
       ) : (
-        <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] px-3 py-2 text-[11px] text-[var(--color-text-tertiary)]">
+        <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--color-token-border)] px-3 py-2 text-[11px] text-[var(--color-token-text-secondary)]">
           {t('trace.noData')}
         </div>
       )}
@@ -348,7 +348,7 @@ function RawBody({ title, body, maxLines }: { title: string; body: TraceBodySnap
 function RawHeaders({ title, headers }: { title: string; headers: Record<string, string> }) {
   return (
     <div>
-      <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">{title}</div>
+      <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--color-token-text-secondary)]">{title}</div>
       <CodeViewer code={formatTraceJson(headers)} language="json" maxLines={20} showLineNumbers />
     </div>
   )
@@ -356,7 +356,7 @@ function RawHeaders({ title, headers }: { title: string; headers: Record<string,
 
 function NoticeBar({ text }: { text: string }) {
   return (
-    <div className="mx-4 mt-3 rounded-[var(--radius-md)] border border-[var(--color-warning)]/30 bg-[var(--color-warning-container)]/30 px-3 py-1.5 text-[11px] text-[var(--color-text-secondary)]">
+    <div className="mx-4 mt-3 rounded-[var(--radius-md)] border border-[var(--color-warning)]/30 bg-[var(--color-warning-container)]/30 px-3 py-1.5 text-[11px] text-[var(--color-token-text-secondary)]">
       {text}
     </div>
   )

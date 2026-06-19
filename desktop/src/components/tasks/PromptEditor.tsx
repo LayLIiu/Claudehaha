@@ -34,14 +34,14 @@ export function PromptEditor({
 }: Props) {
   const t = useTranslation()
   return (
-    <div className="glass-panel rounded-[14px] focus-within:border-[rgba(255,255,255,0.16)] transition-colors overflow-visible">
+    <div className="glass-panel rounded-[var(--radius-xl)] focus-within:border-[rgba(255,255,255,0.16)] transition-colors overflow-visible">
       {/* Prompt textarea */}
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         rows={4}
-        className="w-full resize-y bg-transparent px-3 py-2.5 text-sm leading-relaxed text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-tertiary)]"
+        className="w-full resize-y bg-transparent px-3 py-2.5 text-sm leading-relaxed text-[var(--color-token-foreground)] outline-none placeholder:text-[var(--color-token-text-secondary)]"
         style={{ minHeight: 120 }}
       />
 
@@ -50,7 +50,7 @@ export function PromptEditor({
         {/* Row 1: Permission + Model selectors */}
         <div className="flex items-center justify-between">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-error)]/8 px-2.5 py-1.5 text-xs font-medium text-[var(--color-error)]">
-            <span className="material-symbols-outlined text-[14px]">gavel</span>
+            <span className="material-symbols-outlined icon-xs">gavel</span>
             {t('newTask.fullPermissions')}
           </div>
           <ModelSelector
@@ -68,7 +68,7 @@ export function PromptEditor({
         </div>
 
         <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-[var(--color-error)]/8 text-[10px] text-[var(--color-error)]">
-          <span className="material-symbols-outlined text-[12px]">warning</span>
+          <span className="material-symbols-outlined icon-2xs">warning</span>
           {t('promptEditor.bypassWarning')}{folderPath ? ` ${t('promptEditor.within')} ${folderPath}` : ` ${t('promptEditor.selectFolder')}`}.
         </div>
       </div>

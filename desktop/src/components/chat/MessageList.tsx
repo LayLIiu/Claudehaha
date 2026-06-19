@@ -1,6 +1,6 @@
 import { useRef, useEffect, useMemo, memo, useState, useCallback, useDeferredValue, useLayoutEffect, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowDown, BookMarked, Bot, CheckCircle2, ChevronDown, ChevronRight, CircleStop, FileStack, LoaderCircle, MessageCircle, Settings, Target, XCircle } from 'lucide-react'
+import { ArrowDown, BookMarked, Bot, CheckCircle2, ChevronDown, ChevronRight, CircleStop, FileStack, FolderSearch, Globe, LoaderCircle, MessageCircle, Settings, Target, XCircle } from 'lucide-react'
 import { ApiError } from '../../api/client'
 import { sessionsApi, type SessionTurnCheckpoint } from '../../api/sessions'
 import { useChatStore } from '../../stores/chatStore'
@@ -15,10 +15,11 @@ import { UserMessage } from './UserMessage'
 import { AssistantMessage } from './AssistantMessage'
 import { ThinkingBlock } from './ThinkingBlock'
 import { ToolCallBlock } from './ToolCallBlock'
-import { ToolCallGroup } from './ToolCallGroup'
+import { ToolCallGroup, hasUnresolvedToolCalls, generateToolActivitySummary } from './ToolCallGroup'
+import { Collapse } from './Collapse'
 import { ToolResultBlock } from './ToolResultBlock'
 import { AskUserQuestion } from './AskUserQuestion'
-import { StreamingIndicator } from './StreamingIndicator'
+import { StreamingIndicator, CadencedShimmerText } from './StreamingIndicator'
 import { InlineTaskSummary } from './InlineTaskSummary'
 import { CurrentTurnChangeCard } from './CurrentTurnChangeCard'
 import type { AgentTaskNotification, UIMessage } from '../../types/chat'
@@ -65,7 +66,22 @@ type RenderItem =
   | { kind: 'tool_group'; toolCalls: ToolCall[]; id: string }
   | { kind: 'tool_burst'; burst: ToolBurstGroup; id: string }
   | { kind: 'turn_process'; group: TurnProcessGroup; id: string }
+  | { kind: 'web_search_group'; toolCalls: ToolCall[]; id: string }
+  | { kind: 'exploration_group'; toolCalls: ToolCall[]; id: string }
   | { kind: 'message'; message: UIMessage }
+
+/** A contiguous "turn" slice: items from one user_text boundary to the next.
+ *  Mirrors Codex's turn-based rendering with data-virtualized-turn-content. */
+type TurnGroup = {
+  /** Unique key derived from the first item's key (user message id or similar). */
+  key: string
+  /** The render item indices that belong to this turn. */
+  itemIndices: number[]
+  /** True if this turn contains a final assistant_text item. */
+  hasFinalAssistant: boolean
+  /** True if this is the last turn group in the transcript. */
+  isLast: boolean
+}
 
 type RenderModel = {
   renderItems: RenderItem[]
@@ -173,10 +189,10 @@ function ChatSelectionMenu({
       type="button"
       onMouseDown={(event) => event.preventDefault()}
       onClick={onAdd}
-      className="fixed z-50 inline-flex h-11 items-center gap-2 rounded-full border border-[var(--color-border)]/70 bg-[var(--color-surface-container-lowest)] px-5 text-[15px] font-semibold text-[var(--color-text-primary)] shadow-[0_10px_28px_rgba(15,23,42,0.14),0_2px_8px_rgba(15,23,42,0.08)] transition-colors hover:bg-[var(--color-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
+      className="fixed z-50 inline-flex h-11 items-center gap-2 rounded-full border border-[var(--color-token-border)]/70 bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-5 text-[15px] font-semibold text-[var(--color-token-foreground)] shadow-[0_10px_28px_rgba(15,23,42,0.14),0_2px_8px_rgba(15,23,42,0.08)] transition-colors hover:bg-[var(--color-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
       style={{ left: selection.x, top: selection.y }}
     >
-      <MessageCircle size={21} strokeWidth={2.15} className="shrink-0 text-[var(--color-text-primary)]" aria-hidden="true" />
+      <MessageCircle size={21} strokeWidth={2.15} className="shrink-0 text-[var(--color-token-foreground)]" aria-hidden="true" />
       <span>{t('chat.addSelectionToChat')}</span>
     </button>,
     document.body,
@@ -221,28 +237,28 @@ function CompactStatusDivider({ message, state }: { message?: CompactSummaryEven
           aria-expanded={hasDetails ? expanded : undefined}
           onClick={() => hasDetails && setExpanded((value) => !value)}
           disabled={!hasDetails}
-          className="group inline-flex min-h-8 max-w-[min(78vw,520px)] items-center gap-2 rounded-full border border-[var(--color-border)]/55 bg-[var(--color-surface-container-low)]/54 px-3 py-1.5 text-[12px] font-semibold text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-text-primary)] disabled:cursor-default disabled:hover:text-[var(--color-text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/30"
+          className="group inline-flex min-h-8 max-w-[min(78vw,520px)] items-center gap-2 rounded-full border border-[var(--color-token-border)]/55 bg-[var(--color-surface-container-low)]/54 px-3 py-1.5 text-[12px] font-semibold text-[var(--color-token-text-secondary)] transition-colors hover:text-[var(--color-token-foreground)] disabled:cursor-default disabled:hover:text-[var(--color-token-text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/30"
         >
           {state === 'compacting' ? (
-            <LoaderCircle size={16} strokeWidth={2.1} className="shrink-0 animate-spin text-[var(--color-text-tertiary)]" aria-hidden="true" />
+            <LoaderCircle size={16} strokeWidth={2.1} className="shrink-0 animate-spin text-[var(--color-token-text-secondary)]" aria-hidden="true" />
           ) : (
-            <FileStack size={16} strokeWidth={2.05} className="shrink-0 text-[var(--color-text-tertiary)]" aria-hidden="true" />
+            <FileStack size={16} strokeWidth={2.05} className="shrink-0 text-[var(--color-token-text-secondary)]" aria-hidden="true" />
           )}
-          <span className="min-w-0 truncate font-medium text-[var(--color-text-primary)]">
+          <span className="min-w-0 truncate font-medium text-[var(--color-token-foreground)]">
             {title}
           </span>
         </button>
         <div className="h-px flex-1 bg-[color-mix(in_srgb,var(--color-border)_92%,transparent)]" aria-hidden="true" />
       </div>
       {hasDetails && expanded && (
-        <div className="mx-auto mt-2 w-full max-w-[620px] rounded-[16px] border border-[var(--color-border)]/60 bg-[var(--color-surface-container-lowest)] px-3.5 py-2.5 shadow-[0_10px_26px_rgba(0,0,0,0.08)]">
+        <div className="mx-auto mt-2 w-full max-w-[620px] rounded-[var(--radius-xl)] border border-[var(--color-token-border)]/60 bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3.5 py-2.5 shadow-[0_10px_26px_rgba(0,0,0,0.08)]">
           {meta.length > 0 && (
-            <div className="mb-1.5 flex flex-wrap gap-x-2 gap-y-1 text-[11px] font-medium text-[var(--color-text-tertiary)]">
+            <div className="mb-1.5 flex flex-wrap gap-x-2 gap-y-1 text-[11px] font-medium text-[var(--color-token-text-secondary)]">
               {meta.map((item) => <span key={item}>{item}</span>)}
             </div>
           )}
           {message?.summary && (
-            <div className="max-h-[220px] overflow-auto whitespace-pre-wrap break-words text-[12px] leading-5 text-[var(--color-text-secondary)]">
+            <div className="max-h-[220px] overflow-auto whitespace-pre-wrap break-words text-[12px] leading-5 text-[var(--color-token-text-secondary)]">
               {message.summary}
             </div>
           )}
@@ -267,7 +283,7 @@ function GoalEventCard({ message }: { message: GoalEvent }) {
     <div className="mb-2">
       <div
         data-testid="goal-event-card"
-        className="overflow-hidden rounded-[16px] border border-[var(--color-memory-border)] bg-[var(--color-memory-surface)] shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
+        className="overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-memory-border)] bg-[var(--color-memory-surface)] shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
       >
         <button
           type="button"
@@ -275,16 +291,16 @@ function GoalEventCard({ message }: { message: GoalEvent }) {
           className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-[var(--color-surface-hover)]/50"
         >
           {expanded ? (
-            <ChevronDown size={15} className="shrink-0 text-[var(--color-text-tertiary)]" aria-hidden="true" />
+            <ChevronDown size={15} className="shrink-0 text-[var(--color-token-text-secondary)]" aria-hidden="true" />
           ) : (
-            <ChevronRight size={15} className="shrink-0 text-[var(--color-text-tertiary)]" aria-hidden="true" />
+            <ChevronRight size={15} className="shrink-0 text-[var(--color-token-text-secondary)]" aria-hidden="true" />
           )}
           <Target size={15} className="shrink-0 text-[var(--color-memory-accent)]" strokeWidth={2.25} aria-hidden="true" />
-          <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-[var(--color-text-primary)]">
+          <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-[var(--color-token-foreground)]">
             {title}
           </span>
           {message.status ? (
-            <span className="inline-flex shrink-0 items-center gap-1 text-[12px] text-[var(--color-text-tertiary)]">
+            <span className="inline-flex shrink-0 items-center gap-1 text-[12px] text-[var(--color-token-text-secondary)]">
               <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-memory-accent)]" aria-hidden="true" />
               {message.status}
             </span>
@@ -292,14 +308,14 @@ function GoalEventCard({ message }: { message: GoalEvent }) {
         </button>
 
         {expanded ? (
-          <div className="border-t border-[var(--color-border)]/55 px-3.5 py-3">
+          <div className="border-t border-[var(--color-token-border)]/55 px-3.5 py-3">
             <div className="space-y-1.5">
               {message.objective ? (
-                <div className="line-clamp-2 rounded-md px-2 py-1 text-[12px] leading-5 text-[var(--color-text-secondary)]">
+                <div className="line-clamp-2 rounded-md px-2 py-1 text-[12px] leading-5 text-[var(--color-token-text-secondary)]">
                   {t('chat.goalEvent.objective', { value: message.objective })}
                 </div>
               ) : message.message ? (
-                <div className="whitespace-pre-wrap rounded-md px-2 py-1 text-[12px] leading-5 text-[var(--color-text-secondary)]">
+                <div className="whitespace-pre-wrap rounded-md px-2 py-1 text-[12px] leading-5 text-[var(--color-token-text-secondary)]">
                   {message.message}
                 </div>
               ) : null}
@@ -308,7 +324,7 @@ function GoalEventCard({ message }: { message: GoalEvent }) {
                   {metaDetails.map((detail) => (
                     <span
                       key={detail}
-                      className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-1.5 py-0.5 text-[11px] font-medium text-[var(--color-text-secondary)]"
+                      className="rounded-[var(--radius-sm)] border border-[var(--color-token-border)] bg-[var(--color-surface)] px-1.5 py-0.5 text-[11px] font-medium text-[var(--color-token-text-secondary)]"
                     >
                       {detail}
                     </span>
@@ -346,7 +362,7 @@ function BackgroundTaskEventCard({ message }: { message: BackgroundTaskEvent }) 
       <div
         data-testid="background-task-event-card"
         data-status={task.status}
-        className="flex min-w-0 items-start gap-2 rounded-[16px] border border-[var(--color-border)]/70 bg-[var(--color-surface-container-low)] px-3.5 py-2.5 shadow-[0_8px_22px_rgba(0,0,0,0.06)]"
+        className="flex min-w-0 items-start gap-2 rounded-[var(--radius-xl)] border border-[var(--color-token-border)]/70 bg-[var(--color-surface-container-low)] px-3.5 py-2.5 shadow-[0_8px_22px_rgba(0,0,0,0.06)]"
       >
         <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center">
           {isRunning ? (
@@ -354,32 +370,32 @@ function BackgroundTaskEventCard({ message }: { message: BackgroundTaskEvent }) 
           ) : isFailed ? (
             <XCircle size={15} strokeWidth={2.25} className="text-[var(--color-error)]" aria-hidden="true" />
           ) : isStopped ? (
-            <CircleStop size={15} strokeWidth={2.25} className="text-[var(--color-text-tertiary)]" aria-hidden="true" />
+            <CircleStop size={15} strokeWidth={2.25} className="text-[var(--color-token-text-secondary)]" aria-hidden="true" />
           ) : (
             <CheckCircle2 size={15} strokeWidth={2.25} className="text-[var(--color-success)]" aria-hidden="true" />
           )}
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-2">
-            <Bot size={14} strokeWidth={2.25} className="shrink-0 text-[var(--color-text-tertiary)]" aria-hidden="true" />
-            <span className="shrink-0 text-[12px] font-medium text-[var(--color-text-primary)]">
+            <Bot size={14} strokeWidth={2.25} className="shrink-0 text-[var(--color-token-text-secondary)]" aria-hidden="true" />
+            <span className="shrink-0 text-[12px] font-medium text-[var(--color-token-foreground)]">
               {label}
             </span>
-            <span className="shrink-0 text-[11px] text-[var(--color-text-tertiary)]">
+            <span className="shrink-0 text-[11px] text-[var(--color-token-text-secondary)]">
               {t(`chat.backgroundAgents.status.${task.status}`)}
             </span>
             {task.usage?.totalTokens ? (
-              <span className="hidden shrink-0 text-[11px] text-[var(--color-text-tertiary)] sm:inline">
+              <span className="hidden shrink-0 text-[11px] text-[var(--color-token-text-secondary)] sm:inline">
                 {t('chat.backgroundAgents.tokens', { count: formatTokenCount(task.usage.totalTokens) })}
               </span>
             ) : null}
             {duration ? (
-              <span className="hidden shrink-0 text-[11px] text-[var(--color-text-tertiary)] sm:inline">
+              <span className="hidden shrink-0 text-[11px] text-[var(--color-token-text-secondary)] sm:inline">
                 {duration}
               </span>
             ) : null}
           </div>
-          <div className="mt-0.5 truncate text-[12px] leading-5 text-[var(--color-text-secondary)]">
+          <div className="mt-0.5 truncate text-[12px] leading-5 text-[var(--color-token-text-secondary)]">
             {detail}
           </div>
         </div>
@@ -558,6 +574,19 @@ function appendChildToolCall(
   }
 }
 
+const WEB_SEARCH_TOOLS = new Set(['WebSearch', 'WebFetch'])
+const EXPLORATION_TOOLS = new Set(['Read', 'Glob', 'Grep'])
+
+/** Check if all tool calls in the array are web search tools */
+function isWebSearchGroup(toolCalls: ToolCall[]): boolean {
+  return toolCalls.length > 0 && toolCalls.every((tc) => WEB_SEARCH_TOOLS.has(tc.toolName))
+}
+
+/** Check if all tool calls in the array are file exploration tools */
+function isExplorationGroup(toolCalls: ToolCall[]): boolean {
+  return toolCalls.length > 0 && toolCalls.every((tc) => EXPLORATION_TOOLS.has(tc.toolName))
+}
+
 /** Max visible tool calls before burst-fold kicks in (mirrors iOS collapsedVisibleCount = 5) */
 const TOOL_BURST_VISIBLE_COUNT = 5
 
@@ -570,9 +599,31 @@ export function buildRenderModel(messages: UIMessage[], activeAskUserQuestionToo
   let lastUnresolvedAskUserQuestionIndex: number | null = null
   let pendingToolCalls: ToolCall[] = []
 
-  /** Flush pending tool calls as a tool_group or tool_burst */
+  /** Flush pending tool calls as a specialized group, tool_group, or tool_burst */
   const flushGroup = () => {
     if (pendingToolCalls.length === 0) return
+
+    // Codex-style specialized groups: web search → dedicated render group
+    if (isWebSearchGroup(pendingToolCalls)) {
+      items.push({
+        kind: 'web_search_group',
+        toolCalls: [...pendingToolCalls],
+        id: `websearch-${pendingToolCalls[0]!.id}`,
+      })
+      pendingToolCalls = []
+      return
+    }
+
+    // Codex-style specialized groups: file exploration → dedicated render group
+    if (isExplorationGroup(pendingToolCalls)) {
+      items.push({
+        kind: 'exploration_group',
+        toolCalls: [...pendingToolCalls],
+        id: `exploration-${pendingToolCalls[0]!.id}`,
+      })
+      pendingToolCalls = []
+      return
+    }
 
     // If more than TOOL_BURST_VISIBLE_COUNT, split into pinned + overflow (tool_burst)
     if (pendingToolCalls.length > TOOL_BURST_VISIBLE_COUNT) {
@@ -603,6 +654,19 @@ export function buildRenderModel(messages: UIMessage[], activeAskUserQuestionToo
     if (pendingToolCalls.length > 0 && pendingIsAgentGroup !== nextIsAgent) {
       flushGroup()
     }
+
+    // Flush when switching between web-search, exploration, and general tool groups
+    if (pendingToolCalls.length > 0) {
+      const pendingIsWebSearch = isWebSearchGroup(pendingToolCalls)
+      const pendingIsExploration = isExplorationGroup(pendingToolCalls)
+      const nextIsWebSearch = WEB_SEARCH_TOOLS.has(toolCall.toolName)
+      const nextIsExploration = EXPLORATION_TOOLS.has(toolCall.toolName)
+
+      if (pendingIsWebSearch !== nextIsWebSearch || pendingIsExploration !== nextIsExploration) {
+        flushGroup()
+      }
+    }
+
     pendingToolCalls.push(toolCall)
   }
 
@@ -693,6 +757,51 @@ export function buildRenderModel(messages: UIMessage[], activeAskUserQuestionToo
 }
 
 /**
+ * Group render items into turn slices for Codex-style virtualized turn rendering.
+ * A turn starts at each user_text message and extends to (but not including) the next
+ * user_text message. Items before the first user_text form a "prelude" turn.
+ * The last turn group is NOT virtualized (it's the active/live content area).
+ */
+function buildTurnGroups(renderItems: RenderItem[]): TurnGroup[] {
+  const groups: TurnGroup[] = []
+  let currentIndices: number[] = []
+  let currentKey = 'prelude'
+  let hasFinalAssistant = false
+
+  const flushGroup = (isLast: boolean) => {
+    if (currentIndices.length === 0) return
+    groups.push({
+      key: currentKey,
+      itemIndices: [...currentIndices],
+      hasFinalAssistant,
+      isLast,
+    })
+    currentIndices = []
+    hasFinalAssistant = false
+  }
+
+  for (let index = 0; index < renderItems.length; index++) {
+    const item = renderItems[index]!
+
+    // User_text starts a new turn boundary
+    if (item.kind === 'message' && item.message.type === 'user_text' && !item.message.pending) {
+      flushGroup(false)
+      currentKey = item.message.id
+    }
+
+    // Track if this turn has a final assistant_text
+    if (item.kind === 'message' && item.message.type === 'assistant_text' && item.message.content.trim()) {
+      hasFinalAssistant = true
+    }
+
+    currentIndices.push(index)
+  }
+
+  flushGroup(true)
+  return groups
+}
+
+/**
  * Post-process render items to collapse completed turn internals.
  * A "turn" = user_text → [process items] → final assistant_text.
  * Process items include thinking, tool_group, tool_burst, and non-final assistant_text.
@@ -774,6 +883,8 @@ function countProcessSteps(items: RenderItem[]): number {
   for (const item of items) {
     if (item.kind === 'tool_group') count += item.toolCalls.length
     else if (item.kind === 'tool_burst') count += item.burst.pinnedToolCalls.length + item.burst.overflowToolCalls.length
+    else if (item.kind === 'web_search_group') count += item.toolCalls.length
+    else if (item.kind === 'exploration_group') count += item.toolCalls.length
     else if (item.kind === 'message' && item.message.type === 'thinking') count += 1
     else if (item.kind === 'message' && item.message.type === 'assistant_text') count += 1
     else if (item.kind === 'message' && item.message.type === 'system') count += 0
@@ -995,40 +1106,40 @@ function MemoryEventCard({ message }: { message: MemoryEvent }) {
 
   return (
     <div className="mb-3 flex justify-center px-3">
-      <div className="w-full max-w-2xl rounded-[16px] border border-[var(--color-border)]/70 bg-[var(--color-surface-container-low)] px-3.5 py-3 text-xs shadow-[0_8px_22px_rgba(0,0,0,0.06)]">
+      <div className="w-full max-w-2xl rounded-[var(--radius-xl)] border border-[var(--color-token-border)]/70 bg-[var(--color-surface-container-low)] px-3.5 py-3 text-xs shadow-[0_8px_22px_rgba(0,0,0,0.06)]">
         <div className="flex items-start gap-3">
-          <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-brand)]">
+          <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-[var(--color-token-border)] bg-[var(--color-surface)] text-[var(--color-brand)]">
             <BookMarked size={15} aria-hidden="true" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="font-medium text-[var(--color-text-primary)]">
+              <div className="font-medium text-[var(--color-token-foreground)]">
                 {t('chat.memorySavedTitle', { count: message.files.length })}
               </div>
               <button
                 type="button"
                 onClick={() => openMemorySettings(message.files[0]?.path)}
-                className="inline-flex h-7 items-center gap-1.5 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2 text-[11px] font-medium text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-brand)]/50 hover:text-[var(--color-text-primary)]"
+                className="inline-flex h-7 items-center gap-1.5 rounded-md border border-[var(--color-token-border)] bg-[var(--color-surface)] px-2 text-[11px] font-medium text-[var(--color-token-text-secondary)] transition-colors hover:border-[var(--color-brand)]/50 hover:text-[var(--color-token-foreground)]"
               >
                 <Settings size={13} aria-hidden="true" />
                 {t('chat.memoryOpenSettings')}
               </button>
             </div>
             {message.message ? (
-              <div className="mt-1 text-[var(--color-text-tertiary)]">{message.message}</div>
+              <div className="mt-1 text-[var(--color-token-text-secondary)]">{message.message}</div>
             ) : null}
             <div className="mt-2 flex flex-wrap gap-1.5">
               {visibleFiles.map((file) => (
                 <span
                   key={file.path}
                   title={file.path}
-                  className="max-w-full truncate rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 font-mono text-[10px] text-[var(--color-text-secondary)]"
+                  className="max-w-full truncate rounded-sm border border-[var(--color-token-border)] bg-[var(--color-surface)] px-2 py-1 font-mono text-[10px] text-[var(--color-token-text-secondary)]"
                 >
                   {memoryFileLabel(file.path)}
                 </span>
               ))}
               {hiddenCount > 0 ? (
-                <span className="rounded-sm border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 font-mono text-[10px] text-[var(--color-text-tertiary)]">
+                <span className="rounded-sm border border-[var(--color-token-border)] bg-[var(--color-surface)] px-2 py-1 font-mono text-[10px] text-[var(--color-token-text-secondary)]">
                   {t('chat.memoryMoreFiles', { count: hiddenCount })}
                 </span>
               ) : null}
@@ -1163,6 +1274,8 @@ function getRenderItemKey(item: RenderItem) {
     case 'tool_group':
     case 'tool_burst':
     case 'turn_process':
+    case 'web_search_group':
+    case 'exploration_group':
       return item.id
     case 'message':
       return item.message.id
@@ -1227,6 +1340,10 @@ function getRenderItemContentWeight(item: RenderItem): number {
       const all = [...item.burst.pinnedToolCalls, ...item.burst.overflowToolCalls]
       return all.reduce((total, toolCall) => total + getMessageContentWeight(toolCall), 0)
     }
+    case 'web_search_group':
+      return item.toolCalls.reduce((total, toolCall) => total + getMessageContentWeight(toolCall), 0)
+    case 'exploration_group':
+      return item.toolCalls.reduce((total, toolCall) => total + getMessageContentWeight(toolCall), 0)
     case 'turn_process':
       return item.group.processItems.reduce((total, pi) => total + getRenderItemContentWeight(pi), 0)
   }
@@ -1309,6 +1426,14 @@ function estimateRenderItemHeight(item: RenderItem): number {
       const textWeight = getRenderItemContentWeight(item)
       return clampNumber(92 + all.length * 78 + Math.ceil(textWeight / 140) * 16, 88, 2600)
     }
+    case 'web_search_group': {
+      const textWeight = getRenderItemContentWeight(item)
+      return clampNumber(72 + item.toolCalls.length * 56 + Math.ceil(textWeight / 140) * 16, 68, 1800)
+    }
+    case 'exploration_group': {
+      const textWeight = getRenderItemContentWeight(item)
+      return clampNumber(72 + item.toolCalls.length * 56 + Math.ceil(textWeight / 140) * 16, 68, 1800)
+    }
     case 'turn_process':
       // Collapsed: just the toggle button (~40px). Expanded: sum of children.
       // Default to collapsed height for virtualization estimate.
@@ -1353,6 +1478,10 @@ function getRenderItemMetricSignature(item: RenderItem): string {
       return item.toolCalls.map(getMessageMetricSignature).join('|')
     case 'tool_burst':
       return `burst:${[...item.burst.pinnedToolCalls, ...item.burst.overflowToolCalls].map(getMessageMetricSignature).join('|')}`
+    case 'web_search_group':
+      return `websearch:${item.toolCalls.map(getMessageMetricSignature).join('|')}`
+    case 'exploration_group':
+      return `exploration:${item.toolCalls.map(getMessageMetricSignature).join('|')}`
     case 'turn_process':
       return `turn:${item.group.userMsgId}:${item.group.stepCount}:${item.group.processItems.map(getRenderItemMetricSignature).join('|')}`
   }
@@ -1933,6 +2062,13 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
     ),
     [measuredItemsVersion, renderItemKeys, renderItemMetrics, renderItems, virtualViewport],
   )
+  // Build turn groups for Codex-style data-virtualized-turn-content wrapping.
+  // Only used when virtualization is OFF (the common case); the virtualized
+  // window already handles paint skipping per-item.
+  const turnGroups = useMemo(
+    () => virtualTranscriptWindow.enabled ? [] : buildTurnGroups(renderItems),
+    [renderItems, virtualTranscriptWindow.enabled],
+  )
   const confirmTurnCard = useMemo(
     () => turnChangeCards.find((card) => card.target.messageId === turnUndoConfirmTargetId) ?? null,
     [turnChangeCards, turnUndoConfirmTargetId],
@@ -2171,6 +2307,32 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
         )
       case 'tool_burst':
         return renderToolBurst(item, false)
+      case 'web_search_group':
+        return (
+          <ToolCallGroup
+            toolCalls={item.toolCalls}
+            resultMap={toolResultMap}
+            childToolCallsByParent={childToolCallsByParent}
+            agentTaskNotifications={agentTaskNotifications}
+            isStreaming={
+              chatState === 'tool_executing' &&
+              item.toolCalls.some((tc) => !toolResultMap.has(tc.toolUseId))
+            }
+          />
+        )
+      case 'exploration_group':
+        return (
+          <ToolCallGroup
+            toolCalls={item.toolCalls}
+            resultMap={toolResultMap}
+            childToolCallsByParent={childToolCallsByParent}
+            agentTaskNotifications={agentTaskNotifications}
+            isStreaming={
+              chatState === 'tool_executing' &&
+              item.toolCalls.some((tc) => !toolResultMap.has(tc.toolUseId))
+            }
+          />
+        )
       case 'message':
         return (
           <MessageBlock
@@ -2221,7 +2383,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
         <button
           type="button"
           onClick={() => toggleToolBurstExpand(item.id)}
-          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-text-secondary)]"
+          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-[var(--color-token-text-secondary)] transition-colors hover:text-[var(--color-token-text-secondary)]"
         >
           <span
             className="turn-chevron text-[10px] text-[var(--color-outline)]"
@@ -2231,20 +2393,15 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
           </span>
           <span className="font-medium">{`+${hiddenCount} tool call${hiddenCount > 1 ? 's' : ''}`}</span>
         </button>
-        <div
-          className="tool-burst-overflow"
-          data-collapse-state={isExpanded ? 'open' : 'closed'}
-        >
-          <div className="tool-burst-overflow-inner">
-            <ToolCallGroup
-              toolCalls={overflowToolCalls}
-              resultMap={toolResultMap}
-              childToolCallsByParent={childToolCallsByParent}
-              agentTaskNotifications={agentTaskNotifications}
-              isStreaming={false}
-            />
-          </div>
-        </div>
+        <Collapse open={isExpanded}>
+          <ToolCallGroup
+            toolCalls={overflowToolCalls}
+            resultMap={toolResultMap}
+            childToolCallsByParent={childToolCallsByParent}
+            agentTaskNotifications={agentTaskNotifications}
+            isStreaming={false}
+          />
+        </Collapse>
       </div>
     )
   }
@@ -2278,6 +2435,32 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
             isExpanded={expandedTurns.has(item.group.userMsgId)}
             onToggle={() => toggleTurnExpand(item.group.userMsgId)}
             renderInnerItem={renderInnerItem}
+          />
+        ) : item.kind === 'web_search_group' ? (
+          <WebSearchGroupSection
+            toolCalls={item.toolCalls}
+            resultMap={toolResultMap}
+            childToolCallsByParent={childToolCallsByParent}
+            agentTaskNotifications={agentTaskNotifications}
+            isStreaming={
+              index === lastActiveToolGroupIndex
+                ? chatState === 'tool_executing'
+                : chatState === 'tool_executing' &&
+                  item.toolCalls.some((tc) => !toolResultMap.has(tc.toolUseId))
+            }
+          />
+        ) : item.kind === 'exploration_group' ? (
+          <ExplorationGroupSection
+            toolCalls={item.toolCalls}
+            resultMap={toolResultMap}
+            childToolCallsByParent={childToolCallsByParent}
+            agentTaskNotifications={agentTaskNotifications}
+            isStreaming={
+              index === lastActiveToolGroupIndex
+                ? chatState === 'tool_executing'
+                : chatState === 'tool_executing' &&
+                  item.toolCalls.some((tc) => !toolResultMap.has(tc.toolUseId))
+            }
           />
         ) : (
           <MessageBlock
@@ -2328,31 +2511,64 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
       >
         <div
           ref={scrollContentRef}
-          className={compact ? 'mx-auto max-w-full' : 'codex-task-transcript mx-auto max-w-[800px]'}
+          className={compact ? 'mx-auto max-w-full' : 'codex-task-transcript mx-auto max-w-[var(--thread-content-max-width)]'}
           style={{ paddingBottom: bottomPadding }}
         >
           {virtualTranscriptWindow.enabled ? (
             <VirtualSpacer height={virtualTranscriptWindow.beforeHeight} position="top" />
           ) : null}
 
-          {virtualTranscriptWindow.items.map(({ item, index }) => {
-            const itemKey = getRenderItemKey(item)
-            const content = renderTranscriptItem(item, index)
+          {virtualTranscriptWindow.enabled ? (
+            // Virtualized path: flat items with measured heights (no turn grouping needed)
+            virtualTranscriptWindow.items.map(({ item, index }) => {
+              const itemKey = getRenderItemKey(item)
+              const content = renderTranscriptItem(item, index)
 
-            return virtualTranscriptWindow.enabled ? (
-              <MeasuredRenderItem
-                key={itemKey}
-                itemKey={itemKey}
-                onHeightChange={handleVirtualItemHeightChange}
+              return (
+                <MeasuredRenderItem
+                  key={itemKey}
+                  itemKey={itemKey}
+                  onHeightChange={handleVirtualItemHeightChange}
+                >
+                  {content}
+                </MeasuredRenderItem>
+              )
+            })
+          ) : turnGroups.length > 0 ? (
+            // Non-virtualized path with Codex-style turn grouping:
+            // each turn is wrapped in a data-virtualized-turn-content div
+            // that enables content-visibility:auto for off-screen paint skipping.
+            turnGroups.map((turnGroup) => (
+              <div
+                key={turnGroup.key}
+                data-virtualized-turn-content={turnGroup.isLast ? undefined : ""}
+                data-local-conversation-final-assistant={turnGroup.hasFinalAssistant ? '' : undefined}
+                className="flex flex-col gap-0"
               >
-                {content}
-              </MeasuredRenderItem>
-            ) : (
-              <div key={itemKey} className={`${CHAT_RENDER_ITEM_CLASS} chat-render-item--cv`}>
-                {content}
+                {turnGroup.itemIndices.map((itemIndex) => {
+                  const item = renderItems[itemIndex]!
+                  const itemKey = getRenderItemKey(item)
+                  const content = renderTranscriptItem(item, itemIndex)
+                  return (
+                    <div key={itemKey} className={`${CHAT_RENDER_ITEM_CLASS}${turnGroup.isLast ? '' : ' chat-render-item--cv'}`}>
+                      {content}
+                    </div>
+                  )
+                })}
               </div>
-            )
-          })}
+            ))
+          ) : (
+            // Fallback: flat rendering without turn groups (edge case, e.g. empty turn groups)
+            virtualTranscriptWindow.items.map(({ item, index }) => {
+              const itemKey = getRenderItemKey(item)
+              const content = renderTranscriptItem(item, index)
+              return (
+                <div key={itemKey} className={`${CHAT_RENDER_ITEM_CLASS} chat-render-item--cv`}>
+                  {content}
+                </div>
+              )
+            })
+          )}
 
           {virtualTranscriptWindow.enabled ? (
             <VirtualSpacer height={virtualTranscriptWindow.afterHeight} position="bottom" />
@@ -2387,7 +2603,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
           onClick={handleJumpToLatest}
           title={t('chat.jumpToLatest')}
           aria-label={t('chat.jumpToLatest')}
-          className="absolute bottom-[200px] left-1/2 -translate-x-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(255,255,255,0.18)] bg-[var(--color-surface-container-lowest)] text-xs font-medium text-[var(--color-text-primary)] shadow-[var(--shadow-dropdown)] transition-colors hover:border-[var(--color-brand)]/50 hover:bg-[var(--color-surface-container-low)]"
+          className="absolute bottom-[200px] left-1/2 -translate-x-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(255,255,255,0.18)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] text-xs font-medium text-[var(--color-token-foreground)] shadow-[var(--shadow-dropdown)] transition-colors hover:border-[var(--color-brand)]/50 hover:bg-[var(--color-surface-container-low)]"
         >
           <ArrowDown size={15} aria-hidden="true" />
         </button>
@@ -2426,6 +2642,150 @@ function formatProcessElapsed(seconds: number): string {
   return `${m}m ${s}s`
 }
 
+/** Collapsible section for consecutive web search / web fetch tool calls */
+function WebSearchGroupSection({
+  toolCalls,
+  resultMap,
+  childToolCallsByParent,
+  agentTaskNotifications: _agentTaskNotifications,
+  isStreaming,
+}: {
+  toolCalls: ToolCall[]
+  resultMap: Map<string, ToolResult>
+  childToolCallsByParent: Map<string, ToolCall[]>
+  agentTaskNotifications: Record<string, AgentTaskNotification>
+  isStreaming: boolean
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const t = useTranslation()
+  const hasUnresolved = hasUnresolvedToolCalls(toolCalls, resultMap, childToolCallsByParent)
+  const isRunning = isStreaming || hasUnresolved
+
+  const webCount = toolCalls.filter((tc) => tc.toolName === 'WebSearch').length
+  const fetchCount = toolCalls.filter((tc) => tc.toolName === 'WebFetch').length
+  const parts: string[] = []
+  if (webCount > 0) parts.push(t('toolActivity.webSearched'))
+  if (fetchCount > 0) parts.push(fetchCount === 1 ? '1 fetch' : `${fetchCount} fetches`)
+  const summaryText = parts.length > 0 ? parts.join(', ') : t('toolActivity.fallback')
+
+  return (
+    <div className="mb-[3px]">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="flex w-full items-center gap-2 rounded-[var(--radius-xs)] px-2 py-1.5 text-left transition-colors"
+      >
+        <Globe className="icon-xs text-[var(--color-token-text-secondary)]" />
+        <span className="flex-1 truncate text-[var(--text-size-chat)] text-[var(--color-token-conversation-summary-trailing)]">
+          {isRunning ? (
+            <CadencedShimmerText>{summaryText}</CadencedShimmerText>
+          ) : summaryText}
+        </span>
+        <span className={`material-symbols-outlined icon-2xs text-[var(--color-token-input-placeholder-foreground)] transition-transform duration-300 ${expanded ? 'rotate-90' : ''}`}>
+          {expanded ? 'expand_less' : 'expand_more'}
+        </span>
+        {isRunning && (
+          <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-token-charts-green)] animate-pulse-dot" />
+        )}
+      </button>
+
+      <div className={`tool-group-content${expanded ? ' expanded' : ''}`}>
+        <div className="ml-3 mt-1 space-y-1 border-l border-[var(--color-token-border)]/38 pl-3">
+          {toolCalls.map((tc) => {
+            const toolResult = resultMap.get(tc.toolUseId)
+            const result = toolResult
+              ? { content: toolResult.content, isError: toolResult.isError }
+              : undefined
+            return (
+              <ToolCallBlock
+                key={tc.id}
+                toolName={tc.toolName}
+                input={tc.input}
+                result={result}
+                isPending={tc.isPending}
+                status={tc.status}
+                partialInput={tc.partialInput}
+              />
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** Collapsible section for consecutive exploration (Read/Glob/Grep) tool calls */
+function ExplorationGroupSection({
+  toolCalls,
+  resultMap,
+  childToolCallsByParent,
+  agentTaskNotifications: _agentTaskNotifications,
+  isStreaming,
+}: {
+  toolCalls: ToolCall[]
+  resultMap: Map<string, ToolResult>
+  childToolCallsByParent: Map<string, ToolCall[]>
+  agentTaskNotifications: Record<string, AgentTaskNotification>
+  isStreaming: boolean
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const t = useTranslation()
+  const hasUnresolved = hasUnresolvedToolCalls(toolCalls, resultMap, childToolCallsByParent)
+  const isRunning = isStreaming || hasUnresolved
+
+  const readCount = toolCalls.filter((tc) => tc.toolName === 'Read').length
+  const searchCount = toolCalls.filter((tc) => tc.toolName === 'Glob' || tc.toolName === 'Grep').length
+  const parts: string[] = []
+  if (readCount > 0) parts.push(readCount === 1 ? t('toolActivity.exploredOne') : t('toolActivity.exploredMany', { count: readCount }))
+  if (searchCount > 0) parts.push(searchCount === 1 ? t('toolActivity.searchedOne') : t('toolActivity.searchedMany', { count: searchCount }))
+  const summaryText = parts.length > 0 ? parts.join(', ') : t('toolActivity.fallback')
+
+  return (
+    <div className="mb-[3px]">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="flex w-full items-center gap-2 rounded-[var(--radius-xs)] px-2 py-1.5 text-left transition-colors"
+      >
+        <FolderSearch className="icon-xs text-[var(--color-token-text-secondary)]" />
+        <span className="flex-1 truncate text-[var(--text-size-chat)] text-[var(--color-token-conversation-summary-trailing)]">
+          {isRunning ? (
+            <CadencedShimmerText>{summaryText}</CadencedShimmerText>
+          ) : summaryText}
+        </span>
+        <span className={`material-symbols-outlined icon-2xs text-[var(--color-token-input-placeholder-foreground)] transition-transform duration-300 ${expanded ? 'rotate-90' : ''}`}>
+          {expanded ? 'expand_less' : 'expand_more'}
+        </span>
+        {isRunning && (
+          <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-token-charts-green)] animate-pulse-dot" />
+        )}
+      </button>
+
+      <div className={`tool-group-content${expanded ? ' expanded' : ''}`}>
+        <div className="ml-3 mt-1 space-y-1 border-l border-[var(--color-token-border)]/38 pl-3">
+          {toolCalls.map((tc) => {
+            const toolResult = resultMap.get(tc.toolUseId)
+            const result = toolResult
+              ? { content: toolResult.content, isError: toolResult.isError }
+              : undefined
+            return (
+              <ToolCallBlock
+                key={tc.id}
+                toolName={tc.toolName}
+                input={tc.input}
+                result={result}
+                isPending={tc.isPending}
+                status={tc.status}
+                partialInput={tc.partialInput}
+              />
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /** Collapsible section for completed turn process items */
 function TurnProcessSection({
   group,
@@ -2439,61 +2799,72 @@ function TurnProcessSection({
   renderInnerItem: (item: RenderItem) => ReactNode
 }) {
   const { processItems, startTime, endTime } = group
+  const t = useTranslation()
 
-  // Compute elapsed time for this turn
+  // Compute elapsed time for this turn (WorkedForTimer)
   let elapsedText = ''
   if (startTime != null && endTime != null) {
     const elapsedSec = Math.round((endTime - startTime) / 1000)
     if (elapsedSec > 0) elapsedText = formatProcessElapsed(elapsedSec)
   }
 
-  // Animate from expanded to collapsed on first mount, so the user sees
-  // the content collapse rather than it appearing already collapsed.
-  const [hasAnimated, setHasAnimated] = useState(false)
-  useEffect(() => {
-    const timer = requestAnimationFrame(() => setHasAnimated(true))
-    return () => cancelAnimationFrame(timer)
-  }, [])
+  // Collect all tool calls from processItems for activity summary
+  const allToolCalls = useMemo(() => {
+    const calls: ToolCall[] = []
+    for (const item of processItems) {
+      if (item.kind === 'tool_group' || item.kind === 'web_search_group' || item.kind === 'exploration_group') {
+        calls.push(...item.toolCalls)
+      } else if (item.kind === 'tool_burst') {
+        calls.push(...item.burst.pinnedToolCalls, ...item.burst.overflowToolCalls)
+      } else if (item.kind === 'message' && item.message.type === 'tool_use') {
+        calls.push(item.message)
+      }
+    }
+    return calls
+  }, [processItems])
 
-  const collapseState = isExpanded ? 'open' : (hasAnimated ? 'closed' : 'open')
+  const activitySummary = useMemo(() => {
+    if (allToolCalls.length === 0) return ''
+    return generateToolActivitySummary(allToolCalls, t)
+  }, [allToolCalls, t])
 
   return (
     <div className="flex flex-col">
-      {/* Toggle: "已处理" + elapsed timer */}
+      {/* Toggle: "已处理" + activity summary + elapsed timer */}
       <button
         type="button"
         onClick={onToggle}
-        className="flex items-center gap-2 px-1 py-2 text-[13px] text-[var(--color-text-tertiary)] transition-colors cursor-pointer hover:text-[var(--color-text-secondary)]"
+        className="flex items-center gap-2 px-1 py-2 text-[var(--text-size-chat)] text-[var(--color-token-description-foreground)] transition-colors cursor-pointer hover:text-[var(--color-token-foreground)]"
       >
         <span
-          className="turn-chevron text-[10px] text-[var(--color-outline)]"
+          className="turn-chevron icon-2xs text-[var(--color-token-input-placeholder-foreground)]"
           data-rotated={isExpanded ? 'true' : 'false'}
         >
           {'▸'}
         </span>
-        <span className="font-medium">已处理</span>
+        <span className="font-medium">{t('chat.turnProcessed')}</span>
+        {!isExpanded && activitySummary && (
+          <span className="text-[11px] text-[var(--color-token-conversation-summary-trailing)] truncate">
+            {activitySummary}
+          </span>
+        )}
         {elapsedText && (
-          <span className="text-[11px] font-mono tabular-nums text-[var(--color-text-tertiary)]">
+          <span className="text-[11px] font-mono tabular-nums text-[var(--color-token-text-secondary)]">
             {elapsedText}
           </span>
         )}
       </button>
 
-      {/* Collapsible content */}
-      <div
-        className="turn-collapse-content"
-        data-collapse-state={collapseState}
-      >
-        <div className="turn-collapse-content-inner">
-          <div className="space-y-1 pl-2 border-l border-[var(--color-border)]/30">
-            {processItems.map((pi) => (
-              <div key={pi.kind === 'message' ? pi.message.id : pi.id}>
-                {renderInnerItem(pi)}
-              </div>
-            ))}
-          </div>
+      {/* Collapsible content — height/opacity transition */}
+      <Collapse open={isExpanded} duration={420}>
+        <div className="space-y-1 pl-2 border-l border-[var(--color-token-border)]/30">
+          {processItems.map((pi) => (
+            <div key={pi.kind === 'message' ? pi.message.id : pi.id}>
+              {renderInnerItem(pi)}
+            </div>
+          ))}
         </div>
-      </div>
+      </Collapse>
 
       {/* Divider */}
       <div className="h-px bg-[rgba(255,255,255,0.08)]" />
@@ -2641,7 +3012,7 @@ export const MessageBlock = memo(function MessageBlock({
       return <BackgroundTaskEventCard message={message} />
     case 'system':
       return (
-        <div className="mb-3 text-center text-xs text-[var(--color-text-tertiary)]">
+        <div className="mb-3 text-center text-xs text-[var(--color-token-text-secondary)]">
           {message.content}
         </div>
       )

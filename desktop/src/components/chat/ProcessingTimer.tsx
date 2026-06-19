@@ -38,7 +38,7 @@ export function ProcessingTimer({ startTime, endTime, isProcessing }: Processing
   }
 
   return (
-    <div className="flex items-center gap-2 px-1 py-2 text-[16px] text-[var(--color-text-tertiary)]">
+    <div className="flex items-center gap-2 px-1 py-2 text-[16px] text-[var(--color-token-text-secondary)]">
       <span>{isProcessing && !endTime ? '处理中' : '已处理'}</span>
       <span className="font-mono tabular-nums">{formatTime(elapsed)}</span>
     </div>

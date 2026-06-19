@@ -68,13 +68,14 @@ export const AssistantMessage = memo(function AssistantMessage({ content, isStre
   const documentLayout = shouldUseDocumentLayout(content)
 
   return (
-    <div className="codex-task-stream-item mb-[3px] flex justify-start">
+    <div className="codex-task-stream-item flex justify-start">
       <div
         data-message-shell="assistant"
         data-layout="document"
-        className="assistant-task-block group/message relative flex min-w-0 w-full max-w-[800px] flex-col items-start"
+        data-local-conversation-final-assistant=""
+        className="assistant-task-block group/message relative flex min-w-0 w-full max-w-[var(--thread-content-max-width)] flex-col items-start"
       >
-        <div className="assistant-message-flow w-full text-[14px] leading-7 text-[var(--color-text-primary)]">
+        <div className="assistant-message-flow w-full text-[var(--text-size-chat)] leading-[calc(var(--text-size-chat)_+_8px)] text-[var(--color-token-conversation-body)]">
           <MarkdownRenderer
             content={content}
             variant={documentLayout ? 'document' : 'default'}
@@ -94,7 +95,7 @@ export const AssistantMessage = memo(function AssistantMessage({ content, isStre
               <AssistantOutputTargetCard key={target.id} target={target} sessionId={sessionId} workDir={workDir} />
             ))}
             {outputTargets.length > MAX_CARDS && (
-              <div className="px-1 text-xs text-[var(--color-text-tertiary)]">
+              <div className="px-1 text-xs text-[var(--color-token-text-secondary)]">
                 {t('assistantOutputs.moreOutputs', { count: String(outputTargets.length - MAX_CARDS) })}
               </div>
             )}

@@ -22,7 +22,7 @@ export function BrowserAddressBar({ url, canGoBack, canGoForward, loading = fals
   return (
     <div
       data-testid="browser-address-bar"
-      className="relative flex h-11 items-center gap-1 border-b border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] px-2"
+      className="relative flex h-11 items-center gap-1 border-b border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-2"
     >
       <button aria-label="后退" disabled={!canGoBack} onClick={onBack} className="p-1 disabled:opacity-40"><ArrowLeft size={16} /></button>
       <button aria-label="前进" disabled={!canGoForward} onClick={onForward} className="p-1 disabled:opacity-40"><ArrowRight size={16} /></button>
@@ -31,7 +31,7 @@ export function BrowserAddressBar({ url, canGoBack, canGoForward, loading = fals
       </button>
       <form className="min-w-0 flex-1" onSubmit={(e) => { e.preventDefault(); onNavigate(normalizeBrowserAddress(draft)) }}>
         <input
-          className="w-full rounded-md bg-[var(--color-surface)] px-2 py-1 text-xs text-[var(--color-text-primary)]"
+          className="w-full rounded-md bg-[var(--color-surface)] px-2 py-1 text-xs text-[var(--color-token-foreground)]"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder="输入网址..."

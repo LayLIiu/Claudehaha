@@ -45,19 +45,19 @@ export function StartupErrorView({ error }: StartupErrorViewProps) {
 
   return (
     <div className="h-screen flex items-center justify-center bg-[var(--color-surface)] px-6">
-      <section className="w-full max-w-3xl rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-container-low)] p-6 shadow-[var(--shadow-md)]">
+      <section className="w-full max-w-3xl rounded-lg border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] p-6 shadow-[var(--shadow-md)]">
         <div className="flex flex-col gap-4">
           <div>
-            <h1 className="text-lg font-semibold text-[var(--color-text-primary)]">
+            <h1 className="text-lg font-semibold text-[var(--color-token-foreground)]">
               {t('app.serverFailed')}
             </h1>
-            <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
+            <p className="mt-2 text-sm text-[var(--color-token-text-secondary)]">
               {t('app.serverFailedHint')}
             </p>
           </div>
 
-          <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-            <div className="text-xs font-medium uppercase text-[var(--color-text-tertiary)]">
+          <div className="rounded-lg border border-[var(--color-token-border)] bg-[var(--color-surface)] p-4">
+            <div className="text-xs font-medium uppercase text-[var(--color-token-text-secondary)]">
               {t('app.startupError')}
             </div>
             <pre className="mt-2 max-h-28 overflow-auto whitespace-pre-wrap break-words font-mono text-xs text-[var(--color-error)]">
@@ -66,11 +66,11 @@ export function StartupErrorView({ error }: StartupErrorViewProps) {
           </div>
 
           {logs ? (
-            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-              <div className="text-xs font-medium uppercase text-[var(--color-text-tertiary)]">
+            <div className="rounded-lg border border-[var(--color-token-border)] bg-[var(--color-surface)] p-4">
+              <div className="text-xs font-medium uppercase text-[var(--color-token-text-secondary)]">
                 {t('app.serverLogs')}
               </div>
-              <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-[var(--color-text-secondary)]">
+              <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-[var(--color-token-text-secondary)]">
                 {logs}
               </pre>
             </div>

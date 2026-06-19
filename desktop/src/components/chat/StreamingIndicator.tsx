@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { useChatStore } from '../../stores/chatStore'
 import { useTabStore } from '../../stores/tabStore'
@@ -33,10 +33,69 @@ function formatErrorType(errorType: string | undefined): string | null {
     .trim()
 }
 
-/** Shimmer sweep text — flowing light across text, mirrors iOS ShimmerText.swift */
-function ShimmerText({ children }: { children: React.ReactNode }) {
+/** Cadenced shimmer — stepped sweep highlight every 4s, mirrors Codex ThinkingShimmer.
+ *  A bright band sweeps left→right across dim text on a 4s cadence
+ *  (600ms initial delay → 1s step animation → ~3s pause).
+ *  Falls back to the old ShimmerText when `active` is explicitly false
+ *  (e.g. for static placeholders that should shimmer continuously). */
+export function CadencedShimmerText({
+  children,
+  active = true,
+  className,
+}: {
+  children: React.ReactNode
+  /** When true (default), use cadenced sweep. When false, fall back to continuous shimmer. */
+  active?: boolean
+  className?: string
+}) {
+  const ref = useRef<HTMLSpanElement>(null)
+
+  useEffect(() => {
+    if (!active) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    const el = ref.current
+    if (!el) return
+
+    const SWEEP_DURATION_MS = 1000
+    const CADENCE_INTERVAL_MS = 4000
+    const INITIAL_DELAY_MS = 600
+
+    let timeout: ReturnType<typeof setTimeout> | undefined
+    let interval: ReturnType<typeof setInterval> | undefined
+
+    const triggerSweep = () => {
+      if (timeout != null) {
+        clearTimeout(timeout)
+        timeout = undefined
+      }
+      el.classList.add('cadenced-shimmer-active')
+      timeout = setTimeout(() => {
+        el.classList.remove('cadenced-shimmer-active')
+        timeout = undefined
+      }, SWEEP_DURATION_MS)
+    }
+
+    const initialDelay = setTimeout(() => {
+      triggerSweep()
+      interval = setInterval(triggerSweep, CADENCE_INTERVAL_MS)
+    }, INITIAL_DELAY_MS)
+
+    return () => {
+      clearTimeout(initialDelay)
+      if (timeout != null) clearTimeout(timeout)
+      if (interval != null) clearInterval(interval)
+      el.classList.remove('cadenced-shimmer-active')
+    }
+  }, [active])
+
+  // Fallback: continuous shimmer for non-cadenced use
+  if (!active) {
+    return <span className={`shimmer-sweep-text ${className ?? ''}`}>{children}</span>
+  }
+
   return (
-    <span className="shimmer-sweep-text">
+    <span ref={ref} className={`cadenced-shimmer ${className ?? ''}`}>
       {children}
     </span>
   )
@@ -78,10 +137,10 @@ export function StreamingIndicator() {
       >
         <RefreshCw size={14} strokeWidth={2.2} className="shrink-0 animate-spin text-amber-700 dark:text-amber-300" aria-hidden="true" />
         <span className="font-medium">{t('chat.retry.title')}</span>
-        <span className="rounded-[4px] border border-amber-700/20 bg-white/70 px-1.5 py-0.5 font-mono text-[11px] leading-none text-amber-900 dark:border-amber-300/20 dark:bg-black/15 dark:text-amber-100">
+        <span className="rounded-[var(--radius-2xs)] border border-amber-700/20 bg-white/70 px-1.5 py-0.5 font-mono text-[11px] leading-none text-amber-900 dark:border-amber-300/20 dark:bg-black/15 dark:text-amber-100">
           {t('chat.retry.attempt', { attempt: apiRetry.attempt, max: apiRetry.maxRetries })}
         </span>
-        <span className="rounded-[4px] border border-amber-700/20 bg-white/70 px-1.5 py-0.5 font-mono text-[11px] leading-none text-amber-900 dark:border-amber-300/20 dark:bg-black/15 dark:text-amber-100">
+        <span className="rounded-[var(--radius-2xs)] border border-amber-700/20 bg-white/70 px-1.5 py-0.5 font-mono text-[11px] leading-none text-amber-900 dark:border-amber-300/20 dark:bg-black/15 dark:text-amber-100">
           {statusText}
         </span>
         <span className="text-amber-800 dark:text-amber-200">
@@ -104,17 +163,17 @@ export function StreamingIndicator() {
         data-testid="streaming-fallback-indicator"
         role="status"
         aria-live="polite"
-        className="mb-2 flex w-fit items-center gap-2 rounded-full border border-[var(--color-border)]/40 bg-[var(--color-surface-container-low)] px-3 py-1"
+        className="mb-2 flex w-fit items-center gap-2 rounded-full border border-[var(--color-token-border)]/40 bg-[var(--color-surface-container-low)] px-3 py-1"
       >
-        <RefreshCw size={12} strokeWidth={2.2} className="shrink-0 animate-spin text-[var(--color-text-secondary)]" aria-hidden="true" />
-        <span className="text-xs font-medium text-[var(--color-text-secondary)]">
+        <RefreshCw size={12} strokeWidth={2.2} className="shrink-0 animate-spin text-[var(--color-token-text-secondary)]" aria-hidden="true" />
+        <span className="text-xs font-medium text-[var(--color-token-text-secondary)]">
           {t('chat.fallback.title')}
         </span>
-        <span className="text-[10px] text-[var(--color-text-tertiary)]">
+        <span className="text-[10px] text-[var(--color-token-text-secondary)]">
           {t('chat.fallback.detail')}
         </span>
         {elapsedSeconds > 0 && (
-          <span className="text-[10px] text-[var(--color-text-tertiary)]">
+          <span className="text-[10px] text-[var(--color-token-text-secondary)]">
             {formatElapsed(elapsedSeconds)}
           </span>
         )}
@@ -136,18 +195,18 @@ export function StreamingIndicator() {
   }
 
   return (
-    <div className="mb-2 flex w-fit items-center gap-2 rounded-full border border-[var(--color-border)]/40 bg-[var(--color-surface-container-low)] px-3 py-1">
+    <div className="mb-2 flex w-fit items-center gap-2 rounded-full border border-[var(--color-token-border)]/40 bg-[var(--color-surface-container-low)] px-3 py-1">
       <span className="text-[var(--color-brand)] animate-shimmer text-xs">✦</span>
-      <ShimmerText>
-        <span className="text-xs font-medium text-[var(--color-text-secondary)]">{verb}...</span>
-      </ShimmerText>
+      <CadencedShimmerText>
+        <span className="text-xs font-medium text-[var(--color-token-text-secondary)]">{verb}...</span>
+      </CadencedShimmerText>
       {elapsedSeconds > 0 && (
-        <span className="text-[10px] text-[var(--color-text-tertiary)]">
+        <span className="text-[10px] text-[var(--color-token-text-secondary)]">
           {formatElapsed(elapsedSeconds)}
         </span>
       )}
       {streamingTokens > 0 && (
-        <span className="text-[10px] text-[var(--color-text-tertiary)]">
+        <span className="text-[10px] text-[var(--color-token-text-secondary)]">
           · ↓ {t('common.tokens', { count: formatTokenCount(streamingTokens) })}
         </span>
       )}
@@ -188,11 +247,11 @@ export function StickyThinkingIndicator({ visible, compact }: { visible: boolean
       <div className={compact ? 'mx-auto max-w-full' : 'mx-auto max-w-[800px]'}>
         <div className="flex items-center gap-2.5 px-3.5 py-2">
           <span className="text-[var(--color-brand)] animate-shimmer text-xs">✦</span>
-          <ShimmerText>
-            <span className="text-[13px] font-medium text-[var(--color-text-secondary)]">{verb}...</span>
-          </ShimmerText>
+          <CadencedShimmerText>
+            <span className="text-[13px] font-medium text-[var(--color-token-text-secondary)]">{verb}...</span>
+          </CadencedShimmerText>
           {elapsedSeconds > 0 && (
-            <span className="text-[11px] text-[var(--color-text-tertiary)] font-mono tabular-nums">
+            <span className="text-[11px] text-[var(--color-token-text-secondary)] font-mono tabular-nums">
               {formatElapsed(elapsedSeconds)}
             </span>
           )}

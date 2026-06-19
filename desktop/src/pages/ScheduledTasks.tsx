@@ -23,8 +23,8 @@ export function ScheduledTasks() {
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">{t('scheduledPage.title')}</h1>
-            <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+            <h1 className="text-2xl font-bold text-[var(--color-token-foreground)]">{t('scheduledPage.title')}</h1>
+            <p className="mt-1 text-sm text-[var(--color-token-text-secondary)]">
               {(() => {
                 const parts = t('scheduledPage.subtitle').split('{code}')
                 return <>{parts[0]}<code className="px-1 py-0.5 rounded bg-[var(--color-surface-container)] text-xs font-[var(--font-mono)]">/schedule</code>{parts[1]}</>
@@ -35,9 +35,9 @@ export function ScheduledTasks() {
         </div>
 
         {/* Desktop-online notice */}
-        <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-[12px] glass-panel mb-6">
-          <span className="material-symbols-outlined text-[18px] text-[var(--color-warning)]">schedule</span>
-          <span className="text-xs text-[var(--color-text-secondary)]">
+        <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-[var(--radius-lg)] glass-panel mb-6">
+          <span className="material-symbols-outlined icon-md text-[var(--color-warning)]">schedule</span>
+          <span className="text-xs text-[var(--color-token-text-secondary)]">
             {t('scheduledPage.desktopNotice')}
           </span>
         </div>

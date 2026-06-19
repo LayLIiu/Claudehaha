@@ -207,7 +207,7 @@ export function AskUserQuestion({ sessionId, toolUseId, input, result }: Props) 
     <div className={`mb-4 rounded-[var(--radius-lg)] border overflow-hidden ${
       submitted
         ? 'border-[var(--color-outline-variant)]/40 bg-[var(--color-surface-container-low)] opacity-70'
-        : 'border-[var(--color-secondary)] bg-[var(--color-surface-container-lowest)]'
+        : 'border-[var(--color-secondary)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))]'
     }`}>
       {/* Header */}
       <div className={`flex items-center gap-3 px-4 py-3 ${
@@ -216,16 +216,16 @@ export function AskUserQuestion({ sessionId, toolUseId, input, result }: Props) 
           : 'bg-[var(--color-surface-container)]'
       }`}>
         <div className="flex items-center justify-center w-8 h-8 rounded-[var(--radius-md)] bg-[var(--color-secondary)]/10">
-          <span className="material-symbols-outlined text-[18px] text-[var(--color-secondary)]">
+          <span className="material-symbols-outlined icon-md text-[var(--color-secondary)]">
             help
           </span>
         </div>
         <div className="flex-1 min-w-0">
-          <span className="text-sm font-semibold text-[var(--color-text-primary)]">
+          <span className="text-sm font-semibold text-[var(--color-token-foreground)]">
             {t('question.needsInput')}
           </span>
           {submitted && (
-            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[var(--color-surface-container-high)] text-[var(--color-text-tertiary)]">
+            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[var(--color-surface-container-high)] text-[var(--color-token-text-secondary)]">
               {t(terminalWithoutAnswers ? 'question.completed' : 'question.answered')}
             </span>
           )}
@@ -246,11 +246,11 @@ export function AskUserQuestion({ sessionId, toolUseId, input, result }: Props) 
                 className={`relative flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium whitespace-nowrap transition-colors ${
                   isActive
                     ? 'text-[var(--color-secondary)]'
-                    : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]'
+                    : 'text-[var(--color-token-text-secondary)] hover:text-[var(--color-token-text-secondary)]'
                 }`}
               >
                 {isAnswered && (
-                  <span className="material-symbols-outlined text-[14px] text-[var(--color-success)]">check_circle</span>
+                  <span className="material-symbols-outlined icon-xs text-[var(--color-success)]">check_circle</span>
                 )}
                 {tabLabel}
                 {isActive && (
@@ -264,7 +264,7 @@ export function AskUserQuestion({ sessionId, toolUseId, input, result }: Props) 
 
       {/* Active question content */}
       <div className="px-4 py-3">
-        <p className="text-sm font-medium text-[var(--color-text-primary)] mb-3">
+        <p className="text-sm font-medium text-[var(--color-token-foreground)] mb-3">
           {activeQuestion.question}
         </p>
 
@@ -302,12 +302,12 @@ export function AskUserQuestion({ sessionId, toolUseId, input, result }: Props) 
                       <span className={`text-sm font-medium ${
                         isSelected
                           ? 'text-[var(--color-secondary)]'
-                          : 'text-[var(--color-text-primary)]'
+                          : 'text-[var(--color-token-foreground)]'
                       }`}>
                         {opt.label}
                       </span>
                       {opt.description && (
-                        <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">
+                        <p className="text-xs text-[var(--color-token-text-secondary)] mt-0.5">
                           {opt.description}
                         </p>
                       )}
@@ -322,7 +322,7 @@ export function AskUserQuestion({ sessionId, toolUseId, input, result }: Props) 
         {/* Free text input */}
         {!submitted && (
           <div>
-            <label className="text-xs text-[var(--color-text-tertiary)] mb-1.5 block">
+            <label className="text-xs text-[var(--color-token-text-secondary)] mb-1.5 block">
               {t('question.customResponse')}
             </label>
             <textarea
@@ -340,15 +340,15 @@ export function AskUserQuestion({ sessionId, toolUseId, input, result }: Props) 
               placeholder={t('question.typePlaceholder')}
               rows={3}
               wrap="soft"
-              className="max-h-48 min-h-[84px] w-full resize-y rounded-[var(--radius-md)] border border-[var(--color-outline-variant)]/40 bg-[var(--color-surface)] px-3 py-2 text-sm leading-relaxed text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:border-[var(--color-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-secondary)]/30"
+              className="max-h-48 min-h-[84px] w-full resize-y rounded-[var(--radius-md)] border border-[var(--color-outline-variant)]/40 bg-[var(--color-surface)] px-3 py-2 text-sm leading-relaxed text-[var(--color-token-foreground)] placeholder:text-[var(--color-token-text-secondary)] focus:border-[var(--color-secondary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-secondary)]/30"
             />
           </div>
         )}
 
         {/* Submitted answer display */}
         {submitted && (
-          <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)]">
-            <span className="material-symbols-outlined text-[14px] text-[var(--color-success)]">check_circle</span>
+          <div className="flex items-center gap-2 text-xs text-[var(--color-token-text-secondary)]">
+            <span className="material-symbols-outlined icon-xs text-[var(--color-success)]">check_circle</span>
             <span>
               {t(terminalWithoutAnswers ? 'question.resultPrefix' : 'question.answeredPrefix')}<strong>{answeredText}</strong>
             </span>
@@ -365,7 +365,7 @@ export function AskUserQuestion({ sessionId, toolUseId, input, result }: Props) 
             disabled={!allAnswered || !pendingRequest}
             onClick={handleSubmit}
             icon={
-              <span className="material-symbols-outlined text-[14px]">send</span>
+              <span className="material-symbols-outlined icon-xs">send</span>
             }
           >
             {t('question.submit')}

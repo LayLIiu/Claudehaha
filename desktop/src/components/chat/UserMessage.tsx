@@ -15,9 +15,10 @@ export const UserMessage = memo(function UserMessage({ content, attachments, bra
   const hasText = content.trim().length > 0
 
   return (
-    <div className="codex-task-stream-item mb-[3px] flex justify-end">
+    <div className="codex-task-stream-item flex justify-end">
       <div
         data-message-shell="user"
+        data-local-conversation-user-anchor=""
         className="group/message relative flex min-w-0 max-w-[88%] flex-col items-end sm:max-w-[82%] lg:max-w-[72%]"
       >
         <div className="flex max-w-full flex-col items-end gap-2">
@@ -27,7 +28,8 @@ export const UserMessage = memo(function UserMessage({ content, attachments, bra
 
           {hasText && (
             <div
-              className="user-message-bubble min-w-0 max-w-full rounded-[14px] border border-[var(--color-border)] bg-[var(--color-surface-container)] px-4 py-3 text-[14px] leading-7 text-[var(--color-text-primary)] whitespace-pre-wrap break-words"
+              data-user-message-bubble={true}
+              className="user-message-bubble min-w-0 max-w-full rounded-[var(--radius-xl)] border border-[var(--color-token-border)] bg-[var(--color-token-input-background)] px-4 py-3 text-[var(--text-size-chat)] leading-[calc(var(--text-size-chat)_+_8px)] text-[var(--color-token-foreground)] whitespace-pre-wrap break-words"
               style={{
                 overflowWrap: 'anywhere',
                 wordBreak: 'break-word',

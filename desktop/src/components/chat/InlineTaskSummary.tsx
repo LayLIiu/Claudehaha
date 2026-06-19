@@ -8,7 +8,7 @@ const statusIcon: Record<TaskSummaryItem['status'], string> = {
 }
 
 const statusColor: Record<TaskSummaryItem['status'], string> = {
-  pending: 'var(--color-text-tertiary)',
+  pending: 'var(--color-token-text-secondary)',
   in_progress: 'var(--color-warning)',
   completed: 'var(--color-success)',
 }
@@ -19,17 +19,17 @@ export function InlineTaskSummary({ tasks }: { tasks: TaskSummaryItem[] }) {
   const total = tasks.length
 
   return (
-    <div className="mb-3 rounded-[var(--radius-lg)] border border-[var(--color-outline-variant)]/40 bg-[var(--color-surface-container-lowest)] overflow-hidden">
+    <div className="mb-3 rounded-[var(--radius-lg)] border border-[var(--color-outline-variant)]/40 bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] overflow-hidden">
       <div className="flex items-center gap-3 px-4 py-2 bg-[var(--color-surface-container)]">
         <div className="flex items-center justify-center w-5 h-5 rounded-[var(--radius-md)] bg-[var(--color-success)]/10">
           <span className="material-symbols-outlined text-[13px] text-[var(--color-success)]" style={{ fontVariationSettings: "'FILL' 1" }}>
             task_alt
           </span>
         </div>
-        <span className="text-xs font-semibold text-[var(--color-text-primary)]">
+        <span className="text-xs font-semibold text-[var(--color-token-foreground)]">
           {t('tasks.completed')}
         </span>
-        <span className="text-[10px] text-[var(--color-text-tertiary)] tabular-nums">
+        <span className="text-[10px] text-[var(--color-token-text-secondary)] tabular-nums">
           {completed}/{total}
         </span>
       </div>
@@ -37,18 +37,18 @@ export function InlineTaskSummary({ tasks }: { tasks: TaskSummaryItem[] }) {
         {tasks.map((task) => (
           <div key={task.id} className="flex items-center gap-2 py-1 px-1">
             <span
-              className="material-symbols-outlined text-[14px] shrink-0"
+              className="material-symbols-outlined icon-xs shrink-0"
               style={{ color: statusColor[task.status], fontVariationSettings: "'FILL' 1" }}
             >
               {statusIcon[task.status]}
             </span>
-            <span className="text-[10px] font-mono text-[var(--color-text-tertiary)]">
+            <span className="text-[10px] font-mono text-[var(--color-token-text-secondary)]">
               #{task.id}
             </span>
             <span className={`text-xs ${
               task.status === 'completed'
-                ? 'text-[var(--color-text-tertiary)] line-through'
-                : 'text-[var(--color-text-primary)]'
+                ? 'text-[var(--color-token-text-secondary)] line-through'
+                : 'text-[var(--color-token-foreground)]'
             }`}>
               {task.subject}
             </span>

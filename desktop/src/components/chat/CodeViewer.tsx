@@ -147,7 +147,7 @@ function PrismCodeContent({
               data-line-number={showLineNumbers ? index + 1 : undefined}
             >
               {showLineNumbers && (
-                <span className="mr-3 inline-block min-w-[2.5ch] select-none text-right text-[var(--color-text-tertiary)]">
+                <span className="mr-3 inline-block min-w-[2.5ch] select-none text-right text-[var(--color-token-text-secondary)]">
                   {index + 1}
                 </span>
               )}
@@ -176,8 +176,36 @@ function CodeArea({
   const containerRef = useRef<HTMLDivElement>(null)
   const [runtime, setRuntime] = useState<ShikiRuntime | null>(null)
   const [loaded, setLoaded] = useState(false)
+  const [inViewport, setInViewport] = useState(false)
 
+  // ── IntersectionObserver: only load Shiki when code block is near the viewport ──
+  // Mirrors Codex's lazy-load pattern with 600px rootMargin.
   useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+
+    // If IntersectionObserver is not supported, just proceed
+    if (typeof IntersectionObserver === 'undefined') {
+      setInViewport(true)
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setInViewport(true)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '600px' },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  // ── Load Shiki only when in viewport ──
+  useEffect(() => {
+    if (!inViewport) return
     let cancelled = false
     setLoaded(false)
     loadShikiRuntime().then((nextRuntime) => {
@@ -186,7 +214,7 @@ function CodeArea({
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [inViewport])
 
   useEffect(() => {
     setLoaded(false)
@@ -276,16 +304,16 @@ export function CodeViewer({ code, language, maxLines = 20, showLineNumbers = fa
   const showExpandToggle = allLines.length > maxLines
 
   return (
-    <div className="code-viewer-shell overflow-hidden rounded-[15px] border border-white/[0.045] bg-[#2f2f2f] shadow-none">
-      <div className="flex items-center justify-between px-4 pb-1.5 pt-3 text-[16px] leading-5 text-[#d6d6d6]">
+    <div className="code-viewer-shell overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-token-border-light)] bg-[var(--color-token-text-code-block-background)] shadow-none">
+      <div className="flex items-center justify-between px-4 pb-1.5 pt-3 text-[16px] leading-5 text-[var(--color-token-foreground)]">
         <span className="font-normal lowercase tracking-[-0.01em]">{languageLabel}</span>
         <CopyButton
           text={code}
           label="Copy code"
           copiedLabel="Copied code"
-          displayLabel={<Copy size={18} strokeWidth={1.9} aria-hidden="true" />}
-          displayCopiedLabel={<Check size={18} strokeWidth={2} aria-hidden="true" />}
-          className="inline-flex h-7 w-7 items-center justify-center rounded-[8px] text-[#ababab] transition-colors  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+          displayLabel={<Copy size={14} strokeWidth={1.9} aria-hidden="true" />}
+          displayCopiedLabel={<Check size={14} strokeWidth={2} aria-hidden="true" />}
+          className="icon-md inline-flex items-center justify-center rounded-[var(--radius-xs)] text-[var(--color-token-input-placeholder-foreground)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border)]"
         />
       </div>
 
@@ -299,7 +327,7 @@ export function CodeViewer({ code, language, maxLines = 20, showLineNumbers = fa
       {showExpandToggle && (
         <button
           onClick={() => setExpanded((value) => !value)}
-          className="w-full border-t border-white/[0.07] bg-white/[0.025] py-2 text-[11px] font-medium text-[#b8b8b8] transition-colors "
+          className="w-full border-t border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle)] py-2 text-[11px] font-medium text-[var(--color-token-description-foreground)] transition-colors"
         >
           {expanded ? 'Collapse' : `Show ${allLines.length - maxLines} more lines`}
         </button>

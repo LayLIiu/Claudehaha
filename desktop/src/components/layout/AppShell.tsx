@@ -203,7 +203,7 @@ export function AppShell() {
 
   if (!ready) {
     return (
-      <div className="app-shell-viewport flex items-center justify-center bg-[var(--color-surface)] text-[var(--color-text-secondary)]">
+      <div className="app-shell-viewport flex items-center justify-center bg-[var(--color-surface)] text-[var(--color-token-text-secondary)]">
         {t('app.launching')}
       </div>
     )
@@ -211,7 +211,7 @@ export function AppShell() {
 
   if (traceLaunch.windowMode) {
     return (
-      <div className="app-shell-viewport flex overflow-hidden bg-[var(--color-surface)] text-[var(--color-text-primary)]">
+      <div className="app-shell-viewport flex overflow-hidden bg-[var(--color-surface)] text-[var(--color-token-foreground)]">
         {traceLaunch.sessionId ? (
           <TraceSession sessionId={traceLaunch.sessionId} standalone />
         ) : (
@@ -255,7 +255,7 @@ export function AppShell() {
         {isMobileShell ? (
           <div
             data-testid="mobile-session-header"
-            className="flex shrink-0 items-center gap-3 border-b border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2"
+	            className="flex shrink-0 items-center gap-3 border-b border-[var(--color-token-border)] bg-[var(--color-surface)] px-3 py-2"
           >
             <button
               type="button"
@@ -264,20 +264,20 @@ export function AppShell() {
               aria-expanded={effectiveSidebarOpen}
               aria-label={effectiveSidebarOpen ? t('sidebar.collapse') : t('sidebar.expand')}
               onClick={toggleEffectiveSidebar}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
+	              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[var(--color-token-foreground)] transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))]"
             >
-              <span className="material-symbols-outlined text-[20px]">
+              <span className="material-symbols-outlined icon-md">
                 {effectiveSidebarOpen ? 'close' : 'menu'}
               </span>
             </button>
             {isActiveChatTab ? (
               <div className="min-w-0 flex-1">
-                <h1 className="truncate text-[15px] font-bold leading-tight text-[var(--color-text-primary)]">
+                <h1 className="truncate text-[15px] font-bold leading-tight text-[var(--color-token-foreground)]">
                   {mobileSessionTitle}
                 </h1>
-                <div className="mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap text-[10px] font-medium text-[var(--color-text-tertiary)]">
+                <div className="mt-0.5 flex min-w-0 items-center gap-1.5 overflow-hidden whitespace-nowrap text-[10px] font-medium text-[var(--color-token-text-secondary)]">
                   {activeTab?.status === 'running' ? (
-                    <span className="flex shrink-0 items-center gap-1 text-[var(--color-text-secondary)]">
+                    <span className="flex shrink-0 items-center gap-1 text-[var(--color-token-text-secondary)]">
                       <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-success)] animate-pulse-dot" />
                       {t('session.active')}
                     </span>

@@ -50,8 +50,8 @@ export function ImageGalleryModal({ open, images, activeIndex, onClose, onSelect
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
-            <div className="text-sm font-semibold text-[var(--color-text-primary)]">{activeImage.name}</div>
-            <div className="text-xs text-[var(--color-text-tertiary)]">
+            <div className="text-sm font-semibold text-[var(--color-token-foreground)]">{activeImage.name}</div>
+            <div className="text-xs text-[var(--color-token-text-secondary)]">
               {activeIndex + 1} / {images.length}
             </div>
           </div>
@@ -59,17 +59,17 @@ export function ImageGalleryModal({ open, images, activeIndex, onClose, onSelect
             <div className="flex items-center gap-2">
               <button
                 onClick={() => onSelect((activeIndex - 1 + images.length) % images.length)}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)]"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-token-border)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)]"
                 aria-label="Previous image"
               >
-                <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+                <span className="material-symbols-outlined icon-md">chevron_left</span>
               </button>
               <button
                 onClick={() => onSelect((activeIndex + 1) % images.length)}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-border)] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)]"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--color-token-border)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)]"
                 aria-label="Next image"
               >
-                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+                <span className="material-symbols-outlined icon-md">chevron_right</span>
               </button>
             </div>
           )}
@@ -88,7 +88,7 @@ export function ImageGalleryModal({ open, images, activeIndex, onClose, onSelect
                 className={`overflow-hidden rounded-xl border transition-all ${
                   index === activeIndex
                     ? 'border-[var(--color-brand)] shadow-[0_0_0_1px_var(--color-brand)]'
-                    : 'border-[var(--color-border)]'
+                    : 'border-[var(--color-token-border)]'
                 }`}
               >
                 <img src={image.src} alt={image.name} className="h-16 w-16 object-cover" />

@@ -19,7 +19,7 @@ export function AgentTeams() {
     <>
       <style>{pulseSubtleStyle}</style>
 
-      <div className="flex-1 flex flex-col relative overflow-hidden bg-[var(--color-surface)] text-[var(--color-text-primary)]" style={{ fontFamily: 'var(--font-body)' }}>
+      <div className="flex-1 flex flex-col relative overflow-hidden bg-[var(--color-surface)] text-[var(--color-token-foreground)]" style={{ fontFamily: 'var(--font-body)' }}>
         {/* Code Content Area */}
         <div className="flex-1 overflow-y-auto p-6 md:p-10 max-w-5xl mx-auto w-full">
           <div className="space-y-8">
@@ -31,10 +31,10 @@ export function AgentTeams() {
                   U
                 </div>
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-widest">
+                  <p className="text-xs font-semibold text-[var(--color-token-text-secondary)] uppercase tracking-widest">
                     User
                   </p>
-                  <p className="text-[var(--color-text-primary)] leading-relaxed">
+                  <p className="text-[var(--color-token-foreground)] leading-relaxed">
                     {mockTeamMessages.userMessage}
                   </p>
                 </div>
@@ -51,14 +51,14 @@ export function AgentTeams() {
                   </span>
                 </div>
                 <div className="space-y-4 flex-1">
-                  <p className="text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-widest">
+                  <p className="text-xs font-semibold text-[var(--color-token-text-secondary)] uppercase tracking-widest">
                     Claude Companion
                   </p>
-                  <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] p-5 shadow-[var(--shadow-dropdown)]">
-                    <p className="mb-4 text-[var(--color-text-primary)]">
+                  <div className="rounded-xl border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] p-5 shadow-[var(--shadow-dropdown)]">
+                    <p className="mb-4 text-[var(--color-token-foreground)]">
                       {mockTeamMessages.assistantMessage}
                     </p>
-                    <div className="rounded-lg bg-[var(--color-surface-container-high)] p-4 font-[var(--font-mono)] text-[13px] text-[var(--color-text-secondary)] overflow-x-auto">
+                    <div className="rounded-lg bg-[var(--color-surface-container-high)] p-4 font-[var(--font-mono)] text-[13px] text-[var(--color-token-text-secondary)] overflow-x-auto">
                       <span className="text-[var(--color-brand)]">info:</span> spawning child_processes for parallel development
                       <br />
                       <span className="text-[var(--color-secondary)]">active:</span> session-dev cluster initiated
@@ -83,10 +83,10 @@ export function AgentTeams() {
                     </span>
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-[var(--color-text-primary)]" style={{ fontFamily: 'var(--font-headline)' }}>
+                    <h3 className="text-sm font-bold text-[var(--color-token-foreground)]" style={{ fontFamily: 'var(--font-headline)' }}>
                       Team: {mockTeam.name}
                     </h3>
-                    <p className="text-[11px] font-medium text-[var(--color-text-tertiary)] uppercase tracking-tighter">
+                    <p className="text-[11px] font-medium text-[var(--color-token-text-secondary)] uppercase tracking-tighter">
                       {mockTeam.memberCount} members
                     </p>
                   </div>
@@ -102,11 +102,11 @@ export function AgentTeams() {
                           className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-surface-container-high)] rounded-full border border-[var(--color-success)]/20 group hover:border-[var(--color-success)]/50 transition-all cursor-pointer"
                         >
                           <div className="w-2 h-2 rounded-full bg-[var(--color-success)] shadow-[0_0_8px_rgba(126,219,139,0.4)]" />
-                          <span className="text-xs font-semibold text-[var(--color-text-primary)]">
+                          <span className="text-xs font-semibold text-[var(--color-token-foreground)]">
                             {member.role}
                           </span>
                           <span
-                            className="material-symbols-outlined text-[14px] text-[var(--color-success)]"
+                            className="material-symbols-outlined icon-xs text-[var(--color-success)]"
                             style={{ fontVariationSettings: "'FILL' 1" }}
                           >
                             check_circle
@@ -122,11 +122,11 @@ export function AgentTeams() {
                           className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-surface-container-high)] rounded-full border border-[var(--color-brand)]/20 animate-pulse-subtle group hover:border-[var(--color-brand)]/50 transition-all cursor-pointer"
                         >
                           <div className="w-2 h-2 rounded-full bg-[var(--color-warning)] shadow-[0_0_8px_rgba(247,196,108,0.4)]" />
-                          <span className="text-xs font-semibold text-[var(--color-text-primary)]">
+                          <span className="text-xs font-semibold text-[var(--color-token-foreground)]">
                             {member.role}
                           </span>
                           <span
-                            className="material-symbols-outlined text-[14px] text-[var(--color-warning)]"
+                            className="material-symbols-outlined icon-xs text-[var(--color-warning)]"
                             style={{ fontVariationSettings: "'FILL' 1" }}
                           >
                             sync
@@ -138,13 +138,13 @@ export function AgentTeams() {
                     return (
                       <div
                         key={member.id}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-surface-container-low)] rounded-full border border-[var(--color-border)] grayscale group hover:grayscale-0 hover:border-[var(--color-secondary)]/50 transition-all cursor-pointer"
+                        className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-surface-container-low)] rounded-full border border-[var(--color-token-border)] grayscale group hover:grayscale-0 hover:border-[var(--color-secondary)]/50 transition-all cursor-pointer"
                       >
-                        <div className="w-2 h-2 rounded-full bg-[var(--color-text-tertiary)] shadow-[0_0_8px_rgba(135,115,109,0.2)]" />
-                        <span className="text-xs font-semibold text-[var(--color-text-tertiary)] group-hover:text-[var(--color-text-primary)]">
+                        <div className="w-2 h-2 rounded-full bg-[var(--color-token-text-secondary)] shadow-[0_0_8px_rgba(135,115,109,0.2)]" />
+                        <span className="text-xs font-semibold text-[var(--color-token-text-secondary)] group-hover:text-[var(--color-token-foreground)]">
                           {member.role}
                         </span>
-                        <span className="material-symbols-outlined text-[14px] text-[var(--color-text-tertiary)]">
+                        <span className="material-symbols-outlined icon-xs text-[var(--color-token-text-secondary)]">
                           {member.role === 'Tester' ? 'schedule' : 'pause_circle'}
                         </span>
                       </div>
@@ -153,7 +153,7 @@ export function AgentTeams() {
                 </div>
 
                 {/* Expand button */}
-                <button className="ml-auto p-2 hover:bg-[var(--color-surface-hover)] rounded-full transition-colors text-[var(--color-text-tertiary)]">
+                <button className="ml-auto p-2 hover:bg-[var(--color-surface-hover)] rounded-full transition-colors text-[var(--color-token-text-secondary)]">
                   <span className="material-symbols-outlined text-sm">expand_more</span>
                 </button>
               </div>
@@ -162,11 +162,11 @@ export function AgentTeams() {
             {/* ─── Chat Composer ─── */}
             <div className="max-w-3xl mx-auto w-full mt-auto">
               <div className="glass-panel relative rounded-xl p-1.5 flex items-center gap-2 transition-all">
-                <div className="p-2 text-[var(--color-text-secondary)]">
+                <div className="p-2 text-[var(--color-token-text-secondary)]">
                   <span className="material-symbols-outlined">attach_file</span>
                 </div>
                 <input
-                  className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none text-sm text-[var(--color-text-primary)] py-2"
+                  className="flex-1 bg-transparent border-none focus:ring-0 focus:outline-none text-sm text-[var(--color-token-foreground)] py-2"
                   placeholder="Type a command or ask Claude..."
                   type="text"
                   value={inputValue}
@@ -182,11 +182,11 @@ export function AgentTeams() {
                 </button>
               </div>
               <div className="mt-3 flex justify-center gap-4">
-                <div className="flex items-center gap-1.5 text-[10px] text-[var(--color-text-tertiary)] font-semibold uppercase tracking-widest">
+                <div className="flex items-center gap-1.5 text-[10px] text-[var(--color-token-text-secondary)] font-semibold uppercase tracking-widest">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-success)]" />
                   Auto-run enabled
                 </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-[var(--color-text-tertiary)] font-semibold uppercase tracking-widest">
+                <div className="flex items-center gap-1.5 text-[10px] text-[var(--color-token-text-secondary)] font-semibold uppercase tracking-widest">
                   <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-secondary)]" />
                   Local LLM
                 </div>

@@ -292,11 +292,11 @@ export function RepositoryLaunchControls({
   }, [isLaunchReady, onLaunchReadyChange])
 
   const worktreeLabel = useWorktree ? t('repoLaunch.worktreeIsolated') : t('repoLaunch.worktreeCurrent')
-  const workbarButtonClassName = 'group inline-flex h-9 min-w-0 items-center gap-1.5 rounded-[7px] border border-transparent px-2.5 text-[13px] font-medium leading-none text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-container-lowest)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35 disabled:cursor-not-allowed disabled:opacity-50'
+  const workbarButtonClassName = 'group inline-flex h-9 min-w-0 items-center gap-1.5 rounded-[var(--radius-sm)] border border-transparent px-2.5 text-[13px] font-medium leading-none text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35 disabled:cursor-not-allowed disabled:opacity-50'
 
   const branchMenuClassName = isMobileBrowser
-    ? 'max-h-[72dvh] overflow-hidden rounded-t-2xl border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] shadow-[0_-18px_48px_rgba(54,35,28,0.2)]'
-    : 'w-[390px] overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] shadow-[var(--shadow-dropdown)]'
+    ? 'max-h-[72dvh] overflow-hidden rounded-t-2xl border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] shadow-[0_-18px_48px_rgba(54,35,28,0.2)]'
+    : 'w-[390px] overflow-hidden rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] shadow-[var(--shadow-dropdown)]'
   const branchMenuStyle = isMobileBrowser
     ? {
         position: 'fixed' as const,
@@ -314,8 +314,8 @@ export function RepositoryLaunchControls({
         zIndex: 9999,
       }
   const worktreeMenuClassName = isMobileBrowser
-    ? 'overflow-hidden rounded-t-2xl border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] py-2 shadow-[0_-18px_48px_rgba(54,35,28,0.2)]'
-    : 'w-[226px] overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] py-1 shadow-[var(--shadow-dropdown)]'
+    ? 'overflow-hidden rounded-t-2xl border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] py-2 shadow-[0_-18px_48px_rgba(54,35,28,0.2)]'
+    : 'w-[226px] overflow-hidden rounded-xl border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] py-1 shadow-[var(--shadow-dropdown)]'
   const worktreeMenuStyle = isMobileBrowser
     ? {
         position: 'fixed' as const,
@@ -337,7 +337,7 @@ export function RepositoryLaunchControls({
     <div ref={rootRef} className={`flex min-w-0 flex-col ${isMobileBrowser ? 'gap-0' : isComposerPlacement ? 'gap-1' : 'gap-2'}`}>
       <div className={`flex min-w-0 items-center justify-start gap-x-1.5 gap-y-1 overflow-hidden border-t border-[var(--color-border-separator)] ${
         isMobileBrowser
-          ? 'min-h-[52px] flex-wrap rounded-none bg-[var(--color-surface-container-lowest)] px-3 py-2 shadow-none'
+          ? 'min-h-[52px] flex-wrap rounded-none bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3 py-2 shadow-none'
           : isComposerPlacement
             ? 'min-h-[44px] flex-nowrap bg-transparent px-4 py-2'
           : 'min-h-[48px] flex-nowrap rounded-b-xl bg-[var(--color-surface-container-low)] px-4 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]'
@@ -345,7 +345,7 @@ export function RepositoryLaunchControls({
         <DirectoryPicker value={workDir} onChange={onWorkDirChange} variant="workbar" isGitProject={isGitReady} />
 
         {loading && workDir && !isMobileBrowser && (
-          <div className="inline-flex h-9 items-center gap-1.5 rounded-[7px] px-2.5 text-[13px] text-[var(--color-text-secondary)]">
+          <div className="inline-flex h-9 items-center gap-1.5 rounded-[var(--radius-sm)] px-2.5 text-[13px] text-[var(--color-token-text-secondary)]">
             <Loader2 size={14} className="shrink-0 animate-spin" />
             <span>{t('common.loading')}</span>
           </div>
@@ -369,11 +369,11 @@ export function RepositoryLaunchControls({
               }}
               className={`${workbarButtonClassName} ${isMobileBrowser ? 'max-w-[160px] shrink-0 bg-[var(--color-surface-container)]' : 'max-w-[260px] shrink'}`}
             >
-              <GitBranch size={17} className="shrink-0 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-text-secondary)]" />
-              <span className="min-w-0 flex-1 truncate text-[var(--color-text-primary)]">
+              <GitBranch size={17} className="shrink-0 text-[var(--color-token-text-secondary)] group-hover:text-[var(--color-token-text-secondary)]" />
+              <span className="min-w-0 flex-1 truncate text-[var(--color-token-foreground)]">
                 {selectedBranch?.name || t('repoLaunch.noBranch')}
               </span>
-              <ChevronDown size={16} className="shrink-0 text-[var(--color-text-tertiary)]" />
+              <ChevronDown size={16} className="shrink-0 text-[var(--color-token-text-secondary)]" />
             </button>
 
             <button
@@ -391,22 +391,22 @@ export function RepositoryLaunchControls({
               }}
               className={`${workbarButtonClassName} shrink-0 ${isMobileBrowser ? 'bg-[var(--color-surface-container)]' : ''} ${
                 useWorktree
-                  ? 'bg-[var(--color-surface-container-lowest)] text-[var(--color-text-primary)]'
+                  ? 'bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] text-[var(--color-token-foreground)]'
                   : ''
               }`}
             >
-              <GitFork size={17} className="shrink-0 text-[var(--color-text-tertiary)]" />
+              <GitFork size={17} className="shrink-0 text-[var(--color-token-text-secondary)]" />
               <span className="min-w-0 truncate">
                 {worktreeLabel}
               </span>
-              <ChevronDown size={16} className="shrink-0 text-[var(--color-text-tertiary)]" />
+              <ChevronDown size={16} className="shrink-0 text-[var(--color-token-text-secondary)]" />
             </button>
           </>
         )}
       </div>
 
       {message && workDir && (
-        <div className="flex items-center gap-2 px-1 text-[11px] text-[var(--color-text-tertiary)]">
+        <div className="flex items-center gap-2 px-1 text-[11px] text-[var(--color-token-text-secondary)]">
           <AlertCircle size={13} className="shrink-0" />
           <span>
             {message === 'missing'
@@ -432,8 +432,8 @@ export function RepositoryLaunchControls({
             closeLabel={t('tabs.close')}
             panelRef={menuRef}
             headerExtra={(
-              <div className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-3 py-2">
-                <Search size={15} className="shrink-0 text-[var(--color-text-tertiary)]" />
+              <div className="flex items-center gap-2 rounded-lg border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] px-3 py-2">
+                <Search size={15} className="shrink-0 text-[var(--color-token-text-secondary)]" />
                 <input
                   id={searchInputId}
                   ref={searchRef}
@@ -443,14 +443,14 @@ export function RepositoryLaunchControls({
                   aria-controls={listboxId}
                   aria-activedescendant={filteredBranches[selectedIndex] ? `${listboxId}-option-${selectedIndex}` : undefined}
                   placeholder={t('repoLaunch.searchBranch')}
-                  className="min-w-0 flex-1 bg-transparent text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-tertiary)]"
+                  className="min-w-0 flex-1 bg-transparent text-sm text-[var(--color-token-foreground)] outline-none placeholder:text-[var(--color-token-text-secondary)]"
                 />
               </div>
             )}
           >
             <div id={listboxId} role="listbox" aria-label={t('repoLaunch.selectBranch')} className="py-1">
               {filteredBranches.length === 0 ? (
-                <div className="px-4 py-8 text-center text-xs text-[var(--color-text-tertiary)]">
+                <div className="px-4 py-8 text-center text-xs text-[var(--color-token-text-secondary)]">
                   {t('repoLaunch.noBranchMatch')}
                 </div>
               ) : filteredBranches.map((candidate, index) => {
@@ -470,12 +470,12 @@ export function RepositoryLaunchControls({
                     }`}
                   >
                     <span className={`h-8 w-1 rounded-full ${isSelected ? 'bg-[var(--color-brand)]' : 'bg-transparent'}`} />
-                    <GitBranch size={17} className="shrink-0 text-[var(--color-text-secondary)]" />
+                    <GitBranch size={17} className="shrink-0 text-[var(--color-token-text-secondary)]" />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold text-[var(--color-text-primary)]">
+                      <span className="block truncate text-sm font-semibold text-[var(--color-token-foreground)]">
                         {candidate.name}
                       </span>
-                      <span className="block truncate text-[11px] text-[var(--color-text-tertiary)]">
+                      <span className="block truncate text-[11px] text-[var(--color-token-text-secondary)]">
                         {candidate.current
                           ? t('repoLaunch.currentBranch')
                           : candidate.checkedOut
@@ -497,12 +497,12 @@ export function RepositoryLaunchControls({
             className={branchMenuClassName}
             style={branchMenuStyle}
           >
-            <div className="border-b border-[var(--color-border)] p-3">
+            <div className="border-b border-[var(--color-token-border)] p-3">
               <label htmlFor={searchInputId} className="mb-2 block text-[10px] font-bold uppercase tracking-widest text-[var(--color-outline)]">
                 {t('repoLaunch.selectBranch')}
               </label>
-              <div className="flex items-center gap-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-3 py-2">
-                <Search size={15} className="shrink-0 text-[var(--color-text-tertiary)]" />
+              <div className="flex items-center gap-2 rounded-lg border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] px-3 py-2">
+                <Search size={15} className="shrink-0 text-[var(--color-token-text-secondary)]" />
                 <input
                   id={searchInputId}
                   ref={searchRef}
@@ -512,14 +512,14 @@ export function RepositoryLaunchControls({
                   aria-controls={listboxId}
                   aria-activedescendant={filteredBranches[selectedIndex] ? `${listboxId}-option-${selectedIndex}` : undefined}
                   placeholder={t('repoLaunch.searchBranch')}
-                  className="min-w-0 flex-1 bg-transparent text-sm text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-tertiary)]"
+                  className="min-w-0 flex-1 bg-transparent text-sm text-[var(--color-token-foreground)] outline-none placeholder:text-[var(--color-token-text-secondary)]"
                 />
               </div>
             </div>
 
             <div id={listboxId} role="listbox" aria-label={t('repoLaunch.selectBranch')} className="max-h-[280px] overflow-y-auto py-1">
               {filteredBranches.length === 0 ? (
-                <div className="px-4 py-8 text-center text-xs text-[var(--color-text-tertiary)]">
+                <div className="px-4 py-8 text-center text-xs text-[var(--color-token-text-secondary)]">
                   {t('repoLaunch.noBranchMatch')}
                 </div>
               ) : filteredBranches.map((candidate, index) => {
@@ -539,12 +539,12 @@ export function RepositoryLaunchControls({
                     }`}
                   >
                     <span className={`h-8 w-1 rounded-full ${isSelected ? 'bg-[var(--color-brand)]' : 'bg-transparent'}`} />
-                    <GitBranch size={17} className="shrink-0 text-[var(--color-text-secondary)]" />
+                    <GitBranch size={17} className="shrink-0 text-[var(--color-token-text-secondary)]" />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold text-[var(--color-text-primary)]">
+                      <span className="block truncate text-sm font-semibold text-[var(--color-token-foreground)]">
                         {candidate.name}
                       </span>
-                      <span className="block truncate text-[11px] text-[var(--color-text-tertiary)]">
+                      <span className="block truncate text-[11px] text-[var(--color-token-text-secondary)]">
                         {candidate.current
                           ? t('repoLaunch.currentBranch')
                           : candidate.checkedOut
@@ -584,9 +584,9 @@ export function RepositoryLaunchControls({
                   !useWorktree ? 'bg-[var(--color-surface-hover)]' : 'hover:bg-[var(--color-surface-hover)]'
                 }`}
               >
-                <GitFork size={16} className="shrink-0 text-[var(--color-text-tertiary)]" />
+                <GitFork size={16} className="shrink-0 text-[var(--color-token-text-secondary)]" />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] font-medium text-[var(--color-text-primary)]">
+                  <span className="block truncate text-[13px] font-medium text-[var(--color-token-foreground)]">
                     {t('repoLaunch.worktreeCurrent')}
                   </span>
                 </span>
@@ -602,9 +602,9 @@ export function RepositoryLaunchControls({
                   useWorktree ? 'bg-[var(--color-surface-hover)]' : 'hover:bg-[var(--color-surface-hover)]'
                 }`}
               >
-                <GitFork size={16} className="shrink-0 text-[var(--color-text-tertiary)]" />
+                <GitFork size={16} className="shrink-0 text-[var(--color-token-text-secondary)]" />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] font-medium text-[var(--color-text-primary)]">
+                  <span className="block truncate text-[13px] font-medium text-[var(--color-token-foreground)]">
                     {t('repoLaunch.worktreeIsolated')}
                   </span>
                 </span>
@@ -628,9 +628,9 @@ export function RepositoryLaunchControls({
                 !useWorktree ? 'bg-[var(--color-surface-hover)]' : 'hover:bg-[var(--color-surface-hover)]'
               }`}
             >
-              <GitFork size={16} className="shrink-0 text-[var(--color-text-tertiary)]" />
+              <GitFork size={16} className="shrink-0 text-[var(--color-token-text-secondary)]" />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[13px] font-medium text-[var(--color-text-primary)]">
+                <span className="block truncate text-[13px] font-medium text-[var(--color-token-foreground)]">
                   {t('repoLaunch.worktreeCurrent')}
                 </span>
               </span>
@@ -646,9 +646,9 @@ export function RepositoryLaunchControls({
                 useWorktree ? 'bg-[var(--color-surface-hover)]' : 'hover:bg-[var(--color-surface-hover)]'
               }`}
             >
-              <GitFork size={16} className="shrink-0 text-[var(--color-text-tertiary)]" />
+              <GitFork size={16} className="shrink-0 text-[var(--color-token-text-secondary)]" />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[13px] font-medium text-[var(--color-text-primary)]">
+                <span className="block truncate text-[13px] font-medium text-[var(--color-token-foreground)]">
                   {t('repoLaunch.worktreeIsolated')}
                 </span>
               </span>

@@ -1,8 +1,13 @@
-import { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useMemo, useState } from 'react'
 import { BookMarked, ChevronDown, ChevronRight, Settings } from 'lucide-react'
 import { ToolCallBlock } from './ToolCallBlock'
 import { MarkdownRenderer } from '../markdown/MarkdownRenderer'
 import { Modal } from '../shared/Modal'
+import { Collapse } from './Collapse'
+import { CadencedShimmerText } from './StreamingIndicator'
+import { RollingDiffStats } from './RollingDiffStats'
+import type { DiffStats } from './diffStats'
+import { calculateDiffStats } from './diffStats'
 import { useTranslation } from '../../i18n'
 import type { TranslationKey } from '../../i18n'
 import { SETTINGS_TAB_ID, useTabStore } from '../../stores/tabStore'
@@ -36,37 +41,108 @@ type Props = {
   isStreaming?: boolean
 }
 
-const TOOL_VERBS: Record<string, (count: number, t: (key: TranslationKey, params?: Record<string, string | number>) => string) => string> = {
-  Read: (n, t) => n === 1 ? t('toolGroup.readOne') : t('toolGroup.readMany', { count: n }),
-  Write: (n, t) => n === 1 ? t('toolGroup.createdOne') : t('toolGroup.createdMany', { count: n }),
-  Edit: (n, t) => n === 1 ? t('toolGroup.editedOne') : t('toolGroup.editedMany', { count: n }),
-  Bash: (n, t) => n === 1 ? t('toolGroup.ranOne') : t('toolGroup.ranMany', { count: n }),
-  Glob: (_n, t) => t('toolGroup.foundFiles'),
-  Grep: (n, t) => n === 1 ? t('toolGroup.searchedOne') : t('toolGroup.searchedMany', { count: n }),
-  Agent: (n, t) => n === 1 ? t('toolGroup.agentOne') : t('toolGroup.agentMany', { count: n }),
-  WebSearch: (_n, t) => t('toolGroup.searchedWeb'),
-  WebFetch: (n, t) => n === 1 ? t('toolGroup.fetchedOne') : t('toolGroup.fetchedMany', { count: n }),
-}
-
 type ToolEditStats = {
   label: string
   additions: number
   deletions: number
 }
 
-function generateSummary(toolCalls: ToolCall[], t: (key: TranslationKey, params?: Record<string, string | number>) => string): string {
-  const counts = new Map<string, number>()
+/** Stats for Codex-style structured tool activity summary */
+type ToolActivityCounts = {
+  createdFileCount: number
+  editedFileCount: number
+  deletedFileCount: number
+  commandCount: number
+  exploredFileCount: number
+  searchCount: number
+  webSearchCount: number
+  agentCount: number
+  otherToolCount: number
+}
+
+function computeActivityCounts(toolCalls: ToolCall[]): ToolActivityCounts {
+  const counts: ToolActivityCounts = {
+    createdFileCount: 0,
+    editedFileCount: 0,
+    deletedFileCount: 0,
+    commandCount: 0,
+    exploredFileCount: 0,
+    searchCount: 0,
+    webSearchCount: 0,
+    agentCount: 0,
+    otherToolCount: 0,
+  }
   for (const tc of toolCalls) {
-    counts.set(tc.toolName, (counts.get(tc.toolName) ?? 0) + 1)
+    switch (tc.toolName) {
+      case 'Write':
+        counts.createdFileCount += 1
+        break
+      case 'Edit':
+      case 'MultiEdit':
+        counts.editedFileCount += 1
+        break
+      case 'Bash':
+        counts.commandCount += 1
+        break
+      case 'Read':
+        counts.exploredFileCount += 1
+        break
+      case 'Glob':
+      case 'Grep':
+        counts.searchCount += 1
+        break
+      case 'WebSearch':
+      case 'WebFetch':
+        counts.webSearchCount += 1
+        break
+      case 'Agent':
+        counts.agentCount += 1
+        break
+      default:
+        counts.otherToolCount += 1
+        break
+    }
   }
+  return counts
+}
 
+/**
+ * Codex-style structured tool activity summary.
+ * Generates natural language like "Created 2 files, edited 3 files, ran 5 commands"
+ * First action is capitalized (sentence case), subsequent use lowercase connectors.
+ */
+export function generateToolActivitySummary(
+  toolCalls: ToolCall[],
+  t: (key: TranslationKey, params?: Record<string, string | number>) => string,
+): string {
+  const counts = computeActivityCounts(toolCalls)
   const parts: string[] = []
-  for (const [name, count] of counts) {
-    const verbFn = TOOL_VERBS[name]
-    parts.push(verbFn ? verbFn(count, t) : `${name} (${count})`)
+
+  const addItem = (count: number, oneKey: string, manyKey: string) => {
+    if (count === 0) return
+    parts.push(count === 1 ? t(oneKey as TranslationKey) : t(manyKey as TranslationKey, { count }))
   }
 
-  return parts.join(', ')
+  // Codex ordering: Created → Edited → Deleted → Explored → Searched → Commands → Web → Agent → Tools
+  addItem(counts.createdFileCount, 'toolActivity.createdOne', 'toolActivity.createdMany')
+  addItem(counts.editedFileCount, 'toolActivity.editedOne', 'toolActivity.editedMany')
+  addItem(counts.deletedFileCount, 'toolActivity.deletedOne', 'toolActivity.deletedMany')
+  addItem(counts.exploredFileCount, 'toolActivity.exploredOne', 'toolActivity.exploredMany')
+  if (counts.searchCount > 0) {
+    parts.push(counts.searchCount === 1
+      ? t('toolActivity.searchedOne')
+      : t('toolActivity.searchedMany', { count: counts.searchCount }))
+  }
+  addItem(counts.commandCount, 'toolActivity.ranOne', 'toolActivity.ranMany')
+  if (counts.webSearchCount > 0) {
+    parts.push(parts.length === 0
+      ? t('toolActivity.webSearched')
+      : t('toolActivity.webSearchedLower'))
+  }
+  addItem(counts.agentCount, 'toolActivity.agentOne', 'toolActivity.agentMany')
+  addItem(counts.otherToolCount, 'toolActivity.toolOne', 'toolActivity.toolMany')
+
+  return parts.length === 0 ? t('toolActivity.fallback') : parts.join(', ')
 }
 
 /** Generate a live title showing the LAST currently executing tool (e.g. "npm test" / "src/app.tsx") */
@@ -200,11 +276,8 @@ function extractEditStats(toolCall: ToolCall): ToolEditStats | null {
     const content = extractStringField(toolCall.input, 'content')
       ?? (toolCall.partialInput ? extractPartialJsonStringField(toolCall.partialInput, 'content') : null)
     if (content === null) return label ? { label, additions: 0, deletions: 0 } : null
-    return {
-      label: label || '文件',
-      additions: content.length === 0 ? 0 : content.split('\n').length,
-      deletions: 0,
-    }
+    const { additions, deletions } = calculateDiffStats('', content)
+    return { label: label || '文件', additions, deletions }
   }
 
   if (toolCall.toolName === 'Edit') {
@@ -212,7 +285,7 @@ function extractEditStats(toolCall: ToolCall): ToolEditStats | null {
     const newString = extractStringField(toolCall.input, 'new_string')
       ?? (toolCall.partialInput ? extractPartialJsonStringField(toolCall.partialInput, 'new_string') : null)
     if (newString === null) return label ? { label, additions: 0, deletions: 0 } : null
-    const { additions, deletions } = countLineDiff(oldString, newString)
+    const { additions, deletions } = calculateDiffStats(oldString, newString)
     return { label: label || '文件', additions, deletions }
   }
 
@@ -225,7 +298,7 @@ function extractEditStats(toolCall: ToolCall): ToolEditStats | null {
     for (const edit of edits) {
       const oldString = typeof edit.old_string === 'string' ? edit.old_string : ''
       const newString = typeof edit.new_string === 'string' ? edit.new_string : ''
-      const diff = countLineDiff(oldString, newString)
+      const diff = calculateDiffStats(oldString, newString)
       additions += diff.additions
       deletions += diff.deletions
     }
@@ -236,78 +309,27 @@ function extractEditStats(toolCall: ToolCall): ToolEditStats | null {
   return null
 }
 
-function countLineDiff(oldString: string, newString: string): { additions: number; deletions: number } {
-  const oldLines = oldString.length === 0 ? [] : oldString.split('\n')
-  const newLines = newString.length === 0 ? [] : newString.split('\n')
+function aggregateEditStats(toolCalls: ToolCall[]): DiffStats | null {
+  let additions = 0
+  let deletions = 0
+  let hasStats = false
 
-  if (oldLines.length === 0) {
-    return { additions: newLines.length, deletions: 0 }
-  }
-  if (newLines.length === 0) {
-    return { additions: 0, deletions: oldLines.length }
-  }
-
-  const maxCells = 40_000
-  if (oldLines.length * newLines.length > maxCells) {
-    return {
-      additions: Math.max(0, newLines.length - oldLines.length),
-      deletions: Math.max(0, oldLines.length - newLines.length),
-    }
+  for (const toolCall of toolCalls) {
+    const stats = extractEditStats(toolCall)
+    if (!stats) continue
+    hasStats = true
+    additions += stats.additions
+    deletions += stats.deletions
   }
 
-  const cols = newLines.length + 1
-  const dp = new Uint16Array((oldLines.length + 1) * cols)
-  for (let i = oldLines.length - 1; i >= 0; i -= 1) {
-    for (let j = newLines.length - 1; j >= 0; j -= 1) {
-      const index = i * cols + j
-      if (oldLines[i] === newLines[j]) {
-        dp[index] = (dp[(i + 1) * cols + (j + 1)] ?? 0) + 1
-      } else {
-        dp[index] = Math.max(dp[(i + 1) * cols + j] ?? 0, dp[i * cols + (j + 1)] ?? 0)
-      }
-    }
-  }
-
-  const lcs = dp[0] ?? 0
-  return {
-    additions: newLines.length - lcs,
-    deletions: oldLines.length - lcs,
-  }
+  if (!hasStats || (additions === 0 && deletions === 0)) return null
+  return { additions, deletions }
 }
 
-function AnimatedDiffNumber({ value, prefix }: { value: number; prefix: '+' | '-' }) {
-  const [displayValue, setDisplayValue] = useState(value)
-  const rafRef = useRef<number | null>(null)
-
-  useEffect(() => {
-    if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    const start = displayValue
-    const end = value
-    if (start === end) return
-    const startAt = performance.now()
-    const duration = 260
-
-    const tick = (now: number) => {
-      const progress = Math.min(1, (now - startAt) / duration)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      const next = Math.round(start + (end - start) * eased)
-      setDisplayValue(next)
-      if (progress < 1) {
-        rafRef.current = requestAnimationFrame(tick)
-      }
-    }
-
-    rafRef.current = requestAnimationFrame(tick)
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current)
-    }
-  }, [displayValue, value])
-
-  return (
-    <span className="tabular-nums">
-      {prefix}{displayValue}
-    </span>
-  )
+function getSummaryKey(toolCalls: ToolCall[]): string {
+  return toolCalls
+    .map((toolCall) => `${toolCall.toolUseId}:${toolCall.status ?? ''}:${toolCall.toolName}`)
+    .join('|')
 }
 
 function ActiveEditTitle({
@@ -316,15 +338,10 @@ function ActiveEditTitle({
   stats: ToolEditStats
 }) {
   return (
-    <span className="flex min-w-0 items-center gap-2">
+    <span className="flex min-w-0 items-center gap-1.5">
       <span className="truncate">编辑 {stats.label}</span>
       <span className="shrink-0 text-[11px] text-[rgba(255,255,255,0.46)]">·</span>
-      <span className="shrink-0 text-[11px] text-[rgba(255,255,255,0.72)]">
-        <AnimatedDiffNumber prefix="+" value={stats.additions} />
-      </span>
-      <span className="shrink-0 text-[11px] text-[rgba(255,255,255,0.58)]">
-        <AnimatedDiffNumber prefix="-" value={stats.deletions} />
-      </span>
+      <RollingDiffStats stats={stats} variant="inline" className="text-[13px] font-medium" />
     </span>
   )
 }
@@ -357,7 +374,7 @@ function isToolCallResolved(
   )
 }
 
-function hasUnresolvedToolCalls(
+export function hasUnresolvedToolCalls(
   toolCalls: ToolCall[],
   resultMap: Map<string, ToolResult>,
   childToolCallsByParent: Map<string, ToolCall[]>,
@@ -480,7 +497,7 @@ function MemoryToolActivityGroup({
     <div className="mb-[3px]">
       <div
         data-testid="memory-tool-activity-card"
-        className="overflow-hidden rounded-[16px] border border-[var(--color-memory-border)] bg-[var(--color-memory-surface)]"
+        className="overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-memory-border)] bg-[var(--color-memory-surface)]"
       >
         <button
           type="button"
@@ -488,12 +505,12 @@ function MemoryToolActivityGroup({
           className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors"
         >
           {expanded ? (
-            <ChevronDown size={15} className="shrink-0 text-[var(--color-text-tertiary)]" aria-hidden="true" />
+            <ChevronDown size={15} className="shrink-0 text-[var(--color-token-text-secondary)]" aria-hidden="true" />
           ) : (
-            <ChevronRight size={15} className="shrink-0 text-[var(--color-text-tertiary)]" aria-hidden="true" />
+            <ChevronRight size={15} className="shrink-0 text-[var(--color-token-text-secondary)]" aria-hidden="true" />
           )}
           <BookMarked size={15} className="shrink-0 text-[var(--color-memory-accent)]" aria-hidden="true" />
-          <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-[var(--color-text-primary)]">
+          <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-[var(--color-token-foreground)]">
             {t(titleKey, { count: activity.files.length })}
           </span>
           {isStreaming ? (
@@ -501,8 +518,8 @@ function MemoryToolActivityGroup({
           ) : null}
         </button>
 
-        <div className={`tool-group-content${expanded ? ' expanded' : ''}`}>
-          <div className="border-t border-[var(--color-border)]/55 px-3 py-2.5">
+        <Collapse open={expanded}>
+          <div className="border-t border-[var(--color-token-border)]/55 px-3 py-2.5">
             <div className="space-y-1.5">
               {visibleFiles.map((file) => (
                 <button
@@ -512,22 +529,22 @@ function MemoryToolActivityGroup({
                   onClick={() => openMemorySettings(file.path)}
                   className="group flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left transition-colors focus:outline-none focus-visible:shadow-[var(--shadow-focus-ring)]"
                 >
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border border-[var(--color-memory-border)] bg-[var(--color-memory-icon-bg)] text-[var(--color-text-tertiary)] group-hover:text-[var(--color-memory-accent)]">
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border border-[var(--color-memory-border)] bg-[var(--color-memory-icon-bg)] text-[var(--color-token-text-secondary)] group-hover:text-[var(--color-memory-accent)]">
                     <Settings size={12} aria-hidden="true" />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                      <span className="truncate text-[13px] font-medium text-[var(--color-text-primary)]">
+                      <span className="truncate text-[13px] font-medium text-[var(--color-token-foreground)]">
                         {file.label}
                       </span>
                       {file.lineHint ? (
-                        <span className="shrink-0 text-[12px] text-[var(--color-text-tertiary)]">
+                        <span className="shrink-0 text-[12px] text-[var(--color-token-text-secondary)]">
                           {file.lineHint}
                         </span>
                       ) : null}
                     </span>
                     {file.preview ? (
-                      <span className="mt-0.5 line-clamp-2 text-[12px] leading-5 text-[var(--color-text-secondary)]">
+                      <span className="mt-0.5 line-clamp-2 text-[12px] leading-5 text-[var(--color-token-text-secondary)]">
                         {file.preview}
                       </span>
                     ) : null}
@@ -535,7 +552,7 @@ function MemoryToolActivityGroup({
                 </button>
               ))}
               {hiddenCount > 0 ? (
-                <div className="px-2 py-1 text-[12px] text-[var(--color-text-tertiary)]">
+                <div className="px-2 py-1 text-[12px] text-[var(--color-token-text-secondary)]">
                   {t('chat.memoryMoreFiles', { count: hiddenCount })}
                 </div>
               ) : null}
@@ -544,7 +561,7 @@ function MemoryToolActivityGroup({
             <button
               type="button"
               onClick={() => setDetailsExpanded((value) => !value)}
-              className="mt-2 inline-flex h-7 items-center gap-1.5 rounded-md border border-[var(--color-border)] px-2 text-[11px] font-medium text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-text-primary)]"
+              className="mt-2 inline-flex h-7 items-center gap-1.5 rounded-md border border-[var(--color-token-border)] px-2 text-[11px] font-medium text-[var(--color-token-text-secondary)] transition-colors hover:text-[var(--color-token-foreground)]"
             >
               {detailsExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
               {t('chat.memoryTechnicalDetails')}
@@ -564,7 +581,7 @@ function MemoryToolActivityGroup({
               </div>
             ) : null}
           </div>
-        </div>
+        </Collapse>
       </div>
     </div>
   )
@@ -603,12 +620,12 @@ function AgentToolGroup({
       <button
         type="button"
         onClick={() => setExpanded((value) => !value)}
-        className="flex w-full items-center gap-2 rounded-[14px] border border-[var(--color-border)]/40 bg-[var(--color-surface-container-low)]/80 px-3 py-2 text-left transition-colors"
+        className="flex w-full items-center gap-2 rounded-[var(--radius-xl)] border border-[var(--color-token-border)]/40 bg-[var(--color-token-bg-subtle)] px-3 py-2 text-left transition-colors"
       >
-        <span className="material-symbols-outlined text-[14px] text-[var(--color-outline)]">
+        <span className="material-symbols-outlined icon-xs text-[var(--color-token-foreground)]">
           {expanded ? 'expand_less' : 'expand_more'}
         </span>
-        <span className="flex-1 truncate text-[12px] text-[var(--color-text-secondary)]">
+        <span className="flex-1 truncate text-[12px] text-[var(--color-token-text-secondary)]">
 {isAnyRunning
             ? activeToolTitle || (toolCalls.length === 1 ? t('toolGroup.agentOne') : t('toolGroup.agentMany', { count: toolCalls.length }))
             : (toolCalls.length === 1 ? t('toolGroup.agentOne') : t('toolGroup.agentMany', { count: toolCalls.length }))}
@@ -619,22 +636,22 @@ function AgentToolGroup({
           </span>
         )}
         {!isAnyRunning && !errorPresent && !allComplete && !anyStopped && (
-          <span className="material-symbols-outlined text-[14px] text-[var(--color-outline)]">pending</span>
+          <span className="material-symbols-outlined icon-xs text-[var(--color-token-foreground)]">pending</span>
         )}
         {!isAnyRunning && !errorPresent && !allComplete && anyStopped && (
-          <span className="material-symbols-outlined text-[14px] text-[var(--color-outline)]">stop_circle</span>
+          <span className="material-symbols-outlined icon-xs text-[var(--color-token-foreground)]">stop_circle</span>
         )}
       </button>
 
-      <div className={`tool-group-content${expanded ? ' expanded' : ''}`}>
+      <Collapse open={expanded}>
         <div className="relative mt-3 pl-5">
-          <div className="absolute bottom-6 left-[11px] top-4 w-px rounded-full bg-[var(--color-border)]/45" />
+          <div className="absolute bottom-6 left-[11px] top-4 w-px rounded-full bg-[var(--color-token-border)]/45" />
           <div className="space-y-2">
             {toolCalls.map((toolCall) => (
               <div key={toolCall.id} className="relative pl-7">
                 <div className="absolute left-0 top-1/2 -translate-y-1/2">
-                  <div className="absolute left-[11px] top-1/2 h-px w-4 -translate-y-1/2 bg-[var(--color-border)]/45" />
-                  <div className="absolute left-[8px] top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full border border-[var(--color-border)]/65 bg-[var(--color-surface-container-lowest)] shadow-[0_0_0_2px_var(--color-surface)]" />
+                  <div className="absolute left-[11px] top-1/2 h-px w-4 -translate-y-1/2 bg-[var(--color-token-border)]/45" />
+                  <div className="absolute left-[8px] top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full border border-[var(--color-token-border)]/65 bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] shadow-[0_0_0_2px_var(--color-surface)]" />
                 </div>
                 <AgentCallCard
                   toolCall={toolCall}
@@ -647,18 +664,18 @@ function AgentToolGroup({
             ))}
           </div>
         </div>
-      </div>
+      </Collapse>
     </div>
   )
 }
 
 /** Separated so the useState hook is never called conditionally. */
-function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isStreaming }: Props) {
+function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent }: Props) {
   const [expanded, setExpanded] = useState(false)
   const t = useTranslation()
-  const summary = generateSummary(toolCalls, t)
+  const summary = generateToolActivitySummary(toolCalls, t)
   const hasUnresolvedTools = hasUnresolvedToolCalls(toolCalls, resultMap, childToolCallsByParent)
-  const isRunning = !!isStreaming || hasUnresolvedTools
+  const isRunning = hasUnresolvedTools
 
   const activeToolCall = useMemo(
     () => getLastUnresolvedToolCall(toolCalls, resultMap, childToolCallsByParent),
@@ -668,36 +685,45 @@ function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isSt
   const activeEditStats = useMemo(() => {
     return activeToolCall ? extractEditStats(activeToolCall) : null
   }, [activeToolCall])
+  const completedEditStats = useMemo(() => aggregateEditStats(toolCalls), [toolCalls])
+  const summaryKey = useMemo(() => getSummaryKey(toolCalls), [toolCalls])
+  const summaryContent = completedEditStats ? (
+    <span className="flex min-w-0 items-center gap-1.5">
+      <span className="min-w-0 truncate">{summary}</span>
+      <span className="shrink-0 text-[11px] text-[rgba(255,255,255,0.42)]">·</span>
+      <RollingDiffStats stats={completedEditStats} variant="inline" className="text-[13px] font-medium" />
+    </span>
+  ) : summary
 
   return (
-    <div className="mb-[3px]">
+    <div className="group/collapsed-tool-activity mb-[3px]" data-summary-key={summaryKey}>
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="flex w-full items-center gap-2 rounded-[9px] px-2 py-1.5 text-left transition-colors"
+        className="flex w-full items-center gap-2 rounded-[var(--radius-xs)] px-2 py-1.5 text-left transition-colors"
       >
-        <span className="material-symbols-outlined text-[14px] text-[var(--color-outline)]">
+        <span className={`material-symbols-outlined icon-xs text-[var(--color-token-input-placeholder-foreground)] transition-transform duration-300 ${expanded ? 'rotate-90' : ''}`}>
           {expanded ? 'expand_less' : 'expand_more'}
         </span>
-        <span className="flex-1 truncate text-[12px] text-[var(--color-text-secondary)]">
+        <span className="flex-1 truncate text-[var(--text-size-chat)] text-[var(--color-token-conversation-summary-trailing)] group-hover/collapsed-tool-activity:text-[var(--color-token-foreground)]">
           {isRunning && activeEditStats ? (
-            <span className="shimmer-sweep-text block">
+            <CadencedShimmerText className="block">
               <ActiveEditTitle stats={activeEditStats} />
-            </span>
+            </CadencedShimmerText>
           ) : isRunning ? (
-            <span className="shimmer-sweep-text">
+            <CadencedShimmerText>
               {activeTitle || t('toolGroup.working')}
-            </span>
-          ) : summary}
+            </CadencedShimmerText>
+          ) : summaryContent}
         </span>
 
         {isRunning && (
-          <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-brand)] animate-pulse-dot" />
+          <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-token-charts-green)] animate-pulse-dot" />
         )}
       </button>
 
-      <div className={`tool-group-content${expanded ? ' expanded' : ''}`}>
-        <div className="ml-3 mt-1 space-y-1 border-l border-[var(--color-border)]/38 pl-3">
+      <Collapse open={expanded}>
+        <div className="ml-3 mt-1 space-y-1 border-l border-[var(--color-token-border)]/38 pl-3">
           {toolCalls.map((tc) => {
             return (
               <ToolCallTree
@@ -706,11 +732,12 @@ function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isSt
                 resultMap={resultMap}
                 childToolCallsByParent={childToolCallsByParent}
                 compact
+                diffStats={extractEditStats(tc)}
               />
             )
           })}
         </div>
-      </div>
+      </Collapse>
     </div>
   )
 }
@@ -767,20 +794,20 @@ function AgentCallCard({
   const description = typeof input.description === 'string' ? input.description : ''
 
   return (
-    <div className="overflow-hidden rounded-[14px] border border-[var(--color-border)]/50 bg-[var(--color-surface-container-low)]/76 backdrop-blur-[10px]">
+    <div className="overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-token-border)]/50 bg-[var(--color-surface-container-low)]/76 backdrop-blur-[10px]">
       <div className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors">
-        <span className="material-symbols-outlined text-[18px] text-[var(--color-outline)]">smart_toy</span>
+        <span className="material-symbols-outlined icon-md text-[var(--color-outline)]">smart_toy</span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-[13px] font-semibold text-[var(--color-text-primary)]">Agent</span>
+            <span className="text-[13px] font-semibold text-[var(--color-token-foreground)]">Agent</span>
             {description && (
-              <span className="truncate text-[12px] text-[var(--color-text-secondary)]">
+              <span className="truncate text-[12px] text-[var(--color-token-text-secondary)]">
                 {description}
               </span>
             )}
           </div>
           {!expanded && outputSummary && (
-            <div className="mt-1 line-clamp-2 text-[11px] text-[var(--color-text-tertiary)]">
+            <div className="mt-1 line-clamp-2 text-[11px] text-[var(--color-token-text-secondary)]">
               {outputSummary}
             </div>
           )}
@@ -789,7 +816,7 @@ function AgentCallCard({
               {recentToolCalls.map((recentToolCall) => (
                 <div
                   key={recentToolCall.id}
-                  className="truncate text-[11px] text-[var(--color-text-tertiary)]"
+                  className="truncate text-[11px] text-[var(--color-token-text-secondary)]"
                 >
                   {formatRecentToolUseSummary(recentToolCall, resultMap)}
                 </div>
@@ -809,7 +836,7 @@ function AgentCallCard({
               event.stopPropagation()
               setPreviewOpen(true)
             }}
-            className="shrink-0 rounded-md border border-[var(--color-border)] px-2.5 py-1 text-[11px] font-medium text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-text-primary)]"
+            className="shrink-0 rounded-md border border-[var(--color-token-border)] px-2.5 py-1 text-[11px] font-medium text-[var(--color-token-text-secondary)] transition-colors hover:text-[var(--color-token-foreground)]"
           >
             {t('agentStatus.viewResult')}
           </button>
@@ -823,14 +850,14 @@ function AgentCallCard({
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[var(--color-outline)] transition-colors"
           aria-label={expanded ? 'Collapse agent' : 'Expand agent'}
         >
-          <span className="material-symbols-outlined text-[16px]">
+          <span className="material-symbols-outlined icon-sm">
           {expanded ? 'expand_less' : 'expand_more'}
           </span>
         </button>
       </div>
 
       {expanded && (
-        <div className="border-t border-[var(--color-border)]/60 px-3 py-3">
+        <div className="border-t border-[var(--color-token-border)]/60 px-3 py-3">
           {errorText && (
             <div className="mb-3 rounded-lg border border-[var(--color-error)]/20 bg-[var(--color-error-container)]/60 px-3 py-2 text-[11px] text-[var(--color-error)]">
               {errorText}
@@ -849,11 +876,11 @@ function AgentCallCard({
               ))}
             </div>
           ) : outputSummary ? (
-            <div className="text-[11px] text-[var(--color-text-tertiary)]">
+            <div className="text-[11px] text-[var(--color-token-text-secondary)]">
               {t('agentStatus.noActivity')}
             </div>
           ) : (
-            <div className="text-[11px] text-[var(--color-text-tertiary)]">
+            <div className="text-[11px] text-[var(--color-token-text-secondary)]">
               {status === 'starting' ? t('agentStatus.starting') : t('agentStatus.noActivity')}
             </div>
           )}
@@ -878,14 +905,17 @@ function ToolCallTree({
   resultMap,
   childToolCallsByParent,
   compact = false,
+  diffStats,
 }: {
   toolCall: ToolCall
   resultMap: Map<string, ToolResult>
   childToolCallsByParent: Map<string, ToolCall[]>
   compact?: boolean
+  diffStats?: DiffStats | null
 }) {
   const result = resultMap.get(toolCall.toolUseId)
   const childToolCalls = childToolCallsByParent.get(toolCall.toolUseId) ?? []
+  const toolDiffStats = diffStats ?? extractEditStats(toolCall)
 
   return (
     <div className={compact ? 'space-y-0.5' : ''}>
@@ -897,9 +927,10 @@ function ToolCallTree({
         isPending={toolCall.isPending}
         status={toolCall.status}
         partialInput={toolCall.partialInput}
+        diffStats={toolDiffStats}
       />
       {childToolCalls.length > 0 && (
-        <div className={compact ? 'ml-3 border-l border-[var(--color-border)]/38 pl-3' : 'mb-1.5 ml-6 border-l border-[var(--color-border)]/38 pl-3'}>
+        <div className={compact ? 'ml-3 border-l border-[var(--color-token-border)]/38 pl-3' : 'mb-1.5 ml-6 border-l border-[var(--color-token-border)]/38 pl-3'}>
           <div className="space-y-1">
             {childToolCalls.map((childToolCall) => (
               <ToolCallTree
@@ -908,6 +939,7 @@ function ToolCallTree({
                 resultMap={resultMap}
                 childToolCallsByParent={childToolCallsByParent}
                 compact
+                diffStats={extractEditStats(childToolCall)}
               />
             ))}
           </div>
@@ -1072,14 +1104,14 @@ function getAgentStatusClassName(status: AgentStatus): string {
     case 'failed':
       return 'bg-[var(--color-error)]/10 text-[var(--color-error)]'
     case 'stopped':
-      return 'bg-[var(--color-surface-container-high)] text-[var(--color-text-secondary)]'
+      return 'bg-[var(--color-surface-container-high)] text-[var(--color-token-text-secondary)]'
     case 'done':
       return 'bg-[var(--color-success)]/10 text-[var(--color-success)]'
     case 'running':
       return 'bg-[var(--color-warning)]/10 text-[var(--color-warning)]'
     case 'starting':
     default:
-      return 'bg-[var(--color-surface-container-high)] text-[var(--color-text-secondary)]'
+      return 'bg-[var(--color-surface-container-high)] text-[var(--color-token-text-secondary)]'
   }
 }
 

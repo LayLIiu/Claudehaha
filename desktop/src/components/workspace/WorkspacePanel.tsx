@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { MessageCircle } from 'lucide-react'
 import { Highlight } from 'prism-react-renderer'
+import { sessionsApi } from '../../api/sessions'
 import type {
   WorkspaceChangedFile,
   WorkspaceFileStatus,
@@ -94,11 +95,11 @@ const FILE_STATUS_META: Record<WorkspaceFileStatus, { label: string; className: 
   },
   type_changed: {
     label: 'T',
-    className: 'border-[var(--color-outline)]/45 bg-[var(--color-outline)]/10 text-[var(--color-text-secondary)]',
+    className: 'border-[var(--color-outline)]/45 bg-[var(--color-outline)]/10 text-[var(--color-token-text-secondary)]',
   },
   unknown: {
     label: '?',
-    className: 'border-[var(--color-outline)]/45 bg-[var(--color-outline)]/10 text-[var(--color-text-secondary)]',
+    className: 'border-[var(--color-outline)]/45 bg-[var(--color-outline)]/10 text-[var(--color-token-text-secondary)]',
   },
 }
 
@@ -114,7 +115,7 @@ const FILE_BADGE_META: Record<string, { label: string; className: string }> = {
   js: { label: 'JS', className: 'bg-[var(--color-warning)]/16 text-[var(--color-warning)]' },
   jsx: { label: 'JSX', className: 'bg-[var(--color-warning)]/16 text-[var(--color-warning)]' },
   json: { label: '{}', className: 'bg-[var(--color-tertiary)]/14 text-[var(--color-tertiary)]' },
-  md: { label: 'MD', className: 'bg-[var(--color-text-tertiary)]/14 text-[var(--color-text-secondary)]' },
+  md: { label: 'MD', className: 'bg-[var(--color-token-text-secondary)]/14 text-[var(--color-token-text-secondary)]' },
   css: { label: 'CSS', className: 'bg-[var(--color-secondary)]/14 text-[var(--color-secondary)]' },
   html: { label: 'H', className: 'bg-[var(--color-brand)]/14 text-[var(--color-brand)]' },
   png: { label: 'IMG', className: 'bg-[var(--color-success)]/14 text-[var(--color-success)]' },
@@ -153,7 +154,7 @@ function getFileBadgeMeta(name: string) {
   const extension = getFileExtension(name)
   return FILE_BADGE_META[extension] ?? {
     label: extension ? extension.slice(0, 3).toUpperCase() : 'TXT',
-    className: 'bg-[var(--color-text-tertiary)]/12 text-[var(--color-text-secondary)]',
+    className: 'bg-[var(--color-token-text-secondary)]/12 text-[var(--color-token-text-secondary)]',
   }
 }
 
@@ -178,7 +179,7 @@ function FileTypeBadge({ name, subtle = false }: { name: string; subtle?: boolea
   const meta = getFileBadgeMeta(name)
   return (
     <span
-      className={`inline-flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-[5px] px-1 font-[var(--font-label)] text-[9px] font-semibold leading-none ${meta.className} ${subtle ? 'opacity-55 grayscale' : ''}`}
+      className={`inline-flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-[var(--radius-2xs)] px-1 font-[var(--font-label)] text-[9px] font-semibold leading-none ${meta.className} ${subtle ? 'opacity-55 grayscale' : ''}`}
       aria-hidden="true"
     >
       {meta.label}
@@ -340,10 +341,10 @@ function FloatingSelectionMenu({
       type="button"
       onMouseDown={(event) => event.preventDefault()}
       onClick={onAdd}
-      className="fixed z-50 inline-flex h-11 items-center gap-2 rounded-full border border-[var(--color-border)]/70 bg-[var(--color-surface-container-lowest)] px-5 text-[15px] font-semibold text-[var(--color-text-primary)] shadow-[0_10px_28px_rgba(15,23,42,0.14),0_2px_8px_rgba(15,23,42,0.08)] transition-colors hover:bg-[var(--color-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
+      className="fixed z-50 inline-flex h-11 items-center gap-2 rounded-full border border-[var(--color-token-border)]/70 bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-5 text-[15px] font-semibold text-[var(--color-token-foreground)] shadow-[0_10px_28px_rgba(15,23,42,0.14),0_2px_8px_rgba(15,23,42,0.08)] transition-colors hover:bg-[var(--color-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
       style={{ left: selection.x, top: selection.y }}
     >
-      <MessageCircle size={21} strokeWidth={2.15} className="shrink-0 text-[var(--color-text-primary)]" aria-hidden="true" />
+      <MessageCircle size={21} strokeWidth={2.15} className="shrink-0 text-[var(--color-token-foreground)]" aria-hidden="true" />
       <span>{t('workspace.addSelectionToChat')}</span>
     </button>
   )
@@ -363,7 +364,7 @@ function PanelMessage({
   const toneClass =
     tone === 'error'
       ? 'text-[var(--color-error)]'
-      : 'text-[var(--color-text-tertiary)]'
+      : 'text-[var(--color-token-text-secondary)]'
 
   return (
     <div
@@ -392,9 +393,9 @@ function ToolbarIconButton({
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="inline-flex h-7 w-7 items-center justify-center rounded-[7px] text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
+      className="inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
     >
-      <span className="material-symbols-outlined text-[16px]">{icon}</span>
+      <span className="material-symbols-outlined icon-sm">{icon}</span>
     </button>
   )
 }
@@ -409,22 +410,22 @@ function WorkspaceFilterInput({
   const t = useTranslation()
 
   return (
-    <div className="shrink-0 border-b border-[var(--color-border)] px-3 py-2">
-      <label className="flex h-8 items-center gap-2 rounded-[9px] border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] px-2.5 text-[var(--color-text-tertiary)] transition-colors focus-within:border-[var(--color-border-focus)] focus-within:ring-2 focus-within:ring-[var(--color-brand)]/10">
+    <div className="shrink-0 border-b border-[var(--color-token-border)] px-3 py-2">
+      <label className="flex h-8 items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-2.5 text-[var(--color-token-text-secondary)] transition-colors focus-within:border-[var(--color-token-focus-border,var(--color-border-focus))] focus-within:ring-2 focus-within:ring-[var(--color-brand)]/10">
         <span className="material-symbols-outlined shrink-0 text-[17px]">search</span>
         <input
           value={value}
           onChange={(event) => onChange(event.target.value)}
           aria-label={t('workspace.filterPlaceholder')}
           placeholder={t('workspace.filterPlaceholder')}
-          className="min-w-0 flex-1 bg-transparent text-[13px] text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-tertiary)]"
+          className="min-w-0 flex-1 bg-transparent text-[13px] text-[var(--color-token-foreground)] outline-none placeholder:text-[var(--color-token-text-secondary)]"
         />
         {value.length > 0 && (
           <button
             type="button"
             aria-label={t('workspace.clearFilter')}
             onClick={() => onChange('')}
-            className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-[5px] text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
+            className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-[var(--radius-2xs)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]"
           >
             <span className="material-symbols-outlined text-[13px]">close</span>
           </button>
@@ -524,11 +525,11 @@ function CodeSurface({
     return (
       <div className="grid grid-cols-[48px_minmax(0,720px)] gap-3 bg-[var(--color-brand)]/10 px-3 py-2">
         <span aria-hidden="true" />
-        <div className="rounded-[10px] border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] shadow-sm">
-          <div className="flex items-center gap-2 border-b border-[var(--color-border)] px-3 py-2">
-            <span className="material-symbols-outlined text-[15px] text-[var(--color-text-tertiary)]">chat_bubble</span>
-            <span className="text-[12px] font-semibold text-[var(--color-text-primary)]">{t('workspace.localComment')}</span>
-            <span className="ml-auto text-[11px] text-[var(--color-text-tertiary)]">
+        <div className="rounded-[var(--radius-md)] border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] shadow-sm">
+          <div className="flex items-center gap-2 border-b border-[var(--color-token-border)] px-3 py-2">
+            <span className="material-symbols-outlined text-[15px] text-[var(--color-token-text-secondary)]">chat_bubble</span>
+            <span className="text-[12px] font-semibold text-[var(--color-token-foreground)]">{t('workspace.localComment')}</span>
+            <span className="ml-auto text-[11px] text-[var(--color-token-text-secondary)]">
               {t('workspace.commentLineTarget', { line: lineNumber })}
             </span>
           </div>
@@ -538,7 +539,7 @@ function CodeSurface({
             autoFocus
             rows={3}
             placeholder={t('workspace.commentPlaceholder')}
-            className="block w-full resize-none bg-transparent px-3 py-3 text-[13px] leading-6 text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-tertiary)]"
+            className="block w-full resize-none bg-transparent px-3 py-3 text-[13px] leading-6 text-[var(--color-token-foreground)] outline-none placeholder:text-[var(--color-token-text-secondary)]"
           />
           <div className="flex justify-end gap-2 px-3 pb-3">
             <button
@@ -547,7 +548,7 @@ function CodeSurface({
                 setCommentLine(null)
                 setCommentDraft('')
               }}
-              className="rounded-[7px] px-2.5 py-1 text-[12px] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]"
+              className="rounded-[var(--radius-sm)] px-2.5 py-1 text-[12px] text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)]"
             >
               {t('common.cancel')}
             </button>
@@ -555,7 +556,7 @@ function CodeSurface({
               type="button"
               onClick={submitLineComment}
               disabled={!commentDraft.trim()}
-              className="rounded-[7px] bg-[var(--color-text-primary)] px-2.5 py-1 text-[12px] font-medium text-[var(--color-surface)] disabled:cursor-not-allowed disabled:opacity-45"
+              className="rounded-[var(--radius-sm)] bg-[var(--color-token-foreground)] px-2.5 py-1 text-[12px] font-medium text-[var(--color-surface)] disabled:cursor-not-allowed disabled:opacity-45"
             >
               {t('workspace.addCommentToChat')}
             </button>
@@ -573,7 +574,7 @@ function CodeSurface({
         setCommentLine(lineNumber)
         setCommentDraft('')
       }}
-      className="select-none text-right text-[11px] text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-brand)] focus-visible:outline-none focus-visible:text-[var(--color-brand)]"
+      className="select-none text-right text-[11px] text-[var(--color-token-text-secondary)] transition-colors hover:text-[var(--color-brand)] focus-visible:outline-none focus-visible:text-[var(--color-brand)]"
     >
       {lineNumber}
     </button>
@@ -652,7 +653,7 @@ function CodeSurface({
           </Highlight>
         )}
         {lines.length > WORKSPACE_PREVIEW_LINE_LIMIT && (
-          <div className="sticky bottom-0 flex items-center gap-3 border-t border-[var(--color-border)] bg-[var(--color-surface-glass)] px-3 py-2 text-xs text-[var(--color-text-tertiary)] backdrop-blur">
+          <div className="sticky bottom-0 flex items-center gap-3 border-t border-[var(--color-token-border)] bg-[var(--color-surface-glass)] px-3 py-2 text-xs text-[var(--color-token-text-secondary)] backdrop-blur">
             <span>
               {showAllLines
                 ? t('workspace.previewAllLines', { total: lines.length })
@@ -661,7 +662,7 @@ function CodeSurface({
             <button
               type="button"
               onClick={() => setShowAllLines((current) => !current)}
-              className="ml-auto rounded-[6px] px-2 py-1 text-[12px] font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
+              className="ml-auto rounded-[var(--radius-xs)] px-2 py-1 text-[12px] font-medium text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]"
             >
               {showAllLines ? t('workspace.collapsePreview') : t('workspace.showAllLoadedLines')}
             </button>
@@ -756,7 +757,7 @@ function ImagePreview({ tab }: { tab: WorkspacePreviewTab }) {
         <img
           src={tab.dataUrl}
           alt={tab.path}
-          className="max-h-full max-w-full rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] object-contain shadow-sm"
+          className="max-h-full max-w-full rounded-[var(--radius-sm)] border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] object-contain shadow-sm"
         />
       </div>
     </div>
@@ -765,34 +766,58 @@ function ImagePreview({ tab }: { tab: WorkspacePreviewTab }) {
 
 function ChangedFileRow({
   file,
+  checked,
+  onCheck,
   onClick,
   onContextMenu,
 }: {
   file: WorkspaceChangedFile
+  checked?: boolean
+  onCheck?: (path: string, checked: boolean) => void
   onClick: () => void
   onContextMenu: (event: MouseEvent, path: string) => void
 }) {
+  const hasCheckbox = onCheck !== undefined
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <div
+      className={`mx-2 flex w-[calc(100%-16px)] items-center gap-3 rounded-[var(--radius-sm)] px-2 py-2 transition-colors hover:bg-[var(--color-surface-hover)] ${hasCheckbox ? 'cursor-default' : ''}`}
       onContextMenu={(event) => onContextMenu(event, file.path)}
-      className="mx-2 flex w-[calc(100%-16px)] items-center gap-3 rounded-[7px] px-2 py-2 text-left transition-colors hover:bg-[var(--color-surface-hover)]"
     >
-      <FileStatusBadge status={file.status} />
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-[13px] font-medium text-[var(--color-text-primary)]">{file.path}</div>
-        {file.oldPath && (
-          <div className="truncate text-[11px] text-[var(--color-text-tertiary)]">
-            {file.oldPath}
-          </div>
-        )}
-      </div>
-      <div className="shrink-0 text-right font-[var(--font-mono)] text-[11px] leading-4">
-        <div className="text-[var(--color-success)]">+{file.additions}</div>
-        <div className="text-[var(--color-error)]">-{file.deletions}</div>
-      </div>
-    </button>
+      {hasCheckbox && (
+        <button
+          type="button"
+          role="checkbox"
+          aria-checked={checked}
+          onClick={(event) => { event.stopPropagation(); onCheck(file.path, !checked) }}
+          className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border transition-colors ${
+            checked
+              ? 'border-[var(--color-brand)] bg-[var(--color-brand)] text-white'
+              : 'border-[var(--color-token-border)] bg-transparent hover:border-[var(--color-brand)]'
+          }`}
+        >
+          {checked && <span className="material-symbols-outlined text-[12px] leading-none" style={{ fontVariationSettings: "'FILL' 1" }}>check</span>}
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex min-w-0 flex-1 items-center gap-3 text-left"
+      >
+        <FileStatusBadge status={file.status} />
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[13px] font-medium text-[var(--color-token-foreground)]">{file.path}</div>
+          {file.oldPath && (
+            <div className="truncate text-[11px] text-[var(--color-token-text-secondary)]">
+              {file.oldPath}
+            </div>
+          )}
+        </div>
+        <div className="shrink-0 text-right font-[var(--font-mono)] text-[11px] leading-4">
+          <div className="text-[var(--color-success)]">+{file.additions}</div>
+          <div className="text-[var(--color-error)]">-{file.deletions}</div>
+        </div>
+      </button>
+    </div>
   )
 }
 
@@ -825,15 +850,15 @@ function TreeNode({
         type="button"
         onClick={() => onOpenFile(entry.path)}
         onContextMenu={(event) => onFileContextMenu(event, entry.path, false)}
-        className={`group mx-2 flex h-8 w-[calc(100%-16px)] items-center gap-2 rounded-[7px] pr-2 text-left transition-colors ${
+        className={`group mx-2 flex h-8 w-[calc(100%-16px)] items-center gap-2 rounded-[var(--radius-sm)] pr-2 text-left transition-colors ${
           isActive
-            ? 'bg-[var(--color-surface-selected)] shadow-[inset_0_0_0_1.5px_var(--color-border-focus)]'
+            ? 'bg-[var(--color-surface-selected)] shadow-[inset_0_0_0_1.5px_var(--color-token-focus-border,var(--color-border-focus))]'
             : 'hover:bg-[var(--color-surface-hover)]'
         }`}
         style={{ paddingLeft: indent }}
       >
         <FileTypeBadge name={entry.name} subtle={!isActive} />
-        <span className="min-w-0 truncate text-[14px] font-medium text-[var(--color-text-primary)]">{entry.name}</span>
+        <span className="min-w-0 truncate text-[14px] font-medium text-[var(--color-token-foreground)]">{entry.name}</span>
       </button>
     )
   }
@@ -845,13 +870,13 @@ function TreeNode({
         onClick={() => onToggle(entry.path)}
         onContextMenu={(event) => onFileContextMenu(event, entry.path, true)}
         aria-expanded={isVisuallyExpanded}
-        className="group mx-2 flex h-8 w-[calc(100%-16px)] items-center gap-2 rounded-[7px] pr-2 text-left transition-colors hover:bg-[var(--color-surface-hover)]"
+        className="group mx-2 flex h-8 w-[calc(100%-16px)] items-center gap-2 rounded-[var(--radius-sm)] pr-2 text-left transition-colors hover:bg-[var(--color-surface-hover)]"
         style={{ paddingLeft: indent }}
       >
-        <span className="material-symbols-outlined shrink-0 text-[18px] text-[var(--color-text-tertiary)] transition-colors group-hover:text-[var(--color-text-primary)]">
+        <span className="material-symbols-outlined shrink-0 icon-md text-[var(--color-token-text-secondary)] transition-colors group-hover:text-[var(--color-token-foreground)]">
           {isVisuallyExpanded ? 'expand_more' : 'chevron_right'}
         </span>
-        <span className="min-w-0 truncate text-[15px] font-medium text-[var(--color-text-primary)]">{entry.name}</span>
+        <span className="min-w-0 truncate text-[15px] font-medium text-[var(--color-token-foreground)]">{entry.name}</span>
       </button>
 
       {isVisuallyExpanded && (
@@ -859,7 +884,7 @@ function TreeNode({
           {depth < 4 && (
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute bottom-1 top-1 w-px bg-[var(--color-border)]"
+              className="pointer-events-none absolute bottom-1 top-1 w-px bg-[var(--color-token-border)]"
               style={{ left: 28 + depth * 20 }}
             />
           )}
@@ -925,6 +950,10 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
   const [isNavigatorOpen, setIsNavigatorOpen] = useState(false)
   const [previewTabContextMenu, setPreviewTabContextMenu] = useState<{ tabId: string; x: number; y: number } | null>(null)
   const [fileContextMenu, setFileContextMenu] = useState<FileContextMenuState | null>(null)
+  const [commitMessage, setCommitMessage] = useState('')
+  const [checkedPaths, setCheckedPaths] = useState<Set<string>>(new Set())
+  const [committing, setCommitting] = useState(false)
+  const [pushing, setPushing] = useState(false)
   const width = useWorkspacePanelStore((state) => state.width)
   const isOpen = useWorkspacePanelStore((state) => state.isPanelOpen(sessionId))
   const activeView = useWorkspacePanelStore((state) => state.getActiveView(sessionId))
@@ -1039,6 +1068,61 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
   const panelWidth = hasPreviewTabs ? width : Math.min(width, 520)
   const panelMaxWidth = hasPreviewTabs ? 'min(62%, calc(100% - 328px))' : '36%'
   const panelMinWidth = hasPreviewTabs ? 'min(420px, 54%)' : 'min(340px, 40%)'
+
+  const handleToggleCheck = useCallback((path: string, checked: boolean) => {
+    setCheckedPaths((prev) => {
+      const next = new Set(prev)
+      if (checked) next.add(path)
+      else next.delete(path)
+      return next
+    })
+  }, [])
+
+  const handleToggleAll = useCallback(() => {
+    const allPaths = (status?.changedFiles ?? []).map((f) => f.path)
+    if (checkedPaths.size === allPaths.length) {
+      setCheckedPaths(new Set())
+    } else {
+      setCheckedPaths(new Set(allPaths))
+    }
+  }, [status?.changedFiles, checkedPaths.size])
+
+  const handleCommit = useCallback(async () => {
+    if (!commitMessage.trim()) return
+    setCommitting(true)
+    try {
+      const paths = checkedPaths.size > 0 ? Array.from(checkedPaths) : undefined
+      const result = await sessionsApi.gitCommit(sessionId, commitMessage.trim(), paths)
+      if (result.success) {
+        addToast({ type: 'success', message: result.hash ? `已提交 ${result.hash}` : '已提交' })
+        setCommitMessage('')
+        setCheckedPaths(new Set())
+        void loadStatus(sessionId)
+      } else {
+        addToast({ type: 'error', message: result.error ?? '提交失败' })
+      }
+    } catch (error) {
+      addToast({ type: 'error', message: error instanceof Error ? error.message : '提交失败' })
+    } finally {
+      setCommitting(false)
+    }
+  }, [commitMessage, checkedPaths, sessionId, addToast, loadStatus])
+
+  const handlePush = useCallback(async () => {
+    setPushing(true)
+    try {
+      const result = await sessionsApi.gitPush(sessionId)
+      if (result.success) {
+        addToast({ type: 'success', message: '已推送' })
+      } else {
+        addToast({ type: 'error', message: result.error ?? '推送失败' })
+      }
+    } catch (error) {
+      addToast({ type: 'error', message: error instanceof Error ? error.message : '推送失败' })
+    } finally {
+      setPushing(false)
+    }
+  }, [sessionId, addToast])
 
   const handleRefresh = () => {
     void loadStatus(sessionId)
@@ -1160,16 +1244,88 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
       return <PanelMessage icon="search_off" message={t('workspace.noMatchingFiles')} />
     }
 
+    const allChecked = filteredChangedFiles.length > 0 && filteredChangedFiles.every((f) => checkedPaths.has(f.path))
+
     return (
-      <div>
-        {filteredChangedFiles.map((file) => (
-          <ChangedFileRow
-            key={`${file.path}:${file.status}:${file.oldPath ?? ''}`}
-            file={file}
-            onClick={() => handleOpenDiff(file.path)}
-            onContextMenu={handleFileContextMenu}
+      <div className="flex h-full flex-col">
+        <div className="flex items-center gap-2 px-3 pb-1 pt-0.5">
+          <button
+            type="button"
+            role="checkbox"
+            aria-checked={allChecked}
+            onClick={handleToggleAll}
+            className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-[3px] border transition-colors ${
+              allChecked
+                ? 'border-[var(--color-brand)] bg-[var(--color-brand)] text-white'
+                : 'border-[var(--color-token-border)] bg-transparent hover:border-[var(--color-brand)]'
+            }`}
+          >
+            {allChecked && <span className="material-symbols-outlined text-[12px] leading-none" style={{ fontVariationSettings: "'FILL' 1" }}>check</span>}
+          </button>
+          <span className="text-[11px] text-[var(--color-token-text-secondary)]">
+            {checkedPaths.size > 0 ? `已选 ${checkedPaths.size} 个文件` : `${status.changedFiles.length} 个变更`}
+          </span>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-auto">
+          {filteredChangedFiles.map((file) => (
+            <ChangedFileRow
+              key={`${file.path}:${file.status}:${file.oldPath ?? ''}`}
+              file={file}
+              checked={checkedPaths.has(file.path)}
+              onCheck={handleToggleCheck}
+              onClick={() => handleOpenDiff(file.path)}
+              onContextMenu={handleFileContextMenu}
+            />
+          ))}
+        </div>
+
+        <div className="shrink-0 border-t border-[var(--color-token-border)] p-3 space-y-2">
+          <textarea
+            value={commitMessage}
+            onChange={(event) => setCommitMessage(event.target.value)}
+            placeholder="提交消息…"
+            rows={2}
+            className="w-full resize-none rounded-[var(--radius-sm)] border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-2.5 py-1.5 text-[13px] text-[var(--color-token-foreground)] placeholder:text-[var(--color-token-text-secondary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)]/35"
+            onKeyDown={(event) => {
+              if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+                event.preventDefault()
+                void handleCommit()
+              }
+            }}
           />
-        ))}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={!commitMessage.trim() || committing}
+              onClick={() => void handleCommit()}
+              className="flex h-7 items-center gap-1.5 rounded-[var(--radius-sm)] bg-[var(--color-brand)] px-3 text-[12px] font-semibold text-white transition-colors hover:bg-[var(--color-brand)]/90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {committing ? (
+                <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+              ) : (
+                <span className="material-symbols-outlined text-[14px]">check</span>
+              )}
+              提交
+            </button>
+            <button
+              type="button"
+              disabled={pushing}
+              onClick={() => void handlePush()}
+              className="flex h-7 items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3 text-[12px] font-medium text-[var(--color-token-foreground)] transition-colors hover:bg-[var(--color-surface-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {pushing ? (
+                <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+              ) : (
+                <span className="material-symbols-outlined text-[14px]">upload</span>
+              )}
+              推送
+            </button>
+            <span className="text-[10px] text-[var(--color-token-text-secondary)]">
+              ⌘↵ 提交
+            </span>
+          </div>
+        </div>
       </div>
     )
   }
@@ -1231,7 +1387,7 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
   const renderPreviewContent = () => {
     if (!activePreviewTab) {
       return (
-        <div className="flex min-h-0 flex-1 items-center justify-center px-4 text-xs text-[var(--color-text-tertiary)]">
+        <div className="flex min-h-0 flex-1 items-center justify-center px-4 text-xs text-[var(--color-token-text-secondary)]">
           {t('workspace.previewEmpty')}
         </div>
       )
@@ -1242,12 +1398,12 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
 
     return (
       <>
-        <div className="flex h-10 shrink-0 items-center gap-1.5 border-b border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] px-3 text-[12px]">
-          <span className="truncate text-[var(--color-text-tertiary)]">{status?.repoName || 'workspace'}</span>
+        <div className="flex h-10 shrink-0 items-center gap-1.5 border-b border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3 text-[12px]">
+          <span className="truncate text-[var(--color-token-text-secondary)]">{status?.repoName || 'workspace'}</span>
           {activePreviewTab.path.split('/').map((segment, index, segments) => (
             <span key={`${segment}:${index}`} className="flex min-w-0 items-center gap-1.5">
-              <span className="text-[var(--color-text-tertiary)]">›</span>
-              <span className={`truncate ${index === segments.length - 1 ? 'font-semibold text-[var(--color-text-primary)]' : 'text-[var(--color-text-secondary)]'}`}>
+              <span className="text-[var(--color-token-text-secondary)]">›</span>
+              <span className={`truncate ${index === segments.length - 1 ? 'font-semibold text-[var(--color-token-foreground)]' : 'text-[var(--color-token-text-secondary)]'}`}>
                 {segment}
               </span>
             </span>
@@ -1255,12 +1411,12 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
           <button
             type="button"
             onClick={() => addWorkspacePathToChat(activePreviewTab.path)}
-            className="ml-auto inline-flex h-6 shrink-0 items-center gap-1 rounded-[6px] px-1.5 text-[11px] text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
+            className="ml-auto inline-flex h-6 shrink-0 items-center gap-1 rounded-[var(--radius-xs)] px-1.5 text-[11px] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]"
           >
-            <span aria-hidden="true" className="material-symbols-outlined text-[14px]">person_add</span>
+            <span aria-hidden="true" className="material-symbols-outlined icon-xs">person_add</span>
             <span>{t('workspace.addToChat')}</span>
           </button>
-          <span className="shrink-0 rounded-[5px] border border-[var(--color-border)] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--color-text-tertiary)]">
+          <span className="shrink-0 rounded-[var(--radius-2xs)] border border-[var(--color-token-border)] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.1em] text-[var(--color-token-text-secondary)]">
             {kindLabel}
           </span>
         </div>
@@ -1300,15 +1456,15 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
   const renderPreviewTabs = () => (
     <>
       <div
-        className="flex h-11 shrink-0 items-center gap-2 border-b border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] px-3"
+        className="flex h-11 shrink-0 items-center gap-2 border-b border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3"
       >
         <div
           role="tablist"
           aria-label={t('workspace.previewTabs')}
-          className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto bg-[var(--color-surface-container-lowest)]"
+          className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))]"
         >
           {previewTabs.length === 0 ? (
-            <div className="flex items-center gap-2 px-1.5 text-[12px] text-[var(--color-text-tertiary)]">
+            <div className="flex items-center gap-2 px-1.5 text-[12px] text-[var(--color-token-text-secondary)]">
               <span className="material-symbols-outlined text-[15px]">docs</span>
               <span>{t('workspace.preview')}</span>
             </div>
@@ -1321,10 +1477,10 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
                 <div
                   key={tab.id}
                   onContextMenu={(event) => handlePreviewTabContextMenu(event, tab.id)}
-                  className={`group flex h-8 min-w-[118px] max-w-[210px] shrink-0 items-center gap-2 rounded-[8px] px-2 text-left text-[13px] transition-colors ${
+                  className={`group flex h-8 min-w-[118px] max-w-[210px] shrink-0 items-center gap-2 rounded-[var(--radius-sm)] px-2 text-left text-[13px] transition-colors ${
                     isActive
-                      ? 'bg-[var(--color-surface-selected)] text-[var(--color-text-primary)]'
-                      : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]'
+                      ? 'bg-[var(--color-surface-selected)] text-[var(--color-token-foreground)]'
+                      : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]'
                   }`}
                 >
                   <button
@@ -1337,7 +1493,7 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
                     className="min-w-0 flex flex-1 items-center gap-2 text-left"
                   >
                     {tab.kind === 'diff' ? (
-                      <span className="material-symbols-outlined shrink-0 text-[15px] text-[var(--color-text-tertiary)]">difference</span>
+                      <span className="material-symbols-outlined shrink-0 text-[15px] text-[var(--color-token-text-secondary)]">difference</span>
                     ) : (
                       <FileTypeBadge name={tab.title} subtle={!isActive} />
                     )}
@@ -1349,7 +1505,7 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
                     onClick={() => {
                       closePreview(sessionId, tab.id)
                     }}
-                    className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-[5px] text-[var(--color-text-tertiary)] opacity-0 transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] group-hover:opacity-100 focus-visible:opacity-100"
+                    className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-[var(--radius-2xs)] text-[var(--color-token-text-secondary)] opacity-0 transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] group-hover:opacity-100 focus-visible:opacity-100"
                   >
                     <span className="material-symbols-outlined text-[13px] leading-none">close</span>
                   </button>
@@ -1368,7 +1524,7 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
       {previewTabContextMenu && (
         <div
           role="menu"
-          className="fixed z-50 min-w-[156px] rounded-[10px] border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] py-1 text-[12px] shadow-[var(--shadow-dropdown)]"
+          className="fixed z-50 min-w-[156px] rounded-[var(--radius-md)] border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] py-1 text-[12px] shadow-[var(--shadow-dropdown)]"
           style={{ left: previewTabContextMenu.x, top: previewTabContextMenu.y }}
           onClick={(event) => event.stopPropagation()}
         >
@@ -1376,7 +1532,7 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
             type="button"
             role="menuitem"
             onClick={() => handleClosePreviewTabs('current')}
-            className="block w-full px-3 py-1.5 text-left text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]"
+            className="block w-full px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
           >
             {t('tabs.close')}
           </button>
@@ -1384,7 +1540,7 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
             type="button"
             role="menuitem"
             onClick={() => handleClosePreviewTabs('others')}
-            className="block w-full px-3 py-1.5 text-left text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]"
+            className="block w-full px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
           >
             {t('tabs.closeOthers')}
           </button>
@@ -1392,7 +1548,7 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
             type="button"
             role="menuitem"
             onClick={() => handleClosePreviewTabs('left')}
-            className="block w-full px-3 py-1.5 text-left text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]"
+            className="block w-full px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
           >
             {t('tabs.closeLeft')}
           </button>
@@ -1400,16 +1556,16 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
             type="button"
             role="menuitem"
             onClick={() => handleClosePreviewTabs('right')}
-            className="block w-full px-3 py-1.5 text-left text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]"
+            className="block w-full px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
           >
             {t('tabs.closeRight')}
           </button>
-          <div className="my-1 border-t border-[var(--color-border)]" />
+          <div className="my-1 border-t border-[var(--color-token-border)]" />
           <button
             type="button"
             role="menuitem"
             onClick={() => handleClosePreviewTabs('all')}
-            className="block w-full px-3 py-1.5 text-left text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]"
+            className="block w-full px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
           >
             {t('tabs.closeAll')}
           </button>
@@ -1424,12 +1580,12 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
       className={
         embedded
           ? 'flex h-full min-h-0 w-full min-w-0 bg-[var(--color-surface)]'
-          : 'flex h-full shrink-0 border-l border-[var(--color-border)] bg-[var(--color-surface)]'
+          : 'flex h-full shrink-0 border-l border-[var(--color-token-border)] bg-[var(--color-surface)]'
       }
       style={embedded ? undefined : { width: panelWidth, maxWidth: panelMaxWidth, minWidth: panelMinWidth }}
     >
       {hasPreviewTabs && (
-        <div className={`flex min-w-0 flex-1 flex-col bg-[var(--color-surface)] ${isNavigatorVisible ? 'border-r border-[var(--color-border)]' : ''}`}>
+        <div className={`flex min-w-0 flex-1 flex-col bg-[var(--color-surface)] ${isNavigatorVisible ? 'border-r border-[var(--color-token-border)]' : ''}`}>
           {renderPreviewTabs()}
           {renderPreviewContent()}
         </div>
@@ -1439,7 +1595,7 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
         <div
           className={`${hasPreviewTabs ? 'basis-[32%] min-w-[220px] max-w-[320px]' : 'w-full'} flex h-full shrink-0 flex-col bg-[var(--color-surface)]`}
         >
-          <div className="flex h-10 shrink-0 items-center gap-1.5 border-b border-[var(--color-border)] px-2.5">
+          <div className="flex h-10 shrink-0 items-center gap-1.5 border-b border-[var(--color-token-border)] px-2.5">
             <div className="relative min-w-0">
               <button
                 type="button"
@@ -1447,17 +1603,17 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
                 aria-haspopup="menu"
                 aria-expanded={isViewMenuOpen}
                 onClick={() => setIsViewMenuOpen((open) => !open)}
-                className="inline-flex min-w-0 max-w-full items-center gap-1 rounded-[7px] px-2 py-1 text-[14px] font-semibold leading-5 text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
+                className="inline-flex min-w-0 max-w-full items-center gap-1 rounded-[var(--radius-sm)] px-2 py-1 text-[14px] font-semibold leading-5 text-[var(--color-token-foreground)] transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
               >
                 <span className="truncate">
                   {activeView === 'changed' ? t('workspace.changedFiles') : t('workspace.allFiles')}
                 </span>
-                <span className="material-symbols-outlined shrink-0 text-[15px] font-normal text-[var(--color-text-tertiary)]">expand_more</span>
+                <span className="material-symbols-outlined shrink-0 text-[15px] font-normal text-[var(--color-token-text-secondary)]">expand_more</span>
               </button>
               {isViewMenuOpen && (
                 <div
                   role="menu"
-                  className="absolute left-0 top-[calc(100%+4px)] z-30 min-w-[124px] overflow-hidden rounded-[9px] border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] py-1 shadow-[var(--shadow-dropdown)]"
+                  className="absolute left-0 top-[calc(100%+4px)] z-30 min-w-[124px] overflow-hidden rounded-[var(--radius-sm)] border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] py-1 shadow-[var(--shadow-dropdown)]"
                 >
                   {(['changed', 'all'] as const).map((view) => {
                     const selected = activeView === view
@@ -1468,14 +1624,14 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
                         role="menuitem"
                         onClick={() => handleSetActiveView(view)}
                         className={`flex h-7 w-full items-center gap-2 px-2.5 text-left text-[12px] transition-colors ${
-                          selected ? 'bg-[var(--color-surface-selected)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                          selected ? 'bg-[var(--color-surface-selected)] text-[var(--color-token-foreground)]' : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)]'
                         }`}
                       >
                         <span className="min-w-0 flex-1 truncate">
                           {view === 'changed' ? t('workspace.changedFiles') : t('workspace.allFiles')}
                         </span>
                         {selected && (
-                          <span className="material-symbols-outlined text-[14px] text-[var(--color-brand)]">check</span>
+                          <span className="material-symbols-outlined icon-xs text-[var(--color-brand)]">check</span>
                         )}
                       </button>
                     )
@@ -1502,16 +1658,22 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
 
           <WorkspaceFilterInput value={filterQuery} onChange={setFilterQuery} />
 
-          <div className="min-h-0 flex-1 overflow-auto py-2">
-            {activeView === 'changed' ? renderChangedView() : renderAllFilesView()}
-          </div>
+          {activeView === 'changed' ? (
+            <div className="min-h-0 flex-1">
+              {renderChangedView()}
+            </div>
+          ) : (
+            <div className="min-h-0 flex-1 overflow-auto py-2">
+              {renderAllFilesView()}
+            </div>
+          )}
         </div>
       )}
 
       {fileContextMenu && (
         <div
           role="menu"
-          className="fixed z-50 min-w-[156px] rounded-[10px] border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] py-1 text-[12px] shadow-[var(--shadow-dropdown)]"
+          className="fixed z-50 min-w-[156px] rounded-[var(--radius-md)] border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] py-1 text-[12px] shadow-[var(--shadow-dropdown)]"
           style={{ left: fileContextMenu.x, top: fileContextMenu.y }}
           onClick={(event) => event.stopPropagation()}
         >
@@ -1522,27 +1684,27 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
               addWorkspacePathToChat(fileContextMenu.path, fileContextMenu.isDirectory)
               setFileContextMenu(null)
             }}
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]"
+            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
           >
-            <span aria-hidden="true" className="material-symbols-outlined text-[14px] text-[var(--color-text-tertiary)]">person_add</span>
+            <span aria-hidden="true" className="material-symbols-outlined icon-xs text-[var(--color-token-text-secondary)]">person_add</span>
             <span>{t('workspace.addToChat')}</span>
           </button>
           <button
             type="button"
             role="menuitem"
             onClick={() => void copyWorkspacePath(fileContextMenu.path)}
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]"
+            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
           >
-            <span aria-hidden="true" className="material-symbols-outlined text-[14px] text-[var(--color-text-tertiary)]">content_copy</span>
+            <span aria-hidden="true" className="material-symbols-outlined icon-xs text-[var(--color-token-text-secondary)]">content_copy</span>
             <span>{t('workspace.copyPath')}</span>
           </button>
           <button
             type="button"
             role="menuitem"
             onClick={() => void copyWorkspacePath(fileContextMenu.path, 'absolute')}
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]"
+            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
           >
-            <span aria-hidden="true" className="material-symbols-outlined text-[14px] text-[var(--color-text-tertiary)]">file_copy</span>
+            <span aria-hidden="true" className="material-symbols-outlined icon-xs text-[var(--color-token-text-secondary)]">file_copy</span>
             <span>{t('workspace.copyAbsolutePath')}</span>
           </button>
           <WorkspaceFileOpenWith

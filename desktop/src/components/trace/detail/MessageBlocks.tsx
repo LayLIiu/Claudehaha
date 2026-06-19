@@ -22,7 +22,7 @@ const ROLE_STYLES: Record<NormalizedMessage['role'], { badge: string; container:
     container: 'border-l-[var(--color-warning)] bg-[var(--color-warning)]/8',
   },
   tool: {
-    badge: 'text-[var(--color-text-tertiary)]',
+    badge: 'text-[var(--color-token-text-secondary)]',
     container: 'border-l-[var(--color-outline)] bg-[var(--color-surface-container)]/60',
   },
 }
@@ -71,13 +71,13 @@ function TextBlock({ text }: { text: string }) {
   }
   return (
     <div className="relative">
-      <pre className="max-h-[400px] overflow-y-auto whitespace-pre-wrap break-words rounded-[var(--radius-sm)] bg-[var(--color-surface)]/60 px-2 py-1.5 font-mono text-[11px] leading-5 text-[var(--color-text-secondary)]">
+      <pre className="max-h-[400px] overflow-y-auto whitespace-pre-wrap break-words rounded-[var(--radius-sm)] bg-[var(--color-surface)]/60 px-2 py-1.5 font-mono text-[11px] leading-5 text-[var(--color-token-text-secondary)]">
         {text}
       </pre>
       <CopyButton
         text={text}
         copiedLabel={t('common.copied')}
-        className="absolute right-1.5 top-1.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-1.5 py-0.5 text-[10px] text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-text-primary)]"
+        className="absolute right-1.5 top-1.5 rounded-[var(--radius-sm)] border border-[var(--color-token-border)] bg-[var(--color-surface)] px-1.5 py-0.5 text-[10px] text-[var(--color-token-text-secondary)] transition-colors hover:text-[var(--color-token-foreground)]"
       />
     </div>
   )
@@ -92,12 +92,12 @@ function ThinkingBlock({ thinking }: { thinking: string }) {
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
-        className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-text-primary)]"
+        className="inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-token-border)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--color-token-text-secondary)] transition-colors hover:text-[var(--color-token-foreground)]"
       >
         {t('trace.detail.thinking')} · {t('trace.detail.chars', { count: thinking.length })}
       </button>
       {open ? (
-        <pre className="mt-1.5 max-h-[300px] overflow-y-auto whitespace-pre-wrap break-words text-[11px] italic leading-5 text-[var(--color-text-tertiary)]">
+        <pre className="mt-1.5 max-h-[300px] overflow-y-auto whitespace-pre-wrap break-words text-[11px] italic leading-5 text-[var(--color-token-text-secondary)]">
           {thinking}
         </pre>
       ) : null}
@@ -108,10 +108,10 @@ function ThinkingBlock({ thinking }: { thinking: string }) {
 function ToolUseBlock({ id, name, input }: { id?: string; name: string; input: unknown }) {
   return (
     <div className="min-w-0">
-      <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-[var(--color-text-secondary)]">
+      <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-[var(--color-token-text-secondary)]">
         <Wrench size={13} strokeWidth={2} className="shrink-0 text-[var(--color-warning)]" />
         <span className="truncate">{name}</span>
-        {id ? <span className="truncate font-mono text-[10px] font-normal text-[var(--color-text-tertiary)]">{id}</span> : null}
+        {id ? <span className="truncate font-mono text-[10px] font-normal text-[var(--color-token-text-secondary)]">{id}</span> : null}
       </div>
       <div className="mt-1">
         <CodeViewer code={safeJson(input)} language="json" maxLines={24} showLineNumbers />
@@ -125,12 +125,12 @@ function ToolResultBlock({ toolUseId, content, isError }: { toolUseId?: string; 
   const text = extractPlainText(content)
   return (
     <div className={`min-w-0 ${isError ? 'rounded-[var(--radius-sm)] border border-[var(--color-error)]/40 p-1.5' : ''}`}>
-      <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-[var(--color-text-secondary)]">
+      <div className="flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-[var(--color-token-text-secondary)]">
         <span className={isError ? 'text-[var(--color-error)]' : ''}>
           {isError ? t('trace.toolError') : t('trace.toolResult')}
         </span>
         {toolUseId ? (
-          <span className="truncate font-mono text-[10px] font-normal text-[var(--color-text-tertiary)]">{toolUseId}</span>
+          <span className="truncate font-mono text-[10px] font-normal text-[var(--color-token-text-secondary)]">{toolUseId}</span>
         ) : null}
       </div>
       <div className="mt-1">
@@ -145,7 +145,7 @@ function ToolResultBlock({ toolUseId, content, isError }: { toolUseId?: string; 
 function TextResult({ text }: { text: string }) {
   if (!text.trim()) return null
   return (
-    <pre className="max-h-[400px] overflow-y-auto whitespace-pre-wrap break-words rounded-[var(--radius-sm)] bg-[var(--color-surface)]/60 px-2 py-1.5 font-mono text-[11px] leading-5 text-[var(--color-text-secondary)]">
+    <pre className="max-h-[400px] overflow-y-auto whitespace-pre-wrap break-words rounded-[var(--radius-sm)] bg-[var(--color-surface)]/60 px-2 py-1.5 font-mono text-[11px] leading-5 text-[var(--color-token-text-secondary)]">
       {text}
     </pre>
   )
@@ -153,7 +153,7 @@ function TextResult({ text }: { text: string }) {
 
 function ImageChip({ mediaType }: { mediaType?: string }) {
   return (
-    <span className="inline-flex w-fit items-center gap-1 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--color-text-tertiary)]">
+    <span className="inline-flex w-fit items-center gap-1 rounded-[var(--radius-sm)] border border-[var(--color-token-border)] px-1.5 py-0.5 font-mono text-[10px] text-[var(--color-token-text-secondary)]">
       [image]
       {mediaType ? <span>{mediaType}</span> : null}
     </span>

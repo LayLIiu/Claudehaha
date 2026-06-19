@@ -32,7 +32,7 @@ export function Modal({ open, onClose, title, children, width = 560, footer }: M
 
       {/* Modal content */}
       <div
-        className="glass-panel relative rounded-[18px] max-h-[85vh] flex flex-col overflow-hidden"
+        className="glass-panel relative rounded-[var(--radius-2xl)] max-h-[85vh] flex flex-col overflow-hidden"
         style={{ width, maxWidth: 'calc(100vw - 48px)' }}
         role="dialog"
         aria-modal="true"
@@ -40,14 +40,14 @@ export function Modal({ open, onClose, title, children, width = 560, footer }: M
       >
         {title && (
           <div className="flex items-start justify-between gap-4 px-6 pt-6 pb-0">
-            <h2 className="text-xl font-bold text-[var(--color-text-primary)]">{title}</h2>
+            <h2 className="text-xl font-bold text-[var(--color-token-foreground)]">{title}</h2>
             <button
               type="button"
               onClick={onClose}
               aria-label="Close dialog"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]"
             >
-              <span className="material-symbols-outlined text-[18px]">close</span>
+              <span className="material-symbols-outlined icon-md">close</span>
             </button>
           </div>
         )}

@@ -173,8 +173,8 @@ export function BrowserSurface({ sessionId }: { sessionId: string }) {
         title="截图"
         className={[
           actionButtonClass,
-          'border-transparent text-[var(--color-text-secondary)] hover:border-[var(--color-border)]',
-          'hover:bg-[var(--color-surface-container-low)] hover:text-[var(--color-text-primary)]',
+          'border-transparent text-[var(--color-token-text-secondary)] hover:border-[var(--color-token-border)]',
+          'hover:bg-[var(--color-surface-container-low)] hover:text-[var(--color-token-foreground)]',
         ].join(' ')}
         onClick={() => previewBridge.message({ v: 1, type: 'capture', kind: 'full' })}
       >
@@ -188,7 +188,7 @@ export function BrowserSurface({ sessionId }: { sessionId: string }) {
           actionButtonClass,
           session.pickerActive
             ? 'border-[var(--color-brand)]/45 bg-[var(--color-surface-selected)] text-[var(--color-brand)]'
-            : 'border-transparent text-[var(--color-text-secondary)] hover:border-[var(--color-border)] hover:bg-[var(--color-surface-container-low)] hover:text-[var(--color-text-primary)]',
+            : 'border-transparent text-[var(--color-token-text-secondary)] hover:border-[var(--color-token-border)] hover:bg-[var(--color-surface-container-low)] hover:text-[var(--color-token-foreground)]',
         ].join(' ')}
         onClick={() => {
           const cur = useBrowserPanelStore.getState().bySession[sessionId]
@@ -231,7 +231,7 @@ export function BrowserSurface({ sessionId }: { sessionId: string }) {
       />
       <div ref={hostRef} className="relative flex-1 overflow-hidden" data-testid="preview-host">
         {session.loading && (
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[var(--color-surface)] text-[var(--color-text-tertiary)]">
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[var(--color-surface)] text-[var(--color-token-text-secondary)]">
             <Loader2 size={18} className="animate-spin" aria-label="加载中" />
           </div>
         )}

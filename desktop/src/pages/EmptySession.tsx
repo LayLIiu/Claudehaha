@@ -577,14 +577,14 @@ export function EmptySession() {
             className={isMobileComposer ? 'mb-4 h-14 w-14 opacity-90' : 'mb-5 h-16 w-16 opacity-90'}
           />
           <h1
-            className={`mb-2 font-semibold tracking-tight text-[var(--color-text-primary)] ${
+            className={`mb-2 font-semibold tracking-tight text-[var(--color-token-foreground)] ${
               isMobileComposer ? 'text-[24px]' : 'text-[28px]'
             }`}
           >
             {t('empty.title')}
           </h1>
           <p
-            className={`mx-auto text-[var(--color-text-secondary)] ${
+            className={`mx-auto text-[var(--color-token-text-secondary)] ${
               isMobileComposer ? 'max-w-[280px] text-sm leading-6' : 'max-w-sm text-[14px] leading-6'
             }`}
           >
@@ -606,7 +606,7 @@ export function EmptySession() {
             ref={panelRef}
             data-testid="empty-session-composer-panel"
             className={`glass-panel relative flex flex-col gap-3 overflow-visible ${
-              isMobileComposer ? 'rounded-2xl p-3 shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[18px] p-0'
+              isMobileComposer ? 'rounded-2xl p-3 shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[var(--radius-2xl)] p-0'
             } ${isDragActive ? 'composer-drop-target-active' : ''}`}
             {...dragHandlers}
           >
@@ -682,7 +682,7 @@ export function EmptySession() {
               {slashMenuOpen && filteredCommands.length > 0 && (
                 <div
                   ref={slashMenuRef}
-                  className="absolute bottom-full left-0 right-0 z-50 mb-2 overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] shadow-[var(--shadow-dropdown)]"
+                  className="absolute bottom-full left-0 right-0 z-50 mb-2 overflow-hidden rounded-xl border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] shadow-[var(--shadow-dropdown)]"
                 >
                   <div className="max-h-[260px] overflow-y-auto py-1">
                     {filteredCommands.map((command, index) => (
@@ -696,14 +696,14 @@ export function EmptySession() {
                         }`}
                       >
                         <span className="flex min-w-0 max-w-[52%] shrink-0 items-baseline gap-1.5">
-                          <span className="shrink-0 text-sm font-semibold text-[var(--color-text-primary)]">/{command.name}</span>
+                          <span className="shrink-0 text-sm font-semibold text-[var(--color-token-foreground)]">/{command.name}</span>
                           {command.argumentHint ? (
-                            <span className="min-w-0 truncate font-mono text-[11px] text-[var(--color-text-tertiary)]">
+                            <span className="min-w-0 truncate font-mono text-[11px] text-[var(--color-token-text-secondary)]">
                               {command.argumentHint}
                             </span>
                           ) : null}
                         </span>
-                        <span className="min-w-0 flex-1 truncate text-xs text-[var(--color-text-tertiary)]">{command.description}</span>
+                        <span className="min-w-0 flex-1 truncate text-xs text-[var(--color-token-text-secondary)]">{command.description}</span>
                       </button>
                     ))}
                   </div>
@@ -721,7 +721,7 @@ export function EmptySession() {
                   onChange={(event) => handleInputChange(event.target.value, event.target.selectionStart ?? event.target.value.length)}
                   onKeyDown={handleKeyDown}
                   onPaste={handlePaste}
-                  className={`flex-1 resize-none border-none bg-transparent leading-relaxed text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-tertiary)] ${
+                  className={`flex-1 resize-none border-none bg-transparent leading-relaxed text-[var(--color-token-foreground)] outline-none placeholder:text-[var(--color-token-text-secondary)] ${
                     isMobileComposer ? 'max-h-[132px] min-h-[72px] py-1.5 text-base' : 'py-2'
                   }`}
                   style={{ fontFamily: 'var(--font-body)' }}
@@ -738,29 +738,29 @@ export function EmptySession() {
                     <button
                       onClick={() => setPlusMenuOpen((prev) => !prev)}
                       aria-label="Open composer tools"
-                      className={`text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] ${
+                      className={`text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] ${
                         isMobileComposer ? 'inline-flex h-11 w-11 items-center justify-center rounded-xl' : 'rounded-lg p-1.5'
                       }`}
                     >
-                      <span className="material-symbols-outlined text-[18px]">add</span>
+                      <span className="material-symbols-outlined icon-md">add</span>
                     </button>
 
                     {plusMenuOpen && (
-                      <div className={`absolute bottom-full left-0 mb-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] py-1 shadow-[var(--shadow-dropdown)] ${
+                      <div className={`absolute bottom-full left-0 mb-2 rounded-xl border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] py-1 shadow-[var(--shadow-dropdown)] ${
                         isMobileComposer ? 'w-[min(240px,calc(100vw-32px))]' : 'w-[240px]'
                       }`}>
                         <button
                           onClick={openAttachmentPicker}
-                          className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-surface-hover)]"
+                          className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-[var(--color-token-foreground)] transition-colors hover:bg-[var(--color-surface-hover)]"
                         >
-                          <span className="material-symbols-outlined text-[18px] text-[var(--color-text-secondary)]">attach_file</span>
+                          <span className="material-symbols-outlined icon-md text-[var(--color-token-text-secondary)]">attach_file</span>
                           {t('empty.addFiles')}
                         </button>
                         <button
                           onClick={insertSlashCommand}
-                          className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-surface-hover)]"
+                          className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-[var(--color-token-foreground)] transition-colors hover:bg-[var(--color-surface-hover)]"
                         >
-                          <span className="w-5 text-center text-[18px] font-bold text-[var(--color-text-secondary)]">/</span>
+                          <span className="w-5 text-center text-[18px] font-bold text-[var(--color-token-text-secondary)]">/</span>
                           {t('empty.slashCommands')}
                         </button>
                       </div>
@@ -795,7 +795,7 @@ export function EmptySession() {
                     }`}
                   >
                     {!isMobileComposer && t('common.run')}
-                    <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                    <span className="material-symbols-outlined icon-xs">arrow_forward</span>
                   </button>
                 </div>
               </div>

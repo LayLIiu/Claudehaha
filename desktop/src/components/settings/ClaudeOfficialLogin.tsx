@@ -53,7 +53,7 @@ export function ClaudeOfficialLogin() {
       )
     }
     return (
-      <div className="text-xs text-[var(--color-text-tertiary)]">
+      <div className="text-xs text-[var(--color-token-text-secondary)]">
         {t('common.loading')}
       </div>
     )
@@ -84,7 +84,7 @@ export function ClaudeOfficialLogin() {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="text-sm text-[var(--color-text-secondary)]">
+      <div className="text-sm text-[var(--color-token-text-secondary)]">
         {t('settings.claudeOfficialLogin.intro')}
       </div>
       <button

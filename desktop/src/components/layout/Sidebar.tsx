@@ -680,11 +680,11 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
           <button
             type="button"
             onClick={closeMobileDrawer}
-            className="sidebar-toggle-button flex h-11 w-11 items-center justify-center rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-sidebar)]"
+            className="sidebar-toggle-button flex h-11 w-11 items-center justify-center rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface-sidebar)]"
             aria-label={t('sidebar.collapse')}
             title={t('sidebar.collapse')}
           >
-            <span className="material-symbols-outlined text-[20px]">close</span>
+            <span className="material-symbols-outlined icon-md">close</span>
           </button>
         </div>
       )}
@@ -728,7 +728,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
               setSidebarOpen(false)
               closeMobileDrawer()
             }}
-            icon={<span className="material-symbols-outlined text-[18px]">extension</span>}
+            icon={<span className="material-symbols-outlined icon-md">extension</span>}
           >
             {t('settings.tab.plugins')}
           </NavItem>
@@ -757,15 +757,15 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
             className="sidebar-section sidebar-section--visible flex flex-1 min-h-0 flex-col"
           >
             {isBatchMode && (
-              <div className="mx-3 mb-2 rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-2 shadow-sm">
+              <div className="mx-3 mb-2 rounded-[var(--radius-sm)] border border-[var(--color-token-border)] bg-[var(--color-surface)] px-2.5 py-2 shadow-sm">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="min-w-0 text-xs font-medium text-[var(--color-text-primary)]">
+                  <span className="min-w-0 text-xs font-medium text-[var(--color-token-foreground)]">
                     {t('sidebar.batchSelectedCount', { count: selectedCount })}
                   </span>
                   <button
                     type="button"
                     onClick={handleExitBatchMode}
-                    className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
+                    className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-[var(--color-token-text-secondary)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))]"
                     aria-label={t('sidebar.batchExit')}
                     title={t('sidebar.batchExit')}
                   >
@@ -783,7 +783,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                       }
                     }}
                     disabled={filteredSessionIds.length === 0}
-                    className="rounded-md border border-[var(--color-border)] px-2 py-1.5 text-xs font-medium text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] disabled:opacity-50"
+                    className="rounded-md border border-[var(--color-token-border)] px-2 py-1.5 text-xs font-medium text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] disabled:opacity-50"
                   >
                     {filteredSessionIds.length > 0 && filteredSessionIds.every((id) => selectedSessionIds.has(id))
                       ? t('sidebar.batchDeselectAll')
@@ -804,7 +804,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
               {error && (
                 <div className="mx-1 mt-2 rounded-[var(--radius-md)] border border-[var(--color-error)]/20 bg-[var(--color-error)]/5 px-3 py-2">
                   <div className="text-xs font-medium text-[var(--color-error)]">{t('sidebar.sessionListFailed')}</div>
-                  <div className="mt-1 text-[11px] text-[var(--color-text-secondary)] break-words">{error}</div>
+                  <div className="mt-1 text-[11px] text-[var(--color-token-text-secondary)] break-words">{error}</div>
                   <button
                     onClick={() => fetchSessions()}
                     className="mt-2 text-[11px] font-medium text-[var(--color-brand)] hover:underline"
@@ -814,11 +814,11 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                 </div>
               )}
               {showInitialLoading ? (
-                <div className="px-3 py-4 text-center text-xs text-[var(--color-text-tertiary)]">
+                <div className="px-3 py-4 text-center text-xs text-[var(--color-token-text-secondary)]">
                   {t('common.loading')}
                 </div>
               ) : filteredSessions.length === 0 && (
-                <div className="px-3 py-4 text-center text-xs text-[var(--color-text-tertiary)]">
+                <div className="px-3 py-4 text-center text-xs text-[var(--color-token-text-secondary)]">
                   {t('sidebar.noSessions')}
                 </div>
               )}
@@ -882,7 +882,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                           toggleProjectCollapsed(project.key)
                         }}
                         data-state={projectCollapsed ? 'closed' : 'open'}
-                        className="flex min-w-0 flex-1 cursor-grab items-center gap-2 rounded-[12px] px-0 py-0 text-left transition-[color,border-color] active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
+                        className="flex min-w-0 flex-1 cursor-grab items-center gap-2 rounded-[var(--radius-md)] px-0 py-0 text-left transition-[color,border-color] active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border)]"
                         aria-expanded={!projectCollapsed}
                         aria-label={t(projectCollapsed ? 'sidebar.expandProject' : 'sidebar.collapseProject', { project: project.title })}
                         title={project.subtitle || project.title}
@@ -892,8 +892,8 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                           data-icon-state={projectCollapsed ? 'closed' : 'open'}
                           className={`flex h-5 w-5 flex-shrink-0 items-center justify-center transition-colors ${
                             projectCollapsed
-                              ? 'text-[var(--color-text-secondary)]'
-                              : 'text-[var(--color-text-primary)]'
+                              ? 'text-[var(--color-token-text-secondary)]'
+                              : 'text-[var(--color-token-foreground)]'
                           }`}
                         >
                           {projectCollapsed ? (
@@ -902,15 +902,15 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                             <FolderOpen className="h-[18px] w-[18px]" strokeWidth={1.9} aria-hidden="true" />
                           )}
                         </span>
-                        <span className={`min-w-0 flex-1 truncate text-[13px] font-semibold leading-5 transition-colors ${
+                        <span className={`min-w-0 flex-1 truncate text-[13px] font-semibold leading-5 text-[var(--color-token-text-primary)] transition-colors ${
                           projectCollapsed
-                            ? 'text-[var(--color-text-secondary)]'
-                            : 'text-[var(--color-text-primary)]'
+                            ? 'text-[var(--color-token-text-secondary)]'
+                            : 'text-[var(--color-token-foreground)]'
                         }`}>
                           {project.title}
                         </span>
                         {isProjectPinned && (
-                          <Pin className="h-3.5 w-3.5 flex-shrink-0 text-[var(--color-text-tertiary)]" strokeWidth={1.8} aria-hidden="true" />
+                          <Pin className="icon-xs flex-shrink-0 text-[var(--color-token-description-foreground)]" strokeWidth={1.8} aria-hidden="true" />
                         )}
                       </button>
                       <div className="flex flex-shrink-0 items-center gap-1">
@@ -918,10 +918,10 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                           <button
                             type="button"
                             onClick={() => toggleGroupSelection(groupIds)}
-                            className={`rounded-md px-1.5 py-1 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] ${
+                            className={`rounded-md px-1.5 py-1 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] ${
                               groupSelectedCount > 0
                                 ? 'text-[var(--color-brand)] hover:bg-[var(--color-brand)]/10'
-                                : 'text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-secondary)]'
+                                : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-text-secondary)]'
                             }`}
                             aria-label={t('sidebar.batchSelectGroup', { group: project.title })}
                           >
@@ -939,7 +939,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                 setContextMenu(null)
                                 setProjectContextMenu({ key: project.key, x: event.clientX, y: event.clientY })
                               }}
-                              className="sidebar-project-action flex h-7 w-7 items-center justify-center rounded-[7px] text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
+                              className="sidebar-project-action flex h-7 w-7 items-center justify-center rounded-[var(--radius-xs)] text-[var(--color-token-description-foreground)] transition-colors hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border)]"
                               aria-label={t('sidebar.projectActions', { project: project.title })}
                               title={t('sidebar.projectActions', { project: project.title })}
                             >
@@ -951,7 +951,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                 event.stopPropagation()
                                 void createSessionForWorkDir(project.workDir)
                               }}
-                              className="sidebar-project-action flex h-7 w-7 items-center justify-center rounded-[7px] text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
+                              className="sidebar-project-action flex h-7 w-7 items-center justify-center rounded-[var(--radius-xs)] text-[var(--color-token-description-foreground)] transition-colors hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border)]"
                               aria-label={t('sidebar.newSessionInProject', { project: project.title })}
                               title={t('sidebar.newSessionInProject', { project: project.title })}
                             >
@@ -985,7 +985,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                       setRenameValue('')
                                     }
                                   }}
-                                  className="w-full rounded-[var(--radius-md)] border border-[var(--color-border-focus)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text-primary)] outline-none"
+                                  className="w-full rounded-[var(--radius-md)] border border-[var(--color-token-focus-border,var(--color-border-focus))] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-token-foreground)] outline-none"
                                 />
                               ) : (
                                 <button
@@ -1001,12 +1001,12 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                   }}
                                   onContextMenu={(e) => handleContextMenu(e, session.id)}
                                   className={`
-                                    sidebar-session-row group/session w-full pl-[28px] pr-2 ${isMobile ? 'py-3' : 'py-1.5'} text-left text-[13px] transition-[background,color] duration-150
+                                    sidebar-session-row group/session w-full pl-[28px] pr-2 ${isMobile ? 'py-3' : 'py-[5px]'} text-left text-[13px] transition-[background,color] duration-150
                                     ${selectedSessionIds.has(session.id)
-                                      ? 'sidebar-session-row--selected text-[var(--color-text-primary)]'
+                                      ? 'sidebar-session-row--selected text-[var(--color-token-foreground)]'
                                       : session.id === activeTabId
-                                      ? 'sidebar-session-row--active text-[var(--color-text-primary)]'
-                                      : 'sidebar-session-row--idle text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
+                                      ? 'sidebar-session-row--active text-[var(--color-token-foreground)]'
+                                      : 'sidebar-session-row--idle text-[var(--color-token-text-secondary)] hover:text-[var(--color-token-foreground)]'
                                     }
                                   `}
                                   aria-pressed={isBatchMode ? selectedSessionIds.has(session.id) : undefined}
@@ -1014,28 +1014,28 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                   <span className="flex min-w-0 items-center gap-2">
                                     {isBatchMode ? (
                                       <span
-                                        className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-[5px] border transition-colors ${
+                                        className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-[var(--radius-2xs)] border transition-colors ${
                                           selectedSessionIds.has(session.id)
                                             ? 'border-[var(--color-brand)] bg-[var(--color-brand)] text-white'
-                                            : 'border-[var(--color-border)] bg-[var(--color-surface)]'
+                                            : 'border-[var(--color-token-border)] bg-[var(--color-surface)]'
                                         }`}
                                         aria-hidden="true"
                                       >
                                         {selectedSessionIds.has(session.id) && (
-                                          <span className="material-symbols-outlined text-[12px]">check</span>
+                                          <span className="material-symbols-outlined icon-2xs">check</span>
                                         )}
                                       </span>
                                     ) : null}
                                     <span className="min-w-0 flex-1 truncate font-medium tracking-normal">
                                       {pendingPermissionSessionIds.has(session.id) && (
-                                        <span className="mr-1.5 inline-flex items-center gap-0.5 rounded-[4px] bg-[var(--color-warning)]/15 px-1.5 py-0.5 text-[10px] font-semibold text-[var(--color-warning)]">
+                                        <span className="mr-1.5 inline-flex items-center gap-0.5 rounded-[var(--radius-2xs)] bg-[var(--color-warning)]/15 px-1.5 py-0.5 text-[10px] font-semibold text-[var(--color-warning)]">
                                           {t('sidebar.needsApproval')}
                                         </span>
                                       )}
                                       {session.title || 'Untitled'}
                                     </span>
                                     {pinnedSessionIdSet.has(session.id) && !isBatchMode && (
-                                      <Pin className="h-3.5 w-3.5 flex-shrink-0 text-[var(--color-text-tertiary)]" strokeWidth={1.8} aria-hidden="true" />
+                                      <Pin className="icon-xs flex-shrink-0 text-[var(--color-token-description-foreground)]" strokeWidth={1.8} aria-hidden="true" />
                                     )}
                                     {!session.workDirExists && (
                                       <span
@@ -1062,7 +1062,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                             <button
                               type="button"
                               onClick={() => toggleProjectSessionExpansion(project.key)}
-                              className="inline-flex items-center justify-start py-1 text-[13px] font-semibold text-[var(--color-text-tertiary)] opacity-75 transition-[color,opacity] hover:text-[var(--color-text-secondary)] hover:opacity-100 focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
+                              className="inline-flex items-center justify-start py-1 text-[13px] font-semibold text-[var(--color-token-text-secondary)] opacity-75 transition-[color,opacity] hover:text-[var(--color-token-text-secondary)] hover:opacity-100 focus-visible:rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))]"
                               aria-expanded={sessionsExpanded}
                             >
                               {sessionsExpanded
@@ -1101,7 +1101,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
               setSidebarOpen(false)
               closeMobileDrawer()
             }}
-            icon={<span className="material-symbols-outlined text-[18px]">settings</span>}
+            icon={<span className="material-symbols-outlined icon-md">settings</span>}
           >
             {t('sidebar.settings')}
           </NavItem>
@@ -1116,7 +1116,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
         return renderSidebarOverlay(
           <div
             role="menu"
-            className="sidebar-codex-menu fixed z-[320] w-[232px] overflow-hidden rounded-[18px] border border-[var(--color-border)] p-1.5 shadow-[var(--shadow-dropdown)]"
+            className="sidebar-codex-menu fixed z-[320] w-[232px] overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--color-token-border)] p-1.5 shadow-[var(--shadow-dropdown)]"
             style={positionSessionMenu(contextMenu.x, contextMenu.y)}
             onClick={(event) => event.stopPropagation()}
           >
@@ -1154,7 +1154,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
         return renderSidebarOverlay(
           <div
             role="menu"
-            className="sidebar-codex-menu fixed z-[320] w-[286px] overflow-hidden rounded-[18px] border border-[var(--color-border)] p-1.5 shadow-[var(--shadow-dropdown)]"
+            className="sidebar-codex-menu fixed z-[320] w-[286px] overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--color-token-border)] p-1.5 shadow-[var(--shadow-dropdown)]"
             style={positionProjectMenu(projectContextMenu.x, projectContextMenu.y)}
             onClick={(event) => event.stopPropagation()}
           >
@@ -1252,21 +1252,21 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
         title={t('common.delete')}
         body={(
           <div className="space-y-3">
-            <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+            <p className="text-sm leading-6 text-[var(--color-token-text-secondary)]">
               {t('sidebar.batchDeleteConfirm', { count: pendingBatchDeleteSessionIds?.length ?? 0 })}
             </p>
             <div>
-              <div className="mb-1.5 text-xs font-medium text-[var(--color-text-primary)]">
+              <div className="mb-1.5 text-xs font-medium text-[var(--color-token-foreground)]">
                 {t('sidebar.batchDeleteConfirmBody')}
               </div>
-              <ul className="max-h-40 space-y-1 overflow-y-auto rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface-container-low)] p-2">
+              <ul className="max-h-40 space-y-1 overflow-y-auto rounded-[var(--radius-sm)] border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] p-2">
                 {pendingBatchDeleteSessions.slice(0, 5).map((session) => (
-                  <li key={session.id} className="truncate text-xs text-[var(--color-text-secondary)]">
+                  <li key={session.id} className="truncate text-xs text-[var(--color-token-text-secondary)]">
                     {session.title || 'Untitled'}
                   </li>
                 ))}
                 {(pendingBatchDeleteSessionIds?.length ?? 0) > 5 && (
-                  <li className="text-xs text-[var(--color-text-tertiary)]">
+                  <li className="text-xs text-[var(--color-token-text-secondary)]">
                     {t('sidebar.batchDeleteMore', { count: (pendingBatchDeleteSessionIds?.length ?? 0) - 5 })}
                   </li>
                 )}
@@ -1357,14 +1357,14 @@ function ProjectHeaderActions({
       data-testid="sidebar-projects-header"
       className="group/sidebar-projects flex items-center justify-between px-1.5 pb-2 pt-1"
     >
-      <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">
+      <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--color-token-text-secondary)]">
         {title}
       </div>
       <div className="flex items-center gap-1 opacity-65 transition-opacity group-hover/sidebar-projects:opacity-100 focus-within:opacity-100">
         <button
           type="button"
           onClick={onOpenMenu}
-          className="flex h-8 w-8 items-center justify-center rounded-[10px] text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
+          className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))]"
           aria-label={menuLabel}
           title={menuLabel}
         >
@@ -1373,7 +1373,7 @@ function ProjectHeaderActions({
         <button
           type="button"
           onClick={onOpenCreate}
-          className="flex h-8 w-8 items-center justify-center rounded-[10px] text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
+          className="flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))]"
           aria-label={createLabel}
           title={createLabel}
         >
@@ -1415,7 +1415,7 @@ function ProjectHeaderMenu({
 }) {
   const width = type === 'sort' ? 230 : type === 'create' ? 250 : 270
   const style: React.CSSProperties = { left: x, top: y, width, boxShadow: 'var(--shadow-dropdown)' }
-  const className = 'fixed z-50 overflow-hidden rounded-[18px] border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] py-2 shadow-[var(--shadow-dropdown)]'
+  const className = 'fixed z-50 overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--color-token-border)] bg-[var(--color-token-main-surface-primary)] py-2 shadow-[var(--shadow-dropdown)]'
 
   if (type === 'create') {
     return (
@@ -1510,15 +1510,15 @@ function HeaderMenuItem({
       role="menuitem"
       onClick={onClick}
       onMouseEnter={onMouseEnter}
-      className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-semibold text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:bg-[var(--color-surface-hover)]"
+      className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-semibold text-[var(--color-token-foreground)] transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:bg-[var(--color-surface-hover)]"
     >
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[var(--color-text-secondary)]">
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[var(--color-token-text-secondary)]">
         {icon}
       </span>
       <span className="min-w-0 flex-1 truncate">{children}</span>
-      {checked && <Check className="h-[17px] w-[17px] text-[var(--color-text-secondary)]" strokeWidth={2} aria-hidden="true" />}
+      {checked && <Check className="h-[17px] w-[17px] text-[var(--color-token-text-secondary)]" strokeWidth={2} aria-hidden="true" />}
       {trailing && !checked && (
-        <ChevronDown className="-rotate-90 h-[17px] w-[17px] text-[var(--color-text-tertiary)]" strokeWidth={2} aria-hidden="true" />
+        <ChevronDown className="-rotate-90 h-[17px] w-[17px] text-[var(--color-token-text-secondary)]" strokeWidth={2} aria-hidden="true" />
       )}
     </button>
   )
@@ -1923,7 +1923,7 @@ function ProjectMenuItem({
       onClick={disabled ? undefined : onClick}
       className={`sidebar-codex-menu-item ${danger ? 'sidebar-codex-menu-item--danger' : ''}`}
     >
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[var(--color-text-secondary)]">
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[var(--color-token-text-secondary)]">
         {icon}
       </span>
       <span className="min-w-0 flex-1 truncate">{children}</span>
@@ -1947,24 +1947,24 @@ function SessionRowMeta({
 
   return (
     <span
-      className="ml-auto flex h-5 min-w-0 flex-shrink-0 items-center justify-end gap-1.5 text-[10px] font-medium tabular-nums text-[var(--color-text-tertiary)]"
+      className="ml-auto flex h-5 min-w-0 flex-shrink-0 items-center justify-end gap-1.5 text-[10px] font-medium tabular-nums text-[var(--color-token-description-foreground)]"
       title={updatedLabel}
     >
       {isRunning && (
         <span
-          className="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center text-[var(--color-success)]"
+          className="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center text-[var(--color-token-charts-green)]"
           aria-label={t('sidebar.sessionRunning')}
           title={t('sidebar.sessionRunning')}
         >
-          <LoaderCircle className="h-3.5 w-3.5 animate-spin" strokeWidth={2.2} aria-hidden="true" />
+          <LoaderCircle className="icon-xs animate-spin" strokeWidth={2.2} aria-hidden="true" />
         </span>
       )}
       {isWorktree && (
         <span
-          className="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-[5px] text-[var(--color-text-tertiary)]"
+          className="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-[var(--radius-2xs)] text-[var(--color-token-description-foreground)]"
           title={t('sidebar.worktree')}
         >
-          <GitBranch className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+          <GitBranch className="icon-xs" strokeWidth={2} aria-hidden="true" />
           <span className="sr-only">{t('sidebar.worktree')}</span>
         </span>
       )}
@@ -1999,14 +1999,14 @@ function NavItem({
       title={collapsed ? label : undefined}
       className={`
         flex items-center transition-colors duration-200
-        ${collapsed ? 'h-9 w-9 justify-center rounded-[7px] px-0 py-0' : `w-full gap-2 rounded-[7px] px-2.5 ${touchFriendly ? 'py-3' : 'py-1.5'} text-[13px]`}
-        ${active
-          ? 'bg-[var(--color-sidebar-item-active)] font-medium text-[var(--color-text-primary)]'
-          : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-text-primary)]'
-        }
+	        ${collapsed ? 'h-9 w-9 justify-center rounded-[var(--radius-xs)] px-0 py-0' : `w-full gap-2 rounded-[var(--radius-xs)] px-[8px] ${touchFriendly ? 'py-3' : 'py-[5px]'} text-[13px]`}
+	        ${active
+	          ? 'bg-[var(--color-sidebar-item-active)] font-medium text-[var(--color-token-foreground)]'
+	          : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-token-foreground)]'
+	        }
       `}
     >
-      <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center">
+      <span className="icon-md flex-shrink-0 flex items-center justify-center">
         {icon}
       </span>
       <span className={`sidebar-copy ${collapsed ? 'sidebar-copy--hidden' : 'sidebar-copy--visible'}`}>

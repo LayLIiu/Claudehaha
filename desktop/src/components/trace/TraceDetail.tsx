@@ -25,10 +25,10 @@ export function TraceDetail({
   const t = useTranslation()
   return (
     <div className="flex min-h-0 flex-1 flex-col" data-testid="trace-detail">
-      <div className="shrink-0 border-b border-[var(--color-border)] px-4 py-2.5">
+      <div className="shrink-0 border-b border-[var(--color-token-border)] px-4 py-2.5">
         <div className="flex min-w-0 items-center gap-2">
           <TypeIcon span={span} />
-          <h2 className="min-w-0 truncate text-sm font-semibold text-[var(--color-text-primary)]">
+          <h2 className="min-w-0 truncate text-sm font-semibold text-[var(--color-token-foreground)]">
             {spanDisplayTitle(span, t)}
           </h2>
           <StatusPill status={span.status} />
@@ -150,18 +150,18 @@ function EventDetail({ span }: { span: TraceSpan }) {
     <div data-testid="trace-event-detail">
       <Section sectionKey="event.detail" title={t('trace.section.event')} defaultOpen>
         <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 text-[11px]">
-          <dt className="text-[var(--color-text-tertiary)]">{t('trace.detail.phase')}</dt>
-          <dd className="min-w-0 truncate font-mono text-[var(--color-text-secondary)]">
+          <dt className="text-[var(--color-token-text-secondary)]">{t('trace.detail.phase')}</dt>
+          <dd className="min-w-0 truncate font-mono text-[var(--color-token-text-secondary)]">
             {traceEventPhaseLabel(event.phase, t)}
           </dd>
-          <dt className="text-[var(--color-text-tertiary)]">{t('trace.detail.severity')}</dt>
-          <dd className={`min-w-0 truncate font-mono ${event.severity === 'error' ? 'text-[var(--color-error)]' : 'text-[var(--color-text-secondary)]'}`}>
+          <dt className="text-[var(--color-token-text-secondary)]">{t('trace.detail.severity')}</dt>
+          <dd className={`min-w-0 truncate font-mono ${event.severity === 'error' ? 'text-[var(--color-error)]' : 'text-[var(--color-token-text-secondary)]'}`}>
             {event.severity}
           </dd>
           {event.message ? (
             <>
-              <dt className="text-[var(--color-text-tertiary)]">{t('trace.detail.message')}</dt>
-              <dd className="min-w-0 whitespace-pre-wrap break-words text-[var(--color-text-secondary)]">
+              <dt className="text-[var(--color-token-text-secondary)]">{t('trace.detail.message')}</dt>
+              <dd className="min-w-0 whitespace-pre-wrap break-words text-[var(--color-token-text-secondary)]">
                 {event.message}
               </dd>
             </>

@@ -4,42 +4,6 @@
 
 /* ─── Self-hosted fonts (no Google CDN dependency) ────────────── */
 
-/* Inter – variable weight 400-600, latin */
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 400 600;
-  font-display: swap;
-  src: url('../../public/fonts/inter-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 400 600;
-  font-display: swap;
-  src: url('../../public/fonts/inter-latin-ext.woff2') format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-
-/* Manrope – variable weight 400-800, latin */
-@font-face {
-  font-family: 'Manrope';
-  font-style: normal;
-  font-weight: 400 800;
-  font-display: swap;
-  src: url('../../public/fonts/manrope-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: 'Manrope';
-  font-style: normal;
-  font-weight: 400 800;
-  font-display: swap;
-  src: url('../../public/fonts/manrope-latin-ext.woff2') format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-
 /* JetBrains Mono – weight 400, latin */
 @font-face {
   font-family: 'JetBrains Mono';
@@ -150,7 +114,7 @@
   height: 18px;
   padding: 0 5px;
   border: 1px solid var(--color-border);
-  border-radius: 5px;
+  border-radius: var(--radius-xs);
   background: var(--color-surface-container-lowest);
   color: var(--color-text-secondary);
   font-family: var(--font-label);
@@ -197,7 +161,7 @@
   transform: translateX(-50%) scale(var(--settings-zoom-preview-scale));
   transform-origin: 50% 100%;
   border: 1px solid var(--color-surface-glass-border);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--color-surface-glass);
   padding: 4px 9px;
   color: var(--color-text-primary);
@@ -249,7 +213,7 @@
 
 .settings-zoom-range::-webkit-slider-runnable-track {
   height: 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   border: 1px solid var(--color-border);
   background:
     linear-gradient(
@@ -267,7 +231,7 @@
   width: 18px;
   height: 18px;
   margin-top: -7px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   border: 1px solid var(--settings-zoom-thumb-border);
   background: var(--settings-zoom-thumb-bg);
   box-shadow: var(--settings-zoom-thumb-shadow);
@@ -291,7 +255,7 @@
 
 .settings-zoom-range::-moz-range-track {
   height: 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   border: 1px solid var(--color-border);
   background: var(--settings-zoom-track-empty);
   transition: background 220ms ease, border-color 180ms ease;
@@ -299,14 +263,14 @@
 
 .settings-zoom-range::-moz-range-progress {
   height: 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--color-brand);
 }
 
 .settings-zoom-range::-moz-range-thumb {
   width: 18px;
   height: 18px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   border: 1px solid var(--settings-zoom-thumb-border);
   background: var(--settings-zoom-thumb-bg);
   box-shadow: var(--settings-zoom-thumb-shadow);
@@ -380,10 +344,10 @@
   --color-warning: #CA8A04;
   --color-warning-container: #FFF3D6;
 
-  --font-headline: 'Manrope', sans-serif;
-  --font-body: 'Inter', sans-serif;
-  --font-label: 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-headline: -apple-system, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'Arial', sans-serif;
+  --font-body: -apple-system, 'SF Pro Text', 'Helvetica Neue', 'Arial', sans-serif;
+  --font-label: -apple-system, 'SF Pro Text', 'Helvetica Neue', 'Arial', sans-serif;
+  --font-mono: 'SF Mono', 'JetBrains Mono', 'Menlo', 'Consolas', monospace;
 }
 
 /* ─── Semantic Aliases (used by layout & infrastructure components) ── */
@@ -392,7 +356,7 @@
   color-scheme: light;
 
   /* Layout dimensions */
-  --sidebar-width: 300px;
+  --sidebar-width: clamp(240px, 300px, min(520px, calc(100vw - 320px)));
   --sidebar-rail-width: 0px;
   --titlebar-height: 40px;
   --statusbar-height: 36px;
@@ -486,6 +450,13 @@
   --shadow-focus-ring: 0 0 0 1px rgba(143, 72, 47, 0.16);
   --shadow-error-ring: 0 0 0 1px rgba(186, 26, 26, 0.18);
   --shadow-button-primary: 0 8px 24px rgba(0, 0, 0, 0.2);
+  /* Codex shadow scale */
+  --shadow-sm: 0px 1px 2px -1px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0px 2px 4px -1px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0px 4px 8px -2px rgba(0, 0, 0, 0.10);
+  --shadow-xl: 0px 8px 16px -4px rgba(0, 0, 0, 0.12);
+  --shadow-2xl: 0px 16px 32px -8px rgba(0, 0, 0, 0.19);
+  --shadow-hairline: 0px 0px 0px 0.5px rgba(0, 0, 0, 0.10);
 
   /* Button colors */
   --color-btn-primary-fg: var(--color-on-primary);
@@ -529,6 +500,17 @@
   --color-diff-title-color: #87736D;
   --color-diff-title-border: #DAC1BA;
 
+  /* Codex diff system variables */
+  --diffs-font-family: var(--font-mono);
+  --diffs-font-size: 12px;
+  --diffs-line-height: calc(var(--diffs-font-size) * 1.8);
+  --conversation-block-gap: 12px;
+  --conversation-tool-assistant-gap: 16px;
+  --turn-diff-row-padding-x: 0.75rem;
+  --turn-diff-row-padding-y: 0.25rem;
+  --codex-diffs-header-padding-x: var(--turn-diff-row-padding-x);
+  --codex-diffs-header-padding-y: var(--turn-diff-row-padding-y);
+
   /* Terminal */
   --color-terminal-header: #2D2D2D;
   --color-terminal-bg: #1E1E1E;
@@ -554,12 +536,137 @@
   --color-outline-a78: rgba(160, 160, 160, 0.78);
   --color-outline-a92: rgba(160, 160, 160, 0.92);
 
-  /* Radii */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  /* Radii (deprecated — use Codex scale below) */
   --radius-full: 9999px;
+
+  /* Codex-aligned radius scale (matches official Codex desktop) */
+  --corner-radius-scale: 1;
+  --radius-2xs: calc(2px * var(--corner-radius-scale));
+  --radius-xs:  calc(4px * var(--corner-radius-scale));
+  --radius-sm:  calc(6px * var(--corner-radius-scale));
+  --radius-md:  calc(8px * var(--corner-radius-scale));
+  --radius-lg:  calc(10px * var(--corner-radius-scale));
+  --radius-xl:  calc(12px * var(--corner-radius-scale));
+  --radius-2xl: calc(16px * var(--corner-radius-scale));
+  --radius-3xl: calc(20px * var(--corner-radius-scale));
+  --radius-4xl: calc(24px * var(--corner-radius-scale));
+
+  /* Codex-aligned typography tokens */
+  --codex-chat-font-size: 14px;
+  --codex-chat-code-font-size: 12px;
+  --text-size-chat: 14px;
+  --markdown-font-size: var(--codex-chat-font-size);
+  --markdown-line-height: calc(var(--markdown-font-size) + 8px);
+
+  /* Codex-aligned layout tokens */
+  --height-toolbar: 46px;
+  --thread-content-top-inset: 32px;
+  --thread-content-max-width: 48rem;
+  --thread-content-margin: 24px;
+  --padding-toolbar: 12px;
+  --composer-top-tray-max-height: 177px;
+
+  /* Codex-aligned composer tokens */
+  --composer-border-radius: var(--radius-3xl);
+  --composer-attachment-inset: 8px;
+  --composer-attachment-border-radius: max(0px, calc(var(--composer-border-radius) - var(--composer-attachment-inset)));
+  --composer-top-tray-background: color-mix(in oklab, var(--color-token-side-bar-background, var(--color-surface-container-low)) 94%, transparent);
+  --composer-top-tray-border: color-mix(in srgb, var(--color-token-border, var(--color-border)) 72%, transparent);
+
+  /* Codex-aligned animation tokens */
+  --duration: 0.2s;
+  --fade-easing: cubic-bezier(0.37, 0.55, 0.86, 0.88);
+  --transition-duration-basic: 0.15s;
+  --transition-duration-relaxed: 0.3s;
+  --transition-ease-basic: ease;
+  --cubic-enter: cubic-bezier(0.19, 1, 0.22, 1);
+  --cubic-exit-snappy: cubic-bezier(0.65, 0, 0.4, 1);
+
+  /* Codex font system */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  /* Codex spacing base */
+  --spacing-base: 4px;
+
+  /* ── Codex semantic color token layer ──────────────────────────── */
+  --color-token-text-primary: var(--color-text-primary);
+  --color-token-text-secondary: var(--color-text-secondary);
+  --color-token-foreground: var(--color-text-primary);
+  --color-token-border: var(--color-border);
+  --color-token-border-light: rgba(255, 255, 255, 0.06);
+  --color-token-input-background: var(--color-surface-container);
+  --color-token-input-placeholder-foreground: var(--color-text-tertiary);
+  --color-token-dropdown-background: var(--color-surface-container-high);
+  --color-token-bg-secondary: var(--color-surface-container);
+  --color-token-bg-subtle: rgba(255, 255, 255, 0.04);
+  --color-token-bg-primary: var(--color-surface);
+  --color-token-side-bar-background: var(--color-surface-sidebar);
+  --color-token-main-surface-primary: var(--color-surface);
+  --color-token-editor-background: var(--color-surface-container-lowest);
+  --color-token-text-code-block-background: var(--color-code-bg);
+  --color-token-list-hover-background: var(--color-surface-container);
+  --color-token-list-active-selection-background: var(--color-surface-container-high);
+  --color-token-description-foreground: var(--color-text-tertiary);
+  --color-token-charts-green: #22c55e;
+  --color-token-charts-red: #ef4444;
+  --color-token-charts-yellow: #eab308;
+  --color-token-charts-blue: #3b82f6;
+  --color-token-charts-orange: #f97316;
+  --color-token-diff-surface: color-mix(in srgb, var(--color-token-main-surface-primary) 94%, var(--color-token-foreground));
+  --color-token-focus-border: var(--color-brand);
+  --color-token-primary: var(--color-primary);
+
+  /* Conversation / thread semantic tokens */
+  --color-token-conversation-header: color-mix(in srgb, var(--color-token-foreground) 30%, transparent);
+  --color-token-conversation-body: color-mix(in srgb, var(--color-token-foreground) 60%, transparent);
+  --color-token-conversation-summary-leading: color-mix(in srgb, var(--color-token-description-foreground) 90%, transparent);
+  --color-token-conversation-summary-trailing: color-mix(in srgb, var(--color-token-foreground) 40%, transparent);
+  --color-token-non-assistant-body-descendant: var(--color-text-secondary);
+
+  /* Button semantic tokens */
+  --color-token-button-primary-background: var(--color-primary);
+  --color-token-button-primary-foreground: var(--color-on-primary);
+  --color-token-button-secondary-background: rgba(255, 255, 255, 0.06);
+  --color-token-button-secondary-foreground: var(--color-token-foreground);
+  --color-token-button-tertiary-background: transparent;
+  --color-token-button-tertiary-foreground: var(--color-text-secondary);
+
+  /* Input semantic tokens */
+  --color-token-input-border: var(--color-border);
+  --color-token-input-border-focus: var(--color-border-focus);
+  --color-token-input-validation-error-background: rgba(186, 26, 26, 0.08);
+  --color-token-input-validation-error-border: rgba(186, 26, 26, 0.4);
+  --color-token-input-validation-warning-background: rgba(202, 138, 4, 0.08);
+  --color-token-input-validation-warning-border: rgba(202, 138, 4, 0.4);
+
+  /* Scrollbar semantic tokens */
+  --color-token-scrollbar-slider-background: rgba(255, 255, 255, 0.12);
+  --color-token-scrollbar-slider-hover-background: rgba(255, 255, 255, 0.22);
+  --color-token-scrollbar-slider-active-background: rgba(255, 255, 255, 0.30);
+
+  /* Editor decoration tokens */
+  --color-token-editor-selection-background: rgba(143, 72, 47, 0.18);
+  --color-token-editor-warning-background: rgba(255, 200, 50, 0.12);
+  --color-token-editor-warning-foreground: #f59e0b;
+
+  /* Menu tokens */
+  --color-token-menu-background: var(--color-surface-container);
+  --color-token-text-link-foreground: var(--color-secondary);
+
+  /* Codex shimmer tokens */
+  --shimmer-text-secondary: color-mix(in srgb, var(--color-token-foreground) 58%, transparent);
+  --shimmer-contrast: color-mix(in srgb, var(--color-token-foreground) 78%, transparent);
+
+  /* Codex spacing variable (official uses var(--spacing) * N) */
+  --spacing: var(--spacing-base);
+
+  /* Codex panel transition */
+  --spacing-token-sidebar: clamp(240px, 300px, min(520px, calc(100vw - 320px)));
+  --padding-row-x: calc(var(--spacing) * 2.5);
+  --padding-row-y: calc(var(--spacing) * 1.5);
+  --spacing-token-button-composer: calc(var(--spacing) * 7);
+  --spacing-token-button-composer-sm: calc(var(--spacing) * 5);
 }
 
 [data-theme="white"] {
@@ -684,6 +791,13 @@
   --shadow-focus-ring: 0 0 0 1px rgba(183, 195, 217, 0.42), 0 0 0 4px rgba(64, 64, 64, 0.56);
   --shadow-error-ring: 0 0 0 1px rgba(180, 35, 24, 0.22), 0 0 0 4px rgba(254, 228, 226, 0.86);
   --shadow-button-primary: 0 10px 24px rgba(0, 0, 0, 0.22);
+  /* Codex shadow scale */
+  --shadow-sm: 0px 1px 2px -1px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0px 2px 4px -1px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0px 4px 8px -2px rgba(0, 0, 0, 0.10);
+  --shadow-xl: 0px 8px 16px -4px rgba(0, 0, 0, 0.12);
+  --shadow-2xl: 0px 16px 32px -8px rgba(0, 0, 0, 0.19);
+  --shadow-hairline: 0px 0px 0px 0.5px rgba(0, 0, 0, 0.10);
 
   --color-btn-primary-fg: var(--color-on-primary);
   --gradient-btn-primary: linear-gradient(135deg, #4A4A4A, #5A5A5A);
@@ -723,6 +837,13 @@
   --color-diff-title-color: #667085;
   --color-diff-title-border: #DDE3EA;
 
+  /* Codex diff system variables (white) */
+  --diffs-font-family: var(--font-mono);
+  --diffs-font-size: 12px;
+  --diffs-line-height: calc(var(--diffs-font-size) * 1.8);
+  --conversation-block-gap: 12px;
+  --conversation-tool-assistant-gap: 16px;
+
   --color-terminal-header: #1F2937;
   --color-terminal-bg: #111827;
   --color-terminal-border: #0F172A;
@@ -745,6 +866,104 @@
   --color-outline-a72: rgba(160, 160, 160, 0.72);
   --color-outline-a78: rgba(160, 160, 160, 0.78);
   --color-outline-a92: rgba(160, 160, 160, 0.92);
+
+  /* Codex-aligned radius scale */
+  --corner-radius-scale: 1;
+  --radius-2xs: calc(2px * var(--corner-radius-scale));
+  --radius-xs:  calc(4px * var(--corner-radius-scale));
+  --radius-sm:  calc(6px * var(--corner-radius-scale));
+  --radius-md:  calc(8px * var(--corner-radius-scale));
+  --radius-lg:  calc(10px * var(--corner-radius-scale));
+  --radius-xl:  calc(12px * var(--corner-radius-scale));
+  --radius-2xl: calc(16px * var(--corner-radius-scale));
+  --radius-3xl: calc(20px * var(--corner-radius-scale));
+  --radius-4xl: calc(24px * var(--corner-radius-scale));
+
+  /* Codex-aligned typography tokens */
+  --codex-chat-font-size: 14px;
+  --codex-chat-code-font-size: 12px;
+  --text-size-chat: 14px;
+  --markdown-font-size: var(--codex-chat-font-size);
+  --markdown-line-height: calc(var(--markdown-font-size) + 8px);
+
+  /* Codex-aligned layout tokens */
+  --height-toolbar: 46px;
+  --thread-content-top-inset: 32px;
+  --thread-content-max-width: 48rem;
+  --thread-content-margin: 24px;
+  --padding-toolbar: 12px;
+  --composer-top-tray-max-height: 177px;
+
+  /* Codex-aligned animation tokens */
+  --duration: 0.2s;
+  --fade-easing: cubic-bezier(0.37, 0.55, 0.86, 0.88);
+  --transition-duration-basic: 0.15s;
+  --transition-duration-relaxed: 0.3s;
+  --transition-ease-basic: ease;
+  --cubic-enter: cubic-bezier(0.19, 1, 0.22, 1);
+  --cubic-exit-snappy: cubic-bezier(0.65, 0, 0.4, 1);
+
+  /* Codex font system */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  /* Codex spacing base */
+  --spacing-base: 4px;
+
+  /* Codex semantic color token layer (white theme overrides) */
+  --color-token-text-primary: var(--color-text-primary);
+  --color-token-text-secondary: var(--color-text-secondary);
+  --color-token-foreground: var(--color-text-primary);
+  --color-token-border: var(--color-border);
+  --color-token-border-light: rgba(0, 0, 0, 0.06);
+  --color-token-input-background: var(--color-surface-container);
+  --color-token-input-placeholder-foreground: var(--color-text-tertiary);
+  --color-token-dropdown-background: var(--color-surface-container-high);
+  --color-token-bg-secondary: var(--color-surface-container);
+  --color-token-bg-subtle: rgba(0, 0, 0, 0.02);
+  --color-token-bg-primary: var(--color-surface);
+  --color-token-side-bar-background: var(--color-surface-sidebar);
+  --color-token-main-surface-primary: var(--color-surface);
+  --color-token-editor-background: var(--color-surface-container-lowest);
+  --color-token-text-code-block-background: var(--color-code-bg);
+  --color-token-list-hover-background: var(--color-surface-container);
+  --color-token-list-active-selection-background: var(--color-surface-container-high);
+  --color-token-description-foreground: var(--color-text-tertiary);
+  --color-token-charts-green: #22c55e;
+  --color-token-charts-red: #ef4444;
+  --color-token-charts-yellow: #eab308;
+  --color-token-charts-blue: #3b82f6;
+  --color-token-charts-orange: #f97316;
+  --color-token-diff-surface: color-mix(in srgb, var(--color-token-main-surface-primary) 94%, var(--color-token-foreground));
+  --color-token-focus-border: var(--color-brand);
+  --color-token-primary: var(--color-primary);
+  --color-token-conversation-header: color-mix(in srgb, var(--color-token-foreground) 30%, transparent);
+  --color-token-conversation-body: color-mix(in srgb, var(--color-token-foreground) 60%, transparent);
+  --color-token-conversation-summary-leading: color-mix(in srgb, var(--color-token-description-foreground) 90%, transparent);
+  --color-token-conversation-summary-trailing: color-mix(in srgb, var(--color-token-foreground) 40%, transparent);
+  --color-token-non-assistant-body-descendant: var(--color-text-secondary);
+  --color-token-button-primary-background: var(--color-primary);
+  --color-token-button-primary-foreground: var(--color-on-primary);
+  --color-token-button-secondary-background: rgba(0, 0, 0, 0.04);
+  --color-token-button-secondary-foreground: var(--color-token-foreground);
+  --color-token-button-tertiary-background: transparent;
+  --color-token-button-tertiary-foreground: var(--color-text-secondary);
+  --color-token-input-border: var(--color-border);
+  --color-token-input-border-focus: var(--color-border-focus);
+  --color-token-input-validation-error-background: rgba(180, 35, 24, 0.06);
+  --color-token-input-validation-error-border: rgba(180, 35, 24, 0.32);
+  --color-token-input-validation-warning-background: rgba(181, 71, 8, 0.06);
+  --color-token-input-validation-warning-border: rgba(181, 71, 8, 0.32);
+  --color-token-scrollbar-slider-background: rgba(0, 0, 0, 0.12);
+  --color-token-scrollbar-slider-hover-background: rgba(0, 0, 0, 0.22);
+  --color-token-scrollbar-slider-active-background: rgba(0, 0, 0, 0.30);
+  --color-token-editor-selection-background: rgba(143, 72, 47, 0.14);
+  --color-token-editor-warning-background: rgba(255, 200, 50, 0.12);
+  --color-token-editor-warning-foreground: #f59e0b;
+  --color-token-menu-background: var(--color-surface-container);
+  --color-token-text-link-foreground: var(--color-secondary);
+  --shimmer-text-secondary: color-mix(in srgb, var(--color-token-foreground) 58%, transparent);
+  --shimmer-contrast: color-mix(in srgb, var(--color-token-foreground) 78%, transparent);
 }
 
 [data-theme="dark"] {
@@ -869,6 +1088,13 @@
   --shadow-focus-ring: 0 0 0 1px rgba(183, 195, 217, 0.3);
   --shadow-error-ring: 0 0 0 1px rgba(255, 180, 171, 0.26);
   --shadow-button-primary: 0 12px 24px rgba(0, 0, 0, 0.25);
+  /* Codex shadow scale */
+  --shadow-sm: 0px 1px 2px -1px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0px 2px 4px -1px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0px 4px 8px -2px rgba(0, 0, 0, 0.14);
+  --shadow-xl: 0px 8px 16px -4px rgba(0, 0, 0, 0.16);
+  --shadow-2xl: 0px 16px 32px -8px rgba(0, 0, 0, 0.24);
+  --shadow-hairline: 0px 0px 0px 0.5px rgba(0, 0, 0, 0.16);
 
   --gradient-btn-primary: linear-gradient(135deg, #4A4A4A, #5A5A5A);
   --gradient-btn-primary-hover: linear-gradient(135deg, #5A5A5A, #4A4A4A);
@@ -907,6 +1133,13 @@
   --color-diff-title-color: var(--color-text-tertiary);
   --color-diff-title-border: rgba(90, 65, 56, 0.15);
 
+  /* Codex diff system variables (dark) */
+  --diffs-font-family: var(--font-mono);
+  --diffs-font-size: 12px;
+  --diffs-line-height: calc(var(--diffs-font-size) * 1.8);
+  --conversation-block-gap: 12px;
+  --conversation-tool-assistant-gap: 16px;
+
   --color-terminal-header: #151922;
   --color-terminal-bg: #0D1117;
   --color-terminal-border: #12161D;
@@ -929,6 +1162,104 @@
   --color-outline-a72: rgba(141, 127, 122, 0.72);
   --color-outline-a78: rgba(141, 127, 122, 0.78);
   --color-outline-a92: rgba(141, 127, 122, 0.92);
+
+  /* Codex-aligned radius scale */
+  --corner-radius-scale: 1;
+  --radius-2xs: calc(2px * var(--corner-radius-scale));
+  --radius-xs:  calc(4px * var(--corner-radius-scale));
+  --radius-sm:  calc(6px * var(--corner-radius-scale));
+  --radius-md:  calc(8px * var(--corner-radius-scale));
+  --radius-lg:  calc(10px * var(--corner-radius-scale));
+  --radius-xl:  calc(12px * var(--corner-radius-scale));
+  --radius-2xl: calc(16px * var(--corner-radius-scale));
+  --radius-3xl: calc(20px * var(--corner-radius-scale));
+  --radius-4xl: calc(24px * var(--corner-radius-scale));
+
+  /* Codex-aligned typography tokens */
+  --codex-chat-font-size: 14px;
+  --codex-chat-code-font-size: 12px;
+  --text-size-chat: 14px;
+  --markdown-font-size: var(--codex-chat-font-size);
+  --markdown-line-height: calc(var(--markdown-font-size) + 8px);
+
+  /* Codex-aligned layout tokens */
+  --height-toolbar: 46px;
+  --thread-content-top-inset: 32px;
+  --thread-content-max-width: 48rem;
+  --thread-content-margin: 24px;
+  --padding-toolbar: 12px;
+  --composer-top-tray-max-height: 177px;
+
+  /* Codex-aligned animation tokens */
+  --duration: 0.2s;
+  --fade-easing: cubic-bezier(0.37, 0.55, 0.86, 0.88);
+  --transition-duration-basic: 0.15s;
+  --transition-duration-relaxed: 0.3s;
+  --transition-ease-basic: ease;
+  --cubic-enter: cubic-bezier(0.19, 1, 0.22, 1);
+  --cubic-exit-snappy: cubic-bezier(0.65, 0, 0.4, 1);
+
+  /* Codex font system */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  /* Codex spacing base */
+  --spacing-base: 4px;
+
+  /* Codex semantic color token layer (dark theme overrides) */
+  --color-token-text-primary: var(--color-text-primary);
+  --color-token-text-secondary: var(--color-text-secondary);
+  --color-token-foreground: var(--color-text-primary);
+  --color-token-border: var(--color-border);
+  --color-token-border-light: rgba(255, 255, 255, 0.06);
+  --color-token-input-background: var(--color-surface-container);
+  --color-token-input-placeholder-foreground: var(--color-text-tertiary);
+  --color-token-dropdown-background: var(--color-surface-container-high);
+  --color-token-bg-secondary: var(--color-surface-container);
+  --color-token-bg-subtle: rgba(255, 255, 255, 0.04);
+  --color-token-bg-primary: var(--color-surface);
+  --color-token-side-bar-background: var(--color-surface-sidebar);
+  --color-token-main-surface-primary: var(--color-surface);
+  --color-token-editor-background: var(--color-surface-container-lowest);
+  --color-token-text-code-block-background: var(--color-code-bg);
+  --color-token-list-hover-background: var(--color-surface-container);
+  --color-token-list-active-selection-background: var(--color-surface-container-high);
+  --color-token-description-foreground: var(--color-text-tertiary);
+  --color-token-charts-green: #22c55e;
+  --color-token-charts-red: #ef4444;
+  --color-token-charts-yellow: #eab308;
+  --color-token-charts-blue: #3b82f6;
+  --color-token-charts-orange: #f97316;
+  --color-token-diff-surface: color-mix(in srgb, var(--color-token-main-surface-primary) 94%, var(--color-token-foreground));
+  --color-token-focus-border: var(--color-brand);
+  --color-token-primary: var(--color-primary);
+  --color-token-conversation-header: color-mix(in srgb, var(--color-token-foreground) 30%, transparent);
+  --color-token-conversation-body: color-mix(in srgb, var(--color-token-foreground) 60%, transparent);
+  --color-token-conversation-summary-leading: color-mix(in srgb, var(--color-token-description-foreground) 90%, transparent);
+  --color-token-conversation-summary-trailing: color-mix(in srgb, var(--color-token-foreground) 40%, transparent);
+  --color-token-non-assistant-body-descendant: var(--color-text-secondary);
+  --color-token-button-primary-background: var(--color-primary);
+  --color-token-button-primary-foreground: var(--color-on-primary);
+  --color-token-button-secondary-background: rgba(255, 255, 255, 0.06);
+  --color-token-button-secondary-foreground: var(--color-token-foreground);
+  --color-token-button-tertiary-background: transparent;
+  --color-token-button-tertiary-foreground: var(--color-text-secondary);
+  --color-token-input-border: var(--color-border);
+  --color-token-input-border-focus: var(--color-border-focus);
+  --color-token-input-validation-error-background: rgba(255, 180, 171, 0.10);
+  --color-token-input-validation-error-border: rgba(255, 180, 171, 0.36);
+  --color-token-input-validation-warning-background: rgba(247, 196, 108, 0.10);
+  --color-token-input-validation-warning-border: rgba(247, 196, 108, 0.36);
+  --color-token-scrollbar-slider-background: rgba(255, 255, 255, 0.12);
+  --color-token-scrollbar-slider-hover-background: rgba(255, 255, 255, 0.22);
+  --color-token-scrollbar-slider-active-background: rgba(255, 255, 255, 0.30);
+  --color-token-editor-selection-background: rgba(183, 195, 217, 0.18);
+  --color-token-editor-warning-background: rgba(255, 200, 50, 0.12);
+  --color-token-editor-warning-foreground: #f59e0b;
+  --color-token-menu-background: var(--color-surface-container);
+  --color-token-text-link-foreground: var(--color-tertiary);
+  --shimmer-text-secondary: color-mix(in srgb, var(--color-token-foreground) 58%, transparent);
+  --shimmer-contrast: color-mix(in srgb, var(--color-token-foreground) 78%, transparent);
 }
 
 /* ─── Material Symbols ─────────────────────────────────────────── */
@@ -1068,7 +1399,7 @@ button, input, textarea, select, a, [role="button"] {
 }
 
 #content-area[data-sidebar-state="open"]:not(.app-shell-main--mobile) {
-  border-radius: 16px 0 0 16px;
+  border-radius: var(--radius-xl) 0 0 var(--radius-xl);
   border-left: 1px solid rgba(255, 255, 255, 0.075);
   position: relative;
   overflow: hidden;
@@ -1146,6 +1477,22 @@ button, input, textarea, select, a, [role="button"] {
     background-color var(--motion-sidebar-duration) var(--motion-sidebar-easing),
     border-color var(--motion-sidebar-duration) var(--motion-sidebar-easing);
   contain: layout style paint;
+}
+
+/* Settings sidebar: icon-only on narrow, icon+label on wide */
+.settings-nav-label {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .settings-nav-label {
+    display: inline;
+  }
+}
+
+.settings-nav-item {
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .chat-input-dock-region {
@@ -1246,7 +1593,6 @@ button, input, textarea, select, a, [role="button"] {
 .settings-content-panel {
   background: var(--color-surface);
   position: relative;
-  border-radius: 16px 0 0 16px;
   border-left: 1px solid rgba(255, 255, 255, 0.075);
   box-shadow: none;
 }
@@ -1254,13 +1600,51 @@ button, input, textarea, select, a, [role="button"] {
 .general-settings-view {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
 }
 
+/* ZCode-style settings card — grouped setting rows */
+.settings-card {
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  background: var(--color-surface-container-low);
+  box-shadow: none;
+}
+
+/* ZCode-style settings row — label+control grid layout */
+.settings-row {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 12px 16px;
+}
+
+.settings-row:first-child {
+  border-top: none;
+}
+
+.settings-row-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-token-foreground);
+}
+
+.settings-row-description {
+  font-size: 13px;
+  color: var(--color-token-text-secondary);
+  margin-top: 2px;
+}
+
+.settings-row-control {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Legacy section support for pages not yet migrated */
 .general-settings-section {
   position: relative;
   border: 1px solid rgba(255, 255, 255, 0.075);
-  border-radius: 10px;
+  border-radius: var(--radius-xl);
   background: var(--color-surface-container-low);
   padding: 16px 18px;
   box-shadow: none;
@@ -1420,79 +1804,14 @@ html.electron-macos .app-shell,
 }
 
 /* Spring collapse/expand for tool call groups */
-.tool-group-content {
-  overflow: hidden;
-  max-height: 0;
-  opacity: 0;
-  transition:
-    max-height 420ms cubic-bezier(0.2, 1.12, 0.24, 1),
-    opacity 260ms ease;
-}
-
-.tool-group-content.expanded {
-  max-height: 3000px;
-  opacity: 1;
-  overflow: visible;
-}
-
-/* Turn collapse: spring-bounce expand/collapse for completed turn process items */
-.turn-collapse-content {
-  display: grid;
-  grid-template-rows: 1fr;
-  transition:
-    grid-template-rows 420ms cubic-bezier(0.2, 1.12, 0.24, 1),
-    opacity 280ms ease;
-  opacity: 1;
-}
-.turn-collapse-content[data-collapse-state="closed"] {
-  grid-template-rows: 0fr;
-  opacity: 0;
-}
-.turn-collapse-content-inner {
-  overflow: hidden;
-}
-
-/* Chevron rotation for turn collapse toggle */
+/* Chevron rotation for turn collapse toggle — still CSS-driven for instant response */
 .turn-chevron {
   display: inline-block;
+  vertical-align: middle;
   transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .turn-chevron[data-rotated="true"] {
   transform: rotate(90deg);
-}
-
-/* Tool burst fold: "+N tool calls" overflow */
-.tool-burst-overflow {
-  display: grid;
-  grid-template-rows: 1fr;
-  transition:
-    grid-template-rows 360ms cubic-bezier(0.2, 1.12, 0.24, 1),
-    opacity 240ms ease;
-  opacity: 1;
-}
-.tool-burst-overflow[data-collapse-state="closed"] {
-  grid-template-rows: 0fr;
-  opacity: 0;
-}
-.tool-burst-overflow-inner {
-  overflow: hidden;
-}
-
-/* Thinking disclosure section spring expand */
-.thinking-disclosure-content {
-  display: grid;
-  grid-template-rows: 1fr;
-  transition:
-    grid-template-rows 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    opacity 220ms ease;
-  opacity: 1;
-}
-.thinking-disclosure-content[data-collapse-state="closed"] {
-  grid-template-rows: 0fr;
-  opacity: 0;
-}
-.thinking-disclosure-content-inner {
-  overflow: hidden;
 }
 
 .sidebar-project-collapse {
@@ -1718,7 +2037,7 @@ html.electron-macos .app-shell,
 }
 
 .sidebar-session-row {
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
 }
 
 .tool-call-card {
@@ -1869,6 +2188,44 @@ html.electron-macos .app-shell,
   animation: shimmer-sweep 2.5s ease-in-out infinite;
 }
 
+/* ── Cadenced shimmer — stepped sweep highlight every 4s (mirrors Codex ThinkingShimmer) ── */
+/* Cadenced shimmer — single-layer background-clip:text approach.
+   Base state: dim secondary color. When .cadenced-shimmer-active is toggled,
+   a gradient sweeps across the text in 1s using steps(48), revealing bright
+   highlight that slides left→right. No duplicated text, no alignment issues.
+   Toggled every 4s (600ms delay → 1s animation → ~3s pause) via JS. */
+.cadenced-shimmer {
+  color: var(--color-text-tertiary);
+  -webkit-text-fill-color: currentColor;
+  text-fill-color: currentColor;
+}
+.cadenced-shimmer-active {
+  background: linear-gradient(
+    90deg,
+    var(--color-text-tertiary) 0%,
+    var(--color-text-tertiary) 30%,
+    var(--color-text-primary) 45%,
+    var(--color-text-primary) 55%,
+    var(--color-text-tertiary) 70%,
+    var(--color-text-tertiary) 100%
+  );
+  background-size: 300% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-fill-color: transparent;
+  animation: cadenced-shimmer-sweep 1s steps(48, end) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cadenced-shimmer-active {
+    animation: none;
+  }
+}
+@keyframes cadenced-shimmer-sweep {
+  0% { background-position: 100% 0; }
+  100% { background-position: -50% 0; }
+}
+
 /* Sticky bottom thinking indicator — sits above the chat input */
 .sticky-thinking-indicator {
   position: relative;
@@ -1919,6 +2276,74 @@ html.electron-macos .app-shell,
     left: 0;
     right: 0;
     opacity: 0.5;
+  }
+}
+
+/* ─── Codex-aligned icon sizing utilities ──────────────────────── */
+/* font-size is critical for Material Symbols (font-based icons);
+   without it the glyph renders at the base 24px and overflows the
+   declared box, causing vertical misalignment. */
+.icon-2xs {
+  width: 12px;
+  height: 12px;
+  font-size: 12px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.icon-xs {
+  width: 14px;
+  height: 14px;
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.icon-sm {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.icon-md {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ─── Codex-aligned markdown fade-in animation ─────────────────── */
+@keyframes markdown-fade-in {
+  to { opacity: 1; }
+}
+
+/* Codex markdown content fade-in — applied to markdown root blocks so
+   paragraphs, list items, table rows, and blockquotes fade in smoothly.
+   Respects prefers-reduced-motion. */
+.markdown-fade-root p,
+.markdown-fade-root li,
+.markdown-fade-root tr,
+.markdown-fade-root blockquote,
+.markdown-fade-root hr {
+  opacity: 0;
+  animation: markdown-fade-in var(--duration, 0.2s) var(--fade-easing, cubic-bezier(0.37, 0.55, 0.86, 0.88)) forwards;
+  animation-delay: var(--fade-delay, 0s);
+}
+.markdown-fade-root img {
+  transform-origin: 50%;
+  animation: 0.18s ease-out both markdown-fade-in;
+}
+@media (prefers-reduced-motion: reduce) {
+  .markdown-fade-root p,
+  .markdown-fade-root li,
+  .markdown-fade-root tr,
+  .markdown-fade-root blockquote,
+  .markdown-fade-root hr,
+  .markdown-fade-root img {
+    --duration: 0s;
+    opacity: 1;
+    animation-duration: 0s;
+    animation-delay: 0s !important;
   }
 }
 
@@ -1980,7 +2405,8 @@ html[data-touch-h5] select {
 html[data-touch-h5] .chat-render-item--cv,
 html[data-touch-h5] .trace-row-cv,
 html[data-touch-h5] .trace-message-cv,
-html[data-touch-h5] .trace-list-row-cv {
+html[data-touch-h5] .trace-list-row-cv,
+html[data-touch-h5] [data-virtualized-turn-content] {
   content-visibility: visible;
 }
 
@@ -2026,10 +2452,72 @@ html[data-touch-h5] body {
 /* Codex-style task transcript rendering */
 .codex-task-transcript {
   color: var(--color-text-primary);
+  --conversation-block-gap: 12px;
+  --conversation-tool-assistant-gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--conversation-block-gap);
 }
 
+/* Codex conversation text token utilities */
+.text-token-conversation-header { color: var(--color-token-conversation-header); }
+.text-token-conversation-body { color: var(--color-token-conversation-body); }
+.text-token-conversation-summary-leading { color: var(--color-token-conversation-summary-leading); }
+.text-token-conversation-summary-trailing { color: var(--color-token-conversation-summary-trailing); }
 
+/* Codex thread search highlight (Ctrl+F in thread) */
+mark.codex-thread-find-match {
+  background-color: var(--color-token-charts-yellow);
+  color: var(--color-token-foreground);
+  border-radius: var(--radius-2xs);
+  font: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  word-spacing: inherit;
+  vertical-align: baseline;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+mark.codex-thread-find-active {
+  background-color: var(--color-token-charts-orange, var(--color-brand));
+}
 
+/* Codex diff virtualized rows */
+.thread-diff-virtualized {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 36px;
+}
+
+/* ── Codex semantic font-size classes ── */
+.text-size-chat { font-size: var(--codex-chat-font-size); }
+.text-size-chat-sm { font-size: calc(var(--codex-chat-font-size) - 1px); }
+.text-size-code { font-size: var(--codex-chat-code-font-size); }
+.text-size-code-sm { font-size: calc(var(--codex-chat-code-font-size) - 1px); }
+
+/* ── Codex turn virtualization ── */
+/* content-visibility:auto on turn containers lets the browser skip
+   painting off-screen turns entirely; contain-intrinsic-size gives it
+   a stable placeholder height so scroll positions don't jump. */
+[data-virtualized-turn-content] {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 240px;
+}
+/* If an MCP app is expanded inside a turn, force visible to avoid
+   layout shift during the expanded state. */
+[data-virtualized-turn-content]:has([data-mcp-app-expanded='true']) {
+  content-visibility: visible;
+}
+
+/* ── Codex navigation anchor scroll margin ── */
+[data-local-conversation-user-anchor] {
+  scroll-margin-top: var(--spacing, 4px);
+}
+
+/* ── Codex thread find target scroll margin ── */
+[data-thread-find-target="conversation"] {
+  scroll-margin-top: calc(var(--spacing, 4px) * 6);
+}
 
 .assistant-task-block {
   position: relative;
@@ -2038,12 +2526,12 @@ html[data-touch-h5] body {
 
 
 .assistant-message-flow {
-  color: var(--color-text-primary);
+  color: var(--color-token-conversation-body);
 }
 
 .assistant-message-flow .markdown-prose {
-  font-size: 14px;
-  line-height: 1.72;
+  font-size: var(--codex-chat-font-size);
+  line-height: calc(var(--codex-chat-font-size) + 8px);
 }
 
 .assistant-message-flow .markdown-prose > p,
@@ -2086,33 +2574,33 @@ html[data-touch-h5] body {
 }
 
 .assistant-message-flow .markdown-prose blockquote {
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   border: 1px solid rgba(255, 255, 255, 0.075);
   border-left: 2px solid rgba(255, 255, 255, 0.24);
   background: rgba(255, 255, 255, 0.035);
 }
 
 .assistant-message-flow .markdown-prose code:not(pre code) {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.055);
-  border-color: rgba(255, 255, 255, 0.085);
+  color: var(--color-token-foreground);
+  background: color-mix(in srgb, var(--color-token-list-hover-background) 60%, var(--color-token-foreground) 6%);
+  border-color: var(--color-token-border-light);
 }
 
 .code-viewer-shell,
 .codex-execution-card {
-  border-color: rgba(255, 255, 255, 0.055) !important;
-  background: #2f2f2f !important;
+  border-color: var(--color-token-border-light) !important;
+  background: var(--color-token-text-code-block-background) !important;
   box-shadow: none;
 }
 
 .code-viewer-shell > div:first-child,
 .codex-execution-card-header {
-  background: #2f2f2f !important;
+  background: var(--color-token-text-code-block-background) !important;
   border-color: transparent !important;
 }
 
 .code-viewer-area {
-  background: #2f2f2f !important;
+  background: var(--color-token-text-code-block-background) !important;
 }
 
 .code-viewer-area [data-code-viewer-content] {
@@ -2125,19 +2613,21 @@ html[data-touch-h5] body {
   width: 22px;
   align-items: center;
   justify-content: center;
-  border-radius: 7px;
-  background: rgba(255, 255, 255, 0.055);
-  color: var(--color-text-secondary) !important;
+  border-radius: var(--radius-xs);
+  background: var(--color-token-bg-subtle);
+  color: var(--color-token-text-secondary) !important;
 }
 
 .user-message-bubble {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  box-shadow: inset 0 1px 0 var(--color-token-border-light);
 }
 
 
 /* Codex-style compact chat titlebar */
 .session-titlebar {
   min-height: 50px;
+  height: 50px;
+  overflow: visible;
   background: var(--color-surface);
   box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.025);
 }
@@ -2168,7 +2658,7 @@ html[data-touch-h5] body {
 /* Codex-like sidebar rows and context menus */
 .sidebar-project-row {
   min-height: 32px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 3px 10px;
   transition:
     background-color 160ms ease,
@@ -2183,7 +2673,7 @@ html[data-touch-h5] body {
 
 .sidebar-session-row {
   min-height: 31px;
-  border-radius: 12px;
+  border-radius: var(--radius-xs);
   padding-left: 46px !important;
   padding-right: 14px !important;
 }
@@ -2225,13 +2715,13 @@ html[data-touch-h5] body {
   min-height: 34px;
   align-items: center;
   gap: 11px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 5px 10px;
   text-align: left;
   font-size: 14px;
   font-weight: 620;
   line-height: 1.18;
-  color: var(--color-text-primary);
+  color: var(--color-token-foreground);
   transition:
     background-color 140ms ease,
     color 140ms ease,
@@ -2250,7 +2740,7 @@ html[data-touch-h5] body {
 }
 
 .sidebar-codex-menu-item--danger {
-  color: var(--color-text-primary);
+  color: var(--color-token-foreground);
 }
 
 .sidebar-codex-menu-item--danger:hover,
@@ -2261,8 +2751,8 @@ html[data-touch-h5] body {
 .sidebar-codex-menu-divider {
   height: 1px;
   margin: 5px 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-full);
+  background: var(--color-token-border);
 }
 
 
@@ -2272,4 +2762,433 @@ html[data-touch-h5] body {
 
 .sidebar-project-collapse-inner > div > .relative:first-child {
   margin-top: 3px;
+}
+
+/* ── Codex-aligned composer styles ──────────────────────────────── */
+
+/* Composer footer container queries — progressively hide labels as
+   the composer narrows, matching Codex's responsive footer behavior. */
+.composer-footer {
+  container: composer-footer / inline-size;
+}
+
+@container composer-footer (width <= 440px) {
+  .composer-footer-label-sm {
+    display: none;
+  }
+}
+
+@container composer-footer (width <= 300px) {
+  .composer-footer-label-xs {
+    display: none;
+  }
+}
+
+@container composer-footer (width <= 475px) {
+  [data-codex-window-type="electron"] .composer-footer-label-sm,
+  [data-codex-window-type="electron"] .composer-footer-label-xs {
+    display: none;
+  }
+}
+
+@container composer-footer (width <= 480px) {
+  [data-codex-window-type="electron"] .composer-footer-secondary-label {
+    display: none;
+  }
+}
+
+@container composer-footer (width <= 420px) {
+  [data-codex-window-type="electron"] .composer-footer-secondary-chevron {
+    display: none;
+  }
+}
+
+/* Composer attachment area — uses inset radius calculation matching
+   Codex's --composer-attachment-inset pattern so attachment surfaces
+   stay visually concentric with the composer border-radius. */
+.composer-attachments-area {
+  padding: var(--composer-attachment-inset);
+  padding-bottom: calc(var(--composer-attachment-inset) * 0.75);
+}
+
+.composer-attachment-surface {
+  border-radius: var(--composer-attachment-border-radius);
+}
+
+/* Composer top tray panel — the command/slash menu that appears above
+   the textarea. Matches Codex's expandedTopTrayPanel pattern with
+   semi-transparent background, border-top transparency, and
+   border-top-left/right-radius matching the composer shell. */
+.composer-top-tray-panel {
+  max-height: var(--composer-top-tray-max-height, 177px);
+  padding-top: 12px;
+  padding-left: 8px;
+  background: var(--composer-top-tray-background);
+  border: 1px solid var(--composer-top-tray-border);
+  border-top-left-radius: var(--composer-border-radius);
+  border-top-right-radius: var(--composer-border-radius);
+  border-top-color: transparent;
+  border-bottom: none;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  box-shadow: none;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.composer-top-tray-panel [cmdk-list],
+.composer-top-tray-panel [data-cmdk-list] {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  transition: none;
+  overflow-y: auto;
+}
+
+/* ── Codex-aligned dialog / modal animations ─────────────────────── */
+.codex-dialog-content {
+  animation: codex-dialog-enter var(--transition-duration-relaxed) var(--cubic-enter);
+  transform-origin: top;
+  will-change: transform, opacity;
+}
+.codex-dialog-overlay {
+  animation: codex-dialog-overlay-enter var(--transition-duration-relaxed) var(--cubic-enter);
+  will-change: opacity;
+}
+@keyframes codex-dialog-enter {
+  0% { opacity: 0; transform: translateY(calc(var(--spacing, 4px) * 2)) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes codex-dialog-overlay-enter {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .codex-dialog-content,
+  .codex-dialog-overlay {
+    animation: none;
+  }
+}
+
+/* ── Codex-aligned dropdown animations ───────────────────────────── */
+.codex-dropdown-content {
+  --dropdown-content-inset: 2px;
+  --dropdown-content-start-transform: translateY(calc(var(--dropdown-content-inset) * -1)) scale(0.98);
+  transform-origin: var(--radix-dropdown-menu-content-transform-origin);
+  will-change: opacity, transform;
+}
+.codex-dropdown-content[data-side="top"] {
+  --dropdown-content-start-transform: translateY(var(--dropdown-content-inset)) scale(0.98);
+}
+.codex-dropdown-content[data-side="right"] {
+  --dropdown-content-start-transform: translateX(calc(var(--dropdown-content-inset) * -1)) scale(0.98);
+}
+.codex-dropdown-content[data-side="left"] {
+  --dropdown-content-start-transform: translateX(var(--dropdown-content-inset)) scale(0.98);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .codex-dropdown-content[data-state="open"] {
+    animation: codex-dropdown-enter var(--transition-duration-basic) var(--cubic-enter);
+  }
+  .codex-dropdown-content[data-state="closed"] {
+    animation: codex-dropdown-exit var(--transition-duration-basic) var(--cubic-exit-snappy);
+  }
+}
+@keyframes codex-dropdown-enter {
+  0% { opacity: 0; transform: var(--dropdown-content-start-transform); }
+  100% { opacity: 1; transform: translate(0) translateY(0) scale(1); }
+}
+@keyframes codex-dropdown-exit {
+  0% { opacity: 1; transform: translate(0) translateY(0) scale(1); }
+  100% { opacity: 0; transform: var(--dropdown-content-start-transform); }
+}
+
+/* ── Codex-aligned toast animations ──────────────────────────────── */
+.codex-toast-root {
+  flex-direction: column;
+  align-items: center;
+  transition: opacity 0.24s cubic-bezier(0, 0, 0.2, 1), transform 0.24s cubic-bezier(0, 0, 0.2, 1);
+  display: flex;
+}
+.codex-toast-root[data-state="entering"],
+.codex-toast-root[data-state="entered"] {
+  animation: 0.25s cubic-bezier(0.175, 0.885, 0.32, 1) both codex-toast-open;
+}
+.codex-toast-root[data-state="exiting"] {
+  animation: 0.25s cubic-bezier(0.4, 0, 1, 1) both codex-toast-close;
+}
+.codex-toast-alert {
+  pointer-events: all;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+@keyframes codex-toast-open {
+  0% { opacity: 0; transform: translateY(-4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes codex-toast-close {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ── Codex-aligned curtain (modal backdrop) ──────────────────────── */
+.codex-curtain {
+  z-index: var(--max-app-overlay-z-index, 100);
+  pointer-events: auto;
+  opacity: 0;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: color-mix(in srgb, var(--color-token-bg-primary, var(--color-surface)) 74%, transparent);
+  animation-duration: 0.11s;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation-fill-mode: forwards;
+  position: fixed;
+  inset: 0;
+  transform: scale(1.01);
+}
+.codex-curtain[data-phase="raise"] {
+  animation-name: codex-curtain-raise;
+}
+.codex-curtain[data-phase="lower"] {
+  animation-name: codex-curtain-lower;
+}
+@keyframes codex-curtain-raise {
+  0% { opacity: 0; transform: scale(1.01); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes codex-curtain-lower {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.01); }
+}
+
+/* ── Codex-aligned edge-fade scroll mask system ──────────────────── */
+@property --edge-fade-distance {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 1rem;
+}
+@property --top-fade {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0;
+}
+@property --bottom-fade {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0;
+}
+@keyframes edge-fade {
+  0% { --top-fade: 0; --bottom-fade: var(--edge-fade-distance, 1rem); }
+  1% { --top-fade: 0; --bottom-fade: var(--edge-fade-distance, 1rem); }
+  99% { --top-fade: var(--edge-fade-distance, 1rem); --bottom-fade: 0; }
+  100% { --top-fade: var(--edge-fade-distance, 1rem); --bottom-fade: 0; }
+}
+
+/* ── Codex-aligned loading shimmer ───────────────────────────────── */
+@keyframes codex-loading-shimmer {
+  0% { background-position: -100% 0; }
+  100% { background-position: 250% 0; }
+}
+.codex-loading-shimmer {
+  background: linear-gradient(90deg, transparent 0%, var(--color-token-description-foreground) 16%, transparent 33%);
+  background-size: 300% 100%;
+  animation: codex-loading-shimmer 3s linear infinite;
+}
+
+/* ── Codex-aligned rolling diff stats ───────────────────────────── */
+.codex-diff-stat-rolling-number {
+  display: inline-flex;
+  align-items: baseline;
+  height: 1lh;
+  line-height: inherit;
+}
+.codex-diff-stat-added {
+  color: #31d873;
+}
+.codex-diff-stat-deleted {
+  color: #ff4f57;
+}
+.codex-diff-stat-number-separator {
+  display: inline-block;
+  height: 1lh;
+  line-height: inherit;
+}
+.codex-diff-stat-digit-column {
+  position: relative;
+  display: inline-block;
+  width: 1ch;
+  height: 1lh;
+  line-height: inherit;
+  contain: layout paint style;
+}
+.codex-diff-stat-digit-column::before {
+  content: "0";
+  visibility: hidden;
+}
+.codex-diff-stat-digit-column-inline {
+  contain: none;
+}
+.codex-diff-stat-digit-clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.codex-diff-stat-digit-stack {
+  display: flex;
+  flex-direction: column;
+  height: 1lh;
+  contain: layout size style;
+  will-change: transform;
+  transition: transform var(--transition-duration-relaxed, 0.3s) cubic-bezier(0.16, 1, 0.3, 1);
+}
+.codex-diff-stat-digit-stack > span {
+  flex: 0 0 1lh;
+  height: 1lh;
+}
+.codex-diff-stat-digit-column-inline .codex-diff-stat-digit-stack {
+  display: block;
+  margin-top: var(--rolling-number-y-offset, 0);
+}
+.codex-diff-stat-digit-column-inline .codex-diff-stat-digit-stack > span {
+  display: block;
+  line-height: inherit;
+}
+.codex-diff-stat-digit-stack-0 { transform: translateY(0); }
+.codex-diff-stat-digit-stack-1 { transform: translateY(-1lh); }
+.codex-diff-stat-digit-stack-2 { transform: translateY(-2lh); }
+.codex-diff-stat-digit-stack-3 { transform: translateY(-3lh); }
+.codex-diff-stat-digit-stack-4 { transform: translateY(-4lh); }
+.codex-diff-stat-digit-stack-5 { transform: translateY(-5lh); }
+.codex-diff-stat-digit-stack-6 { transform: translateY(-6lh); }
+.codex-diff-stat-digit-stack-7 { transform: translateY(-7lh); }
+.codex-diff-stat-digit-stack-8 { transform: translateY(-8lh); }
+.codex-diff-stat-digit-stack-9 { transform: translateY(-9lh); }
+@media (prefers-reduced-motion: reduce) {
+  .codex-diff-stat-digit-stack {
+    transition: none;
+  }
+}
+
+/* ── Codex-aligned scroll-to-bottom wave dots ────────────────────── */
+@keyframes codex-working-dot-wave {
+  0%, 10%, 100% { transform: translateY(0); }
+  25% { transform: translateY(1.2px); }
+  55% { transform: translateY(-2px); }
+  70% { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .codex-wave-dot {
+    animation-name: codex-working-dot-wave;
+    animation-duration: 1s;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+  }
+  .codex-wave-dot:nth-child(2) { animation-delay: 0.1s; }
+  .codex-wave-dot:nth-child(3) { animation-delay: 0.2s; }
+}
+
+/* ── Codex-aligned navigation rail markers ───────────────────────── */
+.codex-nav-marker {
+  width: 6px;
+  transition: width 0.16s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.codex-nav-row:hover .codex-nav-marker,
+.codex-nav-row[data-scrub-target] .codex-nav-marker {
+  width: 26px;
+}
+.codex-nav-row:hover + .codex-nav-row .codex-nav-marker,
+.codex-nav-row[data-scrub-target] + .codex-nav-row .codex-nav-marker {
+  width: 20px;
+}
+.codex-nav-row:has(+ .codex-nav-row:hover) .codex-nav-marker,
+.codex-nav-row:has(+ .codex-nav-row[data-scrub-target]) .codex-nav-marker {
+  width: 20px;
+}
+.codex-nav-rail[data-scrubbing] .codex-nav-marker {
+  transition-duration: 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .codex-nav-marker { transition-duration: 0s; }
+}
+
+/* ── Codex-aligned superellipse corner support ───────────────────── */
+@supports (corner-shape: superellipse(1.5)) {
+  .glass-panel,
+  .composer-top-tray-panel,
+  #content-area[data-sidebar-state="open"]:not(.app-shell-main--mobile) {
+    corner-shape: superellipse(1.5);
+  }
+}
+
+/* ── Codex-aligned scrollbar tokens ──────────────────────────────── */
+.codex-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+.codex-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.codex-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-token-scrollbar-slider-background);
+  border-radius: var(--radius-full);
+}
+.codex-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-token-scrollbar-slider-hover-background);
+}
+.codex-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-token-scrollbar-slider-background) transparent;
+}
+
+/* ── Codex-style live turn change pill above composer ────────────── */
+.current-turn-live-change-pill-wrap {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 14px;
+  pointer-events: none;
+}
+.current-turn-live-change-pill {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(38,38,38,0.92);
+  padding: 7px 16px;
+  color: rgba(255,255,255,0.78);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.07),
+    0 14px 34px rgba(0,0,0,0.28);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  animation: current-turn-live-change-pill-rise 420ms cubic-bezier(0.18, 0.96, 0.24, 1.12);
+}
+.current-turn-live-change-pill--compact {
+  min-height: 32px;
+  padding: 6px 13px;
+}
+.current-turn-live-change-pill__label {
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 20px;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+@keyframes current-turn-live-change-pill-rise {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0) scale(0.97);
+  }
+  70% {
+    opacity: 1;
+    transform: translate3d(0, -1px, 0) scale(1.012);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .current-turn-live-change-pill {
+    animation: none;
+  }
 }

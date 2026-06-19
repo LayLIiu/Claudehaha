@@ -1620,6 +1620,132 @@ export class WorkspaceService {
     return { kind: 'ok', diff: result.stdout }
   }
 
+  async gitAdd(sessionId: string, paths: string[]): Promise<{ success: boolean; error?: string }> {
+    if (paths.length === 0) return { success: true }
+    const workDir = await this.requireWorkDir(sessionId)
+    const result = await this.runGit(workDir, ['add', '--', ...paths])
+    if (result.code !== 0) {
+      return { success: false, error: result.stderr || `git add exited with code ${result.code}` }
+    }
+    return { success: true }
+  }
+
+  async gitCommit(
+    sessionId: string,
+    message: string,
+    paths?: string[],
+  ): Promise<{ success: boolean; hash?: string; error?: string }> {
+    const workDir = await this.requireWorkDir(sessionId)
+    const commitMessage = message.trim() || `chore: auto commit ${new Date().toISOString().slice(0, 19)}`
+
+    // Stage specific files if provided, otherwise commit all staged changes
+    if (paths && paths.length > 0) {
+      const addResult = await this.runGit(workDir, ['add', '--', ...paths])
+      if (addResult.code !== 0) {
+        return { success: false, error: addResult.stderr || `git add exited with code ${addResult.code}` }
+      }
+    } else {
+      // Stage all tracked changes
+      const addResult = await this.runGit(workDir, ['add', '-A'])
+      if (addResult.code !== 0) {
+        return { success: false, error: addResult.stderr || `git add -A exited with code ${addResult.code}` }
+      }
+    }
+
+    const commitResult = await this.runGit(workDir, ['commit', '-m', commitMessage])
+    if (commitResult.code !== 0) {
+      // git commit returns code 1 when there's nothing to commit
+      if (commitResult.stdout.includes('nothing to commit')) {
+        return { success: false, error: '没有可提交的变更' }
+      }
+      return { success: false, error: commitResult.stderr || commitResult.stdout || `git commit exited with code ${commitResult.code}` }
+    }
+
+    // Extract commit hash
+    const hashMatch = commitResult.stdout.match(/\[[\w-]+(?:\([\w-]+\))?\s([0-9a-f]{7,})\]/)
+    return { success: true, hash: hashMatch?.[1] }
+  }
+
+  async gitPush(sessionId: string): Promise<{ success: boolean; error?: string }> {
+    const workDir = await this.requireWorkDir(sessionId)
+    // Get current branch name
+    const branchResult = await this.runGit(workDir, ['rev-parse', '--abbrev-ref', 'HEAD'])
+    if (branchResult.code !== 0) {
+      return { success: false, error: branchResult.stderr || '无法获取当前分支' }
+    }
+    const branch = branchResult.stdout.trim()
+    if (!branch || branch === 'HEAD') {
+      return { success: false, error: '当前不在任何分支上' }
+    }
+
+    const pushResult = await this.runGit(workDir, ['push', 'origin', branch])
+    if (pushResult.code !== 0) {
+      return { success: false, error: pushResult.stderr || `git push exited with code ${pushResult.code}` }
+    }
+    return { success: true }
+  }
+
+  async gitSyncStatus(sessionId: string): Promise<{
+    branch: string | null
+    remoteBranch: string | null
+    ahead: number
+    behind: number
+  }> {
+    const workDir = await this.requireWorkDir(sessionId)
+
+    // Get current branch
+    const branchResult = await this.runGit(workDir, ['rev-parse', '--abbrev-ref', 'HEAD'])
+    const branch = branchResult.code === 0 ? branchResult.stdout.trim() : null
+
+    if (!branch || branch === 'HEAD') {
+      return { branch, remoteBranch: null, ahead: 0, behind: 0 }
+    }
+
+    // Get upstream branch
+    const upstreamResult = await this.runGit(workDir, ['rev-parse', '--abbrev-ref', `${branch}@{upstream}`])
+    const remoteBranch = upstreamResult.code === 0 ? upstreamResult.stdout.trim() : null
+
+    if (!remoteBranch) {
+      return { branch, remoteBranch: null, ahead: 0, behind: 0 }
+    }
+
+    // Get ahead/behind counts
+    const countResult = await this.runGit(workDir, ['rev-list', '--left-right', '--count', `${remoteBranch}...HEAD`])
+    if (countResult.code !== 0) {
+      return { branch, remoteBranch, ahead: 0, behind: 0 }
+    }
+
+    const parts = countResult.stdout.trim().split(/\s+/)
+    const behind = parseInt(parts[0] ?? '0', 10) || 0
+    const ahead = parseInt(parts[1] ?? '0', 10) || 0
+
+    return { branch, remoteBranch, ahead, behind }
+  }
+
+  async gitCreateBranch(sessionId: string, branchName: string): Promise<{ success: boolean; error?: string }> {
+    const workDir = await this.requireWorkDir(sessionId)
+
+    // Validate branch name
+    const checkResult = await this.runGit(workDir, ['check-ref-format', '--branch', branchName])
+    if (checkResult.code !== 0) {
+      return { success: false, error: '分支名格式无效' }
+    }
+
+    // Check if branch already exists
+    const existResult = await this.runGit(workDir, ['rev-parse', '--verify', branchName])
+    if (existResult.code === 0) {
+      return { success: false, error: `分支 '${branchName}' 已存在` }
+    }
+
+    // Create and checkout the new branch
+    const result = await this.runGit(workDir, ['checkout', '-b', branchName])
+    if (result.code !== 0) {
+      return { success: false, error: result.stderr || `git checkout -b exited with code ${result.code}` }
+    }
+
+    return { success: true }
+  }
+
   private async runGit(
     workDir: string,
     args: string[],

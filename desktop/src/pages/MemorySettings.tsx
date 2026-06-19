@@ -211,17 +211,17 @@ export function MemorySettings() {
   }
 
   return (
-    <div className="flex h-full min-h-[640px] flex-col overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)]">
-      <header className="grid min-h-[58px] border-b border-[var(--color-border)] bg-[var(--color-surface-container-low)] lg:grid-cols-[280px_minmax(0,1fr)]">
-        <div className="flex min-w-0 items-center gap-3 border-b border-[var(--color-border)] px-4 py-3 lg:border-b-0 lg:border-r">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-brand)]">
+    <div className="flex h-full min-h-[640px] flex-col overflow-hidden rounded-lg border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))]">
+      <header className="grid min-h-[58px] border-b border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] lg:grid-cols-[280px_minmax(0,1fr)]">
+        <div className="flex min-w-0 items-center gap-3 border-b border-[var(--color-token-border)] px-4 py-3 lg:border-b-0 lg:border-r">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-[var(--color-token-border)] bg-[var(--color-surface)] text-[var(--color-brand)]">
             <BookOpenText size={16} aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <h2 className="truncate text-base font-semibold text-[var(--color-text-primary)]">
+            <h2 className="truncate text-base font-semibold text-[var(--color-token-foreground)]">
               {t('settings.memory.title')}
             </h2>
-            <p className="truncate text-xs text-[var(--color-text-tertiary)]">
+            <p className="truncate text-xs text-[var(--color-token-text-secondary)]">
               {t('settings.memory.projects')}
             </p>
           </div>
@@ -255,8 +255,8 @@ export function MemorySettings() {
       )}
 
       <div className="grid min-h-0 flex-1 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="min-h-0 overflow-hidden border-b border-[var(--color-border)] lg:border-b-0 lg:border-r">
-          <section className="flex h-full min-h-0 flex-col bg-[var(--color-surface-container-lowest)]">
+        <aside className="min-h-0 overflow-hidden border-b border-[var(--color-token-border)] lg:border-b-0 lg:border-r">
+          <section className="flex h-full min-h-0 flex-col bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))]">
             <PanelHeader
               icon={<Database size={15} aria-hidden="true" />}
               title={t('settings.memory.resourceManager')}
@@ -306,21 +306,21 @@ export function MemorySettings() {
           </section>
         </aside>
 
-        <section className="flex min-h-0 flex-col overflow-hidden bg-[var(--color-surface-container-lowest)]">
-          <div className="grid gap-3 border-b border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] px-4 py-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+        <section className="flex min-h-0 flex-col overflow-hidden bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))]">
+          <div className="grid gap-3 border-b border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-4 py-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="truncate text-sm font-semibold text-[var(--color-text-primary)]">
+                <h3 className="truncate text-sm font-semibold text-[var(--color-token-foreground)]">
                   {selectedFile?.path ? fileNameFromPath(selectedFile.path) : t('settings.memory.noFileSelected')}
                 </h3>
                 {isDirty && <Badge>{t('settings.memory.unsaved')}</Badge>}
                 {lastSavedAt && !isDirty && <Badge>{t('settings.memory.saved')}</Badge>}
               </div>
-              <p className="mt-1 truncate text-xs text-[var(--color-text-tertiary)]">
+              <p className="mt-1 truncate text-xs text-[var(--color-token-text-secondary)]">
                 {selectedProject?.memoryDir ?? t('settings.memory.selectProject')}
               </p>
             </div>
-            <div className="flex shrink-0 items-center gap-2 text-xs text-[var(--color-text-tertiary)]">
+            <div className="flex shrink-0 items-center gap-2 text-xs text-[var(--color-token-text-secondary)]">
               {selectedFile ? (
                 <>
                   <span>{formatBytes(selectedFile.bytes)}</span>
@@ -333,7 +333,7 @@ export function MemorySettings() {
           {selectedFile ? (
             isEditing ? (
               <div className="flex min-h-0 flex-1 flex-col">
-                <div className="flex h-10 shrink-0 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-3 text-xs font-medium uppercase tracking-normal text-[var(--color-text-tertiary)]">
+                <div className="flex h-10 shrink-0 items-center justify-between border-b border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] px-3 text-xs font-medium uppercase tracking-normal text-[var(--color-token-text-secondary)]">
                   <div className="flex min-w-0 items-center gap-2">
                     <span>{t('settings.memory.editor')}</span>
                     <span>MARKDOWN</span>
@@ -375,12 +375,12 @@ export function MemorySettings() {
                   value={draftContent}
                   onChange={(event) => updateDraft(event.target.value)}
                   spellCheck={false}
-                  className="min-h-0 flex-1 w-full resize-none overflow-auto bg-transparent p-5 font-mono text-[13px] leading-6 text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-tertiary)]"
+                  className="min-h-0 flex-1 w-full resize-none overflow-auto bg-transparent p-5 font-mono text-[13px] leading-6 text-[var(--color-token-foreground)] outline-none placeholder:text-[var(--color-token-text-secondary)]"
                 />
               </div>
             ) : (
               <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                <div className="flex h-10 shrink-0 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-3 text-xs font-medium uppercase tracking-normal text-[var(--color-text-tertiary)]">
+                <div className="flex h-10 shrink-0 items-center justify-between border-b border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] px-3 text-xs font-medium uppercase tracking-normal text-[var(--color-token-text-secondary)]">
                   <div className="flex min-w-0 items-center gap-2">
                     <span>{t('settings.memory.preview')}</span>
                     <span>{t('settings.memory.rendered')}</span>
@@ -429,13 +429,13 @@ function Breadcrumb({
   const projectLabel = project ? projectDisplayName(project.label) : fallbackProject
   const parts = filePath ? [projectLabel, ...filePath.split('/').filter(Boolean)] : [projectLabel, fallbackFile]
   return (
-    <nav aria-label="Memory file path" className="flex min-w-0 items-center gap-1 text-sm text-[var(--color-text-tertiary)]">
+    <nav aria-label="Memory file path" className="flex min-w-0 items-center gap-1 text-sm text-[var(--color-token-text-secondary)]">
       {parts.map((part, index) => {
         const isLast = index === parts.length - 1
         return (
           <span key={`${part}-${index}`} className="flex min-w-0 items-center gap-1">
             {index > 0 ? <ChevronRight size={14} className="shrink-0" aria-hidden="true" /> : null}
-            <span className={`truncate ${isLast ? 'font-semibold text-[var(--color-text-primary)]' : ''}`}>
+            <span className={`truncate ${isLast ? 'font-semibold text-[var(--color-token-foreground)]' : ''}`}>
               {part}
             </span>
           </span>
@@ -462,7 +462,7 @@ function SearchField({
     <div className="relative">
       <Search
         size={15}
-        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]"
+        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-token-text-secondary)]"
         aria-hidden="true"
       />
       <input
@@ -470,14 +470,14 @@ function SearchField({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="h-10 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] pl-9 pr-9 text-sm text-[var(--color-text-primary)] outline-none transition-colors duration-150 placeholder:text-[var(--color-text-tertiary)] focus:border-[var(--color-border-focus)] focus:shadow-[var(--shadow-focus-ring)]"
+        className="h-10 w-full rounded-md border border-[var(--color-token-border)] bg-[var(--color-surface)] pl-9 pr-9 text-sm text-[var(--color-token-foreground)] outline-none transition-colors duration-150 placeholder:text-[var(--color-token-text-secondary)] focus:border-[var(--color-token-focus-border,var(--color-border-focus))] focus:shadow-[var(--shadow-focus-ring)]"
       />
       {value ? (
         <button
           type="button"
           aria-label={clearLabel}
           onClick={() => onChange('')}
-          className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
+          className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]"
         >
           <X size={14} aria-hidden="true" />
         </button>
@@ -488,12 +488,12 @@ function SearchField({
 
 function PanelHeader({ icon, title, meta }: { icon?: ReactNode; title: string; meta?: string }) {
   return (
-    <div className="flex h-11 items-center justify-between border-b border-[var(--color-border)] px-3">
-      <h3 className="flex min-w-0 items-center gap-2 text-sm font-semibold text-[var(--color-text-primary)]">
-        {icon ? <span className="text-[var(--color-text-tertiary)]">{icon}</span> : null}
+    <div className="flex h-11 items-center justify-between border-b border-[var(--color-token-border)] px-3">
+      <h3 className="flex min-w-0 items-center gap-2 text-sm font-semibold text-[var(--color-token-foreground)]">
+        {icon ? <span className="text-[var(--color-token-text-secondary)]">{icon}</span> : null}
         <span className="truncate">{title}</span>
       </h3>
-      {meta ? <span className="text-xs text-[var(--color-text-tertiary)]">{meta}</span> : null}
+      {meta ? <span className="text-xs text-[var(--color-token-text-secondary)]">{meta}</span> : null}
     </div>
   )
 }
@@ -538,23 +538,23 @@ function ProjectTreeRow({
         aria-label={t('settings.memory.toggleFolder', { name: display })}
         className={`group flex min-h-9 w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left transition-colors focus:outline-none focus-visible:shadow-[var(--shadow-focus-ring)] ${
           active
-            ? 'bg-[var(--color-memory-surface)] text-[var(--color-text-primary)] ring-1 ring-inset ring-[var(--color-memory-border)]'
-            : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]'
+            ? 'bg-[var(--color-memory-surface)] text-[var(--color-token-foreground)] ring-1 ring-inset ring-[var(--color-memory-border)]'
+            : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]'
         }`}
       >
         <Folder size={15} className="shrink-0 text-[var(--color-brand)]" aria-hidden="true" />
         <span className="min-w-0 flex-1 truncate text-sm font-medium">{display}</span>
         {!project.exists ? (
-          <span className="shrink-0 text-xs text-[var(--color-text-tertiary)]">{t('settings.memory.missing')}</span>
+          <span className="shrink-0 text-xs text-[var(--color-token-text-secondary)]">{t('settings.memory.missing')}</span>
         ) : null}
       </button>
 
       {expanded ? (
-        <div className="ml-[18px] mt-1.5 border-l border-[var(--color-border)] pl-2.5">
+        <div className="ml-[18px] mt-1.5 border-l border-[var(--color-token-border)] pl-2.5">
           {loading ? (
-            <div className="px-2 py-1.5 text-xs text-[var(--color-text-tertiary)]">{t('common.loading')}</div>
+            <div className="px-2 py-1.5 text-xs text-[var(--color-token-text-secondary)]">{t('common.loading')}</div>
           ) : fileTree.length === 0 ? (
-            <div className="px-2 py-1.5 text-xs text-[var(--color-text-tertiary)]">{emptyText}</div>
+            <div className="px-2 py-1.5 text-xs text-[var(--color-token-text-secondary)]">{emptyText}</div>
           ) : (
             fileTree.map((node) => (
               <MemoryTreeRow
@@ -593,11 +593,11 @@ function FileRow({
       style={{ paddingLeft: `${4 + Math.max(depth - 1, 0) * 16}px` }}
       className={`mb-1 flex min-h-8 w-full items-center gap-1.5 rounded-md border py-1 pr-2 text-left transition-colors focus:outline-none focus-visible:shadow-[var(--shadow-focus-ring)] ${
         active
-          ? 'border-[var(--color-memory-border)] bg-[var(--color-surface-selected)] text-[var(--color-text-primary)]'
-          : 'border-transparent text-[var(--color-text-secondary)] hover:border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]'
+          ? 'border-[var(--color-memory-border)] bg-[var(--color-surface-selected)] text-[var(--color-token-foreground)]'
+          : 'border-transparent text-[var(--color-token-text-secondary)] hover:border-[var(--color-token-border)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]'
       }`}
     >
-      <FileText size={14} className="shrink-0 text-[var(--color-text-tertiary)]" aria-hidden="true" />
+      <FileText size={14} className="shrink-0 text-[var(--color-token-text-secondary)]" aria-hidden="true" />
       <span className="min-w-0 flex-1 truncate text-sm">{file.title}</span>
     </button>
   )
@@ -640,7 +640,7 @@ function MemoryTreeRow({
         onClick={() => onToggleFolder(node.path)}
         aria-expanded={!isCollapsed}
         aria-label={t('settings.memory.toggleFolder', { name: node.name })}
-        className="mb-1 flex min-h-8 w-full items-center gap-1.5 rounded-md border border-transparent py-1 pr-2 text-left text-sm text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:shadow-[var(--shadow-focus-ring)]"
+        className="mb-1 flex min-h-8 w-full items-center gap-1.5 rounded-md border border-transparent py-1 pr-2 text-left text-sm text-[var(--color-token-text-secondary)] transition-colors hover:border-[var(--color-token-border)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] focus:outline-none focus-visible:shadow-[var(--shadow-focus-ring)]"
         style={{ paddingLeft: `${4 + Math.max(depth - 1, 0) * 16}px` }}
       >
         {isCollapsed ? <ChevronRight size={14} aria-hidden="true" /> : <ChevronDown size={14} aria-hidden="true" />}
@@ -648,7 +648,7 @@ function MemoryTreeRow({
         <span className="min-w-0 flex-1 truncate font-medium">{node.name}</span>
       </button>
       {!isCollapsed ? (
-        <div className="ml-[18px] mt-1 border-l border-[var(--color-border)] pl-2.5">
+        <div className="ml-[18px] mt-1 border-l border-[var(--color-token-border)] pl-2.5">
           {node.children.map((child) => (
             <MemoryTreeRow
               key={child.id}
@@ -669,7 +669,7 @@ function MemoryTreeRow({
 
 function Badge({ children }: { children: string }) {
   return (
-    <span className="shrink-0 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-1.5 py-0.5 text-[11px] font-medium text-[var(--color-text-secondary)]">
+    <span className="shrink-0 rounded-[var(--radius-sm)] border border-[var(--color-token-border)] bg-[var(--color-surface)] px-1.5 py-0.5 text-[11px] font-medium text-[var(--color-token-text-secondary)]">
       {children}
     </span>
   )
@@ -677,9 +677,9 @@ function Badge({ children }: { children: string }) {
 
 function EmptyState({ icon, text }: { icon?: ReactNode; text: string }) {
   return (
-    <div className="grid place-items-center gap-2 px-3 py-8 text-center text-sm text-[var(--color-text-tertiary)]">
+    <div className="grid place-items-center gap-2 px-3 py-8 text-center text-sm text-[var(--color-token-text-secondary)]">
       {icon ? (
-        <span className="flex h-9 w-9 items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface-container-low)] text-[var(--color-text-tertiary)]">
+        <span className="flex h-9 w-9 items-center justify-center rounded-md border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] text-[var(--color-token-text-secondary)]">
           {icon}
         </span>
       ) : null}

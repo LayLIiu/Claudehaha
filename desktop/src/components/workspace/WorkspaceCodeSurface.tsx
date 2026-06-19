@@ -137,7 +137,7 @@ export function WorkspaceDiffSurface({
                         : 'hover:bg-[var(--color-surface-hover)]'
                 }`}
               >
-                <span className="select-none text-right text-[11px] text-[var(--color-text-tertiary)]">
+                <span className="select-none text-right text-[11px] text-[var(--color-token-text-secondary)]">
                   {index + 1}
                 </span>
                 <span
@@ -146,7 +146,7 @@ export function WorkspaceDiffSurface({
                       ? 'text-[var(--color-diff-added-text)]'
                       : isRemoved
                         ? 'text-[var(--color-diff-removed-text)]'
-                        : 'text-[var(--color-text-tertiary)]'
+                        : 'text-[var(--color-token-text-secondary)]'
                   }`}
                 >
                   {prefix}
@@ -154,7 +154,7 @@ export function WorkspaceDiffSurface({
                 <span
                   className={`whitespace-pre pr-6 ${
                     isFileHeader
-                      ? 'font-semibold text-[var(--color-text-secondary)]'
+                      ? 'font-semibold text-[var(--color-token-text-secondary)]'
                       : isHunk
                         ? 'font-semibold text-[var(--color-warning)]'
                         : ''
@@ -171,7 +171,7 @@ export function WorkspaceDiffSurface({
           })}
         </pre>
         {lines.length > lineLimit && (
-          <div className="sticky bottom-0 flex items-center gap-3 border-t border-[var(--color-border)] bg-[var(--color-surface-glass)] px-3 py-2 text-xs text-[var(--color-text-tertiary)] backdrop-blur">
+          <div className="sticky bottom-0 flex items-center gap-3 border-t border-[var(--color-token-border)] bg-[var(--color-surface-glass)] px-3 py-2 text-xs text-[var(--color-token-text-secondary)] backdrop-blur">
             <span>
               {showAllLines
                 ? t('workspace.previewAllLines', { total: lines.length })
@@ -180,7 +180,7 @@ export function WorkspaceDiffSurface({
             <button
               type="button"
               onClick={() => setShowAllLines((current) => !current)}
-              className="ml-auto rounded-[6px] px-2 py-1 text-[12px] font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
+              className="ml-auto rounded-[var(--radius-xs)] px-2 py-1 text-[12px] font-medium text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]"
             >
               {showAllLines ? t('workspace.collapsePreview') : t('workspace.showAllLoadedLines')}
             </button>

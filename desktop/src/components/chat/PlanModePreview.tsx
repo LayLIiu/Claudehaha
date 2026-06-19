@@ -39,15 +39,15 @@ export function PlanPreviewCard({
   const trimmedPlan = plan.trim()
 
   return (
-    <div data-testid="plan-preview-card" className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]">
-      <div className="flex items-start gap-2 border-b border-[var(--color-border)]/65 bg-[var(--color-surface-container-low)] px-3 py-2.5">
+    <div data-testid="plan-preview-card" className="overflow-hidden rounded-lg border border-[var(--color-token-border)] bg-[var(--color-surface)]">
+      <div className="flex items-start gap-2 border-b border-[var(--color-token-border)]/65 bg-[var(--color-surface-container-low)] px-3 py-2.5">
         <FileText size={15} strokeWidth={2.1} className="mt-0.5 shrink-0 text-[var(--color-brand)]" aria-hidden="true" />
         <div className="min-w-0 flex-1">
-          <div className="text-[12px] font-semibold text-[var(--color-text-primary)]">
+          <div className="text-[12px] font-semibold text-[var(--color-token-foreground)]">
             {title}
           </div>
           {filePath ? (
-            <div className="mt-0.5 truncate font-[var(--font-mono)] text-[11px] text-[var(--color-text-tertiary)]">
+            <div className="mt-0.5 truncate font-[var(--font-mono)] text-[11px] text-[var(--color-token-text-secondary)]">
               {filePath}
             </div>
           ) : null}
@@ -58,12 +58,12 @@ export function PlanPreviewCard({
         {trimmedPlan ? (
           <MarkdownRenderer content={trimmedPlan} variant="compact" />
         ) : (
-          <div className="text-xs text-[var(--color-text-tertiary)]">{emptyLabel}</div>
+          <div className="text-xs text-[var(--color-token-text-secondary)]">{emptyLabel}</div>
         )}
       </div>
 
       {allowedPrompts.length > 0 && requestedPermissionsTitle ? (
-        <div className="border-t border-[var(--color-border)]/65 bg-[var(--color-surface-container-low)] px-3 py-2.5">
+        <div className="border-t border-[var(--color-token-border)]/65 bg-[var(--color-surface-container-low)] px-3 py-2.5">
           <div className="mb-1.5 flex items-center gap-2 text-[11px] font-semibold uppercase text-[var(--color-outline)]">
             <ShieldCheck size={13} strokeWidth={2.1} aria-hidden="true" />
             {requestedPermissionsTitle}
@@ -72,12 +72,12 @@ export function PlanPreviewCard({
             {allowedPrompts.map((prompt, index) => (
               <div
                 key={`${prompt.tool}-${prompt.prompt}-${index}`}
-                className="rounded-md border border-[var(--color-border)]/70 bg-[var(--color-surface)] px-2.5 py-1.5 text-[11px] text-[var(--color-text-secondary)]"
+                className="rounded-md border border-[var(--color-token-border)]/70 bg-[var(--color-surface)] px-2.5 py-1.5 text-[11px] text-[var(--color-token-text-secondary)]"
               >
-                <span className="font-[var(--font-mono)] font-semibold text-[var(--color-text-primary)]">
+                <span className="font-[var(--font-mono)] font-semibold text-[var(--color-token-foreground)]">
                   {prompt.tool}
                 </span>
-                <span className="text-[var(--color-text-tertiary)]"> · </span>
+                <span className="text-[var(--color-token-text-secondary)]"> · </span>
                 <span>{prompt.prompt}</span>
               </div>
             ))}

@@ -54,10 +54,10 @@ export function MobileBottomSheet({
         aria-modal={role === 'dialog' ? true : undefined}
         aria-label={ariaLabel ?? (typeof title === 'string' ? title : undefined)}
         data-testid={testId}
-        className={`absolute inset-x-0 bottom-0 flex max-h-[min(78dvh,640px)] min-h-0 flex-col overflow-hidden rounded-t-2xl border-x-0 border-y border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] shadow-[0_-18px_48px_rgba(54,35,28,0.22)] ${panelClassName}`}
+        className={`absolute inset-x-0 bottom-0 flex max-h-[min(78dvh,640px)] min-h-0 flex-col overflow-hidden rounded-t-2xl border-x-0 border-y border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] shadow-[0_-18px_48px_rgba(54,35,28,0.22)] ${panelClassName}`}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="shrink-0 border-b border-[var(--color-border)] px-4 py-3">
+        <div className="shrink-0 border-b border-[var(--color-token-border)] px-4 py-3">
           <div className="flex min-h-10 items-center justify-between gap-3">
             <div className="min-w-0 text-[11px] font-bold uppercase tracking-widest text-[var(--color-outline)]">
               {title}
@@ -66,9 +66,9 @@ export function MobileBottomSheet({
               type="button"
               aria-label={closeLabel}
               onClick={onClose}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)]"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))]"
             >
-              <span className="material-symbols-outlined text-[20px]">close</span>
+              <span className="material-symbols-outlined icon-md">close</span>
             </button>
           </div>
           {headerExtra && (
@@ -83,7 +83,7 @@ export function MobileBottomSheet({
         </div>
 
         {footer && (
-          <div className="shrink-0 border-t border-[var(--color-border)]">
+          <div className="shrink-0 border-t border-[var(--color-token-border)]">
             {footer}
           </div>
         )}

@@ -78,7 +78,7 @@ export function OpenWithMenu({ items, anchor, onClose, triggerEl }: Props) {
     <div
       ref={ref}
       role="menu"
-      className="fixed min-w-[220px] overflow-hidden rounded-[12px] border border-[var(--color-border)] bg-[var(--color-surface)] py-1 shadow-[var(--shadow-dropdown)]"
+      className="fixed min-w-[220px] overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-token-border)] bg-[var(--color-surface)] py-1 shadow-[var(--shadow-dropdown)]"
       style={{ top: pos.top, left: pos.left, zIndex: 1000 }}
     >
       {items.map((item) => (
@@ -87,9 +87,9 @@ export function OpenWithMenu({ items, anchor, onClose, triggerEl }: Props) {
           type="button"
           role="menuitem"
           onClick={() => { item.onSelect(); onClose() }}
-          className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-surface-hover)]"
+          className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-[var(--color-token-foreground)] transition-colors hover:bg-[var(--color-surface-hover)]"
         >
-          <span className="flex h-6 w-6 items-center justify-center text-[var(--color-text-secondary)]"><ItemIcon item={item} /></span>
+          <span className="flex h-6 w-6 items-center justify-center text-[var(--color-token-text-secondary)]"><ItemIcon item={item} /></span>
           <span className="min-w-0 truncate">{item.label}</span>
         </button>
       ))}

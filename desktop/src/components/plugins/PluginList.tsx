@@ -174,14 +174,14 @@ export function PluginList() {
 
   if (plugins.length === 0) {
     return (
-      <div className="text-center py-12 rounded-2xl border border-dashed border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-6">
-        <span className="material-symbols-outlined text-[40px] text-[var(--color-text-tertiary)] mb-2 block">
+      <div className="text-center py-12 rounded-2xl border border-dashed border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] px-6">
+        <span className="material-symbols-outlined text-[40px] text-[var(--color-token-text-secondary)] mb-2 block">
           extension
         </span>
-        <p className="text-sm text-[var(--color-text-tertiary)]">
+        <p className="text-sm text-[var(--color-token-text-secondary)]">
           {t('settings.plugins.empty')}
         </p>
-        <p className="text-xs text-[var(--color-text-tertiary)] mt-1">
+        <p className="text-xs text-[var(--color-token-text-secondary)] mt-1">
           {t('settings.plugins.emptyHint')}
         </p>
       </div>
@@ -190,22 +190,22 @@ export function PluginList() {
 
   return (
     <div className="flex flex-col gap-6 min-w-0">
-      <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] overflow-hidden">
+      <section className="rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] overflow-hidden">
         <div className="flex flex-col gap-4 px-5 py-5 min-w-0">
           <div className="flex flex-col gap-4 min-w-0 xl:flex-row xl:items-start xl:justify-between">
             <div className="min-w-0 max-w-4xl">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-text-tertiary)] mb-2">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[var(--color-token-text-secondary)] mb-2">
                 {t('settings.plugins.browserEyebrow')}
               </div>
               <div className="flex items-center gap-3 mb-2">
                 <span className="material-symbols-outlined text-[22px] text-[var(--color-brand)]">
                   extension
                 </span>
-                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                <h3 className="text-lg font-semibold text-[var(--color-token-foreground)]">
                   {t('settings.plugins.browserTitle')}
                 </h3>
               </div>
-              <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+              <p className="text-sm leading-6 text-[var(--color-token-text-secondary)]">
                 {t('settings.plugins.browserDescription')}
               </p>
             </div>
@@ -217,7 +217,7 @@ export function PluginList() {
                 className="min-h-9 flex-1 sm:flex-none"
                 onClick={() => void fetchPlugins(currentWorkDir)}
               >
-                <span className="material-symbols-outlined text-[16px]">refresh</span>
+                <span className="material-symbols-outlined icon-sm">refresh</span>
                 {t('settings.plugins.refresh')}
               </Button>
               <Button
@@ -226,7 +226,7 @@ export function PluginList() {
                 onClick={handleReload}
                 loading={isApplying}
               >
-                <span className="material-symbols-outlined text-[16px]">sync</span>
+                <span className="material-symbols-outlined icon-sm">sync</span>
                 {t('settings.plugins.apply')}
               </Button>
             </div>
@@ -256,7 +256,7 @@ export function PluginList() {
           </div>
 
           {lastReloadSummary && (
-            <p className="text-xs text-[var(--color-text-tertiary)]">
+            <p className="text-xs text-[var(--color-token-text-secondary)]">
               {t('settings.plugins.lastReload', {
                 enabled: String(lastReloadSummary.enabled),
                 skills: String(lastReloadSummary.skills),
@@ -266,19 +266,19 @@ export function PluginList() {
           )}
         </div>
 
-        <div className="flex flex-col gap-3 border-t border-[var(--color-border)] px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex min-w-0 items-center gap-2 text-xs text-[var(--color-text-secondary)]">
-            <span className="material-symbols-outlined text-[16px] text-[var(--color-text-tertiary)]">
+        <div className="flex flex-col gap-3 border-t border-[var(--color-token-border)] px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-2 text-xs text-[var(--color-token-text-secondary)]">
+            <span className="material-symbols-outlined icon-sm text-[var(--color-token-text-secondary)]">
               checklist
             </span>
-            <span className="font-medium text-[var(--color-text-primary)]">
+            <span className="font-medium text-[var(--color-token-foreground)]">
               {t('settings.plugins.selectionCount', { count: String(selectedPlugins.length) })}
             </span>
             {selectedPlugins.length > 0 && (
               <button
                 type="button"
                 onClick={clearSelection}
-                className="rounded-md px-2 py-1 text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]"
+                className="rounded-md px-2 py-1 text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]"
               >
                 {t('settings.plugins.clearSelection')}
               </button>
@@ -290,7 +290,7 @@ export function PluginList() {
               disabled={enableCandidates.length === 0 || isApplying}
               onClick={() => setConfirmBatchAction('enable')}
             >
-              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">toggle_on</span>
+              <span className="material-symbols-outlined icon-sm" aria-hidden="true">toggle_on</span>
               {t('settings.plugins.enableSelected')}
             </Button>
             <Button
@@ -299,7 +299,7 @@ export function PluginList() {
               disabled={disableCandidates.length === 0 || isApplying}
               onClick={() => setConfirmBatchAction('disable')}
             >
-              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">toggle_off</span>
+              <span className="material-symbols-outlined icon-sm" aria-hidden="true">toggle_off</span>
               {t('settings.plugins.disableSelected')}
             </Button>
           </div>
@@ -307,12 +307,12 @@ export function PluginList() {
       </section>
 
       {marketplaces.length > 0 && (
-        <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
-          <div className="px-5 py-4 border-b border-[var(--color-border)] bg-[var(--color-surface-container-low)]">
-            <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">
+        <section className="rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-surface)] overflow-hidden">
+          <div className="px-5 py-4 border-b border-[var(--color-token-border)] bg-[var(--color-surface-container-low)]">
+            <h4 className="text-sm font-semibold text-[var(--color-token-foreground)]">
               {t('settings.plugins.marketplacesTitle')}
             </h4>
-            <p className="text-xs text-[var(--color-text-tertiary)] mt-1">
+            <p className="text-xs text-[var(--color-token-text-secondary)] mt-1">
               {t('settings.plugins.marketplacesHint')}
             </p>
           </div>
@@ -320,26 +320,26 @@ export function PluginList() {
             {marketplaces.map((marketplace) => (
               <div
                 key={marketplace.name}
-                className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-low)] px-4 py-3"
+                className="rounded-xl border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] px-4 py-3"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-[var(--color-text-primary)]">
+                  <span className="text-sm font-semibold text-[var(--color-token-foreground)]">
                     {marketplace.name}
                   </span>
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
                     marketplace.autoUpdate
                       ? 'bg-[var(--color-success-container)] text-[var(--color-success)]'
-                      : 'bg-[var(--color-surface-container-high)] text-[var(--color-text-tertiary)]'
+                      : 'bg-[var(--color-surface-container-high)] text-[var(--color-token-text-secondary)]'
                   }`}>
                     {marketplace.autoUpdate
                       ? t('settings.plugins.marketplaceAutoUpdateOn')
                       : t('settings.plugins.marketplaceAutoUpdateOff')}
                   </span>
                 </div>
-                <div className="mt-2 text-xs leading-5 text-[var(--color-text-secondary)] break-words">
+                <div className="mt-2 text-xs leading-5 text-[var(--color-token-text-secondary)] break-words">
                   {marketplace.source}
                 </div>
-                <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-[var(--color-text-tertiary)]">
+                <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-[var(--color-token-text-secondary)]">
                   <span>{t('settings.plugins.marketplaceInstalledCount', { count: String(marketplace.installedCount) })}</span>
                   {marketplace.lastUpdated && (
                     <span>{t('settings.plugins.marketplaceUpdatedAt', { value: new Date(marketplace.lastUpdated).toLocaleString() })}</span>
@@ -423,24 +423,24 @@ function renderGroup(
   return (
     <section
       key={bucket}
-      className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden"
+      className="rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-surface)] overflow-hidden"
     >
-      <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-[var(--color-border)] bg-[var(--color-surface-container-low)]">
+      <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-[var(--color-token-border)] bg-[var(--color-surface-container-low)]">
         <div className="min-w-0">
-          <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">
+          <h4 className="text-sm font-semibold text-[var(--color-token-foreground)]">
             {t(titleKey)}
           </h4>
-          <p className="text-xs leading-5 text-[var(--color-text-tertiary)] mt-1">
+          <p className="text-xs leading-5 text-[var(--color-token-text-secondary)] mt-1">
             {t('settings.plugins.groupHint', { count: String(items.length) })}
           </p>
         </div>
-        <span className="text-xs text-[var(--color-text-tertiary)]">{items.length}</span>
+        <span className="text-xs text-[var(--color-token-text-secondary)]">{items.length}</span>
       </div>
       <div className="flex flex-col p-2">
         {items.map((plugin) => (
           <div
             key={plugin.id}
-            className={`group rounded-xl border px-3 py-3 transition-all hover:border-[var(--color-border-focus)] hover:bg-[var(--color-surface-hover)] ${
+            className={`group rounded-xl border px-3 py-3 transition-all hover:border-[var(--color-token-focus-border,var(--color-border-focus))] hover:bg-[var(--color-surface-hover)] ${
               selectedPluginIds.has(plugin.id)
                 ? 'border-[var(--color-brand)]/45 bg-[var(--color-surface-selected)]'
                 : 'border-transparent'
@@ -448,13 +448,13 @@ function renderGroup(
           >
             <div className="flex items-start gap-3">
               {canMutatePlugin(plugin) ? (
-                <label className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-container-high)]">
+                <label className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-container-high)]">
                   <input
                     type="checkbox"
                     aria-label={t('settings.plugins.selectPlugin', { name: plugin.name })}
                     checked={selectedPluginIds.has(plugin.id)}
                     onChange={(event) => onToggleSelection(plugin.id, event.currentTarget.checked)}
-                    className="h-4 w-4 rounded border-[var(--color-border)] accent-[var(--color-brand)]"
+                    className="h-4 w-4 rounded border-[var(--color-token-border)] accent-[var(--color-brand)]"
                   />
                 </label>
               ) : (
@@ -465,26 +465,26 @@ function renderGroup(
                 onClick={() => void fetchPluginDetail(plugin.id, cwd)}
                 className="flex min-w-0 flex-1 items-start gap-3 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface)]"
               >
-                <span className="mt-0.5 material-symbols-outlined text-[18px] text-[var(--color-text-tertiary)]">
+                <span className="mt-0.5 material-symbols-outlined icon-md text-[var(--color-token-text-secondary)]">
                   {plugin.hasErrors ? 'warning' : plugin.enabled ? 'extension' : 'extension_off'}
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-semibold text-[var(--color-text-primary)] break-all">
+                    <span className="text-sm font-semibold text-[var(--color-token-foreground)] break-all">
                       {plugin.name}
                     </span>
                     <StatusPill plugin={plugin} />
                     <ScopePill scope={plugin.scope} />
                     {plugin.version && (
-                      <span className="rounded-full bg-[var(--color-surface-container-high)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-text-tertiary)]">
+                      <span className="rounded-full bg-[var(--color-surface-container-high)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-token-text-secondary)]">
                         v{plugin.version}
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-xs leading-5 text-[var(--color-text-secondary)] break-words">
+                  <p className="mt-1 text-xs leading-5 text-[var(--color-token-text-secondary)] break-words">
                     {plugin.description || t('settings.plugins.noDescription')}
                   </p>
-                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[var(--color-text-tertiary)]">
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[var(--color-token-text-secondary)]">
                     <span>{plugin.marketplace}</span>
                     {plugin.componentCounts.skills > 0 && (
                       <span>{t('settings.plugins.capability.skills', { count: String(plugin.componentCounts.skills) })}</span>
@@ -502,7 +502,7 @@ function renderGroup(
                     )}
                   </div>
                 </div>
-                <span className="material-symbols-outlined text-[18px] text-[var(--color-text-tertiary)] opacity-60 transition-transform group-hover:translate-x-0.5 group-hover:opacity-100">
+                <span className="material-symbols-outlined icon-md text-[var(--color-token-text-secondary)] opacity-60 transition-transform group-hover:translate-x-0.5 group-hover:opacity-100">
                   chevron_right
                 </span>
               </button>
@@ -532,14 +532,14 @@ function SummaryCard({
   icon: string
 }) {
   return (
-    <div className="min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-3">
-      <div className="flex min-w-0 items-center gap-1.5 text-[11px] uppercase tracking-[0.08em] text-[var(--color-text-tertiary)]">
-        <span className="material-symbols-outlined text-[14px] flex-shrink-0">{icon}</span>
+    <div className="min-w-0 rounded-xl border border-[var(--color-token-border)] bg-[var(--color-surface)] px-3 py-3">
+      <div className="flex min-w-0 items-center gap-1.5 text-[11px] uppercase tracking-[0.08em] text-[var(--color-token-text-secondary)]">
+        <span className="material-symbols-outlined icon-xs flex-shrink-0">{icon}</span>
         <span className="min-w-0 truncate text-[10px] leading-4">
           {label}
         </span>
       </div>
-      <div className="mt-1.5 truncate text-lg font-semibold text-[var(--color-text-primary)]">
+      <div className="mt-1.5 truncate text-lg font-semibold text-[var(--color-token-foreground)]">
         {value}
       </div>
     </div>
@@ -561,7 +561,7 @@ function StatusPill({ plugin }: { plugin: PluginSummary }) {
     <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
       plugin.enabled
         ? 'bg-[var(--color-success-container)] text-[var(--color-success)]'
-        : 'bg-[var(--color-surface-container-high)] text-[var(--color-text-tertiary)]'
+        : 'bg-[var(--color-surface-container-high)] text-[var(--color-token-text-secondary)]'
     }`}>
       {plugin.enabled
         ? t('settings.plugins.status.enabled')
@@ -573,7 +573,7 @@ function StatusPill({ plugin }: { plugin: PluginSummary }) {
 function ScopePill({ scope }: { scope: PluginSummary['scope'] }) {
   const t = useTranslation()
   return (
-    <span className="rounded-full border border-[var(--color-border)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-text-tertiary)]">
+    <span className="rounded-full border border-[var(--color-token-border)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-token-text-secondary)]">
       {t(`settings.plugins.scope.${scope}`)}
     </span>
   )

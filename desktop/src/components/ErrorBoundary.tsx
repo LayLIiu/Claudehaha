@@ -34,10 +34,10 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
 function ErrorBoundaryFallback() {
   return (
-    <div className="h-screen w-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] flex items-center justify-center p-6">
+    <div className="h-screen w-screen bg-[var(--color-bg-primary)] text-[var(--color-token-foreground)] flex items-center justify-center p-6">
       <div className="max-w-md w-full text-center">
         <div className="text-base font-semibold">{t('errorBoundary.title')}</div>
-        <div className="mt-2 text-sm text-[var(--color-text-tertiary)]">
+        <div className="mt-2 text-sm text-[var(--color-token-text-secondary)]">
           {t('errorBoundary.description')}
         </div>
         <div className="mt-4 flex justify-center">

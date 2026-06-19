@@ -17,6 +17,10 @@ type CLITaskStore = {
   resetting: boolean
   /** Whether the task bar is expanded */
   expanded: boolean
+  /** Whether the task bar is manually toggled open */
+  taskBarOpen: boolean
+  /** Whether tasks have been explicitly set by AI (TodoWrite) — controls auto-visibility */
+  tasksExplicitlySet: boolean
   /** True when all tasks completed and the user already continued chatting.
    *  Set during history load so the sticky bar is suppressed on page refresh. */
   completedAndDismissed: boolean
@@ -37,6 +41,8 @@ type CLITaskStore = {
   clearTasks: (sessionId?: string) => void
   /** Toggle expanded state */
   toggleExpanded: () => void
+  /** Toggle task bar visibility */
+  toggleTaskBar: () => void
 }
 
 function buildCompletedTaskKey(tasks: CLITask[]): string | null {
@@ -84,6 +90,8 @@ export const useCLITaskStore = create<CLITaskStore>((set, get) => ({
   tasks: [],
   resetting: false,
   expanded: false,
+  taskBarOpen: false,
+  tasksExplicitlySet: false,
   completedAndDismissed: false,
   dismissedCompletionKey: null,
 
@@ -96,6 +104,7 @@ export const useCLITaskStore = create<CLITaskStore>((set, get) => ({
         completedAndDismissed: false,
         dismissedCompletionKey: null,
         expanded: false,
+        tasksExplicitlySet: false,
       })
     }
 
@@ -138,6 +147,7 @@ export const useCLITaskStore = create<CLITaskStore>((set, get) => ({
     const tasks = mapTodosToTasks(todos, sessionId)
     set((state) => ({
       tasks,
+      tasksExplicitlySet: true,
       ...resolveDismissState(tasks, state.dismissedCompletionKey),
     }))
   },
@@ -168,6 +178,7 @@ export const useCLITaskStore = create<CLITaskStore>((set, get) => ({
       completedAndDismissed: true,
       dismissedCompletionKey: completionKey,
       expanded: false,
+      tasksExplicitlySet: false,
     })
 
     try {
@@ -188,10 +199,15 @@ export const useCLITaskStore = create<CLITaskStore>((set, get) => ({
       completedAndDismissed: false,
       dismissedCompletionKey: null,
       expanded: false,
+      tasksExplicitlySet: false,
     })
   },
 
   toggleExpanded: () => {
     set((s) => ({ expanded: !s.expanded }))
+  },
+
+  toggleTaskBar: () => {
+    set((s) => ({ taskBarOpen: !s.taskBarOpen }))
   },
 }))

@@ -177,11 +177,11 @@ export function TraceSession({
               <AlertTriangle size={14} strokeWidth={2} />
               {t('trace.loadFailed')}
             </div>
-            <p className="mt-2 text-sm text-[var(--color-text-secondary)]">{state.message}</p>
+            <p className="mt-2 text-sm text-[var(--color-token-text-secondary)]">{state.message}</p>
             <button
               type="button"
               onClick={refresh}
-              className="mt-4 inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] px-3 py-1.5 text-xs font-semibold text-[var(--color-text-primary)] transition-transform active:scale-[0.98]"
+              className="mt-4 inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-token-border)] px-3 py-1.5 text-xs font-semibold text-[var(--color-token-foreground)] transition-transform active:scale-[0.98]"
             >
               <RefreshCw size={14} strokeWidth={2} />
               {t('common.retry')}
@@ -203,7 +203,7 @@ export function TraceSession({
   const activeSpan = selectedSpan ?? viewModel.spansById.get(viewModel.rootId) ?? viewModel.spans[0] ?? null
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-[var(--color-surface)] text-[var(--color-text-primary)]">
+    <div className="flex min-h-0 flex-1 flex-col bg-[var(--color-surface)] text-[var(--color-token-foreground)]">
       <TraceHeader
         sessionId={sessionId}
         title={resolvedTitle}
@@ -217,7 +217,7 @@ export function TraceSession({
       />
       <DiagnosisBanner viewModel={viewModel} onSelect={setSelectedId} />
       {hasTraceContent && activeSpan ? (
-        <div className="flex min-h-0 flex-1 flex-col border-t border-[var(--color-border)]">
+        <div className="flex min-h-0 flex-1 flex-col border-t border-[var(--color-token-border)]">
           <TraceSectionStateProvider scopeId={sessionId}>
             <TraceSplitLayout
               tree={
@@ -273,16 +273,16 @@ function TraceHeader({
   return (
     <header className="flex shrink-0 items-center justify-between gap-3 px-4 py-2.5" data-testid="trace-header">
       <div className="flex min-w-0 items-center gap-2.5">
-        <RadioTower size={14} strokeWidth={2} className="shrink-0 text-[var(--color-text-tertiary)]" />
+        <RadioTower size={14} strokeWidth={2} className="shrink-0 text-[var(--color-token-text-secondary)]" />
         <div className="min-w-0">
           <div className="flex min-w-0 items-center gap-2">
-            <h1 className="min-w-0 truncate text-sm font-semibold tracking-tight text-[var(--color-text-primary)]">
+            <h1 className="min-w-0 truncate text-sm font-semibold tracking-tight text-[var(--color-token-foreground)]">
               {title}
             </h1>
             <LiveBadge />
             {diagnosisStatus ? <DiagnosisDot status={diagnosisStatus} /> : null}
           </div>
-          <div className="mt-0.5 flex min-w-0 items-center gap-2 font-mono text-[10px] text-[var(--color-text-tertiary)]">
+          <div className="mt-0.5 flex min-w-0 items-center gap-2 font-mono text-[10px] text-[var(--color-token-text-secondary)]">
             <span className="max-w-[280px] truncate">{sessionId}</span>
             {updatedAt ? <span className="shrink-0">{t('trace.updatedAt')} {formatClockTime(updatedAt)}</span> : null}
           </div>
@@ -315,7 +315,7 @@ function TraceHeader({
             copiedLabel={t('common.copied')}
             displayLabel={<Copy size={14} strokeWidth={2} />}
             displayCopiedLabel={<CheckCircle2 size={14} strokeWidth={2} />}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-focus)] hover:text-[var(--color-text-primary)] active:scale-[0.98]"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-token-border)] text-[var(--color-token-text-secondary)] transition-colors hover:border-[var(--color-token-focus-border,var(--color-border-focus))] hover:text-[var(--color-token-foreground)] active:scale-[0.98]"
           />
           <IconAction label={t('trace.refresh')} onClick={onRefresh}>
             <RefreshCw size={14} strokeWidth={2} className={refreshing ? 'animate-spin' : ''} />
@@ -363,14 +363,14 @@ function DiagnosisBanner({
   return (
     <section className={`flex shrink-0 items-center gap-2 border-t px-4 py-1.5 ${toneClass}`} data-testid="trace-diagnosis">
       <StatusPill status={diagnosis.status === 'blocked' ? 'error' : 'pending'} />
-      <span className="min-w-0 truncate text-xs font-semibold text-[var(--color-text-primary)]">
+      <span className="min-w-0 truncate text-xs font-semibold text-[var(--color-token-foreground)]">
         {diagnosisReasonLabel(diagnosis.reason, t)}
       </span>
       {focusSpan ? (
         <button
           type="button"
           onClick={() => onSelect(focusSpan.id)}
-          className="shrink-0 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-0.5 text-[11px] text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-focus)] hover:text-[var(--color-text-primary)] active:scale-[0.98]"
+          className="shrink-0 rounded-[var(--radius-sm)] border border-[var(--color-token-border)] bg-[var(--color-surface)] px-2 py-0.5 text-[11px] text-[var(--color-token-text-secondary)] transition-colors hover:border-[var(--color-token-focus-border,var(--color-border-focus))] hover:text-[var(--color-token-foreground)] active:scale-[0.98]"
         >
           {t('trace.focus')}
         </button>
@@ -381,7 +381,7 @@ function DiagnosisBanner({
             key={span.id}
             type="button"
             onClick={() => onSelect(span.id)}
-            className="inline-flex max-w-[200px] items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-0.5 text-[11px] text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-focus)] hover:text-[var(--color-text-primary)] active:scale-[0.98]"
+            className="inline-flex max-w-[200px] items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-token-border)] bg-[var(--color-surface)] px-2 py-0.5 text-[11px] text-[var(--color-token-text-secondary)] transition-colors hover:border-[var(--color-token-focus-border,var(--color-border-focus))] hover:text-[var(--color-token-foreground)] active:scale-[0.98]"
           >
             <TypeIcon span={span} size={13} />
             <span className="truncate">{spanDisplayTitle(span, t)}</span>
@@ -412,7 +412,7 @@ function IconAction({ label, onClick, children }: { label: string; onClick?: () 
       aria-label={label}
       title={label}
       onClick={onClick}
-      className="inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-border)] text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-focus)] hover:text-[var(--color-text-primary)] active:scale-[0.98]"
+      className="inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-token-border)] text-[var(--color-token-text-secondary)] transition-colors hover:border-[var(--color-token-focus-border,var(--color-border-focus))] hover:text-[var(--color-token-foreground)] active:scale-[0.98]"
     >
       {children}
     </button>
@@ -421,8 +421,8 @@ function IconAction({ label, onClick, children }: { label: string; onClick?: () 
 
 function TraceSkeleton() {
   return (
-    <div className="flex min-h-0 flex-1 flex-col border-t border-[var(--color-border)] lg:flex-row" data-testid="trace-skeleton">
-      <div className="shrink-0 border-b border-[var(--color-border)] p-3 lg:w-[380px] lg:border-b-0 lg:border-r">
+    <div className="flex min-h-0 flex-1 flex-col border-t border-[var(--color-token-border)] lg:flex-row" data-testid="trace-skeleton">
+      <div className="shrink-0 border-b border-[var(--color-token-border)] p-3 lg:w-[380px] lg:border-b-0 lg:border-r">
         <div className="h-7 animate-pulse rounded-[var(--radius-md)] bg-[var(--color-surface-container)]" />
         <div className="mt-3 space-y-1.5">
           {Array.from({ length: 10 }).map((_, index) => (
@@ -446,11 +446,11 @@ function TraceSkeleton() {
 function TraceEmpty() {
   const t = useTranslation()
   return (
-    <div className="flex flex-1 items-center justify-center border-t border-[var(--color-border)] p-8">
-      <div className="max-w-sm rounded-[var(--radius-md)] border border-dashed border-[var(--color-border)] px-6 py-8 text-center">
-        <RadioTower size={22} strokeWidth={2} className="mx-auto text-[var(--color-text-tertiary)]" />
-        <h2 className="mt-3 text-sm font-semibold text-[var(--color-text-primary)]">{t('trace.emptyTitle')}</h2>
-        <p className="mt-2 text-sm leading-6 text-[var(--color-text-secondary)]">{t('trace.emptyBody')}</p>
+    <div className="flex flex-1 items-center justify-center border-t border-[var(--color-token-border)] p-8">
+      <div className="max-w-sm rounded-[var(--radius-md)] border border-dashed border-[var(--color-token-border)] px-6 py-8 text-center">
+        <RadioTower size={22} strokeWidth={2} className="mx-auto text-[var(--color-token-text-secondary)]" />
+        <h2 className="mt-3 text-sm font-semibold text-[var(--color-token-foreground)]">{t('trace.emptyTitle')}</h2>
+        <p className="mt-2 text-sm leading-6 text-[var(--color-token-text-secondary)]">{t('trace.emptyBody')}</p>
       </div>
     </div>
   )

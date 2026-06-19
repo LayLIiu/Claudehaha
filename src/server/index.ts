@@ -193,7 +193,13 @@ export function startServer(port = PORT, host = HOST) {
           return h5AccessControlRejectedResponse()
         }
 
-        if (h5AccessDisabledBlocked) {
+        // Mobile pairing endpoints bypass H5 access control — they are the bootstrap path
+        const isMobilePairingPath =
+          url.pathname === '/api/mobile/pairing-code' ||
+          url.pathname === '/api/mobile/pair' ||
+          url.pathname === '/api/mobile/network-info'
+
+        if (h5AccessDisabledBlocked && !isMobilePairingPath) {
           return h5AccessDisabledResponse()
         }
 
@@ -381,8 +387,14 @@ export function startServer(port = PORT, host = HOST) {
             return corsRejectedResponse(cors)
           }
 
+          // Mobile pairing endpoints are authentication bootstrap — skip H5 token check
+          const isMobilePairingPath =
+            url.pathname === '/api/mobile/pairing-code' ||
+            url.pathname === '/api/mobile/pair' ||
+            url.pathname === '/api/mobile/network-info'
+
           // Enforce authentication when required
-          if (authRequired) {
+          if (authRequired && !isMobilePairingPath) {
             const authError = await requireH5Token(req)
             if (authError) {
               return withCors(authError, cors)

@@ -67,7 +67,7 @@ export function WorkspaceFileOpenWith({
 
   return (
     <>
-      <div className="my-1 border-t border-[var(--color-border)]" role="separator" />
+      <div className="my-1 border-t border-[var(--color-token-border)]" role="separator" />
       {items.map((item) => (
         <button
           key={item.id}
@@ -77,11 +77,11 @@ export function WorkspaceFileOpenWith({
             item.onSelect()
             onAfterSelect?.()
           }}
-          className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]"
+          className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
         >
           <span
             aria-hidden="true"
-            className="flex h-[14px] w-[14px] items-center justify-center text-[var(--color-text-tertiary)]"
+            className="flex h-[14px] w-[14px] items-center justify-center text-[var(--color-token-text-secondary)]"
           >
             {item.target ? (
               <TargetIcon target={item.target} size={14} />

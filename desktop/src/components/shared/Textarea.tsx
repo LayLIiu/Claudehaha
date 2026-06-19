@@ -11,7 +11,7 @@ export function Textarea({ label, error, required, className = '', id, ...props 
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label htmlFor={inputId} className="text-sm font-medium text-[var(--color-text-primary)]">
+        <label htmlFor={inputId} className="text-sm font-medium text-[var(--color-token-foreground)]">
           {label}
           {required && <span className="text-[var(--color-error)] ml-0.5">*</span>}
         </label>
@@ -20,12 +20,12 @@ export function Textarea({ label, error, required, className = '', id, ...props 
         id={inputId}
         className={`
           min-h-[120px] px-3 py-2 rounded-[var(--radius-lg)] border text-sm resize-y
-          bg-[var(--color-surface)] text-[var(--color-text-primary)]
-          placeholder:text-[var(--color-text-tertiary)]
+          bg-[var(--color-surface)] text-[var(--color-token-foreground)]
+          placeholder:text-[var(--color-token-text-secondary)]
           transition-colors duration-150
           ${error
             ? 'border-[var(--color-error)]'
-            : 'border-[var(--color-border)] focus:border-[var(--color-border-focus)] focus:shadow-[var(--shadow-focus-ring)]'
+            : 'border-[var(--color-token-border)] focus:border-[var(--color-token-focus-border,var(--color-border-focus))] focus:shadow-[var(--shadow-focus-ring)]'
           }
           outline-none
           ${className}

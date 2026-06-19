@@ -488,7 +488,7 @@ export function AdapterSettings() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12 text-[var(--color-text-tertiary)]">
+      <div className="flex items-center justify-center py-12 text-[var(--color-token-text-secondary)]">
         <span className="material-symbols-outlined animate-spin text-[20px] mr-2">progress_activity</span>
         Loading...
       </div>
@@ -499,7 +499,7 @@ export function AdapterSettings() {
     <div className="max-w-2xl space-y-8">
       {/* Description */}
       <div>
-        <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+        <p className="text-sm leading-6 text-[var(--color-token-text-secondary)]">
           {t('settings.adapters.description')}{' '}
           <a
             href={IM_CONFIG_DOCS_URL}
@@ -508,20 +508,20 @@ export function AdapterSettings() {
             className="inline-flex items-center gap-1 font-medium text-[var(--color-brand)] transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]"
           >
             {t('settings.adapters.configurationDocs')}
-            <span className="material-symbols-outlined text-[14px]" aria-hidden="true">open_in_new</span>
+            <span className="material-symbols-outlined icon-xs" aria-hidden="true">open_in_new</span>
           </a>
           {t('settings.adapters.descriptionAfterDocs')}
         </p>
       </div>
 
       {/* Pairing */}
-      <section className="rounded-xl border border-[var(--color-border)] overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 bg-[var(--color-surface-hover)] border-b border-[var(--color-border)]">
-          <span className="material-symbols-outlined text-[18px] text-[var(--color-text-secondary)]">link</span>
-          <span className="text-sm font-semibold text-[var(--color-text-primary)]">{t('settings.adapters.pairing')}</span>
+      <section className="rounded-xl border border-[var(--color-token-border)] overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 bg-[var(--color-surface-hover)] border-b border-[var(--color-token-border)]">
+          <span className="material-symbols-outlined icon-md text-[var(--color-token-text-secondary)]">link</span>
+          <span className="text-sm font-semibold text-[var(--color-token-foreground)]">{t('settings.adapters.pairing')}</span>
         </div>
         <div className="p-4 space-y-4">
-          <p className="text-sm text-[var(--color-text-secondary)]">{t('settings.adapters.pairingDesc')}</p>
+          <p className="text-sm text-[var(--color-token-text-secondary)]">{t('settings.adapters.pairingDesc')}</p>
 
           {/* Generate code */}
           <div className="flex items-center gap-3">
@@ -533,26 +533,26 @@ export function AdapterSettings() {
                 <span className="font-mono text-2xl font-bold tracking-[0.3em] text-[var(--color-brand)]">
                   {pairingCode}
                 </span>
-                <span className="text-xs text-[var(--color-text-tertiary)]">
+                <span className="text-xs text-[var(--color-token-text-secondary)]">
                   {t('settings.adapters.codeExpiresIn')} 60 {t('settings.adapters.minutes')}
                 </span>
               </div>
             )}
             {!pairingCode && isPairingActive && (
-              <span className="text-xs text-[var(--color-text-tertiary)]">
+              <span className="text-xs text-[var(--color-token-text-secondary)]">
                 {t('settings.adapters.codeExpiresIn')} {minutesLeft} {t('settings.adapters.minutes')}
               </span>
             )}
           </div>
           {pairingCode && (
-            <p className="text-xs text-[var(--color-text-tertiary)]">{t('settings.adapters.pairingCodeHint')}</p>
+            <p className="text-xs text-[var(--color-token-text-secondary)]">{t('settings.adapters.pairingCodeHint')}</p>
           )}
 
           {/* Paired users list */}
           <div>
-            <h4 className="text-sm font-medium text-[var(--color-text-primary)] mb-2">{t('settings.adapters.pairedUsers')}</h4>
+            <h4 className="text-sm font-medium text-[var(--color-token-foreground)] mb-2">{t('settings.adapters.pairedUsers')}</h4>
             {allPairedUsers.length === 0 ? (
-              <p className="text-sm text-[var(--color-text-tertiary)]">{t('settings.adapters.noPairedUsers')}</p>
+              <p className="text-sm text-[var(--color-token-text-secondary)]">{t('settings.adapters.noPairedUsers')}</p>
             ) : (
               <div className="space-y-2">
                 {allPairedUsers.map((user) => (
@@ -561,11 +561,11 @@ export function AdapterSettings() {
                     className="flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--color-surface-hover)]"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface)] text-[var(--color-text-secondary)]">
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface)] text-[var(--color-token-text-secondary)]">
                         {t(`settings.adapters.platform.${user.platform}`)}
                       </span>
-                      <span className="text-sm text-[var(--color-text-primary)]">{user.displayName}</span>
-                      <span className="text-xs text-[var(--color-text-tertiary)]">
+                      <span className="text-sm text-[var(--color-token-foreground)]">{user.displayName}</span>
+                      <span className="text-xs text-[var(--color-token-text-secondary)]">
                         {new Date(user.pairedAt).toLocaleDateString()}
                       </span>
                     </div>
@@ -591,18 +591,18 @@ export function AdapterSettings() {
 
       {/* Default Project */}
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-[var(--color-text-primary)]">
+        <label className="text-sm font-medium text-[var(--color-token-foreground)]">
           {t('settings.adapters.defaultProject')}
         </label>
         <DirectoryPicker value={defaultProjectDir} onChange={setDefaultProjectDir} />
-        <p className="text-xs text-[var(--color-text-tertiary)]">
+        <p className="text-xs text-[var(--color-token-text-secondary)]">
           {t('settings.adapters.defaultProjectHint')}
         </p>
       </div>
 
       {/* IM Adapter Tabs */}
-      <section className="rounded-xl border border-[var(--color-border)] overflow-hidden">
-        <div role="tablist" aria-label="IM adapter" className="flex items-stretch border-b border-[var(--color-border)] bg-[var(--color-surface-hover)]">
+      <section className="rounded-xl border border-[var(--color-token-border)] overflow-hidden">
+        <div role="tablist" aria-label="IM adapter" className="flex items-stretch border-b border-[var(--color-token-border)] bg-[var(--color-surface-hover)]">
           <ImTabButton
             label={t('settings.adapters.telegram')}
             active={activeIm === 'telegram'}
@@ -633,14 +633,14 @@ export function AdapterSettings() {
         {activeIm === 'feishu' && (
           <div className="p-4 space-y-4">
             {!hasSavedFeishuCredentials && (
-              <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+              <div className="rounded-lg border border-[var(--color-token-border)] bg-[var(--color-surface)] p-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="flex min-w-0 gap-3">
                     <span className="material-symbols-outlined mt-0.5 text-[20px] text-[var(--color-brand)]">smart_toy</span>
                     <div className="min-w-0">
-                      <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">{t('settings.adapters.feishuCreateBotTitle')}</h4>
-                      <p className="mt-1 text-xs leading-5 text-[var(--color-text-tertiary)]">{t('settings.adapters.feishuCreateBotDesc')}</p>
-                      <ol className="mt-2 space-y-1 text-xs leading-5 text-[var(--color-text-secondary)]">
+                      <h4 className="text-sm font-semibold text-[var(--color-token-foreground)]">{t('settings.adapters.feishuCreateBotTitle')}</h4>
+                      <p className="mt-1 text-xs leading-5 text-[var(--color-token-text-secondary)]">{t('settings.adapters.feishuCreateBotDesc')}</p>
+                      <ol className="mt-2 space-y-1 text-xs leading-5 text-[var(--color-token-text-secondary)]">
                         <li>1. {t('settings.adapters.feishuCreateBotStepCreate')}</li>
                         <li>2. {t('settings.adapters.feishuCreateBotStepFill')}</li>
                       </ol>
@@ -653,7 +653,7 @@ export function AdapterSettings() {
                     className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-[var(--radius-md)] bg-[image:var(--gradient-btn-primary)] px-3 text-xs font-medium text-[var(--color-btn-primary-fg)] shadow-[var(--shadow-button-primary)] transition-colors hover:bg-[image:var(--gradient-btn-primary-hover)] hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-surface)]"
                   >
                     {t('settings.adapters.feishuCreateBotAction')}
-                    <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                    <span className="material-symbols-outlined icon-xs">open_in_new</span>
                   </a>
                 </div>
               </div>
@@ -696,18 +696,18 @@ export function AdapterSettings() {
                 onChange={(e) => setFsAllowedUsers(e.target.value)}
                 placeholder={t('settings.adapters.fsAllowedUsersPlaceholder')}
               />
-              <p className="text-xs text-[var(--color-text-tertiary)]">{t('settings.adapters.allowedUsersHint')}</p>
+              <p className="text-xs text-[var(--color-token-text-secondary)]">{t('settings.adapters.allowedUsersHint')}</p>
             </div>
             <label className="flex items-center gap-3 cursor-pointer">
               <input
                 type="checkbox"
                 checked={fsStreamingCard}
                 onChange={(e) => setFsStreamingCard(e.target.checked)}
-                className="w-4 h-4 rounded border-[var(--color-border)] accent-[var(--color-brand)]"
+                className="w-4 h-4 rounded border-[var(--color-token-border)] accent-[var(--color-brand)]"
               />
               <div>
-                <span className="text-sm text-[var(--color-text-primary)]">{t('settings.adapters.streamingCard')}</span>
-                <p className="text-xs text-[var(--color-text-tertiary)]">{t('settings.adapters.streamingCardDesc')}</p>
+                <span className="text-sm text-[var(--color-token-foreground)]">{t('settings.adapters.streamingCard')}</span>
+                <p className="text-xs text-[var(--color-token-text-secondary)]">{t('settings.adapters.streamingCardDesc')}</p>
               </div>
             </label>
           </div>
@@ -715,13 +715,13 @@ export function AdapterSettings() {
 
         {activeIm === 'wechat' && (
           <div className="p-4 space-y-4">
-            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 space-y-3">
+            <div className="rounded-lg border border-[var(--color-token-border)] bg-[var(--color-surface)] p-4 space-y-3">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                  <div className="text-sm font-medium text-[var(--color-token-foreground)]">
                     {config.wechat?.accountId ? t('settings.adapters.wechatConnected') : t('settings.adapters.wechatNotConnected')}
                   </div>
-                  <p className="text-xs text-[var(--color-text-tertiary)]">
+                  <p className="text-xs text-[var(--color-token-text-secondary)]">
                     {t('settings.adapters.wechatQrHint')}
                   </p>
                 </div>
@@ -742,16 +742,16 @@ export function AdapterSettings() {
                   <img
                     src={wechatQrUrl}
                     alt={t('settings.adapters.wechatQrAlt')}
-                    className="h-40 w-40 rounded-lg border border-[var(--color-border)] bg-white object-contain p-2"
+                    className="h-40 w-40 rounded-lg border border-[var(--color-token-border)] bg-white object-contain p-2"
                   />
-                  <div className="pt-2 text-sm text-[var(--color-text-secondary)]">
+                  <div className="pt-2 text-sm text-[var(--color-token-text-secondary)]">
                     {wechatStatus || t('settings.adapters.wechatWaiting')}
                   </div>
                 </div>
               )}
 
               {!wechatQrUrl && wechatStatus && (
-                <p className="text-sm text-[var(--color-text-secondary)]">{wechatStatus}</p>
+                <p className="text-sm text-[var(--color-token-text-secondary)]">{wechatStatus}</p>
               )}
             </div>
 
@@ -762,18 +762,18 @@ export function AdapterSettings() {
                 onChange={(e) => setWcAllowedUsers(e.target.value)}
                 placeholder={t('settings.adapters.wcAllowedUsersPlaceholder')}
               />
-              <p className="text-xs text-[var(--color-text-tertiary)]">{t('settings.adapters.wechatAllowedUsersHint')}</p>
+              <p className="text-xs text-[var(--color-token-text-secondary)]">{t('settings.adapters.wechatAllowedUsersHint')}</p>
             </div>
           </div>
         )}
 
         {activeIm === 'dingtalk' && (
           <div className="p-4 space-y-4">
-            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 space-y-3">
+            <div className="rounded-lg border border-[var(--color-token-border)] bg-[var(--color-surface)] p-4 space-y-3">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h4 className="text-sm font-semibold text-[var(--color-text-primary)]">{t('settings.adapters.dingtalkQrTitle')}</h4>
-                  <p className="mt-1 text-xs text-[var(--color-text-tertiary)]">{t('settings.adapters.dingtalkQrDesc')}</p>
+                  <h4 className="text-sm font-semibold text-[var(--color-token-foreground)]">{t('settings.adapters.dingtalkQrTitle')}</h4>
+                  <p className="mt-1 text-xs text-[var(--color-token-text-secondary)]">{t('settings.adapters.dingtalkQrDesc')}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <Button onClick={handleStartDingtalkAuth} loading={isStartingDtAuth} size="sm">
@@ -793,11 +793,11 @@ export function AdapterSettings() {
                     <img
                       src={dtRegistration.qrDataUrl}
                       alt={t('settings.adapters.dingtalkQrAlt')}
-                      className="h-40 w-40 rounded-lg border border-[var(--color-border)] bg-white object-contain p-2"
+                      className="h-40 w-40 rounded-lg border border-[var(--color-token-border)] bg-white object-contain p-2"
                     />
                   ) : null}
                   <div className="min-w-0 flex-1 space-y-2">
-                    <p className="text-sm text-[var(--color-text-primary)]">{t('settings.adapters.dingtalkWaiting')}</p>
+                    <p className="text-sm text-[var(--color-token-foreground)]">{t('settings.adapters.dingtalkWaiting')}</p>
                     <a
                       href={dtRegistration.verificationUriComplete}
                       target="_blank"
@@ -846,7 +846,7 @@ export function AdapterSettings() {
                 onChange={(e) => setDtPermissionCardTemplateId(e.target.value)}
                 placeholder={t('settings.adapters.dingtalkPermissionCardTemplateIdPlaceholder')}
               />
-              <p className="text-xs text-[var(--color-text-tertiary)]">{t('settings.adapters.dingtalkPermissionCardTemplateIdHint')}</p>
+              <p className="text-xs text-[var(--color-token-text-secondary)]">{t('settings.adapters.dingtalkPermissionCardTemplateIdHint')}</p>
             </div>
             <div className="flex flex-col gap-1">
               <Input
@@ -855,7 +855,7 @@ export function AdapterSettings() {
                 onChange={(e) => setDtAllowedUsers(e.target.value)}
                 placeholder={t('settings.adapters.dtAllowedUsersPlaceholder')}
               />
-              <p className="text-xs text-[var(--color-text-tertiary)]">{t('settings.adapters.allowedUsersHint')}</p>
+              <p className="text-xs text-[var(--color-token-text-secondary)]">{t('settings.adapters.allowedUsersHint')}</p>
             </div>
           </div>
         )}
@@ -876,20 +876,20 @@ export function AdapterSettings() {
                 onChange={(e) => setTgAllowedUsers(e.target.value)}
                 placeholder={t('settings.adapters.tgAllowedUsersPlaceholder')}
               />
-              <p className="text-xs text-[var(--color-text-tertiary)]">{t('settings.adapters.allowedUsersHint')}</p>
+              <p className="text-xs text-[var(--color-token-text-secondary)]">{t('settings.adapters.allowedUsersHint')}</p>
             </div>
           </div>
         )}
 
         {activeIm === 'whatsapp' && (
           <div className="p-4 space-y-4">
-            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4 space-y-3">
+            <div className="rounded-lg border border-[var(--color-token-border)] bg-[var(--color-surface)] p-4 space-y-3">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                  <div className="text-sm font-medium text-[var(--color-token-foreground)]">
                     {config.whatsapp?.accountJid ? t('settings.adapters.whatsappConnected') : t('settings.adapters.whatsappNotConnected')}
                   </div>
-                  <p className="text-xs text-[var(--color-text-tertiary)]">
+                  <p className="text-xs text-[var(--color-token-text-secondary)]">
                     {t('settings.adapters.whatsappQrHint')}
                   </p>
                 </div>
@@ -906,7 +906,7 @@ export function AdapterSettings() {
               </div>
 
               {config.whatsapp?.accountJid && (
-                <p className="text-xs text-[var(--color-text-tertiary)]">{config.whatsapp.accountJid}</p>
+                <p className="text-xs text-[var(--color-token-text-secondary)]">{config.whatsapp.accountJid}</p>
               )}
 
               {whatsappQrUrl && (
@@ -914,16 +914,16 @@ export function AdapterSettings() {
                   <img
                     src={whatsappQrUrl}
                     alt={t('settings.adapters.whatsappQrAlt')}
-                    className="h-40 w-40 rounded-lg border border-[var(--color-border)] bg-white object-contain p-2"
+                    className="h-40 w-40 rounded-lg border border-[var(--color-token-border)] bg-white object-contain p-2"
                   />
-                  <div className="pt-2 text-sm text-[var(--color-text-secondary)]">
+                  <div className="pt-2 text-sm text-[var(--color-token-text-secondary)]">
                     {whatsappStatus || t('settings.adapters.whatsappWaiting')}
                   </div>
                 </div>
               )}
 
               {!whatsappQrUrl && whatsappStatus && (
-                <p className="text-sm text-[var(--color-text-secondary)]">{whatsappStatus}</p>
+                <p className="text-sm text-[var(--color-token-text-secondary)]">{whatsappStatus}</p>
               )}
             </div>
 
@@ -934,7 +934,7 @@ export function AdapterSettings() {
                 onChange={(e) => setWaAllowedUsers(e.target.value)}
                 placeholder={t('settings.adapters.waAllowedUsersPlaceholder')}
               />
-              <p className="text-xs text-[var(--color-text-tertiary)]">{t('settings.adapters.whatsappAllowedUsersHint')}</p>
+              <p className="text-xs text-[var(--color-token-text-secondary)]">{t('settings.adapters.whatsappAllowedUsersHint')}</p>
             </div>
           </div>
         )}
@@ -947,13 +947,13 @@ export function AdapterSettings() {
         </Button>
         {saveStatus === 'saved' && (
           <span className="text-sm text-[var(--color-success)]">
-            <span className="material-symbols-outlined text-[16px] align-middle mr-1">check_circle</span>
+            <span className="material-symbols-outlined icon-sm align-middle mr-1">check_circle</span>
             {t('settings.adapters.saved')}
           </span>
         )}
         {saveStatus === 'error' && (
           <span className="text-sm text-[var(--color-error)]">
-            <span className="material-symbols-outlined text-[16px] align-middle mr-1">error</span>
+            <span className="material-symbols-outlined icon-sm align-middle mr-1">error</span>
             {saveError}
           </span>
         )}
@@ -1024,8 +1024,8 @@ function ImTabButton({
       onClick={onClick}
       className={`relative px-4 py-2.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)] focus-visible:ring-inset ${
         active
-          ? 'text-[var(--color-text-primary)] font-semibold after:absolute after:left-3 after:right-3 after:bottom-0 after:h-[2px] after:bg-[var(--color-brand)]'
-          : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
+          ? 'text-[var(--color-token-foreground)] font-semibold after:absolute after:left-3 after:right-3 after:bottom-0 after:h-[2px] after:bg-[var(--color-brand)]'
+          : 'text-[var(--color-token-text-secondary)] hover:text-[var(--color-token-foreground)]'
       }`}
     >
       {label}

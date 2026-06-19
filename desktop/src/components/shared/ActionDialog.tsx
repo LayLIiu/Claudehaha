@@ -57,7 +57,7 @@ export function ActionDialog({
       )}
     >
       {typeof body === 'string' ? (
-        <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
+        <p className="text-sm leading-6 text-[var(--color-token-text-secondary)]">
           {body}
         </p>
       ) : body}

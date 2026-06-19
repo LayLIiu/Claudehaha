@@ -699,7 +699,7 @@ export function ActivitySettings() {
   return (
     <div className="mx-auto w-full max-w-[1060px] min-w-0 pb-12">
       <section className="relative flex min-h-[176px] flex-col items-center justify-start pt-4 text-center">
-        <div className="relative h-16 w-16 overflow-hidden rounded-full border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] shadow-[0_10px_28px_-22px_rgba(15,23,42,0.6)]">
+        <div className="relative h-16 w-16 overflow-hidden rounded-full border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] shadow-[0_10px_28px_-22px_rgba(15,23,42,0.6)]">
           <img
             src={avatarSrc}
             alt={`${profile.displayName} avatar`}
@@ -711,12 +711,12 @@ export function ActivitySettings() {
           />
         </div>
         <div className="group/activity-profile mt-4 flex max-w-full items-center justify-center gap-2">
-          <h1 className="max-w-[min(720px,calc(100%-2.25rem))] truncate text-[28px] font-semibold tracking-tight text-[var(--color-text-primary)] sm:text-[34px]">{profile.displayName}</h1>
+          <h1 className="max-w-[min(720px,calc(100%-2.25rem))] truncate text-[28px] font-semibold tracking-tight text-[var(--color-token-foreground)] sm:text-[34px]">{profile.displayName}</h1>
           <button
             type="button"
             aria-label={t('settings.activity.editProfile')}
             title={t('settings.activity.editProfile')}
-            className="mt-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[var(--color-text-tertiary)] opacity-0 transition-[background-color,color,opacity,transform] group-hover/activity-profile:opacity-100 hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] focus:ring-offset-2 focus:ring-offset-[var(--color-surface)] focus-visible:opacity-100 active:translate-y-[1px] disabled:pointer-events-none disabled:opacity-0"
+            className="mt-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[var(--color-token-text-secondary)] opacity-0 transition-[background-color,color,opacity,transform] group-hover/activity-profile:opacity-100 hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] focus:ring-offset-2 focus:ring-offset-[var(--color-surface)] focus-visible:opacity-100 active:translate-y-[1px] disabled:pointer-events-none disabled:opacity-0"
             onClick={() => {
               setIsEditingProfile(true)
               setDraftDisplayName(profile.displayName)
@@ -724,7 +724,7 @@ export function ActivitySettings() {
             }}
             disabled={isProfileLoading}
           >
-            <span className="material-symbols-outlined text-[16px]" aria-hidden="true">edit</span>
+            <span className="material-symbols-outlined icon-sm" aria-hidden="true">edit</span>
           </button>
         </div>
         {profileSubtitleHref ? (
@@ -732,18 +732,18 @@ export function ActivitySettings() {
             href={profileSubtitleHref}
             target="_blank"
             rel="noreferrer"
-            className="mt-2 inline-flex max-w-full items-center justify-center gap-2 truncate text-base text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-text-primary)]"
+            className="mt-2 inline-flex max-w-full items-center justify-center gap-2 truncate text-base text-[var(--color-token-text-secondary)] transition-colors hover:text-[var(--color-token-foreground)]"
           >
             <span>{profile.subtitle}</span>
           </a>
         ) : (
-          <div className="mt-2 max-w-full truncate text-base text-[var(--color-text-tertiary)]">{profile.subtitle}</div>
+          <div className="mt-2 max-w-full truncate text-base text-[var(--color-token-text-secondary)]">{profile.subtitle}</div>
         )}
         {profileStatus && <div className="mt-3 text-xs text-[var(--color-success)]">{profileStatus}</div>}
         {profileError && !isEditingProfile && <div className="mt-3 text-xs text-[var(--color-error)]">{profileError}</div>}
       </section>
 
-      <section className="activity-summary-panel mx-auto mt-7 w-full max-w-[900px] overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-border)] p-px shadow-[0_12px_34px_-32px_rgba(15,23,42,0.55)]">
+      <section className="activity-summary-panel mx-auto mt-7 w-full max-w-[900px] overflow-hidden rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-token-border)] p-px shadow-[0_12px_34px_-32px_rgba(15,23,42,0.55)]">
         {isLoading ? (
           <div className="activity-summary-grid grid gap-px">
             {Array.from({ length: 5 }).map((_, index) => (
@@ -766,21 +766,21 @@ export function ActivitySettings() {
               return (
                 <div
                   key={metric.label}
-                  className={`activity-summary-metric min-w-0 bg-[var(--color-surface-container-lowest)] px-4 py-3 text-center opacity-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.48)] [animation:activity-reveal_420ms_cubic-bezier(0.16,1,0.3,1)_forwards] ${
+                  className={`activity-summary-metric min-w-0 bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-4 py-3 text-center opacity-0 shadow-[inset_0_1px_0_rgba(255,255,255,0.48)] [animation:activity-reveal_420ms_cubic-bezier(0.16,1,0.3,1)_forwards] ${
                     isPrimary ? 'activity-summary-metric-primary' : ''
                   }`}
                   style={{ animationDelay: `${index * 45}ms` }}
                 >
                   <div className="flex min-h-[68px] flex-col items-center justify-center gap-1.5">
-                    <div className={`activity-summary-value max-w-full truncate font-semibold leading-none tracking-tight text-[var(--color-text-primary)] tabular-nums ${
+                    <div className={`activity-summary-value max-w-full truncate font-semibold leading-none tracking-tight text-[var(--color-token-foreground)] tabular-nums ${
                       isPrimary ? 'text-[23px]' : 'text-[22px]'
                     }`}>
                       {metric.value}
                     </div>
-                    <div className="min-w-0 truncate text-[13px] font-medium leading-tight text-[var(--color-text-secondary)]">
+                    <div className="min-w-0 truncate text-[13px] font-medium leading-tight text-[var(--color-token-text-secondary)]">
                       {metric.label}
                     </div>
-                    {metric.detail && <div className="max-w-full truncate text-[11px] leading-tight text-[var(--color-text-tertiary)]">{metric.detail}</div>}
+                    {metric.detail && <div className="max-w-full truncate text-[11px] leading-tight text-[var(--color-token-text-secondary)]">{metric.detail}</div>}
                   </div>
                 </div>
               )
@@ -791,15 +791,15 @@ export function ActivitySettings() {
 
       {isEditingProfile && createPortal(
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-[var(--color-overlay-scrim)] px-4 py-8" role="dialog" aria-modal="true" aria-labelledby="activity-profile-dialog-title">
-          <div className="w-full max-w-[420px] rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] p-5 shadow-2xl">
+          <div className="w-full max-w-[420px] rounded-xl border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] p-5 shadow-2xl">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 id="activity-profile-dialog-title" className="text-base font-semibold text-[var(--color-text-primary)]">{t('settings.activity.editProfile')}</h2>
-                <p className="mt-1 text-xs text-[var(--color-text-tertiary)]">{t('settings.activity.displayNameHelper')}</p>
+                <h2 id="activity-profile-dialog-title" className="text-base font-semibold text-[var(--color-token-foreground)]">{t('settings.activity.editProfile')}</h2>
+                <p className="mt-1 text-xs text-[var(--color-token-text-secondary)]">{t('settings.activity.displayNameHelper')}</p>
               </div>
               <button
                 type="button"
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]"
                 onClick={() => {
                   setIsEditingProfile(false)
                   setDraftDisplayName(profile.displayName)
@@ -814,32 +814,32 @@ export function ActivitySettings() {
 
             <div className="mt-5 grid gap-4">
               <div className="grid gap-2">
-                <label htmlFor="activity-profile-display-name" className="text-xs font-medium text-[var(--color-text-secondary)]">
+                <label htmlFor="activity-profile-display-name" className="text-xs font-medium text-[var(--color-token-text-secondary)]">
                   {t('settings.activity.displayName')}
                 </label>
                 <input
                   id="activity-profile-display-name"
                   value={draftDisplayName}
                   onChange={(event) => setDraftDisplayName(event.target.value)}
-                  className="h-10 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] outline-none transition-colors focus:border-[var(--color-border-focus)]"
+                  className="h-10 rounded-md border border-[var(--color-token-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-token-foreground)] outline-none transition-colors focus:border-[var(--color-token-focus-border,var(--color-border-focus))]"
                 />
               </div>
 
               <div className="grid gap-2">
-                <label htmlFor="activity-profile-subtitle" className="text-xs font-medium text-[var(--color-text-secondary)]">
+                <label htmlFor="activity-profile-subtitle" className="text-xs font-medium text-[var(--color-token-text-secondary)]">
                   {t('settings.activity.subtitle')}
                 </label>
                 <input
                   id="activity-profile-subtitle"
                   value={draftSubtitle}
                   onChange={(event) => setDraftSubtitle(event.target.value)}
-                  className="h-10 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-text-primary)] outline-none transition-colors focus:border-[var(--color-border-focus)]"
+                  className="h-10 rounded-md border border-[var(--color-token-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-token-foreground)] outline-none transition-colors focus:border-[var(--color-token-focus-border,var(--color-border-focus))]"
                 />
               </div>
 
               <div className="grid gap-2">
-                <div className="text-xs font-medium text-[var(--color-text-secondary)]">{t('settings.activity.avatar')}</div>
-                <p className="text-xs text-[var(--color-text-tertiary)]">{t('settings.activity.avatarHelper')}</p>
+                <div className="text-xs font-medium text-[var(--color-token-text-secondary)]">{t('settings.activity.avatar')}</div>
+                <p className="text-xs text-[var(--color-token-text-secondary)]">{t('settings.activity.avatarHelper')}</p>
                 <div className="flex flex-wrap gap-2">
                   <input
                     ref={avatarInputRef}
@@ -850,7 +850,7 @@ export function ActivitySettings() {
                   />
                   <button
                     type="button"
-                    className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[var(--color-border)] px-2.5 text-xs font-medium text-[var(--color-text-secondary)] transition-[background-color,transform] hover:bg-[var(--color-surface-hover)] active:translate-y-[1px]"
+                    className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[var(--color-token-border)] px-2.5 text-xs font-medium text-[var(--color-token-text-secondary)] transition-[background-color,transform] hover:bg-[var(--color-surface-hover)] active:translate-y-[1px]"
                     onClick={() => avatarInputRef.current?.click()}
                   >
                     <span className="material-symbols-outlined text-[15px]" aria-hidden="true">upload</span>
@@ -859,7 +859,7 @@ export function ActivitySettings() {
                   {profile.avatarFile && (
                     <button
                       type="button"
-                      className="inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium text-[var(--color-text-tertiary)] transition-[background-color,transform] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)] active:translate-y-[1px]"
+                      className="inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium text-[var(--color-token-text-secondary)] transition-[background-color,transform] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] active:translate-y-[1px]"
                       onClick={removeAvatar}
                     >
                       {t('settings.activity.removeAvatar')}
@@ -874,7 +874,7 @@ export function ActivitySettings() {
             <div className="mt-5 flex justify-end gap-2">
               <button
                 type="button"
-                className="h-8 rounded-md px-3 text-xs font-medium text-[var(--color-text-secondary)] transition-[background-color,transform] hover:bg-[var(--color-surface-hover)] active:translate-y-[1px]"
+                className="h-8 rounded-md px-3 text-xs font-medium text-[var(--color-token-text-secondary)] transition-[background-color,transform] hover:bg-[var(--color-surface-hover)] active:translate-y-[1px]"
                 onClick={() => {
                   setIsEditingProfile(false)
                   setDraftDisplayName(profile.displayName)
@@ -886,7 +886,7 @@ export function ActivitySettings() {
               </button>
               <button
                 type="button"
-                className="h-8 rounded-md bg-[var(--color-text-primary)] px-3 text-xs font-medium text-[var(--color-surface)] transition-[opacity,transform] active:translate-y-[1px] disabled:opacity-50"
+                className="h-8 rounded-md bg-[var(--color-token-foreground)] px-3 text-xs font-medium text-[var(--color-surface)] transition-[opacity,transform] active:translate-y-[1px] disabled:opacity-50"
                 onClick={saveProfile}
                 disabled={isSavingProfile}
               >
@@ -901,7 +901,7 @@ export function ActivitySettings() {
       <div className="mt-10">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-[var(--color-text-primary)]">{t('settings.activity.tokenActivity')}</h2>
+            <h2 className="text-xl font-semibold text-[var(--color-token-foreground)]">{t('settings.activity.tokenActivity')}</h2>
           </div>
           <div className="inline-flex w-fit items-center gap-7">
             {modeOptions.map((option) => (
@@ -912,8 +912,8 @@ export function ActivitySettings() {
                 title={option.help}
                 className={`text-lg font-semibold transition-[color,transform] active:translate-y-[1px] ${
                   heatmapMode === option.mode
-                    ? 'text-[var(--color-text-primary)]'
-                    : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]'
+                    ? 'text-[var(--color-token-foreground)]'
+                    : 'text-[var(--color-token-text-secondary)] hover:text-[var(--color-token-foreground)]'
                 }`}
                 onClick={() => setHeatmapMode(option.mode)}
               >
@@ -930,7 +930,7 @@ export function ActivitySettings() {
               {Array.from({ length: 52 }).map((_, col) => (
                 <div key={col} className="grid grid-rows-7 gap-[3px]">
                   {Array.from({ length: 7 }).map((__, row) => (
-                    <div key={row} className="h-2.5 w-2.5 animate-pulse rounded-[3px] bg-[var(--color-surface-container)]" />
+                    <div key={row} className="h-2.5 w-2.5 animate-pulse rounded-[var(--radius-2xs)] bg-[var(--color-surface-container)]" />
                   ))}
                 </div>
               ))}
@@ -943,11 +943,11 @@ export function ActivitySettings() {
         ) : !hasUsage ? (
           <div className="flex min-h-[190px] items-center justify-center">
             <div className="max-w-sm text-center">
-              <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] text-[var(--color-text-tertiary)]">
-                <span className="material-symbols-outlined text-[20px]" aria-hidden="true">monitoring</span>
+              <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-lg border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] text-[var(--color-token-text-secondary)]">
+                <span className="material-symbols-outlined icon-md" aria-hidden="true">monitoring</span>
               </div>
-              <div className="mt-3 text-sm font-medium text-[var(--color-text-primary)]">{t('settings.activity.emptyTitle')}</div>
-              <p className="mt-1 text-sm leading-5 text-[var(--color-text-tertiary)]">{t('settings.activity.emptyBody')}</p>
+              <div className="mt-3 text-sm font-medium text-[var(--color-token-foreground)]">{t('settings.activity.emptyTitle')}</div>
+              <p className="mt-1 text-sm leading-5 text-[var(--color-token-text-secondary)]">{t('settings.activity.emptyBody')}</p>
             </div>
           </div>
         ) : (
@@ -955,7 +955,7 @@ export function ActivitySettings() {
             <div ref={heatmapMeasureRef} className="min-w-0 pb-2">
               <div className="relative" style={{ width: heatmapWidth, maxWidth: '100%' }}>
                 <div
-                  className="mb-3 grid h-5 text-[11px] leading-none text-[var(--color-text-tertiary)]"
+                  className="mb-3 grid h-5 text-[11px] leading-none text-[var(--color-token-text-secondary)]"
                   style={{
                     marginLeft: HEAT_LABEL_WIDTH,
                     gridTemplateColumns: `repeat(${WEEK_COUNT}, ${heatCellSize}px)`,
@@ -971,7 +971,7 @@ export function ActivitySettings() {
 
                 <div className="flex items-start" style={{ gap: HEAT_CELL_GAP }}>
                   <div
-                    className="grid shrink-0 grid-rows-7 text-[11px] leading-none text-[var(--color-text-tertiary)]"
+                    className="grid shrink-0 grid-rows-7 text-[11px] leading-none text-[var(--color-token-text-secondary)]"
                     style={{ width: HEAT_LABEL_WIDTH, height: heatGridHeight, rowGap: HEAT_CELL_GAP }}
                   >
                     <div className="row-start-2 flex items-center">{t(WEEKDAY_LABEL_KEYS[0])}</div>
@@ -1003,7 +1003,7 @@ export function ActivitySettings() {
                           role="gridcell"
                           aria-label={`${cellTitle}: ${cellDetail}`}
                           aria-describedby={activeTooltipDate === day.date ? tooltipId : undefined}
-                          className={`activity-heat-cell rounded-[3px] border focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] focus:ring-offset-2 focus:ring-offset-[var(--color-surface)] ${
+                          className={`activity-heat-cell rounded-[var(--radius-2xs)] border focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] focus:ring-offset-2 focus:ring-offset-[var(--color-surface)] ${
                             isSelected
                               ? 'is-active border-[var(--color-activity-cell-border-active)]'
                               : 'border-[var(--color-activity-cell-border)] hover:border-[var(--color-activity-cell-border-hover)]'
@@ -1038,13 +1038,13 @@ export function ActivitySettings() {
               </div>
             </div>
 
-            <div className="mt-3 flex items-center justify-end gap-2 text-xs text-[var(--color-text-tertiary)] xl:mt-4">
+            <div className="mt-3 flex items-center justify-end gap-2 text-xs text-[var(--color-token-text-secondary)] xl:mt-4">
               <span>{t('settings.activity.less')}</span>
               {HEAT_COLORS.map((color) => (
                 <span
                   key={color}
                   aria-hidden="true"
-                  className="rounded-[3px] border border-[var(--color-activity-cell-border)]"
+                  className="rounded-[var(--radius-2xs)] border border-[var(--color-activity-cell-border)]"
                   style={{ width: heatCellSize, height: heatCellSize, backgroundColor: color }}
                 />
               ))}
@@ -1059,15 +1059,15 @@ export function ActivitySettings() {
           topPluginItems.length > 0 ? 'lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)]' : 'lg:max-w-[520px]'
         }`}>
           <section className="min-w-0">
-            <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">{t('settings.activity.activityInsights')}</h2>
+            <h2 className="text-lg font-semibold text-[var(--color-token-foreground)]">{t('settings.activity.activityInsights')}</h2>
             <dl className="mt-5 grid gap-3">
               {insightMetrics.map((metric) => (
                 <div key={metric.label} className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-5">
-                  <dt className="min-w-0 truncate text-sm font-medium text-[var(--color-text-tertiary)]">{metric.label}</dt>
-                  <dd className="min-w-0 text-right text-sm font-semibold text-[var(--color-text-primary)]">
+                  <dt className="min-w-0 truncate text-sm font-medium text-[var(--color-token-text-secondary)]">{metric.label}</dt>
+                  <dd className="min-w-0 text-right text-sm font-semibold text-[var(--color-token-foreground)]">
                     <span className="tabular-nums">{metric.value}</span>
                     {metric.detail && (
-                      <span className="ml-2 text-xs font-medium text-[var(--color-text-tertiary)]">{metric.detail}</span>
+                      <span className="ml-2 text-xs font-medium text-[var(--color-token-text-secondary)]">{metric.detail}</span>
                     )}
                   </dd>
                 </div>
@@ -1077,17 +1077,17 @@ export function ActivitySettings() {
 
           {topPluginItems.length > 0 && (
             <section className="min-w-0">
-              <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">{t('settings.activity.mostUsedPluginsAndSkills')}</h2>
+              <h2 className="text-lg font-semibold text-[var(--color-token-foreground)]">{t('settings.activity.mostUsedPluginsAndSkills')}</h2>
               <div className="mt-5 grid gap-3">
                 {topPluginItems.map((item) => (
                   <div key={item.id} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-md border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] text-[var(--color-text-tertiary)]">
-                      <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-md border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] text-[var(--color-token-text-secondary)]">
+                      <span className="material-symbols-outlined icon-sm" aria-hidden="true">
                         {item.kind === 'skill' ? 'extension' : 'hub'}
                       </span>
                     </span>
-                    <span className="min-w-0 truncate text-sm font-medium text-[var(--color-text-primary)]">{item.label}</span>
-                    <span className="text-sm text-[var(--color-text-tertiary)] tabular-nums">{formatRunCount(item.count, t)}</span>
+                    <span className="min-w-0 truncate text-sm font-medium text-[var(--color-token-foreground)]">{item.label}</span>
+                    <span className="text-sm text-[var(--color-token-text-secondary)] tabular-nums">{formatRunCount(item.count, t)}</span>
                   </div>
                 ))}
               </div>

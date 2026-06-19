@@ -14,7 +14,7 @@ function ToastItem({ toast }: { toast: ToastType }) {
     <div
       className={`
         bg-[var(--color-surface)] rounded-[var(--radius-md)] shadow-[var(--shadow-dropdown)]
-        px-4 py-3 text-sm text-[var(--color-text-primary)]
+        px-4 py-3 text-sm text-[var(--color-token-foreground)]
         ${typeStyles[toast.type]}
         animate-in slide-in-from-right fade-in duration-200
       `}
@@ -23,7 +23,7 @@ function ToastItem({ toast }: { toast: ToastType }) {
         <span>{toast.message}</span>
         <button
           onClick={() => removeToast(toast.id)}
-          className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] text-lg leading-none"
+          className="text-[var(--color-token-text-secondary)] hover:text-[var(--color-token-foreground)] text-lg leading-none"
         >
           ×
         </button>

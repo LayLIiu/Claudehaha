@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useTranslation } from '../../i18n'
 import { MarkdownRenderer } from '../markdown/MarkdownRenderer'
+import { CadencedShimmerText } from './StreamingIndicator'
+import { Collapse } from './Collapse'
 
 // ── Thinking Disclosure Parser ──
 // Detects **bold title** lines in thinking text and splits into collapsible sections.
@@ -106,33 +108,35 @@ export function ThinkingBlock({ content, isActive = false }: { content: string; 
           type="button"
           onClick={() => setExpanded((v) => !v)}
           aria-expanded={expanded}
-          className="flex w-full items-center gap-1.5 rounded-md px-1 py-0.5 text-left text-[12px] text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-text-secondary)]"
+          className="flex w-full items-center gap-1.5 rounded-md px-1 py-0.5 text-left text-[var(--text-size-chat)] text-[var(--color-token-description-foreground)] transition-colors hover:text-[var(--color-token-foreground)]"
         >
-          <span className="text-[10px] text-[var(--color-outline)]">
+          <span className="icon-2xs text-[var(--color-token-input-placeholder-foreground)] transition-transform duration-300">
             {expanded ? '\u25BE' : '\u25B8'}
           </span>
           <span className="shrink-0 font-medium italic">
-            {isActive ? t('thinking.label') : t('thinking.labelDone')}
+            <CadencedShimmerText>
+              {isActive ? t('thinking.label') : t('thinking.labelDone')}
+            </CadencedShimmerText>
             {isActive && <span className="thinking-dots" />}
           </span>
         </button>
         {hasDisplayContent && (
-          <div className={`tool-group-content${expanded ? ' expanded' : ''}`}>
+          <Collapse open={expanded}>
             <div
               ref={contentRef}
               data-thinking-content="expanded"
-              className="relative mt-1 max-h-[300px] overflow-y-auto rounded-lg border border-[var(--color-border)]/40 bg-[var(--color-surface-container-lowest)] p-2.5 text-[11px] text-[var(--color-text-secondary)]"
+              className="relative mt-1 max-h-[300px] overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--color-token-border-light)] bg-[var(--color-token-editor-background)] p-2.5 text-[11px] text-[var(--color-token-description-foreground)]/80 [&_*]:text-[var(--color-token-non-assistant-body-descendant)]"
             >
               <MarkdownRenderer
                 content={displayContent}
                 variant="compact"
                 cache={!isActive}
                 streaming={isActive}
-                className="thinking-markdown text-[var(--color-text-secondary)]"
+                className="thinking-markdown text-[var(--color-token-non-assistant-body-descendant)]"
               />
               {isActive && <span className="thinking-cursor" />}
             </div>
-          </div>
+          </Collapse>
         )}
       </div>
     )
@@ -146,7 +150,7 @@ export function ThinkingBlock({ content, isActive = false }: { content: string; 
         type="button"
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
-        className="flex w-full items-center gap-1.5 rounded-md px-1 py-0.5 text-left text-[12px] text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-text-secondary)]"
+        className="flex w-full items-center gap-1.5 rounded-md px-1 py-0.5 text-left text-[12px] text-[var(--color-token-text-secondary)] transition-colors hover:text-[var(--color-token-text-secondary)]"
       >
         <span className="text-[10px] text-[var(--color-outline)]">
           {expanded ? '\u25BE' : '\u25B8'}
@@ -156,15 +160,15 @@ export function ThinkingBlock({ content, isActive = false }: { content: string; 
         </span>
       </button>
       {expanded && (
-        <div className="mt-1 rounded-lg border border-[var(--color-border)]/40 bg-[var(--color-surface-container-lowest)] p-2.5">
+        <div className="mt-1 rounded-[var(--radius-lg)] border border-[var(--color-token-border-light)] bg-[var(--color-token-editor-background)] p-2.5">
           {/* Preamble text before any section */}
           {disclosure.preamble && (
-            <div className="mb-2 text-[11px] text-[var(--color-text-secondary)]">
+            <div className="mb-2 text-[11px] text-[var(--color-token-description-foreground)]/80">
               <MarkdownRenderer
                 content={disclosure.preamble}
                 variant="compact"
                 cache
-                className="thinking-markdown text-[var(--color-text-secondary)]"
+                className="thinking-markdown text-[var(--color-token-non-assistant-body-descendant)]"
               />
             </div>
           )}
@@ -179,34 +183,29 @@ export function ThinkingBlock({ content, isActive = false }: { content: string; 
                   onClick={hasDetail ? () => toggleSection(section.id) : undefined}
                   className={`flex items-center gap-2 w-full text-left text-[11px] ${
                     hasDetail
-                      ? 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] cursor-pointer'
-                      : 'text-[var(--color-text-tertiary)] cursor-default'
+                      ? 'text-[var(--color-token-description-foreground)] hover:text-[var(--color-token-foreground)] cursor-pointer'
+                      : 'text-[var(--color-token-description-foreground)] cursor-default'
                   } transition-colors`}
                 >
                   <span
-                    className="turn-chevron text-[9px] text-[var(--color-outline)]"
+                    className="turn-chevron icon-2xs text-[var(--color-token-input-placeholder-foreground)]"
                     data-rotated={isSectionExpanded ? 'true' : 'false'}
                   >
                     {'▸'}
                   </span>
-                  <span className="font-semibold text-[var(--color-text-secondary)]">{section.title}</span>
+                  <span className="font-semibold text-[var(--color-token-foreground)]">{section.title}</span>
                 </button>
                 {hasDetail && (
-                  <div
-                    className="thinking-disclosure-content"
-                    data-collapse-state={isSectionExpanded ? 'open' : 'closed'}
-                  >
-                    <div className="thinking-disclosure-content-inner">
-                      <div className="pl-5 pt-1 text-[11px] text-[var(--color-text-secondary)]">
-                        <MarkdownRenderer
-                          content={section.detail}
-                          variant="compact"
-                          cache
-                          className="thinking-markdown text-[var(--color-text-secondary)]"
-                        />
-                      </div>
+                  <Collapse open={isSectionExpanded} duration={300} easing="cubic-bezier(0.34, 1.56, 0.64, 1)">
+                    <div className="pl-5 pt-1 text-[11px] text-[var(--color-token-description-foreground)]/80">
+                      <MarkdownRenderer
+                        content={section.detail}
+                        variant="compact"
+                        cache
+                        className="thinking-markdown text-[var(--color-token-non-assistant-body-descendant)]"
+                      />
                     </div>
-                  </div>
+                  </Collapse>
                 )}
               </div>
             )
@@ -232,7 +231,7 @@ const thinkingStyles = `
   display: inline-block;
   width: 2px;
   height: 1em;
-  background: var(--color-text-tertiary);
+  background: var(--color-token-text-secondary);
   vertical-align: middle;
   margin-left: 1px;
   animation: thinking-cursor-blink 1s step-end infinite;

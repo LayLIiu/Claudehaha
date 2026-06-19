@@ -17,16 +17,16 @@ export function StatusBar() {
   const modelLabel = runtimeSelection?.modelId ?? currentModel?.name ?? null
 
   return (
-    <div className="h-[var(--statusbar-height)] flex items-center justify-between px-4 border-t border-[var(--color-border)] bg-[var(--color-surface-sidebar)] select-none text-[11px]">
+    <div className="h-[var(--statusbar-height)] flex items-center justify-between px-4 border-t border-[var(--color-token-border)] bg-[var(--color-surface-sidebar)] select-none text-[11px]">
       <div className="flex items-center gap-3">
         {projectName && (
-          <span className="text-[var(--color-text-secondary)] font-[var(--font-mono)]">{projectName}</span>
+          <span className="text-[var(--color-token-text-secondary)] font-[var(--font-mono)]">{projectName}</span>
         )}
       </div>
 
       <div className="flex items-center gap-4">
         {modelLabel && (
-          <span className="text-[var(--color-text-tertiary)] font-[var(--font-mono)]">
+          <span className="text-[var(--color-token-text-secondary)] font-[var(--font-mono)]">
             {modelLabel}
           </span>
         )}

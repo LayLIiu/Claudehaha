@@ -58,8 +58,8 @@ export function Dropdown<T extends string>({
       {open && (
         <div
           className={`
-            absolute z-50 mt-1.5 rounded-[16px]
-            bg-[var(--color-surface-container-lowest)] border border-[var(--color-border)]
+            absolute z-50 mt-1.5 rounded-[var(--radius-xl)]
+            bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] border border-[var(--color-token-border)]
             shadow-[var(--shadow-dropdown)] backdrop-blur-xl
             animate-in fade-in slide-in-from-top-1
             ${maxHeight ? 'overflow-y-auto' : 'overflow-hidden'}
@@ -75,18 +75,18 @@ export function Dropdown<T extends string>({
                 w-full flex items-center gap-3 px-3.5 py-3 text-left transition-colors
                 hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:bg-[var(--color-surface-hover)]
                 ${item.value === value ? 'bg-[var(--color-model-option-selected-bg)]' : ''}
-                ${i > 0 ? 'border-t border-[var(--color-border-separator)]' : ''}
+                ${i > 0 ? 'border-t border-[var(--color-token-border)]' : ''}
               `}
             >
-              {item.icon && <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-[var(--color-text-secondary)]">{item.icon}</span>}
+              {item.icon && <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-[var(--color-token-text-secondary)]">{item.icon}</span>}
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-[var(--color-text-primary)]">{item.label}</div>
+                <div className="text-sm font-medium text-[var(--color-token-foreground)]">{item.label}</div>
                 {item.description && (
-                  <div className="text-xs text-[var(--color-text-secondary)] mt-0.5">{item.description}</div>
+                  <div className="text-xs text-[var(--color-token-text-secondary)] mt-0.5">{item.description}</div>
                 )}
               </div>
               {item.value === value && (
-                <span className="material-symbols-outlined flex-shrink-0 text-[16px] text-[var(--color-brand)]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                <span className="material-symbols-outlined icon-sm flex-shrink-0 text-[var(--color-brand)]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
               )}
             </button>
           ))}
