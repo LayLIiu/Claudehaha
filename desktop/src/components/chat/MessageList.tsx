@@ -17,7 +17,6 @@ import { ThinkingBlock } from './ThinkingBlock'
 import { ToolCallBlock } from './ToolCallBlock'
 import { ToolCallGroup } from './ToolCallGroup'
 import { ToolResultBlock } from './ToolResultBlock'
-import { PermissionDialog } from './PermissionDialog'
 import { AskUserQuestion } from './AskUserQuestion'
 import { StreamingIndicator } from './StreamingIndicator'
 import { InlineTaskSummary } from './InlineTaskSummary'
@@ -628,6 +627,9 @@ export function buildRenderModel(messages: UIMessage[], activeAskUserQuestionToo
 
   for (const msg of messages) {
     if (msg.type === 'assistant_text' && !msg.content.trim()) {
+      continue
+    }
+    if (msg.type === 'permission_request') {
       continue
     }
     if (isAgentBackgroundTaskMessage(msg)) {
@@ -2597,15 +2599,7 @@ export const MessageBlock = memo(function MessageBlock({
         />
       )
     case 'permission_request':
-      return (
-        <PermissionDialog
-          sessionId={sessionId}
-          requestId={message.requestId}
-          toolName={message.toolName}
-          input={message.input}
-          description={message.description}
-        />
-      )
+      return null
     case 'error': {
       const businessErrorKey = message.businessErrorCode
         ? `businessError.${message.businessErrorCode}` as TranslationKey

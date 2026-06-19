@@ -25,6 +25,7 @@ import {
 import { useTranslation } from '../i18n'
 import { MessageList } from '../components/chat/MessageList'
 import { ChatInput } from '../components/chat/ChatInput'
+import { PermissionDialog } from '../components/chat/PermissionDialog'
 import { StickyThinkingIndicator } from '../components/chat/StreamingIndicator'
 import { ComputerUsePermissionModal } from '../components/chat/ComputerUsePermissionModal'
 import { SessionTaskBar } from '../components/chat/SessionTaskBar'
@@ -387,6 +388,7 @@ export function ActiveSession() {
   const removePinnedSession = usePinnedSessionStore((s) => s.removePinned)
   const sessionState = useChatStore((s) => activeTabId ? s.sessions[activeTabId] : undefined)
   const pendingComputerUsePermission = sessionState?.pendingComputerUsePermission ?? null
+  const pendingPermission = sessionState?.pendingPermission ?? null
   const fetchSessionTasks = useCLITaskStore((s) => s.fetchSessionTasks)
   const trackedTaskSessionId = useCLITaskStore((s) => s.sessionId)
   const hasIncompleteTasks = useCLITaskStore((s) => s.tasks.some((task) => task.status !== 'completed'))
@@ -835,15 +837,34 @@ export function ActiveSession() {
           >
             {!isMemberSession && <SessionTaskBar />}
             <StickyThinkingIndicator visible={chatState === 'tool_executing' || chatState === 'thinking' || chatState === 'streaming'} compact={showRightPanel} />
-            <ChatInput
-              variant={shouldFloatHeroComposer && !composerDocked ? 'hero' : 'default'}
-              compact={showRightPanel}
-              onSubmitStart={() => {
-                if (shouldFloatHeroComposer) {
-                  setComposerDocked(true)
-                }
-              }}
-            />
+            <div
+              className="chat-input-covered-shell"
+              data-covered={!isMemberSession && pendingPermission && pendingPermission.toolName !== 'AskUserQuestion' ? 'true' : 'false'}
+            >
+              <ChatInput
+                variant={shouldFloatHeroComposer && !composerDocked ? 'hero' : 'default'}
+                compact={showRightPanel}
+                onSubmitStart={() => {
+                  if (shouldFloatHeroComposer) {
+                    setComposerDocked(true)
+                  }
+                }}
+              />
+            </div>
+            {!isMemberSession && activeTabId && pendingPermission && pendingPermission.toolName !== 'AskUserQuestion' ? (
+              <div className="permission-sheet-overlay">
+                <div className="permission-sheet-anchor">
+                  <PermissionDialog
+                    sessionId={activeTabId}
+                    requestId={pendingPermission.requestId}
+                    toolName={pendingPermission.toolName}
+                    input={pendingPermission.input}
+                    description={pendingPermission.description}
+                    variant="floating"
+                  />
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <div

@@ -18,6 +18,7 @@ type Props = {
   toolName: string
   input: unknown
   description?: string
+  variant?: 'inline' | 'floating'
 }
 
 /**
@@ -107,7 +108,7 @@ function renderPermissionPreview(toolName: string, input: unknown) {
 
   if (toolName === 'Bash' && typeof obj.command === 'string') {
     return (
-      <div className="overflow-x-auto rounded-[var(--radius-md)] bg-[var(--color-terminal-bg)] px-3 py-2.5">
+      <div className="overflow-x-auto rounded-[16px] border border-white/8 bg-[rgba(8,8,8,0.58)] px-3 py-3">
         <pre className="font-[var(--font-mono)] text-[11px] leading-[1.3] text-[var(--color-terminal-fg)] whitespace-pre-wrap break-words">
           <span className="text-[var(--color-terminal-accent)] select-none">$ </span>{obj.command}
         </pre>
@@ -118,7 +119,7 @@ function renderPermissionPreview(toolName: string, input: unknown) {
   return null
 }
 
-export function PermissionDialog({ sessionId, requestId, toolName, input, description }: Props) {
+export function PermissionDialog({ sessionId, requestId, toolName, input, description, variant = 'inline' }: Props) {
   const { respondToPermission } = useChatStore()
   const activeTabId = useTabStore((s) => s.activeTabId)
   const targetSessionId = sessionId ?? activeTabId
@@ -145,19 +146,41 @@ export function PermissionDialog({ sessionId, requestId, toolName, input, descri
   const preview = renderPermissionPreview(toolName, input)
   const title = getPermissionTitle(toolName, input, t)
   const allowRawToggle = !preview
-
-  return (
-    <div className={`mb-4 overflow-hidden rounded-[var(--radius-lg)] border ${
-      isPending
-        ? 'border-[var(--color-warning)] bg-[var(--color-surface-container-lowest)]'
-        : 'border-[var(--color-outline-variant)]/40 bg-[var(--color-surface-container-low)] opacity-70'
-    }`}>
-      {/* Header */}
-      <div className={`flex items-center gap-3 px-4 py-3 ${
+  const isFloating = variant === 'floating'
+  const containerClassName = isFloating
+    ? `overflow-hidden rounded-[22px] border ${
+        isPending
+          ? 'border-white/10 bg-[rgba(26,26,26,0.96)] shadow-[0_28px_90px_rgba(0,0,0,0.52)] backdrop-blur-[18px]'
+          : 'border-white/7 bg-[rgba(26,26,26,0.88)] opacity-85 backdrop-blur-[18px]'
+      }`
+    : `mb-4 overflow-hidden rounded-[var(--radius-lg)] border ${
+        isPending
+          ? 'border-[var(--color-warning)] bg-[var(--color-surface-container-lowest)]'
+          : 'border-[var(--color-outline-variant)]/40 bg-[var(--color-surface-container-low)] opacity-70'
+      }`
+  const headerClassName = isFloating
+    ? `flex items-center gap-3 px-4 py-3.5 ${
+        isPending ? 'bg-white/[0.035]' : 'bg-white/[0.02]'
+      }`
+    : `flex items-center gap-3 px-4 py-3 ${
         isPending
           ? 'bg-[var(--color-surface-container)]'
           : 'bg-[var(--color-surface-container-low)]'
-      }`}>
+      }`
+  const bodyClassName = isFloating
+    ? 'border-t border-white/8 px-4 py-3.5'
+    : 'border-t border-[var(--color-outline-variant)]/20 px-4 py-3'
+  const actionClassName = isFloating
+    ? 'flex items-center gap-2 border-t border-white/8 bg-white/[0.02] px-4 py-3.5'
+    : 'flex items-center gap-2 border-t border-[var(--color-outline-variant)]/20 bg-[var(--color-surface-container-low)] px-4 py-3'
+  const detailChipClassName = isFloating
+    ? 'flex items-center gap-2 rounded-[14px] border border-white/7 bg-[rgba(255,255,255,0.035)] px-3 py-2 text-xs font-[var(--font-mono)] text-[var(--color-text-secondary)]'
+    : 'flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-surface-container)] px-3 py-2 text-xs font-[var(--font-mono)] text-[var(--color-text-secondary)]'
+
+  return (
+    <div className={containerClassName}>
+      {/* Header */}
+      <div className={headerClassName}>
         <div
           className="flex items-center justify-center w-8 h-8 rounded-[var(--radius-md)]"
           style={{ backgroundColor: `${meta.color}18` }}
@@ -193,11 +216,11 @@ export function PermissionDialog({ sessionId, requestId, toolName, input, descri
       </div>
 
       {/* Tool details */}
-      <div className="border-t border-[var(--color-outline-variant)]/20 px-4 py-3">
+      <div className={bodyClassName}>
         {preview ? (
           <div className="space-y-2">
             {details.primary && toolName !== 'Bash' ? (
-              <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-surface-container)] px-3 py-2 text-xs font-[var(--font-mono)] text-[var(--color-text-secondary)]">
+              <div className={detailChipClassName}>
                 <span className="material-symbols-outlined text-[14px] text-[var(--color-outline)] flex-shrink-0">
                   folder_open
                 </span>
@@ -208,7 +231,7 @@ export function PermissionDialog({ sessionId, requestId, toolName, input, descri
           </div>
         ) : details.primary ? (
           <div className="mb-2">
-            <div className="flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-surface-container)] px-3 py-2 text-xs font-[var(--font-mono)] text-[var(--color-text-secondary)]">
+            <div className={detailChipClassName}>
               <span className="material-symbols-outlined text-[14px] text-[var(--color-outline)] flex-shrink-0">
                 {toolName === 'Glob' || toolName === 'Grep' ? 'search' : 'folder_open'}
               </span>
@@ -243,7 +266,7 @@ export function PermissionDialog({ sessionId, requestId, toolName, input, descri
 
       {/* Action buttons */}
       {isPending && (
-        <div className="flex items-center gap-2 border-t border-[var(--color-outline-variant)]/20 bg-[var(--color-surface-container-low)] px-4 py-3">
+        <div className={actionClassName}>
           <Button
             variant="primary"
             size="sm"
