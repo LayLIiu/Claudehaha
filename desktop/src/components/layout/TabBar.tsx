@@ -417,37 +417,37 @@ export function TabBar() {
 
       {contextMenu && (
         <div
-          className="fixed z-50 bg-[var(--color-token-dropdown-background,var(--color-surface))] border border-[var(--color-token-border)] rounded-[var(--radius-md)] py-1 min-w-[160px]"
-          style={{ left: contextMenu.x, top: contextMenu.y, boxShadow: 'var(--shadow-dropdown)' }}
-        >
-          <button
-            onClick={() => { handleClose(contextMenu.sessionId); setContextMenu(null) }}
-	            className="w-full px-3 py-1.5 text-xs text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
-	          >
-	            {t('tabs.close')}
-	          </button>
+className="liquid-glass glass-panel fixed z-50 rounded-[var(--radius-2xl)] p-1.5 min-w-[160px]"
+	          style={{ left: contextMenu.x, top: contextMenu.y, boxShadow: 'var(--shadow-dropdown)' }}
+	        >
 	          <button
-	            onClick={() => handleCloseOthers(contextMenu.sessionId)}
-	            className="w-full px-3 py-1.5 text-xs text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
-	          >
-	            {t('tabs.closeOthers')}
+	            onClick={() => { handleClose(contextMenu.sessionId); setContextMenu(null) }}
+		            className="w-full px-3 py-1.5 text-xs text-left text-[var(--color-token-foreground)] hover:bg-[rgba(255,255,255,0.04)]"
+		          >
+		            {t('tabs.close')}
+		          </button>
+		          <button
+		            onClick={() => handleCloseOthers(contextMenu.sessionId)}
+		            className="w-full px-3 py-1.5 text-xs text-left text-[var(--color-token-foreground)] hover:bg-[rgba(255,255,255,0.04)]"
+		          >
+		            {t('tabs.closeOthers')}
 	          </button>
 	          <button
 	            onClick={() => handleCloseLeft(contextMenu.sessionId)}
-	            className="w-full px-3 py-1.5 text-xs text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
+	            className="w-full px-3 py-1.5 text-xs text-left text-[var(--color-token-foreground)] hover:bg-[rgba(255,255,255,0.04)]"
 	          >
 	            {t('tabs.closeLeft')}
 	          </button>
 	          <button
 	            onClick={() => handleCloseRight(contextMenu.sessionId)}
-	            className="w-full px-3 py-1.5 text-xs text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
+	            className="w-full px-3 py-1.5 text-xs text-left text-[var(--color-token-foreground)] hover:bg-[rgba(255,255,255,0.04)]"
 	          >
 	            {t('tabs.closeRight')}
 	          </button>
-	          <div className="my-1 border-t border-[var(--color-token-border)]" />
+	          <div className="my-1 h-px rounded-full bg-[rgba(255,255,255,0.08)]" />
 	          <button
 	            onClick={handleCloseAll}
-	            className="w-full px-3 py-1.5 text-xs text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
+	            className="w-full px-3 py-1.5 text-xs text-left text-[var(--color-token-foreground)] hover:bg-[rgba(255,255,255,0.04)]"
           >
             {t('tabs.closeAll')}
           </button>

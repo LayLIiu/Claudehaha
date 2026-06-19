@@ -140,11 +140,11 @@ export function TaskRow({ task, showLogs, onToggleLogs }: Props) {
               </button>
 
               {showMenu && !confirmAction && (
-                <div className="absolute right-0 top-full mt-1 z-50 w-44 glass-panel rounded-[var(--radius-xl)] shadow-lg py-1">
+                <div className="liquid-glass glass-panel absolute right-0 top-full mt-1 z-50 w-44 rounded-[var(--radius-2xl)] shadow-[var(--shadow-dropdown)] p-1.5">
                   {/* Edit */}
                   <button
                     onClick={() => { setShowMenu(false); setShowEdit(true) }}
-                    className={`${menuItem} text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]`}
+                    className={`${menuItem} text-[var(--color-token-foreground)] hover:bg-[rgba(255,255,255,0.04)]`}
                   >
                     <span className="material-symbols-outlined icon-sm text-[var(--color-token-text-secondary)]">edit</span>
                     {t('tasks.edit')}
@@ -153,7 +153,7 @@ export function TaskRow({ task, showLogs, onToggleLogs }: Props) {
                   {/* Toggle */}
                   <button
                     onClick={() => setConfirmAction('toggle')}
-                    className={`${menuItem} text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]`}
+                    className={`${menuItem} text-[var(--color-token-foreground)] hover:bg-[rgba(255,255,255,0.04)]`}
                   >
                     <span className="material-symbols-outlined icon-sm text-[var(--color-token-text-secondary)]">
                       {task.enabled ? 'pause_circle' : 'play_circle'}

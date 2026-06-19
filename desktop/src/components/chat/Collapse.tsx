@@ -8,6 +8,13 @@ type CollapseProps = {
   duration?: number
   /** Easing curve (default Codex-style spring) */
   easing?: string
+  /** Optional class for the measured outer shell */
+  className?: string
+  /** Optional class for the inner content that receives the subtle y-motion */
+  contentClassName?: string
+  /** How far content slides upward while collapsing */
+  collapsedOffset?: number
+  testId?: string
 }
 
 /**
@@ -22,6 +29,10 @@ export function Collapse({
   children,
   duration = 360,
   easing = 'cubic-bezier(0.2, 1.12, 0.24, 1)',
+  className,
+  contentClassName,
+  collapsedOffset = 6,
+  testId,
 }: CollapseProps) {
   const ref = useRef<HTMLDivElement>(null)
   const isFirstRender = useRef(true)
@@ -47,12 +58,14 @@ export function Collapse({
       el.style.transition = 'none'
       el.style.height = '0px'
       el.style.opacity = '0'
+      el.style.transform = `translate3d(0, -${collapsedOffset}px, 0)`
       // eslint-disable-next-line no-unused-expressions
       el.offsetHeight // force reflow so browser paints height:0 first
 
-      el.style.transition = `height ${duration}ms ${easing}, opacity ${Math.round(duration * 0.6)}ms ease-out`
+      el.style.transition = `height ${duration}ms ${easing}, opacity ${Math.round(duration * 0.55)}ms ease-out, transform ${duration}ms ${easing}`
       el.style.height = `${targetHeight}px`
       el.style.opacity = '1'
+      el.style.transform = 'translate3d(0, 0, 0)'
 
       el.addEventListener('transitionend', () => {
         el.style.height = 'auto' // free-form sizing after animation
@@ -64,27 +77,36 @@ export function Collapse({
 
       el.style.transition = 'none'
       el.style.height = `${currentHeight}px`
+      el.style.opacity = '1'
+      el.style.transform = 'translate3d(0, 0, 0)'
       // eslint-disable-next-line no-unused-expressions
       el.offsetHeight // force reflow
 
-      el.style.transition = `height ${duration}ms ${easing}, opacity ${Math.round(duration * 0.6)}ms ease-out`
+      el.style.transition = `height ${duration}ms ${easing}, opacity ${Math.round(duration * 0.45)}ms ease-out, transform ${duration}ms ${easing}`
       el.style.height = '0px'
       el.style.opacity = '0'
+      el.style.transform = `translate3d(0, -${collapsedOffset}px, 0)`
     }
 
     return () => controller.abort()
-  }, [open, duration, easing])
+  }, [open, duration, easing, collapsedOffset])
 
   return (
     <div
       ref={ref}
+      className={className}
+      data-testid={testId}
       style={{
         overflow: 'hidden',
         height: open ? 'auto' : '0px',
         opacity: open ? 1 : 0,
+        transform: open ? 'translate3d(0, 0, 0)' : `translate3d(0, -${collapsedOffset}px, 0)`,
+        willChange: 'height, opacity, transform',
       }}
     >
-      {children}
+      <div className={contentClassName}>
+        {children}
+      </div>
     </div>
   )
 }

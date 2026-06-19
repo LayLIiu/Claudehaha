@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, type CSSProperties, type ReactNode } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect, type CSSProperties, type ReactNode } from 'react'
 
 type DropdownItem<T extends string> = {
   value: T
@@ -29,12 +29,52 @@ export function Dropdown<T extends string>({
   className = '',
 }: DropdownProps<T>) {
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const [popupPos, setPopupPos] = useState<CSSProperties | null>(null)
+  const triggerRef = useRef<HTMLDivElement>(null)
+  const popupRef = useRef<HTMLDivElement>(null)
 
+  // Compute fixed position so the popup is never clipped by ancestor overflow:hidden
+  useLayoutEffect(() => {
+    if (!open || !triggerRef.current) return
+    const rect = triggerRef.current.getBoundingClientRect()
+    // When width is a percentage, resolve it against the trigger width
+    const resolvedWidth = typeof width === 'string' && width.endsWith('%')
+      ? rect.width
+      : width
+    const pos: CSSProperties = {
+      position: 'fixed',
+      top: rect.bottom + 6, // matches original mt-1.5
+      width: resolvedWidth,
+      maxHeight,
+      zIndex: 50,
+    }
+    if (align === 'right') {
+      pos.right = window.innerWidth - rect.right
+    } else {
+      pos.left = rect.left
+    }
+    setPopupPos(pos)
+  }, [open, width, maxHeight, align])
+
+  // Flip upward if the popup would overflow the viewport bottom
+  useLayoutEffect(() => {
+    if (!open || !popupRef.current || !popupPos) return
+    const popupRect = popupRef.current.getBoundingClientRect()
+    if (popupRect.bottom > window.innerHeight) {
+      const triggerRect = triggerRef.current!.getBoundingClientRect()
+      const newTop = triggerRect.top - popupRect.height - 6
+      setPopupPos((prev) => prev ? { ...prev, top: Math.max(8, newTop) } : prev)
+    }
+  }, [open, popupPos])
+
+  // Close on outside click or Escape
   useEffect(() => {
     if (!open) return
     const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      if (
+        triggerRef.current && !triggerRef.current.contains(e.target as Node) &&
+        popupRef.current && !popupRef.current.contains(e.target as Node)
+      ) {
         setOpen(false)
       }
     }
@@ -50,32 +90,30 @@ export function Dropdown<T extends string>({
   }, [open])
 
   return (
-    <div ref={ref} className={`relative ${className || 'inline-block'}`}>
+    <div ref={triggerRef} className={className || 'inline-block'}>
       <div onClick={() => setOpen(!open)} className="cursor-pointer">
         {trigger}
       </div>
 
-      {open && (
+      {open && popupPos && (
         <div
+          ref={popupRef}
           className={`
-            absolute z-50 mt-1.5 rounded-[var(--radius-xl)]
-            bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] border border-[var(--color-token-border)]
-            shadow-[var(--shadow-dropdown)] backdrop-blur-xl
+            liquid-glass glass-panel overflow-hidden rounded-[var(--radius-2xl)] p-1.5
+            shadow-[var(--shadow-dropdown)]
             animate-in fade-in slide-in-from-top-1
-            ${maxHeight ? 'overflow-y-auto' : 'overflow-hidden'}
-            ${align === 'right' ? 'right-0' : 'left-0'}
+            ${maxHeight ? 'overflow-y-auto' : ''}
           `}
-          style={{ width, maxHeight }}
+          style={popupPos}
         >
-          {items.map((item, i) => (
+          {items.map((item) => (
             <button
               key={item.value}
               onClick={() => { onChange(item.value); setOpen(false) }}
               className={`
-                w-full flex items-center gap-3 px-3.5 py-3 text-left transition-colors
-                hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:bg-[var(--color-surface-hover)]
-                ${item.value === value ? 'bg-[var(--color-model-option-selected-bg)]' : ''}
-                ${i > 0 ? 'border-t border-[var(--color-token-border)]' : ''}
+                w-full flex items-center gap-3 px-3.5 py-2.5 text-left rounded-[var(--radius-lg)] transition-colors
+                hover:bg-[rgba(255,255,255,0.04)] focus-visible:outline-none focus-visible:bg-[rgba(255,255,255,0.04)]
+                ${item.value === value ? 'bg-white/[0.085]' : ''}
               `}
             >
               {item.icon && <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-[var(--color-token-text-secondary)]">{item.icon}</span>}

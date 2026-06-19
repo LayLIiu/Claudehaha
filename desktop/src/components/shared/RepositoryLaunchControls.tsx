@@ -295,8 +295,8 @@ export function RepositoryLaunchControls({
   const workbarButtonClassName = 'group inline-flex h-9 min-w-0 items-center gap-1.5 rounded-[var(--radius-sm)] border border-transparent px-2.5 text-[13px] font-medium leading-none text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35 disabled:cursor-not-allowed disabled:opacity-50'
 
   const branchMenuClassName = isMobileBrowser
-    ? 'max-h-[72dvh] overflow-hidden rounded-t-2xl border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] shadow-[0_-18px_48px_rgba(54,35,28,0.2)]'
-    : 'w-[390px] overflow-hidden rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] shadow-[var(--shadow-dropdown)]'
+    ? 'liquid-glass glass-panel max-h-[72dvh] overflow-hidden rounded-t-2xl shadow-[var(--shadow-dropdown)]'
+    : 'liquid-glass glass-panel w-[390px] overflow-hidden rounded-2xl shadow-[var(--shadow-dropdown)]'
   const branchMenuStyle = isMobileBrowser
     ? {
         position: 'fixed' as const,
@@ -314,8 +314,8 @@ export function RepositoryLaunchControls({
         zIndex: 9999,
       }
   const worktreeMenuClassName = isMobileBrowser
-    ? 'overflow-hidden rounded-t-2xl border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] py-2 shadow-[0_-18px_48px_rgba(54,35,28,0.2)]'
-    : 'w-[226px] overflow-hidden rounded-xl border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] py-1 shadow-[var(--shadow-dropdown)]'
+    ? 'liquid-glass glass-panel overflow-hidden rounded-t-2xl py-2 shadow-[var(--shadow-dropdown)]'
+    : 'liquid-glass glass-panel w-[226px] overflow-hidden rounded-xl py-1 shadow-[var(--shadow-dropdown)]'
   const worktreeMenuStyle = isMobileBrowser
     ? {
         position: 'fixed' as const,

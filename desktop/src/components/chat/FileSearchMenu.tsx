@@ -213,7 +213,7 @@ export const FileSearchMenu = forwardRef<FileSearchMenuHandle, Props>(({ cwd, fi
         <button
           type="button"
           onClick={() => selectEntry(entry)}
-          className={`flex min-w-0 flex-1 items-center rounded-[var(--radius-lg)] px-2.5 text-left transition-colors hover:bg-white/[0.085] focus-visible:bg-white/[0.085] focus-visible:outline-none ${
+          className={`flex min-w-0 flex-1 items-center rounded-[var(--radius-lg)] px-2.5 text-left transition-colors hover:bg-[rgba(255,255,255,0.04)] focus-visible:bg-[rgba(255,255,255,0.04)] focus-visible:outline-none ${
             isSearchMode ? 'gap-2.5 py-1.5' : 'gap-2.5 py-1.5'
           } ${selected ? 'bg-white/[0.085]' : ''}`}
           role="option"
@@ -266,7 +266,7 @@ export const FileSearchMenu = forwardRef<FileSearchMenuHandle, Props>(({ cwd, fi
   return (
     <div
       id="file-search-menu"
-      className={`sidebar-codex-menu glass-panel absolute bottom-full mb-2 z-50 w-full overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)] ${
+      className={`sidebar-codex-menu liquid-glass glass-panel absolute bottom-full mb-2 z-50 w-full overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)] ${
         compact ? 'left-0 right-0 min-w-0 max-w-[calc(100vw-32px)]' : 'left-0 min-w-[480px]'
       }`}
       onMouseDown={(e) => e.stopPropagation()}

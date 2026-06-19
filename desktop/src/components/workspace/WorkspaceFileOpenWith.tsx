@@ -67,7 +67,7 @@ export function WorkspaceFileOpenWith({
 
   return (
     <>
-      <div className="my-1 border-t border-[var(--color-token-border)]" role="separator" />
+      <div className="my-1 h-px rounded-full bg-[rgba(255,255,255,0.08)]" role="separator" />
       {items.map((item) => (
         <button
           key={item.id}
@@ -77,7 +77,7 @@ export function WorkspaceFileOpenWith({
             item.onSelect()
             onAfterSelect?.()
           }}
-          className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
+          className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[rgba(255,255,255,0.04)]"
         >
           <span
             aria-hidden="true"

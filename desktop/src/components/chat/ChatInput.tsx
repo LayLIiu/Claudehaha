@@ -48,10 +48,20 @@ type GitInfo = SessionGitInfo
 
 type Attachment = ComposerAttachment
 
+type HeroRecentItem = {
+  id: string
+  title: string
+  projectLabel: string
+  meta?: string
+}
+
 type ChatInputProps = {
   variant?: 'default' | 'hero'
   compact?: boolean
   onSubmitStart?: () => void
+  heroTitle?: string
+  heroRecentItems?: HeroRecentItem[]
+  onOpenHeroRecentItem?: (sessionId: string) => void
 }
 
 const EMPTY_WORKSPACE_REFERENCES: WorkspaceChatReference[] = []
@@ -85,7 +95,14 @@ function insertComposerTokenAtRange(value: string, start: number, end: number, t
   }
 }
 
-export function ChatInput({ variant = 'default', compact = false, onSubmitStart }: ChatInputProps) {
+export function ChatInput({
+  variant = 'default',
+  compact = false,
+  onSubmitStart,
+  heroTitle,
+  heroRecentItems = [],
+  onOpenHeroRecentItem,
+}: ChatInputProps) {
   const t = useTranslation()
   const isMobileComposer = useMobileViewport() && !isDesktopRuntime()
   const [input, setInput] = useState('')
@@ -956,10 +973,6 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
 
   const addFilesLabel = isHeroComposer ? t('empty.addFiles') : t('chat.addFiles')
   const slashCommandsLabel = isHeroComposer ? t('empty.slashCommands') : t('chat.slashCommands')
-  const heroHintLabels = useMemo(
-    () => [t('chat.addFiles'), t('chat.slashCommands'), t('tabs.showWorkspace')],
-    [t],
-  )
 
   return (
     <div
@@ -975,17 +988,23 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
       <div
         className={
           isHeroComposer
-            ? 'mx-auto flex w-full max-w-3xl flex-col'
+            ? 'codex-new-task-composer mx-auto flex w-full max-w-[980px] flex-col'
           : compact
               ? 'mx-auto max-w-full'
               : `${isMobileComposer ? 'mx-0 max-w-none' : 'mx-auto max-w-[800px]'}`
         }
       >
+        {isHeroComposer && heroTitle ? (
+          <h2 className="codex-new-task-title" data-testid="new-task-hero-title">
+            {heroTitle}
+          </h2>
+        ) : null}
+
         <div
           ref={panelRef}
           data-testid="chat-input-panel"
           className={isHeroComposer
-            ? `glass-panel relative flex flex-col gap-3 overflow-visible ${embedLaunchControlsInHero ? 'rounded-[var(--radius-4xl)]' : 'rounded-t-[var(--radius-4xl)] rounded-b-none'} p-4 transition-colors ${isDragActive ? 'composer-drop-target-active' : ''}`
+            ? `glass-panel codex-new-task-input-panel relative flex flex-col gap-3 overflow-visible ${embedLaunchControlsInHero ? 'rounded-[var(--radius-4xl)]' : 'rounded-t-[var(--radius-4xl)] rounded-b-none'} p-4 transition-colors ${isDragActive ? 'composer-drop-target-active' : ''}`
             : compact
               ? `glass-panel relative overflow-visible p-3 transition-colors ${isMobileComposer ? 'rounded-[var(--radius-2xl)] shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[var(--radius-3xl)]'} ${isDragActive ? 'composer-drop-target-active' : ''}`
               : `glass-panel relative overflow-visible transition-colors ${isMobileComposer ? 'rounded-[var(--radius-2xl)] p-3 shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[var(--radius-3xl)] pt-[24px] pb-4 px-4 -ml-[8px] w-[calc(100%+8px)]'} ${isDragActive ? 'composer-drop-target-active' : ''}`}
@@ -1064,7 +1083,7 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
           {!isMemberSession && slashMenuOpen && filteredCommands.length > 0 && (
               <div
               ref={slashMenuRef}
-              className="composer-top-tray-panel absolute bottom-full left-0 right-0 z-50 mb-2 overflow-hidden p-1.5 shadow-[var(--shadow-dropdown)]"
+	              className="liquid-glass glass-panel composer-top-tray-panel absolute bottom-full left-0 right-0 z-50 mb-2 overflow-hidden p-1.5 shadow-[var(--shadow-dropdown)]"
             >
               <div className="max-h-[300px] overflow-y-auto">
                 {filteredCommands.map((command, index) => (
@@ -1097,11 +1116,11 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
                 <>
                   <div className="sidebar-codex-menu-divider" />
                   <div className="flex items-center gap-1.5 px-2 py-1.5 text-[11px] text-[var(--color-token-text-secondary)]">
-	                  <kbd className="rounded border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-1.5 py-0.5 font-mono text-[10px]">Up/Down</kbd>
+	                  <kbd className="rounded border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.04)] px-1.5 py-0.5 font-mono text-[10px]">Up/Down</kbd>
 	                  <span>{t('chat.navigate')}</span>
-	                  <kbd className="ml-2 rounded border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-1.5 py-0.5 font-mono text-[10px]">Enter</kbd>
+	                  <kbd className="ml-2 rounded border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.04)] px-1.5 py-0.5 font-mono text-[10px]">Enter</kbd>
 	                  <span>{t('chat.select')}</span>
-	                  <kbd className="ml-2 rounded border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-1.5 py-0.5 font-mono text-[10px]">Esc</kbd>
+	                  <kbd className="ml-2 rounded border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.04)] px-1.5 py-0.5 font-mono text-[10px]">Esc</kbd>
                     <span>{t('chat.dismiss')}</span>
                   </div>
                 </>
@@ -1125,7 +1144,7 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
                     data-testid="pending-user-message"
                     className={[
                       'flex min-w-0 items-center gap-2 px-3 py-2 text-xs',
-	                    'border-t border-[var(--color-token-border)] first:border-t-0',
+	                    'border-t border-[rgba(255,255,255,0.08)] first:border-t-0',
 	                    'bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))]/70 text-[var(--color-token-text-secondary)]',
                     ].join(' ')}
                   >
@@ -1237,18 +1256,6 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
                   className="flex-1 resize-none border-none bg-transparent py-2 leading-7 text-[15px] text-[var(--color-token-foreground)] outline-none placeholder:text-[var(--color-token-input-placeholder-foreground)] disabled:opacity-50"
                 />
               </div>
-              {!input.trim() && composerAttachments.length === 0 && !embedLaunchControlsInHero ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  {heroHintLabels.map((label) => (
-                    <span
-                      key={label}
-                      className="inline-flex items-center rounded-full border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-2.5 py-1 text-[11px] font-medium text-[var(--color-token-text-secondary)]"
-                    >
-                      {label}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
             </div>
           ) : (
             <textarea
@@ -1289,7 +1296,7 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
                     {plusMenuOpen && plusMenuPos && createPortal(
                       <div
                         ref={plusMenuPortalRef}
-                        className="glass-panel fixed z-[80] w-[240px] overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)]"
+                        className="liquid-glass glass-panel fixed z-[80] w-[240px] overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)]"
                         style={{ bottom: plusMenuPos.bottom, left: plusMenuPos.left }}
                       >
                         <button
@@ -1377,6 +1384,25 @@ export function ChatInput({ variant = 'default', compact = false, onSubmitStart 
         </div>
 
         <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileSelect} />
+
+        {isHeroComposer && heroRecentItems.length > 0 ? (
+          <div className="codex-new-task-recent-list" data-testid="new-task-recent-list">
+            {heroRecentItems.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className="codex-new-task-recent-row"
+                onClick={() => onOpenHeroRecentItem?.(item.id)}
+                title={`${item.projectLabel} · ${item.title}`}
+              >
+                <span className="material-symbols-outlined icon-sm shrink-0 text-[var(--color-token-text-secondary)]">folder_open</span>
+                <span className="min-w-0 flex-1 truncate">{item.title}</span>
+                <span className="hidden min-w-0 max-w-[220px] truncate text-[var(--color-token-text-secondary)] sm:block">{item.projectLabel}</span>
+                {item.meta ? <span className="shrink-0 text-[var(--color-token-text-secondary)]">{item.meta}</span> : null}
+              </button>
+            ))}
+          </div>
+        ) : null}
 
         {!isMemberSession && !embedLaunchControlsInHero && messageCount === 0 && (
           <div className={useCompactControls ? 'mt-2 flex min-w-0 px-1' : 'mt-3 px-1'}>

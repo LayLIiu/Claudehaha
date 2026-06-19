@@ -369,7 +369,7 @@ export function GitActionsDialog({
       ref={dialogRef}
       role="dialog"
       aria-label="Git 操作"
-      className="fixed z-[350] w-[min(320px,calc(100vw-32px))] overflow-hidden rounded-[var(--radius-lg)] border border-[rgba(255,255,255,0.1)] bg-[rgba(48,48,50,0.94)] shadow-[0_12px_36px_rgba(0,0,0,0.4)] backdrop-blur-[24px]"
+      className="liquid-glass glass-panel fixed z-[350] w-[min(320px,calc(100vw-32px))] overflow-hidden rounded-[var(--radius-lg)] p-1.5 shadow-[var(--shadow-dropdown)]"
       style={dialogStyle}
     >
       {view === 'menu' && renderMenu()}

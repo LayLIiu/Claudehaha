@@ -53,8 +53,8 @@ export function SessionTaskBar({
   return (
     <div className={isPopover ? 'absolute right-0 top-[calc(100%+6px)] z-[330] w-[min(280px,calc(100vw-48px))]' : 'shrink-0 px-8'}>
       <div className={isPopover
-        ? 'glass-panel overflow-hidden rounded-[var(--radius-lg)] shadow-[var(--shadow-dropdown)]'
-        : 'glass-panel mx-auto mb-2 max-w-[860px] overflow-hidden rounded-[var(--radius-xl)] transition-colors'}
+        ? 'liquid-glass glass-panel overflow-hidden rounded-[var(--radius-lg)] shadow-[var(--shadow-dropdown)]'
+        : 'liquid-glass glass-panel mx-auto mb-2 max-w-[860px] overflow-hidden rounded-[var(--radius-xl)] transition-colors'}
       >
         <div className={isPopover ? 'px-2.5 py-2' : 'px-4 pb-2 pt-3'}>
           <div className="flex items-center justify-between gap-2">

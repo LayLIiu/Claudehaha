@@ -217,6 +217,19 @@ describe('MessageList nested tool calls', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
     vi.unstubAllGlobals()
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    })
     useSettingsStore.setState({ locale: 'en' })
     useUIStore.setState({ pendingSettingsTab: null })
     useTabStore.setState({ activeTabId: ACTIVE_TAB, tabs: [{ sessionId: ACTIVE_TAB, title: 'Test', type: 'session' as const, status: 'idle' }] })
@@ -1413,6 +1426,68 @@ describe('MessageList nested tool calls', () => {
 
     expect(renderItems).toHaveLength(1)
     expect(renderItems[0]).toMatchObject({ kind: 'tool_group' })
+  })
+
+  it('collapses completed turn process into a processed summary and expands it on click', async () => {
+    useChatStore.setState({
+      sessions: {
+        [ACTIVE_TAB]: makeSessionState({
+          chatState: 'idle',
+          messages: [
+            {
+              id: 'user-1',
+              type: 'user_text',
+              content: '帮我检查这个文件',
+              timestamp: 1_000,
+            },
+            {
+              id: 'thinking-1',
+              type: 'thinking',
+              content: '我先看一下相关文件。',
+              timestamp: 1_500,
+            },
+            {
+              id: 'tool-read',
+              type: 'tool_use',
+              toolName: 'Read',
+              toolUseId: 'read-1',
+              input: { file_path: '/tmp/example.ts' },
+              timestamp: 2_000,
+            },
+            {
+              id: 'result-read',
+              type: 'tool_result',
+              toolUseId: 'read-1',
+              content: 'const value = 1',
+              isError: false,
+              timestamp: 2_500,
+            },
+            {
+              id: 'assistant-final',
+              type: 'assistant_text',
+              content: '已经检查完了，文件没有明显问题。',
+              timestamp: 4_000,
+            },
+          ],
+        }),
+      },
+    })
+
+    render(<MessageList />)
+
+    expect(screen.getByText('已经检查完了，文件没有明显问题。')).toBeTruthy()
+    const trigger = screen.getByTestId('turn-process-trigger')
+    const collapse = screen.getByTestId('turn-process-collapse')
+
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+    expect(collapse.style.height).toBe('0px')
+
+    fireEvent.click(trigger)
+
+    await waitFor(() => {
+      expect(trigger.getAttribute('aria-expanded')).toBe('true')
+    })
+    expect(collapse.style.height).toBe('auto')
   })
 
   it('shows failed agent status and compact unavailable summary for Explore launch errors', () => {

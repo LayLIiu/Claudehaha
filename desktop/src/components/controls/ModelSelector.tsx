@@ -415,7 +415,7 @@ export function ModelSelector({
                         className={`
                           w-full rounded-[var(--radius-lg)] px-2.5 text-left transition-colors
                           ${isMobileBrowser ? 'min-h-[56px] py-3' : 'py-2'}
-                          ${isSelected ? 'bg-white/[0.085]' : 'hover:bg-white/[0.085]'}
+                          ${isSelected ? 'bg-white/[0.085]' : 'hover:bg-[rgba(255,255,255,0.04)]'}
                         `}
                       >
                         <div className="flex items-start gap-3">
@@ -463,7 +463,7 @@ export function ModelSelector({
                   className={`
                     w-full rounded-[var(--radius-lg)] px-2.5 text-left transition-colors
                     ${isMobileBrowser ? 'min-h-[56px] py-3' : 'py-2'}
-                    ${isSelected ? 'bg-white/[0.085]' : 'hover:bg-white/[0.085]'}
+                    ${isSelected ? 'bg-white/[0.085]' : 'hover:bg-[rgba(255,255,255,0.04)]'}
                   `}
                 >
                   <div className="flex items-center gap-3">
@@ -509,7 +509,7 @@ export function ModelSelector({
                     rounded-lg py-2 text-center text-xs font-semibold transition-colors
                     ${isSelected
                       ? 'bg-white/[0.12] text-[var(--color-token-foreground)]'
-                      : 'bg-transparent text-[var(--color-token-text-secondary)] hover:bg-white/[0.085]'
+                      : 'bg-transparent text-[var(--color-token-text-secondary)] hover:bg-[rgba(255,255,255,0.04)]'
                     }
                   `}
                 >
@@ -541,7 +541,7 @@ export function ModelSelector({
       <div
         ref={dropdownRef}
         data-testid="model-selector-dropdown"
-        className="sidebar-codex-menu glass-panel fixed z-[80] overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)]"
+        className="sidebar-codex-menu liquid-glass glass-panel fixed z-[80] overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)]"
         style={{
           top: dropdownPosition.top,
           bottom: dropdownPosition.bottom,

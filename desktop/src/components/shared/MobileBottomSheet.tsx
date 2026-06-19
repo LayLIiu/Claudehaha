@@ -54,10 +54,10 @@ export function MobileBottomSheet({
         aria-modal={role === 'dialog' ? true : undefined}
         aria-label={ariaLabel ?? (typeof title === 'string' ? title : undefined)}
         data-testid={testId}
-        className={`absolute inset-x-0 bottom-0 flex max-h-[min(78dvh,640px)] min-h-0 flex-col overflow-hidden rounded-t-2xl border-x-0 border-y border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] shadow-[0_-18px_48px_rgba(54,35,28,0.22)] ${panelClassName}`}
+        className={`liquid-glass glass-panel absolute inset-x-0 bottom-0 flex max-h-[min(78dvh,640px)] min-h-0 flex-col overflow-hidden rounded-t-2xl shadow-[var(--shadow-dropdown)] ${panelClassName}`}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="shrink-0 border-b border-[var(--color-token-border)] px-4 py-3">
+        <div className="shrink-0 border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
           <div className="flex min-h-10 items-center justify-between gap-3">
             <div className="min-w-0 text-[11px] font-bold uppercase tracking-widest text-[var(--color-outline)]">
               {title}
@@ -83,7 +83,7 @@ export function MobileBottomSheet({
         </div>
 
         {footer && (
-          <div className="shrink-0 border-t border-[var(--color-token-border)]">
+          <div className="shrink-0 border-t border-[rgba(255,255,255,0.08)]">
             {footer}
           </div>
         )}

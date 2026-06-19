@@ -166,13 +166,13 @@ export function GlobalSearchModal({ open, onClose }: Props) {
       />
 
       <div
-        className="glass-panel relative z-10 flex max-h-[70vh] w-[640px] max-w-[calc(100vw-48px)] flex-col overflow-hidden rounded-[var(--radius-2xl)]"
+	        className="liquid-glass glass-panel relative z-10 flex max-h-[70vh] w-[640px] max-w-[calc(100vw-48px)] flex-col overflow-hidden rounded-[var(--radius-2xl)]"
         role="dialog"
         aria-modal="true"
         aria-label={t('search.global.placeholder')}
       >
         {/* Search input */}
-        <div className="flex items-center gap-2.5 border-b border-[var(--color-token-border)] px-4 py-3">
+        <div className="flex items-center gap-2.5 border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
           <Search className="h-4 w-4 shrink-0 text-[var(--color-token-text-secondary)]" aria-hidden="true" />
           <input
             ref={inputRef}
@@ -256,12 +256,12 @@ export function GlobalSearchModal({ open, onClose }: Props) {
         </div>
 
         {/* Footer hints */}
-        <div className="flex items-center gap-1.5 border-t border-[var(--color-token-border)] px-4 py-1.5 text-[10px] text-[var(--color-token-text-secondary)]">
-          <kbd className="rounded border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] px-1 py-0.5 font-mono">↑↓</kbd>
+        <div className="flex items-center gap-1.5 border-t border-[rgba(255,255,255,0.08)] px-4 py-1.5 text-[10px] text-[var(--color-token-text-secondary)]">
+          <kbd className="rounded border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.04)] px-1 py-0.5 font-mono">↑↓</kbd>
           <span>{t('fileSearch.navigate')}</span>
-          <kbd className="ml-2 rounded border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] px-1 py-0.5 font-mono">Enter</kbd>
+          <kbd className="ml-2 rounded border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.04)] px-1 py-0.5 font-mono">Enter</kbd>
           <span>{t('fileSearch.select')}</span>
-          <kbd className="ml-2 rounded border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] px-1 py-0.5 font-mono">Esc</kbd>
+          <kbd className="ml-2 rounded border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.04)] px-1 py-0.5 font-mono">Esc</kbd>
           <span>{t('fileSearch.close')}</span>
         </div>
       </div>

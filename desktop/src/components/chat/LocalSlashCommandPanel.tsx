@@ -75,7 +75,7 @@ function PanelShell({
   onClose: () => void
 }) {
   return (
-    <div className="sidebar-codex-menu glass-panel absolute bottom-full left-0 right-0 z-50 mb-3 overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)]">
+    <div className="sidebar-codex-menu liquid-glass glass-panel absolute bottom-full left-0 right-0 z-50 mb-3 overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)]">
       <div className="flex items-start justify-between gap-4 px-3 py-3">
         <div>
           <h3 className="text-base font-semibold text-[var(--color-token-foreground)]">{title}</h3>
@@ -698,7 +698,7 @@ function SessionInspectorShell({
 }) {
   return (
     <div
-      className="sidebar-codex-menu absolute bottom-full left-0 right-0 z-50 mb-4 overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--color-token-border)] p-1.5 text-[var(--color-inspector-text)] shadow-[var(--shadow-dropdown)]"
+      className="sidebar-codex-menu liquid-glass glass-panel absolute bottom-full left-0 right-0 z-50 mb-4 overflow-hidden rounded-[var(--radius-2xl)] p-1.5 text-[var(--color-inspector-text)] shadow-[var(--shadow-dropdown)]"
     >
       <div className="grid min-h-[54px] grid-cols-[1fr_auto_1fr] items-center px-4">
         <div className="font-mono text-[16px] font-semibold uppercase text-[var(--color-inspector-accent)]">{t('slash.inspector.title')}</div>
@@ -915,7 +915,7 @@ function McpPanel({ cwd, onClose }: { cwd?: string; onClose: () => void }) {
                 <div className="text-sm font-semibold text-[var(--color-token-foreground)]">{scopeLabel(scope, t)}</div>
                 <div className="text-xs text-[var(--color-token-text-secondary)]">{grouped.get(scope)?.length ?? 0}</div>
               </div>
-              <div className="overflow-hidden rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-surface)]">
+              <div className="overflow-hidden rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)]">
                 {grouped.get(scope)?.map((server) => (
                   <button
                     type="button"
@@ -926,7 +926,7 @@ function McpPanel({ cwd, onClose }: { cwd?: string; onClose: () => void }) {
                       useTabStore.getState().openTab(SETTINGS_TAB_ID, 'Settings', 'settings')
                       onClose()
                     }}
-                    className="block w-full border-t border-[var(--color-token-border)] px-4 py-4 text-left first:border-t-0 hover:bg-[var(--color-surface-hover)]"
+                    className="block w-full border-t border-[rgba(255,255,255,0.08)] px-4 py-4 text-left first:border-t-0 hover:bg-[rgba(255,255,255,0.04)]"
                   >
                     <div className="flex items-center gap-3">
                       <div className="text-sm font-semibold text-[var(--color-token-foreground)]">{server.name}</div>
@@ -990,7 +990,7 @@ function SkillsPanel({ cwd, onClose }: { cwd?: string; onClose: () => void }) {
       ) : skills.length === 0 ? (
         <EmptyState title={t('slash.skills.emptyTitle')} body={t('slash.skills.emptyBody')} />
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-surface)]">
+        <div className="overflow-hidden rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)]">
           {skills.map((skill) => (
             <button
               type="button"
@@ -1001,7 +1001,7 @@ function SkillsPanel({ cwd, onClose }: { cwd?: string; onClose: () => void }) {
                 useTabStore.getState().openTab(SETTINGS_TAB_ID, 'Settings', 'settings')
                 onClose()
               }}
-              className="block w-full border-t border-[var(--color-token-border)] px-4 py-4 text-left first:border-t-0 hover:bg-[var(--color-surface-hover)]"
+              className="block w-full border-t border-[rgba(255,255,255,0.08)] px-4 py-4 text-left first:border-t-0 hover:bg-[rgba(255,255,255,0.04)]"
             >
               <div className="flex items-center gap-3">
                 <div className="text-sm font-semibold text-[var(--color-token-foreground)]">/{skill.name}</div>
@@ -1059,7 +1059,7 @@ function HelpPanel({
   )
 
   const renderCommand = (command: SlashCommandOption) => (
-    <div key={command.name} className="flex min-w-0 items-start gap-3 border-t border-[var(--color-token-border)] px-4 py-3 first:border-t-0">
+    <div key={command.name} className="flex min-w-0 items-start gap-3 border-t border-[rgba(255,255,255,0.08)] px-4 py-3 first:border-t-0">
       <div className="flex min-w-[120px] max-w-[45%] shrink-0 flex-wrap items-baseline gap-x-1.5 font-mono">
         <span className="text-sm font-semibold text-[var(--color-token-foreground)]">/{command.name}</span>
         {command.argumentHint ? (
@@ -1085,7 +1085,7 @@ function HelpPanel({
           return (
             <section key={group.titleKey}>
               <div className="mb-2 text-sm font-semibold text-[var(--color-token-foreground)]">{t(group.titleKey)}</div>
-              <div className="overflow-hidden rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-surface)]">
+              <div className="overflow-hidden rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)]">
                 {entries.map(renderCommand)}
               </div>
             </section>
@@ -1095,7 +1095,7 @@ function HelpPanel({
         {otherCommands.length > 0 && (
           <section>
             <div className="mb-2 text-sm font-semibold text-[var(--color-token-foreground)]">{t('slash.help.group.more')}</div>
-            <div className="overflow-hidden rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-surface)]">
+            <div className="overflow-hidden rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.03)]">
               {otherCommands.map(renderCommand)}
             </div>
             {hiddenOtherCommandCount > 0 && (

@@ -149,10 +149,10 @@ export function PermissionDialog({ sessionId, requestId, toolName, input, descri
   const allowRawToggle = !preview
   const isFloating = variant === 'floating'
   const containerClassName = isFloating
-    ? `overflow-hidden rounded-[var(--radius-3xl)] border ${
+    ? `liquid-glass glass-panel overflow-hidden rounded-[var(--radius-3xl)] ${
         isPending
-          ? 'border-white/10 bg-[rgba(42,42,42,0.96)] shadow-[0_28px_90px_rgba(0,0,0,0.52)] backdrop-blur-[18px]'
-          : 'border-white/7 bg-[rgba(42,42,42,0.9)] opacity-85 backdrop-blur-[18px]'
+          ? ''
+          : 'opacity-85'
       }`
     : `mb-4 overflow-hidden rounded-[var(--radius-lg)] border ${
         isPending

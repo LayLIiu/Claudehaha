@@ -7,7 +7,12 @@ import { Collapse } from './Collapse'
 import { CadencedShimmerText } from './StreamingIndicator'
 import { RollingDiffStats } from './RollingDiffStats'
 import type { DiffStats } from './diffStats'
-import { calculateDiffStats } from './diffStats'
+import {
+  aggregateToolEditStats,
+  extractToolEditStats as extractEditStats,
+  summarizeToolEditFiles,
+  type ToolEditStats,
+} from './toolEditSummary'
 import { useTranslation } from '../../i18n'
 import type { TranslationKey } from '../../i18n'
 import { SETTINGS_TAB_ID, useTabStore } from '../../stores/tabStore'
@@ -39,12 +44,6 @@ type Props = {
   agentTaskNotifications: Record<string, AgentTaskNotification>
   /** When true, the last tool is still executing — show expanded */
   isStreaming?: boolean
-}
-
-type ToolEditStats = {
-  label: string
-  additions: number
-  deletions: number
 }
 
 /** Stats for Codex-style structured tool activity summary */
@@ -188,144 +187,6 @@ function generateActiveTitle(toolCall: ToolCall | null): string {
   }
 }
 
-function getPathLeaf(path: string): string {
-  return path.replace(/\\/g, '/').split('/').filter(Boolean).pop() || path
-}
-
-function extractStringField(input: unknown, key: string): string | null {
-  if (!input || typeof input !== 'object') return null
-  const value = (input as Record<string, unknown>)[key]
-  return typeof value === 'string' ? value : null
-}
-
-function extractPartialJsonStringField(source: string, field: string): string | null {
-  const key = `"${field}"`
-  const keyIndex = source.indexOf(key)
-  if (keyIndex < 0) return null
-  const colonIndex = source.indexOf(':', keyIndex + key.length)
-  if (colonIndex < 0) return null
-
-  let index = colonIndex + 1
-  while (index < source.length && /\s/.test(source[index] ?? '')) index += 1
-  if (source[index] !== '"') return null
-  index += 1
-
-  let value = ''
-  while (index < source.length) {
-    const char = source[index]
-    if (char === '"') return value
-    if (char !== '\\') {
-      value += char
-      index += 1
-      continue
-    }
-
-    const escaped = source[index + 1]
-    if (escaped === undefined) break
-    switch (escaped) {
-      case 'n':
-        value += '\n'
-        index += 2
-        break
-      case 'r':
-        value += '\r'
-        index += 2
-        break
-      case 't':
-        value += '\t'
-        index += 2
-        break
-      case 'b':
-        value += '\b'
-        index += 2
-        break
-      case 'f':
-        value += '\f'
-        index += 2
-        break
-      case '"':
-      case '\\':
-      case '/':
-        value += escaped
-        index += 2
-        break
-      case 'u': {
-        const hex = source.slice(index + 2, index + 6)
-        if (/^[0-9a-fA-F]{4}$/.test(hex)) {
-          value += String.fromCharCode(Number.parseInt(hex, 16))
-          index += 6
-        } else {
-          index = source.length
-        }
-        break
-      }
-      default:
-        value += escaped
-        index += 2
-        break
-    }
-  }
-  return value
-}
-
-function extractEditStats(toolCall: ToolCall): ToolEditStats | null {
-  const filePath = extractStringField(toolCall.input, 'file_path')
-  const label = filePath ? getPathLeaf(filePath) : ''
-
-  if (toolCall.toolName === 'Write') {
-    const content = extractStringField(toolCall.input, 'content')
-      ?? (toolCall.partialInput ? extractPartialJsonStringField(toolCall.partialInput, 'content') : null)
-    if (content === null) return label ? { label, additions: 0, deletions: 0 } : null
-    const { additions, deletions } = calculateDiffStats('', content)
-    return { label: label || '文件', additions, deletions }
-  }
-
-  if (toolCall.toolName === 'Edit') {
-    const oldString = extractStringField(toolCall.input, 'old_string') ?? ''
-    const newString = extractStringField(toolCall.input, 'new_string')
-      ?? (toolCall.partialInput ? extractPartialJsonStringField(toolCall.partialInput, 'new_string') : null)
-    if (newString === null) return label ? { label, additions: 0, deletions: 0 } : null
-    const { additions, deletions } = calculateDiffStats(oldString, newString)
-    return { label: label || '文件', additions, deletions }
-  }
-
-  if (toolCall.toolName === 'MultiEdit') {
-    const edits = Array.isArray((toolCall.input as Record<string, unknown> | null)?.edits)
-      ? ((toolCall.input as Record<string, unknown>).edits as Array<Record<string, unknown>>)
-      : []
-    let additions = 0
-    let deletions = 0
-    for (const edit of edits) {
-      const oldString = typeof edit.old_string === 'string' ? edit.old_string : ''
-      const newString = typeof edit.new_string === 'string' ? edit.new_string : ''
-      const diff = calculateDiffStats(oldString, newString)
-      additions += diff.additions
-      deletions += diff.deletions
-    }
-    if (!label && edits.length === 0) return null
-    return { label: label || '文件', additions, deletions }
-  }
-
-  return null
-}
-
-function aggregateEditStats(toolCalls: ToolCall[]): DiffStats | null {
-  let additions = 0
-  let deletions = 0
-  let hasStats = false
-
-  for (const toolCall of toolCalls) {
-    const stats = extractEditStats(toolCall)
-    if (!stats) continue
-    hasStats = true
-    additions += stats.additions
-    deletions += stats.deletions
-  }
-
-  if (!hasStats || (additions === 0 && deletions === 0)) return null
-  return { additions, deletions }
-}
-
 function getSummaryKey(toolCalls: ToolCall[]): string {
   return toolCalls
     .map((toolCall) => `${toolCall.toolUseId}:${toolCall.status ?? ''}:${toolCall.toolName}`)
@@ -343,6 +204,33 @@ function ActiveEditTitle({
       <span className="shrink-0 text-[11px] text-[rgba(255,255,255,0.46)]">·</span>
       <RollingDiffStats stats={stats} variant="inline" className="text-[13px] font-medium" />
     </span>
+  )
+}
+
+function ToolEditFileSummaryRows({
+  files,
+}: {
+  files: ReturnType<typeof summarizeToolEditFiles>
+}) {
+  if (files.length === 0) return null
+
+  return (
+    <div className="mb-1 space-y-0.5" data-testid="tool-edit-file-summaries">
+      {files.map((file) => (
+        <div
+          key={file.path}
+          className="flex min-h-7 items-center gap-2 rounded-[var(--radius-xs)] px-2 py-1 text-[12px] text-[var(--color-token-conversation-summary-trailing)]"
+          title={file.path}
+        >
+          <span className="material-symbols-outlined icon-xs shrink-0 text-[var(--color-token-input-placeholder-foreground)]">draft</span>
+          <span className="min-w-0 flex-1 truncate font-[var(--font-mono)]">{file.label}</span>
+          {file.editCount > 1 ? (
+            <span className="shrink-0 text-[10px] text-[var(--color-token-text-secondary)]">×{file.editCount}</span>
+          ) : null}
+          <RollingDiffStats stats={file} variant="inline" className="text-[13px] font-medium" />
+        </div>
+      ))}
+    </div>
   )
 }
 
@@ -685,7 +573,8 @@ function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent }: Pr
   const activeEditStats = useMemo(() => {
     return activeToolCall ? extractEditStats(activeToolCall) : null
   }, [activeToolCall])
-  const completedEditStats = useMemo(() => aggregateEditStats(toolCalls), [toolCalls])
+  const completedEditStats = useMemo(() => aggregateToolEditStats(toolCalls), [toolCalls])
+  const editFileSummaries = useMemo(() => summarizeToolEditFiles(toolCalls), [toolCalls])
   const summaryKey = useMemo(() => getSummaryKey(toolCalls), [toolCalls])
   const summaryContent = completedEditStats ? (
     <span className="flex min-w-0 items-center gap-1.5">
@@ -724,6 +613,7 @@ function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent }: Pr
 
       <Collapse open={expanded}>
         <div className="ml-3 mt-1 space-y-1 border-l border-[var(--color-token-border)]/38 pl-3">
+          <ToolEditFileSummaryRows files={editFileSummaries} />
           {toolCalls.map((tc) => {
             return (
               <ToolCallTree

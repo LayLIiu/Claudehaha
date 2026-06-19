@@ -203,7 +203,7 @@ export function OpenProjectMenu({
           <div
             ref={menuRef}
             role="menu"
-            className="fixed z-50 min-w-[220px] overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-token-border)] bg-[var(--color-surface)] py-1 shadow-[var(--shadow-dropdown)]"
+            className="liquid-glass glass-panel fixed z-50 min-w-[220px] overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)]"
             style={{ top: rect.bottom + 6, right: Math.max(12, window.innerWidth - rect.right) }}
           >
             {targets.map((target) => (
@@ -212,7 +212,7 @@ export function OpenProjectMenu({
                 type="button"
                 role="menuitem"
                 onClick={() => void handleOpenTarget(target.id)}
-                className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-[var(--color-token-foreground)] transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:bg-[var(--color-surface-hover)]"
+                className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-[var(--color-token-foreground)] transition-colors hover:bg-[rgba(255,255,255,0.04)] focus-visible:bg-[rgba(255,255,255,0.04)]"
               >
                 <span className="flex h-7 w-7 items-center justify-center text-[var(--color-token-text-secondary)]">
                   <TargetIcon target={target} size={24} />
@@ -247,7 +247,7 @@ export function OpenProjectMenu({
           ref={menuRef}
           role="dialog"
           aria-label="环境信息"
-          className="fixed z-[340] w-[min(280px,calc(100vw-32px))] overflow-hidden rounded-[var(--radius-lg)] border border-[rgba(255,255,255,0.1)] bg-[rgba(48,48,50,0.94)] shadow-[0_12px_36px_rgba(0,0,0,0.4)] backdrop-blur-[24px]"
+          className="liquid-glass glass-panel fixed z-[340] w-[min(280px,calc(100vw-32px))] overflow-hidden rounded-[var(--radius-lg)] p-1.5 shadow-[var(--shadow-dropdown)]"
           style={{
             top: rect.bottom + 6,
             right: Math.max(12, window.innerWidth - rect.right),

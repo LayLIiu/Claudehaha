@@ -99,8 +99,8 @@ export default function NewTaskModal() {
 
           {/* ═══ MODAL OVERLAY ═══════════════════════════════════════ */}
           <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-on-surface)]/40 backdrop-blur-sm">
-            <div
-              className="bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] w-full max-w-lg rounded-xl overflow-hidden flex flex-col"
+	            <div
+	              className="liquid-glass glass-panel w-full max-w-lg rounded-[var(--radius-2xl)] overflow-hidden flex flex-col"
               style={{
                 boxShadow:
                   '0 4px 20px rgba(27,28,26,0.04), 0 12px 40px rgba(27,28,26,0.08)',

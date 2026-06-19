@@ -279,7 +279,7 @@ export function ContextUsageIndicator({
         </span>
       </button>
 
-      <div className={`sidebar-codex-menu pointer-events-none absolute bottom-full right-0 z-40 mb-2 w-[320px] max-w-[calc(100vw-2rem)] translate-y-1 rounded-[var(--radius-2xl)] border border-[var(--color-token-border)] p-3 text-left opacity-0 shadow-[var(--shadow-dropdown)] transition-all duration-150 group-hover/context:translate-y-0 group-hover/context:opacity-100 group-focus-within/context:translate-y-0 group-focus-within/context:opacity-100 ${
+      <div className={`sidebar-codex-menu liquid-glass glass-panel pointer-events-none absolute bottom-full right-0 z-40 mb-2 w-[320px] max-w-[calc(100vw-2rem)] translate-y-1 rounded-[var(--radius-2xl)] p-3 text-left opacity-0 transition-all duration-150 group-hover/context:translate-y-0 group-hover/context:opacity-100 group-focus-within/context:translate-y-0 group-focus-within/context:opacity-100 ${
         compact ? 'hidden' : ''
       }`}>
         <div className="flex items-start justify-between gap-3">

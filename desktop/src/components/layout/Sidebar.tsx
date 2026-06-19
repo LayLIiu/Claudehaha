@@ -1116,7 +1116,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
         return renderSidebarOverlay(
           <div
             role="menu"
-            className="sidebar-codex-menu fixed z-[320] w-[232px] overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--color-token-border)] p-1.5 shadow-[var(--shadow-dropdown)]"
+            className="sidebar-codex-menu liquid-glass glass-panel fixed z-[320] w-[232px] overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)]"
             style={positionSessionMenu(contextMenu.x, contextMenu.y)}
             onClick={(event) => event.stopPropagation()}
           >
@@ -1154,7 +1154,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
         return renderSidebarOverlay(
           <div
             role="menu"
-            className="sidebar-codex-menu fixed z-[320] w-[286px] overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--color-token-border)] p-1.5 shadow-[var(--shadow-dropdown)]"
+            className="sidebar-codex-menu liquid-glass glass-panel fixed z-[320] w-[286px] overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)]"
             style={positionProjectMenu(projectContextMenu.x, projectContextMenu.y)}
             onClick={(event) => event.stopPropagation()}
           >
@@ -1415,7 +1415,7 @@ function ProjectHeaderMenu({
 }) {
   const width = type === 'sort' ? 230 : type === 'create' ? 250 : 270
   const style: React.CSSProperties = { left: x, top: y, width, boxShadow: 'var(--shadow-dropdown)' }
-  const className = 'fixed z-50 overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--color-token-border)] bg-[var(--color-token-main-surface-primary)] py-2 shadow-[var(--shadow-dropdown)]'
+  const className = 'liquid-glass glass-panel fixed z-50 overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)]'
 
   if (type === 'create') {
     return (
@@ -1510,7 +1510,7 @@ function HeaderMenuItem({
       role="menuitem"
       onClick={onClick}
       onMouseEnter={onMouseEnter}
-      className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-semibold text-[var(--color-token-foreground)] transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:bg-[var(--color-surface-hover)]"
+      className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-semibold text-[var(--color-token-foreground)] transition-colors hover:bg-[rgba(255,255,255,0.04)] focus-visible:outline-none focus-visible:bg-[rgba(255,255,255,0.04)]"
     >
       <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[var(--color-token-text-secondary)]">
         {icon}

@@ -189,7 +189,7 @@ function ChatSelectionMenu({
       type="button"
       onMouseDown={(event) => event.preventDefault()}
       onClick={onAdd}
-      className="fixed z-50 inline-flex h-11 items-center gap-2 rounded-full border border-[var(--color-token-border)]/70 bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-5 text-[15px] font-semibold text-[var(--color-token-foreground)] shadow-[0_10px_28px_rgba(15,23,42,0.14),0_2px_8px_rgba(15,23,42,0.08)] transition-colors hover:bg-[var(--color-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
+      className="liquid-glass glass-panel fixed z-50 inline-flex h-11 items-center gap-2 rounded-full px-5 text-[15px] font-semibold text-[var(--color-token-foreground)] shadow-[var(--shadow-dropdown)] transition-colors hover:bg-white/[0.085] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
       style={{ left: selection.x, top: selection.y }}
     >
       <MessageCircle size={21} strokeWidth={2.15} className="shrink-0 text-[var(--color-token-foreground)]" aria-hidden="true" />
@@ -2798,7 +2798,7 @@ function TurnProcessSection({
   onToggle: () => void
   renderInnerItem: (item: RenderItem) => ReactNode
 }) {
-  const { processItems, startTime, endTime } = group
+  const { processItems, startTime, endTime, stepCount } = group
   const t = useTranslation()
 
   // Compute elapsed time for this turn (WorkedForTimer)
@@ -2827,47 +2827,54 @@ function TurnProcessSection({
     if (allToolCalls.length === 0) return ''
     return generateToolActivitySummary(allToolCalls, t)
   }, [allToolCalls, t])
+  const trailingSummary = activitySummary || (stepCount > 0 ? `${stepCount} 个步骤` : '')
 
   return (
-    <div className="flex flex-col">
-      {/* Toggle: "已处理" + activity summary + elapsed timer */}
+    <div className="codex-turn-process" data-expanded={isExpanded ? 'true' : 'false'}>
       <button
         type="button"
         onClick={onToggle}
-        className="flex items-center gap-2 px-1 py-2 text-[var(--text-size-chat)] text-[var(--color-token-description-foreground)] transition-colors cursor-pointer hover:text-[var(--color-token-foreground)]"
+        aria-expanded={isExpanded}
+        data-testid="turn-process-trigger"
+        className="codex-turn-process-trigger"
       >
         <span
-          className="turn-chevron icon-2xs text-[var(--color-token-input-placeholder-foreground)]"
+          className="turn-chevron codex-turn-process-chevron"
           data-rotated={isExpanded ? 'true' : 'false'}
+          aria-hidden="true"
         >
           {'▸'}
         </span>
-        <span className="font-medium">{t('chat.turnProcessed')}</span>
-        {!isExpanded && activitySummary && (
-          <span className="text-[11px] text-[var(--color-token-conversation-summary-trailing)] truncate">
-            {activitySummary}
+        <span className="codex-turn-process-title">{t('chat.turnProcessed')}</span>
+        {!isExpanded && trailingSummary && (
+          <span className="codex-turn-process-summary">
+            {trailingSummary}
           </span>
         )}
         {elapsedText && (
-          <span className="text-[11px] font-mono tabular-nums text-[var(--color-token-text-secondary)]">
+          <span className="codex-turn-process-time">
             {elapsedText}
           </span>
         )}
       </button>
 
-      {/* Collapsible content — height/opacity transition */}
-      <Collapse open={isExpanded} duration={420}>
-        <div className="space-y-1 pl-2 border-l border-[var(--color-token-border)]/30">
-          {processItems.map((pi) => (
-            <div key={pi.kind === 'message' ? pi.message.id : pi.id}>
-              {renderInnerItem(pi)}
-            </div>
-          ))}
-        </div>
+      <Collapse
+        open={isExpanded}
+        duration={560}
+        easing="cubic-bezier(0.16, 1, 0.3, 1)"
+        collapsedOffset={8}
+        className="codex-turn-process-collapse"
+        contentClassName="codex-turn-process-content"
+        testId="turn-process-collapse"
+      >
+        {processItems.map((pi) => (
+          <div className="codex-turn-process-item" key={pi.kind === 'message' ? pi.message.id : pi.id}>
+            {renderInnerItem(pi)}
+          </div>
+        ))}
       </Collapse>
 
-      {/* Divider */}
-      <div className="h-px bg-[rgba(255,255,255,0.08)]" />
+      <div className="codex-turn-process-divider" />
     </div>
   )
 }

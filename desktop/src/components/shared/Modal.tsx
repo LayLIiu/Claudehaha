@@ -32,7 +32,7 @@ export function Modal({ open, onClose, title, children, width = 560, footer }: M
 
       {/* Modal content */}
       <div
-        className="glass-panel relative rounded-[var(--radius-2xl)] max-h-[85vh] flex flex-col overflow-hidden"
+	        className="liquid-glass glass-panel relative rounded-[var(--radius-2xl)] max-h-[85vh] flex flex-col overflow-hidden"
         style={{ width, maxWidth: 'calc(100vw - 48px)' }}
         role="dialog"
         aria-modal="true"

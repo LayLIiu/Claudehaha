@@ -791,7 +791,7 @@ export function ActivitySettings() {
 
       {isEditingProfile && createPortal(
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-[var(--color-overlay-scrim)] px-4 py-8" role="dialog" aria-modal="true" aria-labelledby="activity-profile-dialog-title">
-          <div className="w-full max-w-[420px] rounded-xl border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] p-5 shadow-2xl">
+          <div className="liquid-glass glass-panel w-full max-w-[420px] rounded-[var(--radius-2xl)] p-5 shadow-[var(--shadow-dropdown)]">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 id="activity-profile-dialog-title" className="text-base font-semibold text-[var(--color-token-foreground)]">{t('settings.activity.editProfile')}</h2>

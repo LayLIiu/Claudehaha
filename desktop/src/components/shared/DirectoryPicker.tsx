@@ -166,7 +166,7 @@ export function DirectoryPicker({ value, onChange, variant = 'chip', isGitProjec
     ? 'flex h-9 min-w-0 items-center gap-1.5 rounded-[var(--radius-sm)] border border-transparent px-2.5 text-[13px] font-medium leading-none text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35'
     : 'flex items-center gap-2 text-xs text-[var(--color-token-text-secondary)] hover:text-[var(--color-token-text-secondary)] transition-colors'
 
-  const dropdownClassName = 'glass-panel overflow-hidden rounded-[var(--radius-xl)] shadow-[var(--shadow-dropdown)]'
+  const dropdownClassName = 'liquid-glass glass-panel overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)]'
   const dropdownStyle = {
     position: 'fixed' as const,
     left: dropdownPos?.left,
@@ -196,7 +196,7 @@ export function DirectoryPicker({ value, onChange, variant = 'chip', isGitProjec
               <button
                 key={project.projectPath}
                 onClick={() => handleSelect(project.realPath)}
-                className={`flex w-full items-center gap-3 px-4 text-left transition-colors hover:bg-[var(--color-surface-hover)] ${
+                className={`flex w-full items-center gap-3 px-4 text-left transition-colors hover:bg-[rgba(255,255,255,0.04)] ${
                   isMobileBrowser ? 'min-h-[72px] py-3.5' : 'py-3'
                 } ${
                   isSelected ? 'bg-[var(--color-surface-selected)]' : ''
@@ -228,10 +228,10 @@ export function DirectoryPicker({ value, onChange, variant = 'chip', isGitProjec
           })
         )}
       </div>
-      <div className="border-t border-[var(--color-token-border)]">
-        <button
-          onClick={handleChooseFolder}
-          className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--color-surface-hover)]"
+<div className="border-t border-[rgba(255,255,255,0.08)]">
+	        <button
+	          onClick={handleChooseFolder}
+	          className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[rgba(255,255,255,0.04)]"
         >
           <span className="material-symbols-outlined icon-md text-[var(--color-token-text-secondary)]">create_new_folder</span>
           <span className="text-sm text-[var(--color-token-text-secondary)]">{t('dirPicker.chooseFolder')}</span>
@@ -262,7 +262,7 @@ export function DirectoryPicker({ value, onChange, variant = 'chip', isGitProjec
         ) : (
           <>
             {browseParent && browseParent !== browsePath && (
-              <button onClick={() => loadBrowseDir(browseParent)} className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-[var(--color-surface-hover)]">
+              <button onClick={() => loadBrowseDir(browseParent)} className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-[rgba(255,255,255,0.04)]">
                 <span className="material-symbols-outlined icon-sm text-[var(--color-token-text-secondary)]">arrow_upward</span>
                 <span className="text-xs text-[var(--color-token-text-secondary)]">..</span>
               </button>
@@ -272,7 +272,7 @@ export function DirectoryPicker({ value, onChange, variant = 'chip', isGitProjec
             ) : browseEntries.map((entry) => (
               <div
                 key={entry.path}
-                className="flex w-full items-center gap-2 px-3 py-2 hover:bg-[var(--color-surface-hover)]"
+                className="flex w-full items-center gap-2 px-3 py-2 hover:bg-[rgba(255,255,255,0.04)]"
               >
                 <button
                   type="button"
@@ -291,7 +291,7 @@ export function DirectoryPicker({ value, onChange, variant = 'chip', isGitProjec
         )}
       </div>
 
-      <div className="flex items-center justify-between border-t border-[var(--color-token-border)] px-3 py-2">
+      <div className="flex items-center justify-between border-t border-[rgba(255,255,255,0.08)] px-3 py-2">
         <span className="truncate font-[var(--font-mono)] text-[10px] text-[var(--color-token-text-secondary)]">{browsePath}</span>
         <button onClick={() => handleSelect(browsePath)} className="rounded-lg bg-[var(--color-brand)] px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90">
           {t('dirPicker.useThisFolder')}

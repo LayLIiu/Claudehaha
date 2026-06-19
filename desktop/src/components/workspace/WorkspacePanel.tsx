@@ -341,7 +341,7 @@ function FloatingSelectionMenu({
       type="button"
       onMouseDown={(event) => event.preventDefault()}
       onClick={onAdd}
-      className="fixed z-50 inline-flex h-11 items-center gap-2 rounded-full border border-[var(--color-token-border)]/70 bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-5 text-[15px] font-semibold text-[var(--color-token-foreground)] shadow-[0_10px_28px_rgba(15,23,42,0.14),0_2px_8px_rgba(15,23,42,0.08)] transition-colors hover:bg-[var(--color-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
+      className="liquid-glass glass-panel fixed z-50 inline-flex h-11 items-center gap-2 rounded-full px-5 text-[15px] font-semibold text-[var(--color-token-foreground)] shadow-[var(--shadow-dropdown)] transition-colors hover:bg-[rgba(255,255,255,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
       style={{ left: selection.x, top: selection.y }}
     >
       <MessageCircle size={21} strokeWidth={2.15} className="shrink-0 text-[var(--color-token-foreground)]" aria-hidden="true" />
@@ -1524,7 +1524,7 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
       {previewTabContextMenu && (
         <div
           role="menu"
-          className="fixed z-50 min-w-[156px] rounded-[var(--radius-md)] border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] py-1 text-[12px] shadow-[var(--shadow-dropdown)]"
+          className="liquid-glass glass-panel fixed z-50 min-w-[156px] rounded-[var(--radius-2xl)] p-1.5 text-[12px] shadow-[var(--shadow-dropdown)]"
           style={{ left: previewTabContextMenu.x, top: previewTabContextMenu.y }}
           onClick={(event) => event.stopPropagation()}
         >
@@ -1532,7 +1532,7 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
             type="button"
             role="menuitem"
             onClick={() => handleClosePreviewTabs('current')}
-            className="block w-full px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
+            className="block w-full px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[rgba(255,255,255,0.04)]"
           >
             {t('tabs.close')}
           </button>
@@ -1540,7 +1540,7 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
             type="button"
             role="menuitem"
             onClick={() => handleClosePreviewTabs('others')}
-            className="block w-full px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
+            className="block w-full px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[rgba(255,255,255,0.04)]"
           >
             {t('tabs.closeOthers')}
           </button>
@@ -1548,7 +1548,7 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
             type="button"
             role="menuitem"
             onClick={() => handleClosePreviewTabs('left')}
-            className="block w-full px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
+            className="block w-full px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[rgba(255,255,255,0.04)]"
           >
             {t('tabs.closeLeft')}
           </button>
@@ -1556,16 +1556,16 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
             type="button"
             role="menuitem"
             onClick={() => handleClosePreviewTabs('right')}
-            className="block w-full px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
+            className="block w-full px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[rgba(255,255,255,0.04)]"
           >
             {t('tabs.closeRight')}
           </button>
-          <div className="my-1 border-t border-[var(--color-token-border)]" />
+          <div className="my-1 h-px rounded-full bg-[rgba(255,255,255,0.08)]" />
           <button
             type="button"
             role="menuitem"
             onClick={() => handleClosePreviewTabs('all')}
-            className="block w-full px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
+            className="block w-full px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[rgba(255,255,255,0.04)]"
           >
             {t('tabs.closeAll')}
           </button>
@@ -1613,7 +1613,7 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
               {isViewMenuOpen && (
                 <div
                   role="menu"
-                  className="absolute left-0 top-[calc(100%+4px)] z-30 min-w-[124px] overflow-hidden rounded-[var(--radius-sm)] border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] py-1 shadow-[var(--shadow-dropdown)]"
+                  className="liquid-glass glass-panel absolute left-0 top-[calc(100%+4px)] z-30 min-w-[124px] overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)]"
                 >
                   {(['changed', 'all'] as const).map((view) => {
                     const selected = activeView === view
@@ -1624,7 +1624,7 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
                         role="menuitem"
                         onClick={() => handleSetActiveView(view)}
                         className={`flex h-7 w-full items-center gap-2 px-2.5 text-left text-[12px] transition-colors ${
-                          selected ? 'bg-[var(--color-surface-selected)] text-[var(--color-token-foreground)]' : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                          selected ? 'bg-white/[0.085] text-[var(--color-token-foreground)]' : 'text-[var(--color-token-text-secondary)] hover:bg-[rgba(255,255,255,0.04)]'
                         }`}
                       >
                         <span className="min-w-0 flex-1 truncate">
@@ -1673,7 +1673,7 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
       {fileContextMenu && (
         <div
           role="menu"
-          className="fixed z-50 min-w-[156px] rounded-[var(--radius-md)] border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] py-1 text-[12px] shadow-[var(--shadow-dropdown)]"
+          className="liquid-glass glass-panel fixed z-50 min-w-[156px] rounded-[var(--radius-2xl)] p-1.5 text-[12px] shadow-[var(--shadow-dropdown)]"
           style={{ left: fileContextMenu.x, top: fileContextMenu.y }}
           onClick={(event) => event.stopPropagation()}
         >
@@ -1684,7 +1684,7 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
               addWorkspacePathToChat(fileContextMenu.path, fileContextMenu.isDirectory)
               setFileContextMenu(null)
             }}
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
+            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[rgba(255,255,255,0.04)]"
           >
             <span aria-hidden="true" className="material-symbols-outlined icon-xs text-[var(--color-token-text-secondary)]">person_add</span>
             <span>{t('workspace.addToChat')}</span>
@@ -1693,7 +1693,7 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
             type="button"
             role="menuitem"
             onClick={() => void copyWorkspacePath(fileContextMenu.path)}
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
+            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[rgba(255,255,255,0.04)]"
           >
             <span aria-hidden="true" className="material-symbols-outlined icon-xs text-[var(--color-token-text-secondary)]">content_copy</span>
             <span>{t('workspace.copyPath')}</span>
@@ -1702,7 +1702,7 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
             type="button"
             role="menuitem"
             onClick={() => void copyWorkspacePath(fileContextMenu.path, 'absolute')}
-            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[var(--color-surface-hover)]"
+            className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[var(--color-token-foreground)] hover:bg-[rgba(255,255,255,0.04)]"
           >
             <span aria-hidden="true" className="material-symbols-outlined icon-xs text-[var(--color-token-text-secondary)]">file_copy</span>
             <span>{t('workspace.copyAbsolutePath')}</span>
