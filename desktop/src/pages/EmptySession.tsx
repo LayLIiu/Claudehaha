@@ -20,8 +20,7 @@ import { FileSearchMenu, type FileSearchMenuHandle } from '../components/chat/Fi
 import { LocalSlashCommandPanel, type LocalSlashCommandName } from '../components/chat/LocalSlashCommandPanel'
 import { useMobileViewport } from '../hooks/useMobileViewport'
 import { isDesktopRuntime } from '../lib/desktopRuntime'
-import { publicAssetPath } from '../lib/publicAsset'
-import { NoiseDotBackground } from '../components/shared/NoiseDotBackground'
+import { DotGridShader } from '../components/shared/DotGridShader'
 import {
   filesToComposerAttachments,
   selectNativeFileAttachments,
@@ -563,34 +562,11 @@ export function EmptySession() {
   }
 
   return (
-    <div className="relative flex flex-1 flex-col overflow-hidden bg-[var(--color-surface)]">
-      <NoiseDotBackground />
-      <div className={`flex flex-1 flex-col items-center justify-center ${
+    <div className="relative flex flex-1 flex-col overflow-hidden">
+	      <DotGridShader />
+	      <div className={`flex flex-1 flex-col items-center justify-center ${
         isMobileComposer ? 'px-6 pb-[230px] pt-10' : 'p-8 pb-32'
       }`}>
-        <div className={`flex flex-col items-center text-center ${
-          isMobileComposer ? 'max-w-[300px]' : 'max-w-md'
-        }`}>
-          <img
-            src={publicAssetPath('app-icon.png')}
-            alt="Claude Code Haha"
-            className={isMobileComposer ? 'mb-4 h-14 w-14 opacity-90' : 'mb-5 h-16 w-16 opacity-90'}
-          />
-          <h1
-            className={`mb-2 font-semibold tracking-tight text-[var(--color-token-foreground)] ${
-              isMobileComposer ? 'text-[24px]' : 'text-[28px]'
-            }`}
-          >
-            {t('empty.title')}
-          </h1>
-          <p
-            className={`mx-auto text-[var(--color-token-text-secondary)] ${
-              isMobileComposer ? 'max-w-[280px] text-sm leading-6' : 'max-w-sm text-[14px] leading-6'
-            }`}
-          >
-            {t('empty.subtitle')}
-          </p>
-        </div>
       </div>
 
       <div
@@ -682,7 +658,7 @@ export function EmptySession() {
               {slashMenuOpen && filteredCommands.length > 0 && (
                 <div
                   ref={slashMenuRef}
-                  className="absolute bottom-full left-0 right-0 z-50 mb-2 overflow-hidden rounded-xl border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] shadow-[var(--shadow-dropdown)]"
+	                  className="liquid-glass glass-panel absolute bottom-full left-0 right-0 z-50 mb-2 overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)]"
                 >
                   <div className="max-h-[260px] overflow-y-auto py-1">
                     {filteredCommands.map((command, index) => (
@@ -692,7 +668,7 @@ export function EmptySession() {
                         onClick={() => selectSlashCommand(command.name)}
                         onMouseEnter={() => setSlashSelectedIndex(index)}
                         className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                          index === slashSelectedIndex ? 'bg-[var(--color-surface-hover)]' : 'hover:bg-[var(--color-surface-hover)]'
+                          index === slashSelectedIndex ? 'bg-[rgba(255,255,255,0.04)]' : 'hover:bg-[rgba(255,255,255,0.04)]'
                         }`}
                       >
                         <span className="flex min-w-0 max-w-[52%] shrink-0 items-baseline gap-1.5">
@@ -746,19 +722,19 @@ export function EmptySession() {
                     </button>
 
                     {plusMenuOpen && (
-                      <div className={`absolute bottom-full left-0 mb-2 rounded-xl border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] py-1 shadow-[var(--shadow-dropdown)] ${
+                      <div className={`absolute bottom-full left-0 mb-2 rounded-[var(--radius-2xl)] glass-panel p-1.5 shadow-[var(--shadow-dropdown)] ${
                         isMobileComposer ? 'w-[min(240px,calc(100vw-32px))]' : 'w-[240px]'
                       }`}>
                         <button
                           onClick={openAttachmentPicker}
-                          className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-[var(--color-token-foreground)] transition-colors hover:bg-[var(--color-surface-hover)]"
+                          className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm text-[var(--color-token-foreground)] transition-colors hover:bg-[rgba(255,255,255,0.04)]"
                         >
                           <span className="material-symbols-outlined icon-md text-[var(--color-token-text-secondary)]">attach_file</span>
                           {t('empty.addFiles')}
                         </button>
                         <button
                           onClick={insertSlashCommand}
-                          className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-[var(--color-token-foreground)] transition-colors hover:bg-[var(--color-surface-hover)]"
+                          className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm text-[var(--color-token-foreground)] transition-colors hover:bg-[rgba(255,255,255,0.04)]"
                         >
                           <span className="w-5 text-center text-[18px] font-bold text-[var(--color-token-text-secondary)]">/</span>
                           {t('empty.slashCommands')}

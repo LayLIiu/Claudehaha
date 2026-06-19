@@ -300,26 +300,26 @@
 
 /* ─── Tailwind Theme Override (matches prototype design system) ─── */
 @theme {
-  --color-primary: #8F482F;
-  --color-primary-container: #AD5F45;
-  --color-primary-fixed: #FFDBD0;
-  --color-primary-fixed-dim: #FFB59D;
+  --color-primary: #0169cc;
+  --color-primary-container: #0A7CE8;
+  --color-primary-fixed: #3399FF;
+  --color-primary-fixed-dim: #0169cc;
 
   --color-on-primary: #FFFFFF;
-  --color-on-surface: #FFFFFF;
+  --color-on-surface: #fcfcfc;
   --color-on-surface-variant: #A8A8A8;
 
-  --color-surface: #161616;
-  --color-surface-bright: #1E1E1E;
-  --color-surface-dim: #0E0E0E;
-  --color-surface-container: #1E1E1E;
-  --color-surface-container-low: #161616;
-  --color-surface-container-high: #262626;
-  --color-surface-container-highest: #2E2E2E;
+  --color-surface: #111111;
+  --color-surface-bright: #1A1A1A;
+  --color-surface-dim: #0A0A0A;
+  --color-surface-container: #1A1A1A;
+  --color-surface-container-low: #151515;
+  --color-surface-container-high: #222222;
+  --color-surface-container-highest: #2A2A2A;
   --color-surface-container-lowest: #0A0A0A;
-  --color-surface-variant: #222222;
+  --color-surface-variant: #1A1A1A;
 
-  --color-background: #0E0E0E;
+  --color-background: #111111;
 
   --color-outline: #87736D;
   --color-outline-variant: #DAC1BA;
@@ -337,7 +337,7 @@
   --color-inverse-on-surface: #F2F1ED;
   --color-inverse-primary: #FFB59D;
 
-  --color-success: #16A34A;
+  --color-success: #00a240;
   --color-success-container: #E8F5E2;
   --color-info: #2D628F;
   --color-info-container: #E4F1FF;
@@ -367,6 +367,7 @@
   --color-surface-sidebar: rgba(22, 22, 22, 0.85);
   --color-surface-hover: var(--color-surface-container-high);
   --color-surface-selected: var(--color-surface-container);
+  --color-dot-grid: hsla(0, 0%, 30%, 0.25);
   --color-memory-accent: #3B7068;
   --color-memory-surface: #F6FAF8;
   --color-memory-border: #BCCDC8;
@@ -969,25 +970,27 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --color-primary: #B7C3D9;
-  --color-primary-container: #8898B3;
-  --color-primary-fixed: #D5DEEE;
-  --color-primary-fixed-dim: #B7C3D9;
+  --color-primary: #0169cc;
+  --color-primary-container: #0A7CE8;
+  --color-primary-fixed: #3399FF;
+  --color-primary-fixed-dim: #0169cc;
 
-  --color-on-primary: #0F1726;
-  --color-on-surface: #FFFFFF;
+  --color-on-primary: #FFFFFF;
+  --color-on-surface: #fcfcfc;
   --color-on-surface-variant: #A8A8A8;
 
-  --color-surface: #171717;
-  --color-surface-bright: #242424;
-  --color-surface-dim: #111111;
-  --color-surface-container: #202020;
-  --color-surface-container-low: #1B1B1B;
-  --color-surface-container-high: #2A2A2A;
-  --color-surface-container-highest: #333333;
-  --color-surface-container-lowest: #121212;
-  --color-surface-variant: #202020;
+  --color-surface: #111111;
+  --color-surface-bright: #1A1A1A;
+  --color-surface-dim: #0A0A0A;
+  --color-surface-container: #1A1A1A;
+  --color-surface-container-low: #151515;
+  --color-surface-container-high: #222222;
+  --color-surface-container-highest: #2A2A2A;
+  --color-surface-container-lowest: #0A0A0A;
+  --color-surface-variant: #1A1A1A;
   --color-background: #111111;
+
+  --color-dot-grid: hsla(0, 0%, 100%, 0.35);
 
   --color-outline: #7D8796;
   --color-outline-variant: rgba(255, 255, 255, 0.08);
@@ -1005,8 +1008,8 @@
   --color-inverse-on-surface: #1B1B1B;
   --color-inverse-primary: #8F482F;
 
-  --color-success: #7EDB8B;
-  --color-success-container: rgba(126, 219, 139, 0.16);
+  --color-success: #00a240;
+  --color-success-container: rgba(0, 162, 64, 0.16);
   --color-info: #74E0F7;
   --color-info-container: rgba(116, 224, 247, 0.16);
   --color-warning: #F7C46C;
@@ -1015,7 +1018,7 @@
   --color-surface-sidebar: rgba(31, 31, 31, 0.92);
   --color-surface-hover: rgba(255, 255, 255, 0.055);
   --color-surface-selected: rgba(255, 255, 255, 0.10);
-  --color-memory-accent: #7DD3C7;
+  --color-memory-accent: #b06dff;
   --color-memory-surface: #1D2423;
   --color-memory-border: #334743;
   --color-memory-icon-bg: #22302E;
@@ -1072,7 +1075,7 @@
   --sidebar-panel-bg-image: none;
 
   --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-focus: rgba(183, 195, 217, 0.48);
+  --color-border-focus: rgba(1, 105, 204, 0.48);
   --color-border-separator: rgba(255, 255, 255, 0.06);
 
   --color-text-primary: var(--color-on-surface);
@@ -1085,7 +1088,7 @@
 
   --shadow-dropdown: 0 16px 40px rgba(0, 0, 0, 0.34);
   --shadow-sidebar-filter: none;
-  --shadow-focus-ring: 0 0 0 1px rgba(183, 195, 217, 0.3);
+  --shadow-focus-ring: 0 0 0 1px rgba(1, 105, 204, 0.3);
   --shadow-error-ring: 0 0 0 1px rgba(255, 180, 171, 0.26);
   --shadow-button-primary: 0 12px 24px rgba(0, 0, 0, 0.25);
   /* Codex shadow scale */
@@ -1096,8 +1099,8 @@
   --shadow-2xl: 0px 16px 32px -8px rgba(0, 0, 0, 0.24);
   --shadow-hairline: 0px 0px 0px 0.5px rgba(0, 0, 0, 0.16);
 
-  --gradient-btn-primary: linear-gradient(135deg, #4A4A4A, #5A5A5A);
-  --gradient-btn-primary-hover: linear-gradient(135deg, #5A5A5A, #4A4A4A);
+  --gradient-btn-primary: linear-gradient(135deg, #0169cc, #0A7CE8);
+  --gradient-btn-primary-hover: linear-gradient(135deg, #0A7CE8, #0169cc);
 
   --color-surface-user-msg: var(--color-surface-glass);
 
@@ -1116,17 +1119,17 @@
   --color-code-type: #CDBDFF;
   --color-code-parameter: #E5E2E1;
   --color-code-punctuation: #999999;
-  --color-code-inserted: #8EEA9A;
-  --color-code-deleted: #FFB59F;
+  --color-code-inserted: #00a240;
+  --color-code-deleted: #e02e2a;
 
-  --color-diff-added-bg: rgba(126, 219, 139, 0.12);
-  --color-diff-added-word: rgba(126, 219, 139, 0.22);
-  --color-diff-added-gutter: rgba(126, 219, 139, 0.18);
-  --color-diff-added-text: #8EEA9A;
-  --color-diff-removed-bg: rgba(255, 110, 64, 0.12);
-  --color-diff-removed-word: rgba(255, 110, 64, 0.24);
-  --color-diff-removed-gutter: rgba(255, 110, 64, 0.18);
-  --color-diff-removed-text: #FFB59F;
+  --color-diff-added-bg: rgba(0, 162, 64, 0.12);
+  --color-diff-added-word: rgba(0, 162, 64, 0.22);
+  --color-diff-added-gutter: rgba(0, 162, 64, 0.18);
+  --color-diff-added-text: #00a240;
+  --color-diff-removed-bg: rgba(224, 46, 42, 0.12);
+  --color-diff-removed-word: rgba(224, 46, 42, 0.24);
+  --color-diff-removed-gutter: rgba(224, 46, 42, 0.18);
+  --color-diff-removed-text: #e02e2a;
   --color-diff-highlight-bg: rgba(205, 189, 255, 0.12);
   --color-diff-highlight-gutter: rgba(205, 189, 255, 0.16);
   --color-diff-title-bg: var(--color-surface-container-low);
@@ -1253,7 +1256,7 @@
   --color-token-scrollbar-slider-background: rgba(255, 255, 255, 0.12);
   --color-token-scrollbar-slider-hover-background: rgba(255, 255, 255, 0.22);
   --color-token-scrollbar-slider-active-background: rgba(255, 255, 255, 0.30);
-  --color-token-editor-selection-background: rgba(183, 195, 217, 0.18);
+  --color-token-editor-selection-background: rgba(1, 105, 204, 0.18);
   --color-token-editor-warning-background: rgba(255, 200, 50, 0.12);
   --color-token-editor-warning-foreground: #f59e0b;
   --color-token-menu-background: var(--color-surface-container);
@@ -1335,8 +1338,27 @@ button, input, textarea, select, a, [role="button"] {
 }
 
 .glass-panel:focus-within {
-  border-color: rgba(255, 255, 255, 0.16);
-  box-shadow: none;
+  /* Preserve liquid-glass border/shadow when focused */
+}
+
+/* Liquid glass effect — macOS Tahoe-inspired frosted glass for popup menus
+   and floating panels.  Key characteristics:
+   • Translucent base that lets background content bleed through
+   • Heavy backdrop blur with boosted saturation (the "liquid" feel)
+   • Multi-layer radial gradient simulating light reflection at the top
+   • Bright inset highlight along the top edge
+   • Deep drop-shadow for float/elevation */
+.liquid-glass {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 40%, rgba(0, 0, 0, 0.04) 100%),
+    rgba(30, 30, 30, 0.92) !important;
+  border-color: rgba(255, 255, 255, 0.20) !important;
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.40),
+    0 2px 12px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+  backdrop-filter: blur(40px) saturate(1.8) brightness(1.05) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(1.8) brightness(1.05) !important;
 }
 
 .composer-drop-target-active {
@@ -1563,7 +1585,9 @@ button, input, textarea, select, a, [role="button"] {
 }
 
 .chat-input-dock-region--floating {
-  transform: translate3d(0, clamp(-208px, -22vh, -128px), 0);
+  bottom: auto;
+  top: 50%;
+  transform: translate3d(0, -50%, 0);
 }
 
 @keyframes permission-sheet-rise {
@@ -1681,7 +1705,7 @@ button, input, textarea, select, a, [role="button"] {
 }
 
 .empty-session-hero-panel {
-  padding: 8px 24px 24px;
+  padding: 0 24px 0;
 }
 
 .session-header-shell {
@@ -1754,7 +1778,9 @@ html.electron-macos .app-shell,
     border-right: 1px solid rgba(255, 255, 255, 0.07);
   }
   .chat-input-dock-region--floating {
-    transform: translate3d(0, clamp(-228px, -24vh, -142px), 0);
+    bottom: auto;
+    top: 50%;
+    transform: translate3d(0, -50%, 0);
   }
   .electron-macos .sidebar-panel {
     background-image: none !important;
@@ -1812,6 +1838,111 @@ html.electron-macos .app-shell,
 }
 .turn-chevron[data-rotated="true"] {
   transform: rotate(90deg);
+}
+
+.codex-turn-process {
+  width: 100%;
+  margin: 1px 0 3px;
+  color: var(--color-token-text-secondary);
+}
+
+.codex-turn-process-trigger {
+  display: inline-flex;
+  max-width: min(100%, var(--thread-content-max-width));
+  min-height: 30px;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  padding: 3px 6px 3px 2px;
+  color: color-mix(in srgb, var(--color-token-text-secondary) 88%, white);
+  font-size: 16px;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    color 180ms ease,
+    background 180ms ease,
+    transform 360ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.codex-turn-process-trigger:hover {
+  color: var(--color-token-foreground);
+  background: rgba(255,255,255,0.035);
+  transform: translateX(1px);
+}
+
+.codex-turn-process-trigger:focus-visible {
+  outline: none;
+  background: rgba(255,255,255,0.06);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.12),
+    0 0 0 4px rgba(255,255,255,0.045);
+}
+
+.codex-turn-process-chevron {
+  width: 14px;
+  color: color-mix(in srgb, var(--color-token-text-secondary) 72%, transparent);
+  font-size: 12px;
+}
+
+.codex-turn-process-title {
+  flex: 0 0 auto;
+  font-weight: 560;
+  letter-spacing: -0.015em;
+}
+
+.codex-turn-process-summary {
+  min-width: 0;
+  overflow: hidden;
+  color: color-mix(in srgb, var(--color-token-text-secondary) 82%, transparent);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.codex-turn-process-time {
+  flex: 0 0 auto;
+  color: color-mix(in srgb, var(--color-token-text-secondary) 78%, transparent);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.codex-turn-process-collapse {
+  max-width: var(--thread-content-max-width);
+}
+
+.codex-turn-process-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 1px 0 5px;
+}
+
+.codex-turn-process-item {
+  min-width: 0;
+}
+
+.codex-turn-process-item > .codex-task-stream-item,
+.codex-turn-process-item > .mb-\[3px\] {
+  margin-bottom: 0;
+}
+
+.codex-turn-process-divider {
+  height: 1px;
+  max-width: var(--thread-content-max-width);
+  margin: 1px 0 4px;
+  background: linear-gradient(
+    to right,
+    rgba(255,255,255,0.12),
+    rgba(255,255,255,0.055) 44%,
+    transparent
+  );
 }
 
 .sidebar-project-collapse {
@@ -2698,15 +2829,8 @@ mark.codex-thread-find-active {
 }
 
 .sidebar-codex-menu {
-  background:
-    radial-gradient(circle at 50% 8%, rgba(255, 255, 255, 0.08), transparent 44%),
-    color-mix(in srgb, rgba(45, 45, 45, 0.94) 92%, transparent);
-  border-color: rgba(255, 255, 255, 0.16) !important;
-  box-shadow:
-    0 18px 52px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(28px) saturate(1.12);
-  -webkit-backdrop-filter: blur(28px) saturate(1.12);
+  /* Visual effects (background, border, shadow, backdrop-filter) are now
+     provided by .liquid-glass + .glass-panel.  Only layout/typography stays. */
 }
 
 .sidebar-codex-menu-item {
@@ -2730,7 +2854,7 @@ mark.codex-thread-find-active {
 
 .sidebar-codex-menu-item:hover,
 .sidebar-codex-menu-item:focus-visible {
-  background: rgba(255, 255, 255, 0.085);
+  background: rgba(255, 255, 255, 0.04);
   outline: none;
 }
 
@@ -2745,14 +2869,14 @@ mark.codex-thread-find-active {
 
 .sidebar-codex-menu-item--danger:hover,
 .sidebar-codex-menu-item--danger:focus-visible {
-  background: rgba(255, 255, 255, 0.085);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .sidebar-codex-menu-divider {
   height: 1px;
   margin: 5px 8px;
   border-radius: var(--radius-full);
-  background: var(--color-token-border);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 
@@ -3116,6 +3240,7 @@ mark.codex-thread-find-active {
 /* ── Codex-aligned superellipse corner support ───────────────────── */
 @supports (corner-shape: superellipse(1.5)) {
   .glass-panel,
+  .liquid-glass,
   .composer-top-tray-panel,
   #content-area[data-sidebar-state="open"]:not(.app-shell-main--mobile) {
     corner-shape: superellipse(1.5);
@@ -3191,4 +3316,98 @@ mark.codex-thread-find-active {
   .current-turn-live-change-pill {
     animation: none;
   }
+}
+.current-turn-live-change-pill--button {
+  cursor: pointer;
+  pointer-events: auto;
+  transition:
+    transform 180ms cubic-bezier(0.2, 0.92, 0.24, 1.06),
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+.current-turn-live-change-pill--button:hover {
+  transform: translateY(-1px) scale(1.012);
+  border-color: rgba(255,255,255,0.24);
+  background: rgba(48,48,48,0.94);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    0 18px 38px rgba(0,0,0,0.32);
+}
+.current-turn-live-change-pill--button:active {
+  transform: translateY(0) scale(0.99);
+}
+.current-turn-live-change-pill--button:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(255,255,255,0.18),
+    0 0 0 4px rgba(90,160,255,0.22),
+    0 18px 38px rgba(0,0,0,0.32);
+}
+
+/* ── Codex-style new task hero composer ─────────────────────────── */
+.codex-new-task-composer {
+  align-items: stretch;
+}
+.codex-new-task-title {
+  margin: 0 0 34px;
+  text-align: center;
+  color: var(--color-token-foreground);
+  font-size: clamp(28px, 3.2vw, 38px);
+  font-weight: 560;
+  line-height: 1.16;
+  letter-spacing: -0.045em;
+}
+.codex-new-task-input-panel {
+  border-radius: 23px !important;
+  background: rgba(38,38,38,0.92) !important;
+  border-color: rgba(255,255,255,0.09) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.045),
+    0 18px 52px rgba(0,0,0,0.24) !important;
+}
+.codex-new-task-input-panel textarea {
+  min-height: 76px;
+  padding-top: 4px !important;
+  font-size: 16px !important;
+  line-height: 1.55 !important;
+}
+.codex-new-task-input-panel .composer-footer {
+  padding-top: 6px !important;
+}
+.codex-new-task-input-panel [data-testid='repository-launch-controls'],
+.codex-new-task-input-panel .repository-launch-controls {
+  color: var(--color-token-text-secondary);
+}
+.codex-new-task-recent-list {
+  margin: 14px auto 0;
+  width: min(100%, 760px);
+  color: rgba(255,255,255,0.58);
+}
+.codex-new-task-recent-row {
+  display: flex;
+  min-height: 42px;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  padding: 0 14px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 520;
+  letter-spacing: -0.01em;
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    transform 180ms cubic-bezier(0.2, 0.92, 0.24, 1.06);
+}
+.codex-new-task-recent-row:hover {
+  color: rgba(255,255,255,0.82);
+  background: rgba(255,255,255,0.045);
+  transform: translateX(2px);
+}
+.codex-new-task-recent-row:focus-visible {
+  outline: none;
+  background: rgba(255,255,255,0.07);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
 }

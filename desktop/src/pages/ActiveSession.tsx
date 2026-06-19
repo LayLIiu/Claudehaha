@@ -40,6 +40,7 @@ import { OpenProjectMenu } from '../components/layout/OpenProjectMenu'
 import type { SessionListItem } from '../types/session'
 import type { ActiveGoalState, UIMessage } from '../types/chat'
 import { useMobileViewport } from '../hooks/useMobileViewport'
+import { DotGridShader } from '../components/shared/DotGridShader'
 import { isDesktopRuntime } from '../lib/desktopRuntime'
 import { conversationToMarkdown, downloadMarkdownFile } from '../lib/conversationExport'
 
@@ -47,7 +48,7 @@ const TASK_POLL_INTERVAL_MS = 1000
 const WORKSPACE_RESIZE_STEP = 32
 const TERMINAL_RESIZE_STEP = 24
 const CHAT_COLUMN_WITH_WORKSPACE_CLASS =
-  'min-w-[320px] flex-1 bg-[var(--color-surface)]'
+  'min-w-[320px] flex-1'
 
 function getPathLeaf(path: string | null | undefined) {
   if (!path) return null
@@ -71,6 +72,62 @@ function getSessionTerminalCwd(session: SessionListItem | undefined) {
   if (!session) return undefined
   if (session.workDir && session.workDirExists !== false) return session.workDir
   return session.projectPath || undefined
+}
+
+type NewTaskRecentProjectItem = {
+  id: string
+  title: string
+  projectLabel: string
+  meta?: string
+}
+
+function getSessionProjectPath(session: SessionListItem) {
+  return session.workDir || session.projectRoot || session.projectPath || ''
+}
+
+function getNewTaskProjectLabel(session: SessionListItem | undefined) {
+  return getPathLeaf(session?.workDir || session?.projectRoot || session?.projectPath) || '当前项目'
+}
+
+function buildNewTaskRecentProjects(
+  sessions: SessionListItem[],
+  currentSessionId: string | null,
+): NewTaskRecentProjectItem[] {
+  const byProject = new Map<string, SessionListItem>()
+
+  for (const item of sessions) {
+    if (item.id === currentSessionId) continue
+    const projectPath = getSessionProjectPath(item)
+    if (!projectPath) continue
+    const key = projectPath.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase()
+    const previous = byProject.get(key)
+    if (!previous || new Date(item.modifiedAt).getTime() > new Date(previous.modifiedAt).getTime()) {
+      byProject.set(key, item)
+    }
+  }
+
+  return Array.from(byProject.values())
+    .sort((a, b) => new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime())
+    .slice(0, 4)
+    .map((item) => ({
+      id: item.id,
+      title: item.title?.trim() || 'Untitled Session',
+      projectLabel: getNewTaskProjectLabel(item),
+      meta: formatRecentProjectTime(item.modifiedAt),
+    }))
+}
+
+function formatRecentProjectTime(value: string) {
+  const timestamp = new Date(value).getTime()
+  if (!Number.isFinite(timestamp)) return undefined
+  const diffMs = Date.now() - timestamp
+  const minute = 60_000
+  const hour = 60 * minute
+  const day = 24 * hour
+  if (diffMs < minute) return '刚刚'
+  if (diffMs < hour) return `${Math.max(1, Math.floor(diffMs / minute))} 分钟前`
+  if (diffMs < day) return `${Math.floor(diffMs / hour)} 小时前`
+  return `${Math.floor(diffMs / day)} 天前`
 }
 
 function ActiveGoalStrip({
@@ -295,7 +352,7 @@ function TitleMenuItem({
       role="menuitem"
       onClick={onClick}
       disabled={disabled}
-      className="flex w-full items-center gap-3 rounded-[var(--radius-lg)] px-3 py-2.5 text-left text-[14px] font-semibold text-[var(--color-token-foreground)] transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:bg-[var(--color-surface-hover)] disabled:cursor-not-allowed disabled:text-[var(--color-token-text-secondary)] disabled:opacity-55 disabled:hover:bg-transparent"
+      className="flex w-full items-center gap-3 rounded-[var(--radius-lg)] px-3 py-2.5 text-left text-[14px] font-semibold text-[var(--color-token-foreground)] transition-colors hover:bg-[rgba(255,255,255,0.04)] focus-visible:outline-none focus-visible:bg-[rgba(255,255,255,0.04)] disabled:cursor-not-allowed disabled:text-[var(--color-token-text-secondary)] disabled:opacity-55 disabled:hover:bg-transparent"
     >
       <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[var(--color-token-text-secondary)]">
         {icon}
@@ -599,7 +656,12 @@ export function ActiveSession() {
   const openProjectPath = session?.workDir && session.workDirExists !== false
     ? session.workDir
     : session?.projectPath || null
-  const projectLabel = getPathLeaf(openProjectPath)
+  const newTaskProjectLabel = useMemo(() => getNewTaskProjectLabel(session), [session])
+  const newTaskHeroTitle = `我们应该在 ${newTaskProjectLabel} 中构建什么？`
+  const newTaskRecentProjects = useMemo(
+    () => buildNewTaskRecentProjects(sessions, activeTabId),
+    [activeTabId, sessions],
+  )
 
   useEffect(() => {
     setComposerDocked(false)
@@ -608,7 +670,8 @@ export function ActiveSession() {
   if (!activeTabId) return null
 
   return (
-    <div className="flex-1 flex relative overflow-hidden bg-[var(--color-surface)] text-on-surface">
+    <div className="flex-1 flex relative overflow-hidden text-on-surface">
+      <DotGridShader />
       <div data-testid="active-session-content-row" className="flex min-h-0 min-w-0 flex-1">
         <div
           data-testid="active-session-chat-column"
@@ -664,12 +727,12 @@ export function ActiveSession() {
             <div
               data-testid="empty-session-hero"
               className={[
-                'flex min-h-0 flex-1 flex-col items-center justify-center overflow-hidden px-8 pt-8',
-                compactEmptyHero ? 'pb-6' : 'pb-32',
+                'flex min-h-0 flex-1 flex-col items-center justify-end overflow-hidden px-8 pt-0',
+                compactEmptyHero ? 'pb-2' : 'pb-2',
               ].join(' ')}
             >
               <div className="empty-session-hero-panel flex w-full max-w-[760px] flex-col items-center text-center">
-                {isMemberSession ? (
+                {isMemberSession && (
                   <>
 	                    <span className={`material-symbols-outlined mb-4 text-[var(--color-token-text-secondary)] ${compactEmptyHero ? 'text-[36px]' : 'text-[48px]'}`}>smart_toy</span>
 	                    <p className="text-[var(--color-token-text-secondary)]">
@@ -677,30 +740,6 @@ export function ActiveSession() {
                         ? `${memberInfo.role} ${t('teams.working')}`
                         : t('teams.noMessages')}
                     </p>
-                  </>
-                ) : (
-                  <>
-	                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3 py-1 text-[11px] font-medium text-[var(--color-token-text-secondary)]">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-brand)]" />
-                      {projectLabel ?? t('empty.title')}
-                    </div>
-	                    <h1 className={`${compactEmptyHero ? 'mb-2 text-[28px]' : 'mb-3 text-[34px]'} font-semibold tracking-[-0.03em] text-[var(--color-token-foreground)]`}>
-                      {t('empty.title')}
-                    </h1>
-	                    <p className={`mx-auto max-w-[520px] text-[var(--color-token-text-secondary)] ${compactEmptyHero ? 'text-sm leading-6' : 'text-[15px] leading-7'}`}>
-                      {t('empty.subtitle')}
-                    </p>
-	                    <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-	                      <span className="inline-flex items-center rounded-full border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3 py-1.5 text-[11px] font-medium text-[var(--color-token-text-secondary)]">
-	                        {t('chat.addFiles')}
-	                      </span>
-	                      <span className="inline-flex items-center rounded-full border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3 py-1.5 text-[11px] font-medium text-[var(--color-token-text-secondary)]">
-	                        {t('chat.slashCommands')}
-	                      </span>
-	                      <span className="inline-flex items-center rounded-full border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3 py-1.5 text-[11px] font-medium text-[var(--color-token-text-secondary)]">
-                        {t('tabs.showWorkspace')}
-                      </span>
-                    </div>
                   </>
                 )}
               </div>
@@ -745,7 +784,7 @@ export function ActiveSession() {
                             <div
                               ref={titleMenuPortalRef}
                               role="menu"
-                              className="session-title-menu glass-panel fixed z-[80] w-[250px] overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)]"
+                              className="session-title-menu liquid-glass glass-panel fixed z-[80] w-[250px] overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)]"
                               style={{ top: titleMenuPos.top, right: titleMenuPos.right }}
                               onClick={(event) => event.stopPropagation()}
                             >
@@ -897,7 +936,18 @@ export function ActiveSession() {
                 : 'chat-input-dock-region'
             }
           >
-            <CurrentTurnLiveChangePill summary={liveTurnChangeSummary} compact={showRightPanel} />
+            <CurrentTurnLiveChangePill
+              summary={liveTurnChangeSummary}
+              compact={showRightPanel}
+              onOpenChanges={() => {
+                if (!activeTabId) return
+                const workspace = useWorkspacePanelStore.getState()
+                workspace.setMode(activeTabId, 'workspace')
+                workspace.setActiveView(activeTabId, 'changed')
+                workspace.openPanel(activeTabId)
+                void workspace.loadStatus(activeTabId)
+              }}
+            />
             <StickyThinkingIndicator visible={chatState === 'tool_executing' || chatState === 'thinking' || chatState === 'streaming'} compact={showRightPanel} />
             <div
               className="chat-input-covered-shell"
@@ -906,6 +956,13 @@ export function ActiveSession() {
               <ChatInput
                 variant={shouldFloatHeroComposer && !composerDocked ? 'hero' : 'default'}
                 compact={showRightPanel}
+                heroTitle={shouldFloatHeroComposer && !composerDocked ? newTaskHeroTitle : undefined}
+                heroRecentItems={shouldFloatHeroComposer && !composerDocked ? newTaskRecentProjects : []}
+                onOpenHeroRecentItem={(sessionId) => {
+                  const target = sessions.find((item) => item.id === sessionId)
+                  useTabStore.getState().openTab(sessionId, target?.title || 'Untitled Session', 'session')
+                  connectToSession(sessionId)
+                }}
                 onSubmitStart={() => {
                   if (shouldFloatHeroComposer) {
                     setComposerDocked(true)
