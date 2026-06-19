@@ -348,7 +348,7 @@ export function OpenProjectMenu({
       aria-expanded={open}
       title={buttonLabel}
       onClick={() => setOpen((value) => !value)}
-      className={`inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] transition-colors spring-bounce-btn focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] ${open ? 'bg-[var(--color-surface)] text-[var(--color-token-foreground)] shadow-[0_8px_18px_rgba(0,0,0,0.12)]' : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-token-foreground)]'}`}
+      className={`inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] transition-colors spring-bounce-btn focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] ${open ? 'bg-[var(--color-surface)] text-[var(--color-token-foreground)] shadow-[0_8px_18px_rgba(0,0,0,0.12)]' : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-token-foreground)]'}`}
     >
       <TargetIcon target={primaryTarget} size={17} />
     </button>
@@ -422,7 +422,7 @@ export function OpenProjectMenu({
                 type="button"
                 disabled={!sessionId}
                 onClick={() => openGitDialog('menu')}
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] text-[rgba(255,255,255,0.56)] transition-colors hover:bg-[rgba(255,255,255,0.07)] hover:text-[rgba(255,255,255,0.9)] disabled:cursor-default disabled:opacity-45"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] text-[rgba(255,255,255,0.56)] transition-colors hover:bg-[rgba(255,255,255,0.07)] hover:text-[rgba(255,255,255,0.9)] disabled:cursor-default disabled:opacity-45"
                 aria-label="更多 Git 操作"
               >
                 <Ellipsis size={15} />
@@ -617,7 +617,7 @@ function IconButton({ label, children, onClick }: { label: string; children: Rea
       aria-label={label}
       title={label}
       onClick={onClick}
-      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] text-[rgba(255,255,255,0.56)] transition-colors hover:bg-[rgba(255,255,255,0.07)] hover:text-[rgba(255,255,255,0.9)]"
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] text-[rgba(255,255,255,0.56)] transition-colors hover:bg-[rgba(255,255,255,0.07)] hover:text-[rgba(255,255,255,0.9)]"
     >
       {children}
     </button>

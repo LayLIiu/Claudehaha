@@ -209,7 +209,7 @@ export function Settings() {
   ]
 
   return (
-    <div className="settings-page-root flex-1 grid min-h-0 grid-cols-[64px_minmax(0,1fr)] lg:grid-cols-[264px_minmax(0,1fr)] overflow-hidden">
+    <div className="settings-page-root flex-1 grid min-h-0 grid-cols-[64px_minmax(0,1fr)] lg:grid-cols-[300px_minmax(0,1fr)] overflow-hidden">
       {/* Sidebar navigation */}
       <aside
         data-testid="settings-sidebar-panel"
@@ -260,13 +260,13 @@ export function Settings() {
         className={
           activeTab === 'trace'
             ? 'settings-content-panel flex-1 flex min-h-0 flex-col overflow-hidden'
-            : 'settings-content-panel flex-1 overflow-y-auto'
+            : 'settings-content-panel ml-2 flex-1 overflow-y-auto'
         }
       >
         {activeTab === 'trace' ? (
           <TraceList />
         ) : (
-          <div className="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-6 pb-8 lg:px-8 lg:py-10">
+          <div className="mx-auto flex max-w-5xl flex-col gap-8 px-3 py-6 pb-8 lg:px-5 lg:py-10">
             {activeTab === 'providers' && <ProviderSettings />}
             {activeTab === 'activity' && <ActivitySettings />}
             {activeTab === 'general' && <GeneralSettings />}

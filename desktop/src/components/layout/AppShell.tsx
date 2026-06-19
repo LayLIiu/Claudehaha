@@ -250,6 +250,7 @@ export function AppShell() {
       <main
         id="content-area"
         data-sidebar-state={showDesktopSidebar && effectiveSidebarOpen ? 'open' : 'closed'}
+        data-desktop-drag-region={desktopRuntime && !isMobileShell ? true : undefined}
         className={`app-shell-main min-w-0 flex-1 flex flex-col overflow-hidden bg-[var(--color-surface)] relative${isSettingsTab ? ' app-shell-main--settings' : ''}${isMobileShell ? ' app-shell-main--mobile' : ''}`}
       >
         {isMobileShell ? (

@@ -1351,15 +1351,11 @@ export function ChatInput({
                         : t('common.run')
                       : undefined
                 }
-                className={`flex shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-all hover:scale-[1.04] disabled:opacity-35 ${
+                className={`flex shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-all hover:scale-[1.04] disabled:opacity-35 bg-white text-black hover:brightness-95 ${
                   isMobileComposer ? 'h-10 w-10' : 'h-9 w-9'
-                } ${
-                  !isMemberSession && isActive
-                    ? 'bg-[var(--color-brand)] text-[var(--color-token-main-surface-primary)] hover:brightness-110'
-                    : 'bg-[var(--color-brand)] text-white hover:brightness-110'
                 }`}
               >
-                <span className="material-symbols-outlined icon-sm">
+                <span className="material-symbols-outlined" style={{ fontSize: 20, width: 20, height: 20, lineHeight: 1 }}>
                   {!isMemberSession && isActive ? 'stop' : 'arrow_upward'}
                 </span>
               </button>

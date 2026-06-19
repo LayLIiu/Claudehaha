@@ -114,6 +114,7 @@ async function openTraceWindow(sessionId: string) {
     minWidth: 860,
     minHeight: 560,
     title: 'Trace',
+    icon: path.join(__dirname, '..', 'dist', 'favicon.ico'),
     autoHideMenuBar: true,
     show: false,
     webPreferences: {
@@ -349,6 +350,7 @@ async function createMainWindow() {
     minWidth: MIN_WINDOW_WIDTH,
     minHeight: MIN_WINDOW_HEIGHT,
     show: false,
+    icon: path.join(__dirname, '..', 'dist', 'favicon.ico'),
     ...windowChromeOptionsForPlatform(process.platform),
     webPreferences: {
       preload: preloadPath(),

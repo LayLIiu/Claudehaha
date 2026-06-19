@@ -1520,6 +1520,7 @@ html, body, #root {
   app-region: drag;
   -webkit-app-region: drag;
 }
+
 button, input, textarea, select, a, [role="button"] {
   app-region: no-drag;
   -webkit-app-region: no-drag;
@@ -1881,11 +1882,16 @@ button, input, textarea, select, a, [role="button"] {
   background: transparent;
 }
 
+.settings-sidebar-panel {
+  background: var(--color-surface);
+}
+
 .settings-content-panel {
   background: var(--color-surface);
   position: relative;
-  border-left: 1px solid rgba(255, 255, 255, 0.075);
+  border-left: none;
   box-shadow: none;
+  margin-left: 18px;
 }
 
 .general-settings-view {
@@ -2076,6 +2082,14 @@ html.electron-macos .app-shell,
 }
 .codex-chrome-btn:active {
   transform: scale(0.9);
+}
+
+/* Chat content area: no-drag so only titlebar strip is draggable */
+.chat-input-dock-region,
+.settings-page-root,
+[data-testid="active-session-chat-column"] > .relative.min-h-0,
+[data-testid="empty-session-hero"] {
+  -webkit-app-region: no-drag;
 }
 
 .sidebar-settings-dock {

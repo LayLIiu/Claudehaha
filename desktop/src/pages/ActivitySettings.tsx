@@ -1,14 +1,7 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
-import { createPortal } from 'react-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { activityStatsApi, type ActivityStatsResponse, type DailyActivity } from '../api/activityStats'
-import {
-  desktopUiPreferencesApi,
-  getProfileAvatarUrl,
-  type DesktopProfilePreferences,
-} from '../api/desktopUiPreferences'
 import { type Locale, useTranslation } from '../i18n'
 import { useSettingsStore } from '../stores/settingsStore'
-import { publicAssetPath } from '../lib/publicAsset'
 
 type HeatmapDay = {
   date: string
@@ -68,14 +61,6 @@ const DATE_LOCALES: Record<Locale, string> = {
   jp: 'ja-JP',
   kr: 'ko-KR',
 }
-const DEFAULT_PROFILE: DesktopProfilePreferences = {
-  displayName: 'cc-haha',
-  subtitle: 'github.com/NanmiCoder/cc-haha',
-  avatarFile: null,
-  avatarUpdatedAt: null,
-}
-const DEFAULT_AVATAR_SRC = publicAssetPath('app-icon.png')
-
 function localDateKey(date: Date) {
   const year = date.getFullYear()
   const month = `${date.getMonth() + 1}`.padStart(2, '0')
@@ -215,16 +200,6 @@ function buildPluginAndSkillRankItems(stats: ActivityStatsResponse | null) {
     .filter((item) => item.count > 0)
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
     .slice(0, 6)
-}
-
-function withProfileDefaults(profile: Partial<DesktopProfilePreferences> | null | undefined): DesktopProfilePreferences {
-  return { ...DEFAULT_PROFILE, ...profile }
-}
-
-function getProfileSubtitleHref(subtitle: string) {
-  if (/^https?:\/\//i.test(subtitle)) return subtitle
-  if (/^[\w.-]+\.[a-z]{2,}(?:\/.*)?$/i.test(subtitle)) return `https://${subtitle}`
-  return null
 }
 
 function calculateHeatCellSize(width: number) {
@@ -432,18 +407,9 @@ export function ActivitySettings() {
   const t = useTranslation()
   const locale = useSettingsStore((state) => state.locale)
   const heatmapMeasureRef = useRef<HTMLDivElement | null>(null)
-  const avatarInputRef = useRef<HTMLInputElement | null>(null)
   const [stats, setStats] = useState<ActivityStatsResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [profile, setProfile] = useState<DesktopProfilePreferences>(DEFAULT_PROFILE)
-  const [profileError, setProfileError] = useState<string | null>(null)
-  const [profileStatus, setProfileStatus] = useState<string | null>(null)
-  const [isProfileLoading, setIsProfileLoading] = useState(true)
-  const [isEditingProfile, setIsEditingProfile] = useState(false)
-  const [isSavingProfile, setIsSavingProfile] = useState(false)
-  const [draftDisplayName, setDraftDisplayName] = useState(DEFAULT_PROFILE.displayName)
-  const [draftSubtitle, setDraftSubtitle] = useState(DEFAULT_PROFILE.subtitle)
   const [heatmapMode, setHeatmapMode] = useState<HeatmapMode>('daily')
   const [hoveredDate, setHoveredDate] = useState<string | null>(null)
   const [focusedDate, setFocusedDate] = useState<string | null>(null)
@@ -465,32 +431,6 @@ export function ActivitySettings() {
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  useEffect(() => {
-    let cancelled = false
-    setIsProfileLoading(true)
-    setProfileError(null)
-
-    desktopUiPreferencesApi.getPreferences()
-      .then((result) => {
-        if (cancelled) return
-        const nextProfile = withProfileDefaults(result.preferences.profile)
-        setProfile(nextProfile)
-        setDraftDisplayName(nextProfile.displayName)
-        setDraftSubtitle(nextProfile.subtitle)
-      })
-      .catch((err) => {
-        if (cancelled) return
-        setProfileError(err instanceof Error ? err.message : String(err))
-      })
-      .finally(() => {
-        if (!cancelled) setIsProfileLoading(false)
       })
 
     return () => {
@@ -626,11 +566,6 @@ export function ActivitySettings() {
       value: formatInteger(stats?.totalSessions ?? 0, locale),
     },
   ]
-  const avatarSrc = profile.avatarFile ? getProfileAvatarUrl(profile.avatarUpdatedAt) : DEFAULT_AVATAR_SRC
-  const avatarClassName = profile.avatarFile
-    ? 'h-full w-full object-cover'
-    : 'h-full w-full scale-[1.28] object-contain transition-transform'
-  const profileSubtitleHref = getProfileSubtitleHref(profile.subtitle)
   const hasUsage = Boolean(stats && (stats.totalSessions > 0 || totalTokens > 0))
   const modeOptions: Array<{ mode: HeatmapMode; label: string; help: string }> = [
     { mode: 'daily', label: t('settings.activity.mode.daily'), help: t('settings.activity.modeHelp.daily') },
@@ -638,110 +573,9 @@ export function ActivitySettings() {
     { mode: 'cumulative', label: t('settings.activity.mode.cumulative'), help: t('settings.activity.modeHelp.cumulative') },
   ]
 
-  const saveProfile = async () => {
-    setIsSavingProfile(true)
-    setProfileError(null)
-    setProfileStatus(null)
-    try {
-      const result = await desktopUiPreferencesApi.updateProfilePreferences({
-        displayName: draftDisplayName,
-        subtitle: draftSubtitle,
-      })
-      const nextProfile = withProfileDefaults(result.preferences.profile)
-      setProfile(nextProfile)
-      setDraftDisplayName(nextProfile.displayName)
-      setDraftSubtitle(nextProfile.subtitle)
-      setIsEditingProfile(false)
-      setProfileStatus(t('settings.activity.profileSaved'))
-    } catch (err) {
-      setProfileError(err instanceof Error ? err.message : t('settings.activity.profileSaveFailed'))
-    } finally {
-      setIsSavingProfile(false)
-    }
-  }
-
-  const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    event.target.value = ''
-    if (!file) return
-    setIsSavingProfile(true)
-    setProfileError(null)
-    setProfileStatus(null)
-    try {
-      const result = await desktopUiPreferencesApi.uploadProfileAvatar(file)
-      const nextProfile = withProfileDefaults(result.preferences.profile)
-      setProfile(nextProfile)
-      setDraftDisplayName(nextProfile.displayName)
-      setDraftSubtitle(nextProfile.subtitle)
-      setProfileStatus(t('settings.activity.profileSaved'))
-    } catch (err) {
-      setProfileError(err instanceof Error ? err.message : t('settings.activity.profileSaveFailed'))
-    } finally {
-      setIsSavingProfile(false)
-    }
-  }
-
-  const removeAvatar = async () => {
-    setIsSavingProfile(true)
-    setProfileError(null)
-    setProfileStatus(null)
-    try {
-      const result = await desktopUiPreferencesApi.deleteProfileAvatar()
-      setProfile(withProfileDefaults(result.preferences.profile))
-      setProfileStatus(t('settings.activity.profileSaved'))
-    } catch (err) {
-      setProfileError(err instanceof Error ? err.message : t('settings.activity.profileSaveFailed'))
-    } finally {
-      setIsSavingProfile(false)
-    }
-  }
-
   return (
     <div className="mx-auto w-full max-w-[1060px] min-w-0 pb-12">
-      <section className="relative flex min-h-[176px] flex-col items-center justify-start pt-4 text-center">
-        <div className="relative h-16 w-16 overflow-hidden rounded-full border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] shadow-[0_10px_28px_-22px_rgba(15,23,42,0.6)]">
-          <img
-            src={avatarSrc}
-            alt={`${profile.displayName} avatar`}
-            className={avatarClassName}
-            onError={(event) => {
-              event.currentTarget.src = DEFAULT_AVATAR_SRC
-              event.currentTarget.className = 'h-full w-full scale-[1.28] object-contain transition-transform'
-            }}
-          />
-        </div>
-        <div className="group/activity-profile mt-4 flex max-w-full items-center justify-center gap-2">
-          <h1 className="max-w-[min(720px,calc(100%-2.25rem))] truncate text-[28px] font-semibold tracking-tight text-[var(--color-token-foreground)] sm:text-[34px]">{profile.displayName}</h1>
-          <button
-            type="button"
-            aria-label={t('settings.activity.editProfile')}
-            title={t('settings.activity.editProfile')}
-            className="mt-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[var(--color-token-text-secondary)] opacity-0 transition-[background-color,color,opacity,transform] group-hover/activity-profile:opacity-100 hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)] focus:ring-offset-2 focus:ring-offset-[var(--color-surface)] focus-visible:opacity-100 active:translate-y-[1px] disabled:pointer-events-none disabled:opacity-0"
-            onClick={() => {
-              setIsEditingProfile(true)
-              setDraftDisplayName(profile.displayName)
-              setDraftSubtitle(profile.subtitle)
-            }}
-            disabled={isProfileLoading}
-          >
-            <span className="material-symbols-outlined icon-sm" aria-hidden="true">edit</span>
-          </button>
-        </div>
-        {profileSubtitleHref ? (
-          <a
-            href={profileSubtitleHref}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-2 inline-flex max-w-full items-center justify-center gap-2 truncate text-base text-[var(--color-token-text-secondary)] transition-colors hover:text-[var(--color-token-foreground)]"
-          >
-            <span>{profile.subtitle}</span>
-          </a>
-        ) : (
-          <div className="mt-2 max-w-full truncate text-base text-[var(--color-token-text-secondary)]">{profile.subtitle}</div>
-        )}
-        {profileStatus && <div className="mt-3 text-xs text-[var(--color-success)]">{profileStatus}</div>}
-        {profileError && !isEditingProfile && <div className="mt-3 text-xs text-[var(--color-error)]">{profileError}</div>}
-      </section>
+
 
       <section className="activity-summary-panel mx-auto mt-7 w-full max-w-[900px] overflow-hidden rounded-2xl border border-[var(--color-token-border)] bg-[var(--color-token-border)] p-px shadow-[0_12px_34px_-32px_rgba(15,23,42,0.55)]">
         {isLoading ? (
@@ -788,115 +622,6 @@ export function ActivitySettings() {
           </div>
         )}
       </section>
-
-      {isEditingProfile && createPortal(
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-[var(--color-overlay-scrim)] px-4 py-8" role="dialog" aria-modal="true" aria-labelledby="activity-profile-dialog-title">
-          <div className="liquid-glass glass-panel w-full max-w-[420px] rounded-[var(--radius-2xl)] p-5 shadow-[var(--shadow-dropdown)]">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 id="activity-profile-dialog-title" className="text-base font-semibold text-[var(--color-token-foreground)]">{t('settings.activity.editProfile')}</h2>
-                <p className="mt-1 text-xs text-[var(--color-token-text-secondary)]">{t('settings.activity.displayNameHelper')}</p>
-              </div>
-              <button
-                type="button"
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]"
-                onClick={() => {
-                  setIsEditingProfile(false)
-                  setDraftDisplayName(profile.displayName)
-                  setDraftSubtitle(profile.subtitle)
-                  setProfileError(null)
-                }}
-                aria-label={t('settings.activity.cancelEdit')}
-              >
-                <span className="material-symbols-outlined text-[17px]" aria-hidden="true">close</span>
-              </button>
-            </div>
-
-            <div className="mt-5 grid gap-4">
-              <div className="grid gap-2">
-                <label htmlFor="activity-profile-display-name" className="text-xs font-medium text-[var(--color-token-text-secondary)]">
-                  {t('settings.activity.displayName')}
-                </label>
-                <input
-                  id="activity-profile-display-name"
-                  value={draftDisplayName}
-                  onChange={(event) => setDraftDisplayName(event.target.value)}
-                  className="h-10 rounded-md border border-[var(--color-token-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-token-foreground)] outline-none transition-colors focus:border-[var(--color-token-focus-border,var(--color-border-focus))]"
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <label htmlFor="activity-profile-subtitle" className="text-xs font-medium text-[var(--color-token-text-secondary)]">
-                  {t('settings.activity.subtitle')}
-                </label>
-                <input
-                  id="activity-profile-subtitle"
-                  value={draftSubtitle}
-                  onChange={(event) => setDraftSubtitle(event.target.value)}
-                  className="h-10 rounded-md border border-[var(--color-token-border)] bg-[var(--color-surface)] px-3 text-sm text-[var(--color-token-foreground)] outline-none transition-colors focus:border-[var(--color-token-focus-border,var(--color-border-focus))]"
-                />
-              </div>
-
-              <div className="grid gap-2">
-                <div className="text-xs font-medium text-[var(--color-token-text-secondary)]">{t('settings.activity.avatar')}</div>
-                <p className="text-xs text-[var(--color-token-text-secondary)]">{t('settings.activity.avatarHelper')}</p>
-                <div className="flex flex-wrap gap-2">
-                  <input
-                    ref={avatarInputRef}
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    className="hidden"
-                    onChange={handleAvatarChange}
-                  />
-                  <button
-                    type="button"
-                    className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[var(--color-token-border)] px-2.5 text-xs font-medium text-[var(--color-token-text-secondary)] transition-[background-color,transform] hover:bg-[var(--color-surface-hover)] active:translate-y-[1px]"
-                    onClick={() => avatarInputRef.current?.click()}
-                  >
-                    <span className="material-symbols-outlined text-[15px]" aria-hidden="true">upload</span>
-                    {t('settings.activity.changeAvatar')}
-                  </button>
-                  {profile.avatarFile && (
-                    <button
-                      type="button"
-                      className="inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium text-[var(--color-token-text-secondary)] transition-[background-color,transform] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] active:translate-y-[1px]"
-                      onClick={removeAvatar}
-                    >
-                      {t('settings.activity.removeAvatar')}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {profileError && <div className="mt-4 rounded-md border border-[var(--color-error)]/30 bg-[var(--color-error)]/10 px-3 py-2 text-xs text-[var(--color-error)]">{profileError}</div>}
-
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                className="h-8 rounded-md px-3 text-xs font-medium text-[var(--color-token-text-secondary)] transition-[background-color,transform] hover:bg-[var(--color-surface-hover)] active:translate-y-[1px]"
-                onClick={() => {
-                  setIsEditingProfile(false)
-                  setDraftDisplayName(profile.displayName)
-                  setDraftSubtitle(profile.subtitle)
-                  setProfileError(null)
-                }}
-              >
-                {t('settings.activity.cancelEdit')}
-              </button>
-              <button
-                type="button"
-                className="h-8 rounded-md bg-[var(--color-token-foreground)] px-3 text-xs font-medium text-[var(--color-surface)] transition-[opacity,transform] active:translate-y-[1px] disabled:opacity-50"
-                onClick={saveProfile}
-                disabled={isSavingProfile}
-              >
-                {t('settings.activity.saveProfile')}
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body,
-      )}
 
       <div className="mt-10">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

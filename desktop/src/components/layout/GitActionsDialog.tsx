@@ -331,7 +331,7 @@ function ModalFrame({
             <button
               type="button"
               onClick={onBack}
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] text-[rgba(255,255,255,0.56)] transition-colors hover:bg-[rgba(255,255,255,0.07)] hover:text-[rgba(255,255,255,0.9)]"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] text-[rgba(255,255,255,0.56)] transition-colors hover:bg-[rgba(255,255,255,0.07)] hover:text-[rgba(255,255,255,0.9)]"
             >
               <span className="material-symbols-outlined text-[16px]">arrow_back</span>
             </button>
@@ -341,7 +341,7 @@ function ModalFrame({
         <button
           type="button"
           onClick={onClose}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] text-[rgba(255,255,255,0.56)] transition-colors hover:bg-[rgba(255,255,255,0.07)] hover:text-[rgba(255,255,255,0.9)]"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] text-[rgba(255,255,255,0.56)] transition-colors hover:bg-[rgba(255,255,255,0.07)] hover:text-[rgba(255,255,255,0.9)]"
         >
           <span className="material-symbols-outlined text-[16px]">close</span>
         </button>
