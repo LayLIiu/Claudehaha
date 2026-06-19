@@ -248,10 +248,11 @@ export function ContextUsageIndicator({
   const strokeColor = percentage >= 90
     ? 'var(--color-error)'
     : 'var(--color-token-text-secondary)'
+  const trackColor = 'var(--color-surface-container-highest)'
   const ringStyle = {
     background: displayContext
-      ? `conic-gradient(${strokeColor} ${percentage * 3.6}deg, var(--color-surface-container-high) 0deg)`
-      : 'var(--color-surface-container-high)',
+      ? `conic-gradient(${strokeColor} ${percentage * 3.6}deg, ${trackColor} 0deg)`
+      : trackColor,
   }
   const displayModel = firstNonEmpty(context?.model, inspectionModel, fallbackModelLabel)
   const ariaLabel = displayContext
