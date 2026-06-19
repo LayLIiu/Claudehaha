@@ -19,7 +19,7 @@ export const UserMessage = memo(function UserMessage({ content, attachments, bra
       <div
         data-message-shell="user"
         data-local-conversation-user-anchor=""
-        className="group/message relative flex min-w-0 max-w-[88%] flex-col items-end sm:max-w-[82%] lg:max-w-[72%]"
+        className="group/message relative flex min-w-0 max-w-[77%] flex-col items-end"
       >
         <div className="flex max-w-full flex-col items-end gap-2">
           {attachments && attachments.length > 0 && (
@@ -29,7 +29,7 @@ export const UserMessage = memo(function UserMessage({ content, attachments, bra
           {hasText && (
             <div
               data-user-message-bubble={true}
-              className="user-message-bubble min-w-0 max-w-full rounded-[var(--radius-xl)] border border-[var(--color-token-border)] bg-[var(--color-token-input-background)] px-4 py-3 text-[var(--text-size-chat)] leading-[calc(var(--text-size-chat)_+_8px)] text-[var(--color-token-foreground)] whitespace-pre-wrap break-words"
+              className="user-message-bubble min-w-0 max-w-full rounded-[var(--radius-2xl)] bg-[var(--color-surface-container-high)] px-3 py-2 text-[var(--text-size-chat)] leading-[calc(var(--text-size-chat)_+_8px)] text-[var(--color-token-foreground)] whitespace-pre-wrap break-words"
               style={{
                 overflowWrap: 'anywhere',
                 wordBreak: 'break-word',

@@ -73,9 +73,9 @@ export const AssistantMessage = memo(function AssistantMessage({ content, isStre
         data-message-shell="assistant"
         data-layout="document"
         data-local-conversation-final-assistant=""
-        className="assistant-task-block group/message relative flex min-w-0 w-full max-w-[var(--thread-content-max-width)] flex-col items-start"
+        className="group/group group/message flex min-w-0 w-full max-w-[var(--thread-content-max-width)] flex-col"
       >
-        <div className="assistant-message-flow w-full text-[var(--text-size-chat)] leading-[calc(var(--text-size-chat)_+_8px)] text-[var(--color-token-conversation-body)]">
+        <div className="w-full text-[var(--text-size-chat)] leading-[calc(var(--text-size-chat)_+_8px)] text-[var(--color-token-conversation-body)]">
           <MarkdownRenderer
             content={content}
             variant={documentLayout ? 'document' : 'default'}

@@ -99,7 +99,7 @@ export function WindowControls() {
     return (
       <div
         data-testid="window-controls"
-        className="window-traffic-light-zone fixed top-0 left-0 z-[110] flex items-center pl-[80px] h-[34px] pt-[3px]"
+        className="window-traffic-light-zone fixed top-[8px] left-0 z-[110] flex items-center pl-[80px] h-[34px]"
       >
         {/* Sidebar toggle: hidden on settings page (back button is in settings sidebar) */}
         {!isSettingsPage && (

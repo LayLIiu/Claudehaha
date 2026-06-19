@@ -363,7 +363,7 @@ export function TerminalSettings({
   return (
     <div className={`flex h-full flex-col overflow-hidden ${
       docked
-        ? 'min-h-0 bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3 py-1.5'
+        ? 'min-h-0 bg-[var(--color-surface)] px-3 py-1.5'
         : workspace
           ? 'min-h-0 bg-[var(--color-surface)] px-5 py-4'
           : 'min-h-[min(720px,calc(100vh-8rem))]'

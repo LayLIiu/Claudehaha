@@ -175,6 +175,19 @@ const TARGET_DEFINITIONS: TargetDefinition[] = [
     },
   },
   {
+    id: 'xcode',
+    kind: 'ide',
+    label: 'Xcode',
+    icon: 'xcode',
+    platforms: ['darwin'],
+    appPaths: {
+      darwin: ['/Applications/Xcode.app', posixPath.join(homedir(), 'Applications', 'Xcode.app')],
+    },
+    iconPaths: {
+      darwin: ['/Applications/Xcode.app/Contents/Resources/Xcode.icns'],
+    },
+  },
+  {
     id: 'finder',
     kind: 'file_manager',
     label: 'Finder',
@@ -182,6 +195,23 @@ const TARGET_DEFINITIONS: TargetDefinition[] = [
     platforms: ['darwin'],
     iconPaths: {
       darwin: ['/System/Library/CoreServices/Finder.app/Contents/Resources/Finder.icns'],
+    },
+    fallback: true,
+  },
+  {
+    id: 'terminal',
+    kind: 'ide',
+    label: 'Terminal',
+    icon: 'terminal',
+    platforms: ['darwin'],
+    iconPaths: {
+      darwin: ['/System/Applications/Utilities/Terminal.app/Contents/Resources/Terminal.icns'],
+    },
+    appPaths: {
+      darwin: [
+        '/System/Applications/Utilities/Terminal.app',
+        '/Applications/Utilities/Terminal.app',
+      ],
     },
     fallback: true,
   },
@@ -575,6 +605,14 @@ async function resolveLaunchPlan(
         if (definition.kind === 'file_manager' && !target.isDirectory) {
           return { command: 'open', args: ['-R', targetPath] }
         }
+        if (definition.id === 'terminal') {
+          const terminalTargetPath = target.isDirectory ? targetPath : dirname(targetPath)
+          for (const appPath of definition.appPaths?.darwin ?? []) {
+            if (await runtime.pathExists(appPath)) {
+              return { command: 'open', args: ['-a', appPath, terminalTargetPath] }
+            }
+          }
+        }
         return { command: 'open', args: [targetPath] }
       case 'win32':
         if (definition.kind === 'file_manager' && !target.isDirectory) {
@@ -589,6 +627,15 @@ async function resolveLaunchPlan(
   }
 
   if (runtime.platform === 'darwin') {
+    if (definition.id === 'terminal') {
+      const terminalTargetPath = target.isDirectory ? targetPath : dirname(targetPath)
+      for (const appPath of definition.appPaths?.darwin ?? []) {
+        if (await runtime.pathExists(appPath)) {
+          return { command: 'open', args: ['-a', appPath, terminalTargetPath] }
+        }
+      }
+    }
+
     for (const appPath of definition.appPaths?.darwin ?? []) {
       if (await runtime.pathExists(appPath)) {
         return { command: 'open', args: ['-a', appPath, targetPath] }

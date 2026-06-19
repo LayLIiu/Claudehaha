@@ -1722,6 +1722,48 @@ export class WorkspaceService {
     return { branch, remoteBranch, ahead, behind }
   }
 
+  async gitLog(sessionId: string): Promise<{
+    commits: Array<{
+      hash: string
+      shortHash: string
+      subject: string
+      author: string
+      date: string
+      refs: string[]
+    }>
+  }> {
+    const workDir = await this.requireWorkDir(sessionId)
+    const result = await this.runGit(workDir, [
+      'log',
+      '--decorate=short',
+      '--date=format:%m/%d %H:%M',
+      '--pretty=format:%H%x1f%h%x1f%ad%x1f%an%x1f%D%x1f%s%x1e',
+      '--max-count=80',
+    ])
+
+    if (result.code !== 0) {
+      return { commits: [] }
+    }
+
+    const commits = result.stdout
+      .split('\x1e')
+      .map((row) => row.trim())
+      .filter(Boolean)
+      .map((row) => {
+        const [hash = '', shortHash = '', date = '', author = '', decorate = '', subject = ''] = row.split('\x1f')
+        return {
+          hash,
+          shortHash,
+          date,
+          author,
+          refs: decorate.split(',').map((item) => item.trim()).filter(Boolean),
+          subject,
+        }
+      })
+
+    return { commits }
+  }
+
   async gitCreateBranch(sessionId: string, branchName: string): Promise<{ success: boolean; error?: string }> {
     const workDir = await this.requireWorkDir(sessionId)
 

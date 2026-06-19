@@ -23,8 +23,10 @@ const statusConfig = {
 
 export function SessionTaskBar({
   variant = 'dock',
+  placement = 'below',
 }: {
   variant?: 'dock' | 'popover'
+  placement?: 'above' | 'below'
 }) {
   const {
     tasks,
@@ -49,9 +51,12 @@ export function SessionTaskBar({
   const totalCount = tasks.length
   const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0
   const isPopover = variant === 'popover'
+  const popoverPositionClass = placement === 'above'
+    ? 'absolute bottom-[calc(100%+8px)] left-1/2 z-[330] w-[min(640px,calc(100vw-48px))] -translate-x-1/2'
+    : 'absolute right-0 top-[calc(100%+6px)] z-[330] w-[min(640px,calc(100vw-48px))]'
 
   return (
-    <div className={isPopover ? 'absolute right-0 top-[calc(100%+6px)] z-[330] w-[min(280px,calc(100vw-48px))]' : 'shrink-0 px-8'}>
+    <div className={isPopover ? popoverPositionClass : 'shrink-0 px-8'}>
       <div className={isPopover
         ? 'liquid-glass glass-panel overflow-hidden rounded-[var(--radius-lg)] shadow-[var(--shadow-dropdown)]'
         : 'liquid-glass glass-panel mx-auto mb-2 max-w-[860px] overflow-hidden rounded-[var(--radius-xl)] transition-colors'}

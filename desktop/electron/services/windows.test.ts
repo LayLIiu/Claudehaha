@@ -138,6 +138,7 @@ describe('Electron window service', () => {
       fullscreenable: false,
       vibrancy: 'sidebar',
       backgroundColor: '#00000000',
+      trafficLightPosition: { x: 18, y: 18 },
     })
     expect(windowChromeOptionsForPlatform('linux')).toEqual({
       titleBarStyle: 'default',

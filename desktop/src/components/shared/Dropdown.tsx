@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect, type CSSProperties, type ReactNode } from 'react'
+import { useGlassPanelAnimation } from '../../hooks/useGlassPanelAnimation'
 
 type DropdownItem<T extends string> = {
   value: T
@@ -32,6 +33,7 @@ export function Dropdown<T extends string>({
   const [popupPos, setPopupPos] = useState<CSSProperties | null>(null)
   const triggerRef = useRef<HTMLDivElement>(null)
   const popupRef = useRef<HTMLDivElement>(null)
+  const { animatingOut, requestClose } = useGlassPanelAnimation(() => setOpen(false))
 
   // Compute fixed position so the popup is never clipped by ancestor overflow:hidden
   useLayoutEffect(() => {
@@ -75,11 +77,11 @@ export function Dropdown<T extends string>({
         triggerRef.current && !triggerRef.current.contains(e.target as Node) &&
         popupRef.current && !popupRef.current.contains(e.target as Node)
       ) {
-        setOpen(false)
+        requestClose()
       }
     }
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false)
+      if (e.key === 'Escape') requestClose()
     }
     document.addEventListener('mousedown', handleClick)
     document.addEventListener('keydown', handleEsc)
@@ -87,11 +89,11 @@ export function Dropdown<T extends string>({
       document.removeEventListener('mousedown', handleClick)
       document.removeEventListener('keydown', handleEsc)
     }
-  }, [open])
+  }, [open, requestClose])
 
   return (
     <div ref={triggerRef} className={className || 'inline-block'}>
-      <div onClick={() => setOpen(!open)} className="cursor-pointer">
+      <div onClick={() => { if (open) requestClose(); else setOpen(true) }} className="cursor-pointer">
         {trigger}
       </div>
 
@@ -101,7 +103,7 @@ export function Dropdown<T extends string>({
           className={`
             liquid-glass glass-panel overflow-hidden rounded-[var(--radius-2xl)] p-1.5
             shadow-[var(--shadow-dropdown)]
-            animate-in fade-in slide-in-from-top-1
+            ${animatingOut ? 'glass-animate-exit' : ''}
             ${maxHeight ? 'overflow-y-auto' : ''}
           `}
           style={popupPos}
@@ -109,7 +111,7 @@ export function Dropdown<T extends string>({
           {items.map((item) => (
             <button
               key={item.value}
-              onClick={() => { onChange(item.value); setOpen(false) }}
+              onClick={() => { onChange(item.value); requestClose() }}
               className={`
                 w-full flex items-center gap-3 px-3.5 py-2.5 text-left rounded-[var(--radius-lg)] transition-colors
                 hover:bg-[rgba(255,255,255,0.04)] focus-visible:outline-none focus-visible:bg-[rgba(255,255,255,0.04)]

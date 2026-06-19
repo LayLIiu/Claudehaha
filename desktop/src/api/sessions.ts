@@ -34,6 +34,15 @@ export type SessionGitInfo = {
   changedFiles: number
   worktree: SessionGitWorktreeInfo | null
 }
+
+export type GitLogEntry = {
+  hash: string
+  shortHash: string
+  subject: string
+  author: string
+  date: string
+  refs: string[]
+}
 export type CreateSessionRepositoryOptions = {
   branch?: string | null
   worktree?: boolean
@@ -429,6 +438,10 @@ export const sessionsApi = {
       ahead: number
       behind: number
     }>(`/api/sessions/${sessionId}/git/sync-status`, {})
+  },
+
+  gitLog(sessionId: string) {
+    return api.post<{ commits: GitLogEntry[] }>(`/api/sessions/${sessionId}/git/log`, {})
   },
 
   gitCreateBranch(sessionId: string, branchName: string) {

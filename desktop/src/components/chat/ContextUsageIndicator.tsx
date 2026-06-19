@@ -87,6 +87,8 @@ export function ContextUsageIndicator({
   const [updatedAt, setUpdatedAt] = useState<number | null>(null)
   const [inspectionModel, setInspectionModel] = useState<string | null>(null)
   const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false)
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const detailsRef = useRef<HTMLDivElement>(null)
   const requestSeq = useRef(0)
   const contextIdentityRef = useRef('')
   const inFlightRequestRef = useRef<Promise<boolean> | null>(null)
@@ -217,6 +219,18 @@ export function ContextUsageIndicator({
     return () => clearInterval(timer)
   }, [chatState, messageCount, refresh])
 
+  // Close details popup on outside click
+  useEffect(() => {
+    if (!detailsOpen) return
+    const handleClick = (e: MouseEvent) => {
+      if (detailsRef.current && !detailsRef.current.contains(e.target as Node)) {
+        setDetailsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [detailsOpen])
+
   const details = useMemo(() => {
     if (!context) return []
     return pickUsedContextCategory(context)
@@ -251,13 +265,15 @@ export function ContextUsageIndicator({
       : t('contextIndicator.unavailableAria')
 
   return (
-    <div className="group/context relative pointer-events-auto">
+    <div className="relative pointer-events-auto">
       <button
         type="button"
         aria-label={ariaLabel}
         onClick={() => {
           if (compact) {
             setMobileDetailsOpen(true)
+          } else {
+            setDetailsOpen((prev) => !prev)
           }
           void refresh('manual')
         }}
@@ -279,76 +295,79 @@ export function ContextUsageIndicator({
         </span>
       </button>
 
-      <div className={`sidebar-codex-menu liquid-glass glass-panel pointer-events-none absolute bottom-full right-0 z-40 mb-2 w-[320px] max-w-[calc(100vw-2rem)] translate-y-1 rounded-[var(--radius-2xl)] p-3 text-left opacity-0 transition-all duration-150 group-hover/context:translate-y-0 group-hover/context:opacity-100 group-focus-within/context:translate-y-0 group-focus-within/context:opacity-100 ${
-        compact ? 'hidden' : ''
-      }`}>
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--color-token-text-secondary)]">
-              {t('contextIndicator.title')}
+      {!compact && detailsOpen && (
+        <div
+          ref={detailsRef}
+          className="sidebar-codex-menu liquid-glass glass-panel pointer-events-auto absolute bottom-full right-0 z-40 mb-2 w-[300px] max-w-[calc(100vw-2rem)] rounded-[var(--radius-2xl)] p-3 text-left"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[var(--color-token-text-secondary)]">
+                {t('contextIndicator.title')}
+              </div>
+              <div className="mt-0.5 truncate text-[13px] font-semibold text-[var(--color-token-foreground)]">
+                {displayModel ?? t('contextIndicator.modelUnknown')}
+              </div>
             </div>
-            <div className="mt-1 truncate text-sm font-semibold text-[var(--color-token-foreground)]">
-              {displayModel ?? t('contextIndicator.modelUnknown')}
+            <div className="shrink-0 font-mono text-lg font-semibold text-[var(--color-token-foreground)]">
+              {displayContext ? formatPercent(percentage) : '--'}
             </div>
           </div>
-          <div className="shrink-0 font-mono text-xl font-semibold text-[var(--color-token-foreground)]">
-            {displayContext ? formatPercent(percentage) : '--'}
-          </div>
-        </div>
 
-        {displayContext ? (
-          <>
-            <div className="mt-3 grid grid-cols-2 gap-2.5 font-mono text-xs">
-              <div>
-                <div className="text-[var(--color-token-text-secondary)]">{t('contextIndicator.used')}</div>
-                <div className="mt-1 text-[var(--color-token-foreground)]">{formatNumber(usedTokens)}</div>
+          {displayContext ? (
+            <>
+              <div className="mt-2.5 grid grid-cols-2 gap-2 font-mono text-[13px] leading-5">
+                <div>
+                  <div className="text-[12px] text-[var(--color-token-text-secondary)]">{t('contextIndicator.used')}</div>
+                  <div className="text-[var(--color-token-foreground)]">{formatNumber(usedTokens)}</div>
+                </div>
+                <div>
+                  <div className="text-[12px] text-[var(--color-token-text-secondary)]">{t('contextIndicator.free')}</div>
+                  <div className="text-[var(--color-token-foreground)]">{formatNumber(freeTokens)}</div>
+                </div>
+                <div className="col-span-2">
+                  <div className="text-[12px] text-[var(--color-token-text-secondary)]">{t('contextIndicator.window')}</div>
+                  <div className="text-[var(--color-token-foreground)]">{maxTokens > 0 ? formatNumber(maxTokens) : '--'}</div>
+                </div>
               </div>
-              <div>
-                <div className="text-[var(--color-token-text-secondary)]">{t('contextIndicator.free')}</div>
-                <div className="mt-1 text-[var(--color-token-foreground)]">{formatNumber(freeTokens)}</div>
-              </div>
-              <div className="col-span-2">
-                <div className="text-[var(--color-token-text-secondary)]">{t('contextIndicator.window')}</div>
-                <div className="mt-1 text-[var(--color-token-foreground)]">{maxTokens > 0 ? formatNumber(maxTokens) : '--'}</div>
-              </div>
-            </div>
-            {details.length > 0 && (
-              <div className="mt-3 space-y-2">
-                {details.map((category) => {
-                  const percent = maxTokens > 0 ? Math.max(0.5, Math.min(100, (category.tokens / maxTokens) * 100)) : 0
-                  return (
-                    <div key={category.name}>
-                      <div className="flex items-center justify-between gap-3 text-xs">
-                        <span className="min-w-0 truncate text-[var(--color-token-text-secondary)]">{category.name}</span>
-                        <span className="shrink-0 font-mono text-[var(--color-token-text-secondary)]">{formatNumber(category.tokens)}</span>
+              {details.length > 0 && (
+                <div className="mt-2.5 space-y-1.5">
+                  {details.map((category) => {
+                    const percent = maxTokens > 0 ? Math.max(0.5, Math.min(100, (category.tokens / maxTokens) * 100)) : 0
+                    return (
+                      <div key={category.name}>
+                        <div className="flex items-center justify-between gap-3 text-[12px] leading-5">
+                          <span className="min-w-0 truncate text-[var(--color-token-text-secondary)]">{category.name}</span>
+                          <span className="shrink-0 font-mono text-[var(--color-token-text-secondary)]">{formatNumber(category.tokens)}</span>
+                        </div>
+                        <div className="mt-0.5 h-1 overflow-hidden rounded-full bg-[var(--color-surface-container)]">
+                          <div className="h-full rounded-full" style={{ width: `${percent}%`, backgroundColor: category.color }} />
+                        </div>
                       </div>
-                      <div className="mt-1 h-1 overflow-hidden rounded-full bg-[var(--color-surface-container)]">
-                        <div className="h-full rounded-full" style={{ width: `${percent}%`, backgroundColor: category.color }} />
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-            <div className="mt-3 text-[11px] text-[var(--color-token-text-secondary)]">
-              {formatUpdatedAt(updatedAt, t)}
-              {contextSource === 'estimate' && (
-                <span className="ml-2 inline-flex rounded-full border border-[var(--color-token-border)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em]">
-                  {t('contextIndicator.estimate')}
-                </span>
+                    )
+                  })}
+                </div>
               )}
+              <div className="mt-2.5 text-[12px] leading-5 text-[var(--color-token-text-secondary)]">
+                {formatUpdatedAt(updatedAt, t)}
+                {contextSource === 'estimate' && (
+                  <span className="ml-2 inline-flex rounded-full border border-[var(--color-token-border)] px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em]">
+                    {t('contextIndicator.estimate')}
+                  </span>
+                )}
+              </div>
+            </>
+          ) : isPendingContext ? (
+            <div className="mt-3 text-[13px] leading-5 text-[var(--color-token-text-secondary)]">
+              {t('contextIndicator.pendingDetail')}
             </div>
-          </>
-        ) : isPendingContext ? (
-          <div className="mt-4 text-sm leading-6 text-[var(--color-token-text-secondary)]">
-            {t('contextIndicator.pendingDetail')}
-          </div>
-        ) : (
-          <div className="mt-4 text-sm leading-6 text-[var(--color-token-text-secondary)]">
-            {loading ? t('contextIndicator.loading') : t('contextIndicator.unavailableDetail')}
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="mt-3 text-[13px] leading-5 text-[var(--color-token-text-secondary)]">
+              {loading ? t('contextIndicator.loading') : t('contextIndicator.unavailableDetail')}
+            </div>
+          )}
+        </div>
+      )}
 
       {compact && (
         <MobileBottomSheet

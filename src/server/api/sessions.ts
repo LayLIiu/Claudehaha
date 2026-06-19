@@ -365,6 +365,10 @@ async function handleSessionGitRoute(
       const result = await workspaceService.gitSyncStatus(sessionId)
       return Response.json(result)
     }
+    case 'log': {
+      const result = await workspaceService.gitLog(sessionId)
+      return Response.json(result)
+    }
     case 'create-branch': {
       const body = (await req.json()) as { branchName?: string }
       if (!body.branchName || typeof body.branchName !== 'string' || body.branchName.trim().length === 0) {

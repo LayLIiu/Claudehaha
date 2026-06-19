@@ -22,6 +22,7 @@ import { AskUserQuestion } from './AskUserQuestion'
 import { StreamingIndicator, CadencedShimmerText } from './StreamingIndicator'
 import { InlineTaskSummary } from './InlineTaskSummary'
 import { CurrentTurnChangeCard } from './CurrentTurnChangeCard'
+import { summarizeToolEditFiles, type ToolEditFileSummary } from './toolEditSummary'
 import type { AgentTaskNotification, UIMessage } from '../../types/chat'
 import { formatTokenCount } from '../../lib/formatTokenCount'
 import { isTouchH5Document } from '../../lib/touchH5'
@@ -107,6 +108,10 @@ type TurnChangeCardModel = {
   checkpoint: SessionTurnCheckpoint
   workDir: string | null
   isLatest: boolean
+}
+
+type TurnEditSummary = {
+  fileStats: Map<string, ToolEditFileSummary>
 }
 
 type ChatMessageRole = 'user' | 'assistant'
@@ -1055,6 +1060,73 @@ function buildChangedFilesByRenderIndex(
   })
 
   return filesByRenderIndex
+}
+
+function buildToolEditSummariesByTurn(messages: UIMessage[]): Map<string, TurnEditSummary> {
+  const summaries = new Map<string, TurnEditSummary>()
+  let activeTurnId: string | null = null
+  let activeToolCalls: ToolCall[] = []
+
+  const flushActiveTurn = () => {
+    if (!activeTurnId || activeToolCalls.length === 0) return
+    const fileStats = new Map<string, ToolEditFileSummary>()
+    for (const stats of summarizeToolEditFiles(activeToolCalls)) {
+      fileStats.set(normalizeStatsPath(stats.path), stats)
+    }
+    if (fileStats.size > 0) {
+      summaries.set(activeTurnId, { fileStats })
+    }
+  }
+
+  for (const message of messages) {
+    if (message.type === 'user_text' && !message.pending) {
+      flushActiveTurn()
+      activeTurnId = message.id
+      activeToolCalls = []
+      continue
+    }
+
+    if (!activeTurnId || message.type !== 'tool_use') continue
+    activeToolCalls.push(message)
+  }
+
+  flushActiveTurn()
+  return summaries
+}
+
+function applyTurnEditSummaryToCheckpoint(
+  checkpoint: SessionTurnCheckpoint,
+  summary: TurnEditSummary,
+): SessionTurnCheckpoint | null {
+  if (summary.fileStats.size === 0) return null
+
+  const fileStats = Array.from(summary.fileStats.values()).map((stats) => ({
+    path: stats.path,
+    insertions: stats.additions,
+    deletions: stats.deletions,
+  }))
+  const totals = fileStats.reduce(
+    (total, item) => ({
+      insertions: total.insertions + item.insertions,
+      deletions: total.deletions + item.deletions,
+    }),
+    { insertions: 0, deletions: 0 },
+  )
+
+  return {
+    ...checkpoint,
+    code: {
+      ...checkpoint.code,
+      filesChanged: fileStats.map((stats) => stats.path),
+      insertions: totals.insertions,
+      deletions: totals.deletions,
+      fileStats,
+    },
+  }
+}
+
+function normalizeStatsPath(filePath: string): string {
+  return filePath.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase()
 }
 
 function getApiErrorMessage(error: unknown) {
@@ -2115,6 +2187,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
     ])
       .then(([checkpointResponse, workspaceStatus]) => {
         if (cancelled) return
+        const editSummaryByTurn = buildToolEditSummariesByTurn(messages)
         const targetByMessageId = new Map(
           completedTurnTargets.map((target) => [target.messageId, target] as const),
         )
@@ -2130,9 +2203,16 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
             if (!target || !checkpoint.code.available || checkpoint.code.filesChanged.length === 0) {
               return []
             }
+            const editSummary = editSummaryByTurn.get(target.messageId)
+            const displayCheckpoint = editSummary
+              ? applyTurnEditSummaryToCheckpoint(checkpoint, editSummary)
+              : checkpoint
+            if (!displayCheckpoint || displayCheckpoint.code.filesChanged.length === 0) {
+              return []
+            }
             return [{
               target,
-              checkpoint,
+              checkpoint: displayCheckpoint,
               workDir: checkpoint.workDir ?? workspaceStatus?.workDir ?? null,
               isLatest: target.messageId === latestCompletedTurnId,
             }]
@@ -2153,7 +2233,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
     return () => {
       cancelled = true
     }
-  }, [chatState, completedTurnTargets, isMemberSession, latestCompletedTurnId, resolvedSessionId])
+  }, [chatState, completedTurnTargets, isMemberSession, latestCompletedTurnId, messages, resolvedSessionId])
 
   const handleUndoCurrentTurn = useCallback(async () => {
     if (!resolvedSessionId || !confirmTurnCard || rewindingTurnId) return
@@ -2523,6 +2603,14 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
             virtualTranscriptWindow.items.map(({ item, index }) => {
               const itemKey = getRenderItemKey(item)
               const content = renderTranscriptItem(item, index)
+              // Insert an invisible separator between user and assistant items (Codex pattern)
+              const prevItem = index > 0 ? virtualTranscriptWindow.items[index - 1]?.item : undefined
+              const isUserToAssistantTransition =
+                prevItem &&
+                prevItem.kind === 'message' &&
+                prevItem.message.type === 'user_text' &&
+                item.kind === 'message' &&
+                item.message.type === 'assistant_text'
 
               return (
                 <MeasuredRenderItem
@@ -2530,6 +2618,9 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
                   itemKey={itemKey}
                   onHeightChange={handleVirtualItemHeightChange}
                 >
+                  {isUserToAssistantTransition && (
+                    <div className="w-full" aria-hidden="true" />
+                  )}
                   {content}
                 </MeasuredRenderItem>
               )
@@ -2545,12 +2636,24 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
                 data-local-conversation-final-assistant={turnGroup.hasFinalAssistant ? '' : undefined}
                 className="flex flex-col gap-0"
               >
-                {turnGroup.itemIndices.map((itemIndex) => {
+                {turnGroup.itemIndices.map((itemIndex, i) => {
                   const item = renderItems[itemIndex]!
                   const itemKey = getRenderItemKey(item)
                   const content = renderTranscriptItem(item, itemIndex)
+                  // Insert an invisible separator between user and assistant items,
+                  // matching Codex's DOM pattern: div.w-full[aria-hidden=true]
+                  const prevItem = i > 0 ? renderItems[turnGroup.itemIndices[i - 1]!] : undefined
+                  const isUserToAssistantTransition =
+                    prevItem &&
+                    prevItem.kind === 'message' &&
+                    prevItem.message.type === 'user_text' &&
+                    item.kind === 'message' &&
+                    item.message.type === 'assistant_text'
                   return (
                     <div key={itemKey} className={`${CHAT_RENDER_ITEM_CLASS}${turnGroup.isLast ? '' : ' chat-render-item--cv'}`}>
+                      {isUserToAssistantTransition && (
+                        <div className="w-full" aria-hidden="true" />
+                      )}
                       {content}
                     </div>
                   )
@@ -2603,7 +2706,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
           onClick={handleJumpToLatest}
           title={t('chat.jumpToLatest')}
           aria-label={t('chat.jumpToLatest')}
-          className="absolute bottom-[200px] left-1/2 -translate-x-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(255,255,255,0.18)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] text-xs font-medium text-[var(--color-token-foreground)] shadow-[var(--shadow-dropdown)] transition-colors hover:border-[var(--color-brand)]/50 hover:bg-[var(--color-surface-container-low)]"
+          className="absolute bottom-[200px] left-1/2 -translate-x-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-surface-container-high)] text-xs font-medium text-[var(--color-token-foreground)] shadow-[var(--shadow-dropdown)] transition-colors hover:bg-[var(--color-surface-hover)]"
         >
           <ArrowDown size={15} aria-hidden="true" />
         </button>

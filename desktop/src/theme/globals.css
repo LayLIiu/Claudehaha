@@ -364,7 +364,7 @@
   --motion-sidebar-easing: cubic-bezier(0.22, 1, 0.36, 1);
 
   /* Surface aliases */
-  --color-surface-sidebar: rgba(22, 22, 22, 0.85);
+  --color-surface-sidebar: rgba(24, 24, 24, 0.75);
   --color-surface-hover: var(--color-surface-container-high);
   --color-surface-selected: var(--color-surface-container);
   --color-dot-grid: hsla(0, 0%, 30%, 0.25);
@@ -562,7 +562,7 @@
   /* Codex-aligned layout tokens */
   --height-toolbar: 46px;
   --thread-content-top-inset: 32px;
-  --thread-content-max-width: 48rem;
+  --thread-content-max-width: 50rem;
   --thread-content-margin: 24px;
   --padding-toolbar: 12px;
   --composer-top-tray-max-height: 177px;
@@ -655,6 +655,76 @@
   --color-token-menu-background: var(--color-surface-container);
   --color-token-text-link-foreground: var(--color-secondary);
 
+  /* ── P0.1: Codex-aligned missing tokens ─────────── */
+  --color-token-border-default: color-mix(in oklab, var(--color-token-foreground) 12%, transparent);
+  --color-token-border-heavy: color-mix(in oklab, var(--color-token-foreground) 16%, transparent);
+  --color-token-text-tertiary: color-mix(in srgb, var(--color-token-foreground) 45%, transparent);
+  --color-token-text-link-active-foreground: color-mix(in srgb, var(--color-token-foreground) 72%, transparent);
+  --color-token-text-preformat-background: color-mix(in srgb, var(--color-token-foreground) 7%, transparent);
+  --color-token-text-preformat-foreground: var(--color-token-foreground);
+  --color-token-disabled-foreground: color-mix(in srgb, var(--color-token-foreground) 35%, transparent);
+  --color-token-input-foreground: var(--color-token-foreground);
+  --color-token-input-validation-info-background: rgba(45, 98, 143, 0.08);
+  --color-token-input-validation-info-border: rgba(45, 98, 143, 0.32);
+  --color-token-dropdown-foreground: var(--color-token-foreground);
+  --color-token-error-foreground: #f14c4c;
+  --color-token-icon-foreground: var(--color-token-text-secondary);
+  --color-token-badge-background: var(--color-primary);
+  --color-token-badge-foreground: var(--color-on-primary);
+  --color-token-activity-bar-badge-background: var(--color-primary);
+  --color-token-activity-bar-badge-foreground: var(--color-on-primary);
+  --color-token-progress-bar-background: var(--color-primary);
+  --color-token-radio-active-foreground: var(--color-primary);
+  --color-token-checkbox-background: var(--color-primary);
+  --color-token-checkbox-border: var(--color-token-border);
+  --color-token-checkbox-foreground: var(--color-on-primary);
+  --color-token-button-background: var(--color-primary);
+  --color-token-button-foreground: var(--color-on-primary);
+  --color-token-button-border: transparent;
+  --color-token-button-secondary-hover-background: rgba(255, 255, 255, 0.10);
+  --color-token-list-active-selection-foreground: var(--color-token-foreground);
+  --color-token-list-active-selection-icon-foreground: var(--color-token-text-secondary);
+  --color-token-list-focus-outline: var(--color-token-focus-border);
+  --color-token-editor-foreground: var(--color-token-foreground);
+  --color-token-editor-error-foreground: #f14c4c;
+  --color-token-editor-info-foreground: #3794ff;
+  --color-token-editor-widget-background: var(--color-surface-container);
+  --color-token-editor-group-drop-background: rgba(83, 89, 93, 0.5);
+  --color-token-editor-group-drop-into-prompt-background: rgba(45, 98, 143, 0.3);
+  --color-token-editor-group-drop-into-prompt-foreground: var(--color-token-foreground);
+  --color-token-menu-border: var(--color-token-border-default);
+  --color-token-menubar-selection-background: rgba(255, 255, 255, 0.08);
+  --color-token-menubar-selection-foreground: var(--color-token-foreground);
+  --color-token-toolbar-hover-background: rgba(255, 255, 255, 0.06);
+  --color-token-bg-tertiary: color-mix(in srgb, var(--color-token-main-surface-primary) 92%, transparent);
+  --color-token-bg-fog: color-mix(in srgb, var(--color-token-foreground) 5%, var(--color-token-main-surface-primary));
+  --color-token-bg-appshot: color-mix(in srgb, var(--color-token-foreground) 8%, var(--color-token-main-surface-primary));
+  --color-token-link: var(--color-secondary);
+  --color-token-charts-purple: #a855f7;
+  --color-token-git-decoration-added-resource-foreground: #73c991;
+  --color-token-git-decoration-modified-resource-foreground: #e2c08d;
+  --color-token-git-decoration-deleted-resource-foreground: #c74e39;
+  --color-token-terminal-background: var(--color-terminal-bg);
+  --color-token-terminal-border: var(--color-terminal-border);
+  --color-token-terminal-foreground: var(--color-terminal-fg);
+  --color-token-terminal-ansi-black: #000000;
+  --color-token-terminal-ansi-red: #cd3131;
+  --color-token-terminal-ansi-green: #0dbc79;
+  --color-token-terminal-ansi-yellow: #e5e510;
+  --color-token-terminal-ansi-blue: #2472c8;
+  --color-token-terminal-ansi-magenta: #bc3fbc;
+  --color-token-terminal-ansi-cyan: #11a8cd;
+  --color-token-terminal-ansi-white: #e5e5e5;
+  --color-token-terminal-ansi-bright-black: #666666;
+  --color-token-terminal-ansi-bright-red: #f14c4c;
+  --color-token-terminal-ansi-bright-green: #23d18b;
+  --color-token-terminal-ansi-bright-yellow: #f5f543;
+  --color-token-terminal-ansi-bright-blue: #3b8eea;
+  --color-token-terminal-ansi-bright-magenta: #d670d6;
+  --color-token-terminal-ansi-bright-cyan: #29b8db;
+  --color-token-terminal-ansi-bright-white: #ffffff;
+
+
   /* Codex shimmer tokens */
   --shimmer-text-secondary: color-mix(in srgb, var(--color-token-foreground) 58%, transparent);
   --shimmer-contrast: color-mix(in srgb, var(--color-token-foreground) 78%, transparent);
@@ -716,7 +786,7 @@
   --color-warning: #B54708;
   --color-warning-container: #FEF0C7;
 
-  --color-surface-sidebar: rgba(22, 22, 22, 0.85);
+  --color-surface-sidebar: rgba(24, 24, 24, 0.75);
   --color-surface-hover: #2E2E2E;
   --color-surface-selected: #E9EEF3;
   --color-memory-accent: #0F766E;
@@ -890,7 +960,7 @@
   /* Codex-aligned layout tokens */
   --height-toolbar: 46px;
   --thread-content-top-inset: 32px;
-  --thread-content-max-width: 48rem;
+  --thread-content-max-width: 50rem;
   --thread-content-margin: 24px;
   --padding-toolbar: 12px;
   --composer-top-tray-max-height: 177px;
@@ -963,6 +1033,76 @@
   --color-token-editor-warning-foreground: #f59e0b;
   --color-token-menu-background: var(--color-surface-container);
   --color-token-text-link-foreground: var(--color-secondary);
+
+  /* ── P0.1: Codex-aligned missing tokens ─────────── */
+  --color-token-border-default: color-mix(in oklab, var(--color-token-foreground) 12%, transparent);
+  --color-token-border-heavy: color-mix(in oklab, var(--color-token-foreground) 16%, transparent);
+  --color-token-text-tertiary: color-mix(in srgb, var(--color-token-foreground) 45%, transparent);
+  --color-token-text-link-active-foreground: color-mix(in srgb, var(--color-token-foreground) 72%, transparent);
+  --color-token-text-preformat-background: color-mix(in srgb, var(--color-token-foreground) 7%, transparent);
+  --color-token-text-preformat-foreground: var(--color-token-foreground);
+  --color-token-disabled-foreground: color-mix(in srgb, var(--color-token-foreground) 35%, transparent);
+  --color-token-input-foreground: var(--color-token-foreground);
+  --color-token-input-validation-info-background: rgba(45, 98, 143, 0.08);
+  --color-token-input-validation-info-border: rgba(45, 98, 143, 0.32);
+  --color-token-dropdown-foreground: var(--color-token-foreground);
+  --color-token-error-foreground: #f14c4c;
+  --color-token-icon-foreground: var(--color-token-text-secondary);
+  --color-token-badge-background: var(--color-primary);
+  --color-token-badge-foreground: var(--color-on-primary);
+  --color-token-activity-bar-badge-background: var(--color-primary);
+  --color-token-activity-bar-badge-foreground: var(--color-on-primary);
+  --color-token-progress-bar-background: var(--color-primary);
+  --color-token-radio-active-foreground: var(--color-primary);
+  --color-token-checkbox-background: var(--color-primary);
+  --color-token-checkbox-border: var(--color-token-border);
+  --color-token-checkbox-foreground: var(--color-on-primary);
+  --color-token-button-background: var(--color-primary);
+  --color-token-button-foreground: var(--color-on-primary);
+  --color-token-button-border: transparent;
+  --color-token-button-secondary-hover-background: rgba(255, 255, 255, 0.10);
+  --color-token-list-active-selection-foreground: var(--color-token-foreground);
+  --color-token-list-active-selection-icon-foreground: var(--color-token-text-secondary);
+  --color-token-list-focus-outline: var(--color-token-focus-border);
+  --color-token-editor-foreground: var(--color-token-foreground);
+  --color-token-editor-error-foreground: #f14c4c;
+  --color-token-editor-info-foreground: #3794ff;
+  --color-token-editor-widget-background: var(--color-surface-container);
+  --color-token-editor-group-drop-background: rgba(83, 89, 93, 0.5);
+  --color-token-editor-group-drop-into-prompt-background: rgba(45, 98, 143, 0.3);
+  --color-token-editor-group-drop-into-prompt-foreground: var(--color-token-foreground);
+  --color-token-menu-border: var(--color-token-border-default);
+  --color-token-menubar-selection-background: rgba(255, 255, 255, 0.08);
+  --color-token-menubar-selection-foreground: var(--color-token-foreground);
+  --color-token-toolbar-hover-background: rgba(255, 255, 255, 0.06);
+  --color-token-bg-tertiary: color-mix(in srgb, var(--color-token-main-surface-primary) 92%, transparent);
+  --color-token-bg-fog: color-mix(in srgb, var(--color-token-foreground) 5%, var(--color-token-main-surface-primary));
+  --color-token-bg-appshot: color-mix(in srgb, var(--color-token-foreground) 8%, var(--color-token-main-surface-primary));
+  --color-token-link: var(--color-secondary);
+  --color-token-charts-purple: #a855f7;
+  --color-token-git-decoration-added-resource-foreground: #73c991;
+  --color-token-git-decoration-modified-resource-foreground: #e2c08d;
+  --color-token-git-decoration-deleted-resource-foreground: #c74e39;
+  --color-token-terminal-background: var(--color-terminal-bg);
+  --color-token-terminal-border: var(--color-terminal-border);
+  --color-token-terminal-foreground: var(--color-terminal-fg);
+  --color-token-terminal-ansi-black: #000000;
+  --color-token-terminal-ansi-red: #cd3131;
+  --color-token-terminal-ansi-green: #0dbc79;
+  --color-token-terminal-ansi-yellow: #e5e510;
+  --color-token-terminal-ansi-blue: #2472c8;
+  --color-token-terminal-ansi-magenta: #bc3fbc;
+  --color-token-terminal-ansi-cyan: #11a8cd;
+  --color-token-terminal-ansi-white: #e5e5e5;
+  --color-token-terminal-ansi-bright-black: #666666;
+  --color-token-terminal-ansi-bright-red: #f14c4c;
+  --color-token-terminal-ansi-bright-green: #23d18b;
+  --color-token-terminal-ansi-bright-yellow: #f5f543;
+  --color-token-terminal-ansi-bright-blue: #3b8eea;
+  --color-token-terminal-ansi-bright-magenta: #d670d6;
+  --color-token-terminal-ansi-bright-cyan: #29b8db;
+  --color-token-terminal-ansi-bright-white: #ffffff;
+
   --shimmer-text-secondary: color-mix(in srgb, var(--color-token-foreground) 58%, transparent);
   --shimmer-contrast: color-mix(in srgb, var(--color-token-foreground) 78%, transparent);
 }
@@ -1015,7 +1155,7 @@
   --color-warning: #F7C46C;
   --color-warning-container: rgba(247, 196, 108, 0.16);
 
-  --color-surface-sidebar: rgba(31, 31, 31, 0.92);
+  --color-surface-sidebar: rgba(24, 24, 24, 0.75);
   --color-surface-hover: rgba(255, 255, 255, 0.055);
   --color-surface-selected: rgba(255, 255, 255, 0.10);
   --color-memory-accent: #b06dff;
@@ -1188,7 +1328,7 @@
   /* Codex-aligned layout tokens */
   --height-toolbar: 46px;
   --thread-content-top-inset: 32px;
-  --thread-content-max-width: 48rem;
+  --thread-content-max-width: 50rem;
   --thread-content-margin: 24px;
   --padding-toolbar: 12px;
   --composer-top-tray-max-height: 177px;
@@ -1261,6 +1401,76 @@
   --color-token-editor-warning-foreground: #f59e0b;
   --color-token-menu-background: var(--color-surface-container);
   --color-token-text-link-foreground: var(--color-tertiary);
+
+  /* ── P0.1: Codex-aligned missing tokens ─────────── */
+  --color-token-border-default: color-mix(in oklab, var(--color-token-foreground) 12%, transparent);
+  --color-token-border-heavy: color-mix(in oklab, var(--color-token-foreground) 16%, transparent);
+  --color-token-text-tertiary: color-mix(in srgb, var(--color-token-foreground) 45%, transparent);
+  --color-token-text-link-active-foreground: color-mix(in srgb, var(--color-token-foreground) 72%, transparent);
+  --color-token-text-preformat-background: color-mix(in srgb, var(--color-token-foreground) 7%, transparent);
+  --color-token-text-preformat-foreground: var(--color-token-foreground);
+  --color-token-disabled-foreground: color-mix(in srgb, var(--color-token-foreground) 35%, transparent);
+  --color-token-input-foreground: var(--color-token-foreground);
+  --color-token-input-validation-info-background: rgba(45, 98, 143, 0.08);
+  --color-token-input-validation-info-border: rgba(45, 98, 143, 0.32);
+  --color-token-dropdown-foreground: var(--color-token-foreground);
+  --color-token-error-foreground: #f14c4c;
+  --color-token-icon-foreground: var(--color-token-text-secondary);
+  --color-token-badge-background: var(--color-primary);
+  --color-token-badge-foreground: var(--color-on-primary);
+  --color-token-activity-bar-badge-background: var(--color-primary);
+  --color-token-activity-bar-badge-foreground: var(--color-on-primary);
+  --color-token-progress-bar-background: var(--color-primary);
+  --color-token-radio-active-foreground: var(--color-primary);
+  --color-token-checkbox-background: var(--color-primary);
+  --color-token-checkbox-border: var(--color-token-border);
+  --color-token-checkbox-foreground: var(--color-on-primary);
+  --color-token-button-background: var(--color-primary);
+  --color-token-button-foreground: var(--color-on-primary);
+  --color-token-button-border: transparent;
+  --color-token-button-secondary-hover-background: rgba(255, 255, 255, 0.10);
+  --color-token-list-active-selection-foreground: var(--color-token-foreground);
+  --color-token-list-active-selection-icon-foreground: var(--color-token-text-secondary);
+  --color-token-list-focus-outline: var(--color-token-focus-border);
+  --color-token-editor-foreground: var(--color-token-foreground);
+  --color-token-editor-error-foreground: #f14c4c;
+  --color-token-editor-info-foreground: #3794ff;
+  --color-token-editor-widget-background: var(--color-surface-container);
+  --color-token-editor-group-drop-background: rgba(83, 89, 93, 0.5);
+  --color-token-editor-group-drop-into-prompt-background: rgba(45, 98, 143, 0.3);
+  --color-token-editor-group-drop-into-prompt-foreground: var(--color-token-foreground);
+  --color-token-menu-border: var(--color-token-border-default);
+  --color-token-menubar-selection-background: rgba(255, 255, 255, 0.08);
+  --color-token-menubar-selection-foreground: var(--color-token-foreground);
+  --color-token-toolbar-hover-background: rgba(255, 255, 255, 0.06);
+  --color-token-bg-tertiary: color-mix(in srgb, var(--color-token-main-surface-primary) 92%, transparent);
+  --color-token-bg-fog: color-mix(in srgb, var(--color-token-foreground) 5%, var(--color-token-main-surface-primary));
+  --color-token-bg-appshot: color-mix(in srgb, var(--color-token-foreground) 8%, var(--color-token-main-surface-primary));
+  --color-token-link: var(--color-secondary);
+  --color-token-charts-purple: #a855f7;
+  --color-token-git-decoration-added-resource-foreground: #73c991;
+  --color-token-git-decoration-modified-resource-foreground: #e2c08d;
+  --color-token-git-decoration-deleted-resource-foreground: #c74e39;
+  --color-token-terminal-background: var(--color-terminal-bg);
+  --color-token-terminal-border: var(--color-terminal-border);
+  --color-token-terminal-foreground: var(--color-terminal-fg);
+  --color-token-terminal-ansi-black: #000000;
+  --color-token-terminal-ansi-red: #cd3131;
+  --color-token-terminal-ansi-green: #0dbc79;
+  --color-token-terminal-ansi-yellow: #e5e510;
+  --color-token-terminal-ansi-blue: #2472c8;
+  --color-token-terminal-ansi-magenta: #bc3fbc;
+  --color-token-terminal-ansi-cyan: #11a8cd;
+  --color-token-terminal-ansi-white: #e5e5e5;
+  --color-token-terminal-ansi-bright-black: #666666;
+  --color-token-terminal-ansi-bright-red: #f14c4c;
+  --color-token-terminal-ansi-bright-green: #23d18b;
+  --color-token-terminal-ansi-bright-yellow: #f5f543;
+  --color-token-terminal-ansi-bright-blue: #3b8eea;
+  --color-token-terminal-ansi-bright-magenta: #d670d6;
+  --color-token-terminal-ansi-bright-cyan: #29b8db;
+  --color-token-terminal-ansi-bright-white: #ffffff;
+
   --shimmer-text-secondary: color-mix(in srgb, var(--color-token-foreground) 58%, transparent);
   --shimmer-contrast: color-mix(in srgb, var(--color-token-foreground) 78%, transparent);
 }
@@ -1359,6 +1569,52 @@ button, input, textarea, select, a, [role="button"] {
     inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
   backdrop-filter: blur(40px) saturate(1.8) brightness(1.05) !important;
   -webkit-backdrop-filter: blur(40px) saturate(1.8) brightness(1.05) !important;
+  /* Codex-style enter animation applied by default to all liquid-glass panels */
+  animation: glass-panel-enter 150ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Codex-style dropdown / panel enter/exit animations ──────────
+   Ported from Codex dropdown-9F1MU8ql.css.
+   Uses scale(.98) + opacity for a snappy, macOS-like feel.
+   Enter animation is built into .liquid-glass itself (applies on mount).
+   Exit animation needs the .glass-animate-exit class (applied by React
+   before unmount via useGlassPanelAnimation hook). */
+
+@keyframes glass-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-2px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes glass-panel-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-2px) scale(0.98);
+  }
+}
+
+/* Exit animation class — applied by React before unmount via useGlassPanelAnimation */
+.liquid-glass.glass-animate-exit {
+  animation: glass-panel-exit 100ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .liquid-glass {
+    animation: none;
+  }
+  .liquid-glass.glass-animate-exit {
+    animation: none;
+  }
 }
 
 .composer-drop-target-active {
@@ -1420,18 +1676,23 @@ button, input, textarea, select, a, [role="button"] {
   border-left-color: transparent;
 }
 
+/* P0.2: Enhanced main-surface floating card — matches official Codex */
 #content-area[data-sidebar-state="open"]:not(.app-shell-main--mobile) {
-  border-radius: var(--radius-xl) 0 0 var(--radius-xl);
-  border-left: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: var(--radius-2xl) 0 0 var(--radius-2xl);
+  border-left: 1px solid var(--color-token-border-default);
   position: relative;
   overflow: hidden;
-  box-shadow: none;
+  background: var(--color-token-main-surface-primary);
+  box-shadow:
+    -2px 0 8px -2px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
-@media (prefers-color-scheme: dark) {
-  #content-area[data-sidebar-state="open"]:not(.app-shell-main--mobile) {
-    border-left-color: rgba(255, 255, 255, 0.06);
-  }
+[data-theme="light"] #content-area[data-sidebar-state="open"]:not(.app-shell-main--mobile) {
+  border-left-color: var(--color-token-border-default);
+  box-shadow:
+    -2px 0 8px -2px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .sidebar-shell {
@@ -1479,9 +1740,12 @@ button, input, textarea, select, a, [role="button"] {
   width: var(--sidebar-width);
   min-width: var(--sidebar-width);
   z-index: 1;
+  margin-right: -16px;
   background-image: var(--sidebar-panel-bg-image);
   background-repeat: no-repeat;
   background-color: var(--color-surface-sidebar) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-right: 0.5px solid rgba(255, 255, 255, 0.08);
   transition:
     background-color var(--motion-sidebar-duration) var(--motion-sidebar-easing),
@@ -1491,9 +1755,12 @@ button, input, textarea, select, a, [role="button"] {
 
 .settings-sidebar-panel {
   z-index: 1;
+  margin-right: -16px;
   background-image: var(--sidebar-panel-bg-image);
   background-repeat: no-repeat;
   background-color: var(--color-surface-sidebar);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-right: 0.5px solid rgba(255, 255, 255, 0.08);
   transition:
     background-color var(--motion-sidebar-duration) var(--motion-sidebar-easing),
@@ -1526,10 +1793,11 @@ button, input, textarea, select, a, [role="button"] {
   background: transparent !important;
   pointer-events: none;
   transition:
+    bottom 400ms cubic-bezier(0.32, 0.72, 0, 1),
     transform 820ms cubic-bezier(0.2, 1.08, 0.24, 1),
     opacity 260ms ease;
   transform: translate3d(0, 0, 0);
-  will-change: transform;
+  will-change: transform, bottom;
 }
 
 /* Input inside dock region receives pointer events */
@@ -1574,12 +1842,11 @@ button, input, textarea, select, a, [role="button"] {
   content: '';
   position: absolute;
   bottom: 0;
-  left: 50%;
-  right: auto;
-  width: 820px;
-  transform: translateX(-50%);
-  height: 280px;
-  background: linear-gradient(to bottom, transparent 0%, transparent 25%, var(--color-surface) 45%);
+  left: 0;
+  right: 0;
+  width: auto;
+  height: 200px;
+  background: linear-gradient(to bottom, transparent 0%, transparent 35%, var(--color-surface) 60%);
   pointer-events: none;
   z-index: -1;
 }
@@ -1739,16 +2006,16 @@ html.electron-macos .app-shell,
 }
 .electron-macos .sidebar-panel {
   background-image: none !important;
-  background-color: transparent !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  background-color: rgba(26, 26, 26, 0.68) !important;
+  backdrop-filter: blur(24px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
   border-right: 0.5px solid rgba(255, 255, 255, 0.1) !important;
 }
 .electron-macos .settings-sidebar-panel {
   background-image: none !important;
-  background-color: transparent !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  background-color: rgba(26, 26, 26, 0.68) !important;
+  backdrop-filter: blur(24px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
   border-right: 0.5px solid rgba(255, 255, 255, 0.1) !important;
 }
 
@@ -1784,16 +2051,16 @@ html.electron-macos .app-shell,
   }
   .electron-macos .sidebar-panel {
     background-image: none !important;
-    background-color: transparent !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+    background-color: rgba(24, 24, 24, 0.68) !important;
+    backdrop-filter: blur(24px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
     border-right: 0.5px solid rgba(255, 255, 255, 0.06);
   }
   .electron-macos .settings-sidebar-panel {
     background-image: none !important;
-    background-color: transparent !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+    background-color: rgba(24, 24, 24, 0.68) !important;
+    backdrop-filter: blur(24px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
     border-right: 0.5px solid rgba(255, 255, 255, 0.06) !important;
   }
 }
@@ -1802,6 +2069,20 @@ html.electron-macos .app-shell,
 .window-traffic-light-zone {
   -webkit-app-region: no-drag;
 }
+
+.codex-chrome-btn {
+  -webkit-app-region: no-drag;
+  transition: background-color 150ms ease, color 150ms ease, transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.codex-chrome-btn:active {
+  transform: scale(0.9);
+}
+
+.sidebar-settings-dock {
+  background: transparent;
+  pointer-events: auto;
+}
+
 
 .sidebar-panel[data-state="closed"] {
 }
@@ -2177,9 +2458,7 @@ html.electron-macos .app-shell,
 
 .sidebar-settings-dock {
   z-index: 30;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.08) 42%, rgba(0, 0, 0, 0.16) 100%);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: transparent;
 }
 
 .sidebar-scroll-area::-webkit-scrollbar {
@@ -2363,7 +2642,7 @@ html.electron-macos .app-shell,
   z-index: 5;
   pointer-events: none;
   transition: opacity 200ms ease, transform 200ms cubic-bezier(0.2, 1.12, 0.24, 1);
-  margin-bottom: -4px;
+  margin-bottom: 4px;
   padding-left: 4px;
 }
 .sticky-thinking-indicator--hidden {
@@ -3267,7 +3546,7 @@ mark.codex-thread-find-active {
   display: flex;
   justify-content: center;
   width: 100%;
-  margin-bottom: 14px;
+  margin-bottom: 1px;
   pointer-events: none;
 }
 .current-turn-live-change-pill {
@@ -3343,6 +3622,141 @@ mark.codex-thread-find-active {
     0 0 0 2px rgba(255,255,255,0.18),
     0 0 0 4px rgba(90,160,255,0.22),
     0 18px 38px rgba(0,0,0,0.32);
+}
+
+/* ── Task progress pill fused with live turn changes ─────────────── */
+.task-progress-dock-wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 1px;
+  pointer-events: none;
+}
+.task-progress-dock-wrap > * {
+  pointer-events: auto;
+}
+.task-progress-dock-pill {
+  display: inline-flex;
+  min-height: 36px;
+  max-width: min(720px, calc(100vw - 48px));
+  align-items: stretch;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(38,38,38,0.92);
+  color: rgba(255,255,255,0.78);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.07),
+    0 14px 34px rgba(0,0,0,0.28);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  animation: current-turn-live-change-pill-rise 420ms cubic-bezier(0.18, 0.96, 0.24, 1.12);
+}
+.task-progress-dock-pill--compact {
+  min-height: 32px;
+}
+.task-progress-dock-pill__task,
+.task-progress-dock-pill__changes {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  white-space: nowrap;
+  transition:
+    background 180ms ease,
+    color 180ms ease,
+    transform 180ms cubic-bezier(0.2, 0.92, 0.24, 1.06);
+}
+.task-progress-dock-pill__task {
+  padding: 7px 16px;
+  cursor: pointer;
+}
+.task-progress-dock-pill__changes {
+  position: relative;
+  padding: 7px 16px 7px 14px;
+  cursor: pointer;
+}
+.task-progress-dock-pill--compact .task-progress-dock-pill__task,
+.task-progress-dock-pill--compact .task-progress-dock-pill__changes {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+.task-progress-dock-pill--merged .task-progress-dock-pill__changes::before {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  top: 8px;
+  width: 1px;
+  background: rgba(255,255,255,0.12);
+}
+.task-progress-dock-pill__task:hover,
+.task-progress-dock-pill__changes:hover {
+  background: rgba(255,255,255,0.055);
+  color: rgba(255,255,255,0.9);
+}
+.task-progress-dock-pill__task:active,
+.task-progress-dock-pill__changes:active {
+  transform: scale(0.985);
+}
+.task-progress-dock-pill__task:focus-visible,
+.task-progress-dock-pill__changes:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px rgba(90,160,255,0.32);
+}
+.task-progress-dock-pill__icon {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: rgba(255,255,255,0.72);
+}
+.task-progress-dock-pill__icon--running {
+  color: #2f8cff;
+  animation: task-progress-icon-spin 1.1s linear infinite;
+}
+.task-progress-dock-pill__icon--done {
+  color: var(--color-success);
+}
+.task-progress-dock-pill__label,
+.task-progress-dock-pill__change-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 20px;
+  letter-spacing: 0;
+}
+.task-progress-dock-pill__change-label {
+  color: rgba(255,255,255,0.74);
+}
+@keyframes task-progress-icon-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (max-width: 640px) {
+  .task-progress-dock-pill {
+    max-width: calc(100vw - 28px);
+  }
+  .task-progress-dock-pill__change-label {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .task-progress-dock-pill,
+  .task-progress-dock-pill__icon--running {
+    animation: none;
+  }
 }
 
 /* ── Codex-style new task hero composer ─────────────────────────── */

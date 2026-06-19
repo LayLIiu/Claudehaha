@@ -703,6 +703,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
             void createSessionForWorkDir(currentSession?.workDir || currentSession?.projectRoot || undefined)
           }}
           icon={<PlusIcon />}
+          shortcut="⌘N"
         >
           {t('sidebar.newSession')}
         </NavItem>
@@ -713,6 +714,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
           touchFriendly={isMobile}
           onClick={() => openModal('globalSearch')}
           icon={<SearchIcon />}
+          shortcut="⌘K"
         >
           {t('search.global.trigger')}
         </NavItem>
@@ -756,6 +758,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
             data-testid="sidebar-session-list-section"
             className="sidebar-section sidebar-section--visible flex flex-1 min-h-0 flex-col"
           >
+            <div className="px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-token-text-secondary)]">Chats</div>
             {isBatchMode && (
               <div className="mx-3 mb-2 rounded-[var(--radius-sm)] border border-[var(--color-token-border)] bg-[var(--color-surface)] px-2.5 py-2 shadow-sm">
                 <div className="flex items-center justify-between gap-2">
@@ -914,7 +917,8 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                         )}
                       </button>
                       <div className="flex flex-shrink-0 items-center gap-1">
-                        {isBatchMode && (
+                        
+            {isBatchMode && (
                           <button
                             type="button"
                             onClick={() => toggleGroupSelection(groupIds)}
@@ -1492,6 +1496,7 @@ function ProjectHeaderMenu({
 function HeaderMenuItem({
   icon,
   children,
+  shortcut,
   onClick,
   onMouseEnter,
   checked = false,
@@ -1499,6 +1504,7 @@ function HeaderMenuItem({
 }: {
   icon: React.ReactNode
   children: React.ReactNode
+  shortcut?: string
   onClick: (event: React.MouseEvent<HTMLButtonElement>) => void
   onMouseEnter?: (event: React.MouseEvent<HTMLButtonElement>) => void
   checked?: boolean
@@ -1516,6 +1522,7 @@ function HeaderMenuItem({
         {icon}
       </span>
       <span className="min-w-0 flex-1 truncate">{children}</span>
+      {shortcut ? <span className="flex-shrink-0 text-[11px] opacity-60">{shortcut}</span> : null}
       {checked && <Check className="h-[17px] w-[17px] text-[var(--color-token-text-secondary)]" strokeWidth={2} aria-hidden="true" />}
       {trailing && !checked && (
         <ChevronDown className="-rotate-90 h-[17px] w-[17px] text-[var(--color-token-text-secondary)]" strokeWidth={2} aria-hidden="true" />
@@ -1880,11 +1887,13 @@ function SidebarMenuDivider() {
 
 function SidebarMenuItem({
   children,
+  shortcut,
   onClick,
   disabled = false,
   danger = false,
 }: {
   children: React.ReactNode
+  shortcut?: string
   onClick?: () => void
   disabled?: boolean
   danger?: boolean
@@ -1898,6 +1907,7 @@ function SidebarMenuItem({
       className={`sidebar-codex-menu-item ${danger ? 'sidebar-codex-menu-item--danger' : ''}`}
     >
       <span className="min-w-0 flex-1 truncate">{children}</span>
+      {shortcut ? <span className="flex-shrink-0 text-[11px] opacity-60">{shortcut}</span> : null}
     </button>
   )
 }
@@ -1905,12 +1915,14 @@ function SidebarMenuItem({
 function ProjectMenuItem({
   icon,
   children,
+  shortcut,
   onClick,
   disabled = false,
   danger = false,
 }: {
   icon: React.ReactNode
   children: React.ReactNode
+  shortcut?: string
   onClick?: () => void
   disabled?: boolean
   danger?: boolean
@@ -1927,6 +1939,7 @@ function ProjectMenuItem({
         {icon}
       </span>
       <span className="min-w-0 flex-1 truncate">{children}</span>
+      {shortcut ? <span className="flex-shrink-0 text-[11px] opacity-60">{shortcut}</span> : null}
     </button>
   )
 }
@@ -1983,6 +1996,7 @@ function NavItem({
   onClick,
   icon,
   children,
+  shortcut,
 }: {
   active: boolean
   collapsed: boolean
@@ -1991,15 +2005,16 @@ function NavItem({
   onClick: () => void
   icon: React.ReactNode
   children: React.ReactNode
+  shortcut?: string
 }) {
   return (
     <button
       onClick={onClick}
       aria-label={label}
-      title={collapsed ? label : undefined}
+      title={collapsed ? [label, shortcut].filter(Boolean).join(' ') : undefined}
       className={`
-        flex items-center transition-colors duration-200
-	        ${collapsed ? 'h-9 w-9 justify-center rounded-[var(--radius-xs)] px-0 py-0' : `w-full gap-2 rounded-[var(--radius-xs)] px-[8px] ${touchFriendly ? 'py-3' : 'py-[5px]'} text-[13px]`}
+        group/nav flex items-center transition-colors duration-200
+	        ${collapsed ? 'h-9 w-9 justify-center rounded-[var(--radius-xs)] px-0 py-0' : `w-full gap-2 rounded-[var(--radius-xs)] px-[8px] ${touchFriendly ? 'py-3' : 'py-[5px]'} text-[13px] text-left`}
 	        ${active
 	          ? 'bg-[var(--color-sidebar-item-active)] font-medium text-[var(--color-token-foreground)]'
 	          : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-sidebar-item-hover)] hover:text-[var(--color-token-foreground)]'
@@ -2009,9 +2024,12 @@ function NavItem({
       <span className="icon-md flex-shrink-0 flex items-center justify-center">
         {icon}
       </span>
-      <span className={`sidebar-copy ${collapsed ? 'sidebar-copy--hidden' : 'sidebar-copy--visible'}`}>
+      <span className={`sidebar-copy min-w-0 flex-1 truncate ${collapsed ? 'sidebar-copy--hidden' : 'sidebar-copy--visible'}`}>
         {children}
       </span>
+      {shortcut && !collapsed ? (
+        <span className="nav-shortcut flex-shrink-0 text-[11px] text-[var(--color-token-text-secondary)] opacity-0 transition-opacity duration-150 group-hover/nav:opacity-60 group-focus-visible/nav:opacity-60">{shortcut}</span>
+      ) : null}
     </button>
   )
 }

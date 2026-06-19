@@ -3741,6 +3741,91 @@ describe('MessageList nested tool calls', () => {
     expect(screen.queryByText('third.ts')).toBeNull()
   })
 
+  it('uses current turn tool edit stats instead of broad checkpoint dirty files', async () => {
+    vi.spyOn(sessionsApi, 'getTurnCheckpoints').mockResolvedValue({
+      checkpoints: [
+        {
+          target: {
+            targetUserMessageId: 'user-1',
+            userMessageIndex: 0,
+            userMessageCount: 1,
+          },
+          code: {
+            available: true,
+            filesChanged: [
+              'desktop/src/theme/globals.css',
+              'desktop/src/pages/ActiveSession.tsx',
+            ],
+            insertions: 138,
+            deletions: 3,
+            fileStats: [
+              { path: 'desktop/src/theme/globals.css', insertions: 135, deletions: 0 },
+              { path: 'desktop/src/pages/ActiveSession.tsx', insertions: 3, deletions: 3 },
+            ],
+          },
+        },
+      ],
+    })
+
+    useChatStore.setState({
+      sessions: {
+        [ACTIVE_TAB]: makeSessionState({
+          messages: [
+            {
+              id: 'user-1',
+              type: 'user_text',
+              content: '把按钮变大一点',
+              timestamp: 1,
+            },
+            {
+              id: 'edit-1',
+              type: 'tool_use',
+              toolName: 'Edit',
+              toolUseId: 'edit-1',
+              input: {
+                file_path: '/repo/desktop/src/components/chat/ThreadChrome.tsx',
+                old_string: [
+                  "className=\"h-7 w-7\"",
+                  '<span className="material-symbols-outlined icon-xs">',
+                ].join('\n'),
+                new_string: [
+                  "className=\"h-8 w-8\"",
+                  '<span className="material-symbols-outlined text-[17px]">',
+                ].join('\n'),
+              },
+              timestamp: 2,
+            },
+            {
+              id: 'tool-result-1',
+              type: 'tool_result',
+              toolUseId: 'edit-1',
+              content: '<tool_use_error>String to replace not found in file.',
+              isError: true,
+              timestamp: 3,
+            },
+            {
+              id: 'assistant-1',
+              type: 'assistant_text',
+              content: '改好了。',
+              timestamp: 4,
+            },
+          ],
+        }),
+      },
+    })
+
+    render(<MessageList />)
+
+    const card = await screen.findByLabelText('Turn changed files')
+    expect(within(card).getByText('Edited 1 files')).toBeTruthy()
+    expect(within(card).getAllByText('+2').length).toBeGreaterThanOrEqual(1)
+    expect(within(card).getAllByText('-2').length).toBeGreaterThanOrEqual(1)
+    expect(within(card).getByText('/repo/desktop/src/components/chat/ThreadChrome.tsx')).toBeTruthy()
+    expect(within(card).queryByText('desktop/src/theme/globals.css')).toBeNull()
+    expect(within(card).queryByText('desktop/src/pages/ActiveSession.tsx')).toBeNull()
+    expect(within(card).queryByText('+138')).toBeNull()
+  })
+
   it('opens the workspace diff (working-tree) when a historical turn change row is clicked', async () => {
     vi.spyOn(sessionsApi, 'getTurnCheckpoints').mockResolvedValue({
       checkpoints: [

@@ -163,6 +163,25 @@ describe('WorkspaceService', () => {
     })
   })
 
+  it('returns recent git commits for the Git graph panel', async () => {
+    const repoDir = await createGitWorkspace()
+    git(repoDir, 'add', '-A')
+    git(repoDir, 'commit', '-m', 'second commit')
+    const service = new WorkspaceService(async (sessionId) => sessionId === 'session-1' ? repoDir : null)
+
+    const result = await service.gitLog('session-1')
+
+    expect(result.commits.length).toBeGreaterThanOrEqual(2)
+    expect(result.commits[0]).toMatchObject({
+      subject: 'second commit',
+      author: 'Workspace Service',
+    })
+    expect(result.commits[0]?.hash).toHaveLength(40)
+    expect(result.commits[0]?.shortHash.length).toBeGreaterThan(0)
+    expect(result.commits[0]?.refs.some((ref) => ref.includes('HEAD'))).toBe(true)
+    expect(result.commits[1]?.subject).toBe('initial')
+  })
+
   it('scopes git status and diff paths to a nested workDir inside a repo', async () => {
     const { repoDir, workDir } = await createNestedGitWorkspace()
     const service = new WorkspaceService(async (sessionId) => sessionId === 'session-1' ? workDir : null)

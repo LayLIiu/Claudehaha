@@ -991,7 +991,7 @@ export function ChatInput({
             ? 'codex-new-task-composer mx-auto flex w-full max-w-[760px] flex-col'
           : compact
               ? 'mx-auto max-w-full'
-              : `${isMobileComposer ? 'mx-0 max-w-none' : 'mx-auto max-w-[800px]'}`
+              : `${isMobileComposer ? 'mx-0 max-w-none' : 'relative mx-auto max-w-[800px]'}`
         }
       >
         {isHeroComposer && heroTitle ? (
@@ -1352,11 +1352,11 @@ export function ChatInput({
                       : undefined
                 }
                 className={`flex shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-all hover:scale-[1.04] disabled:opacity-35 ${
-                  isMobileComposer ? 'h-12 w-12' : 'h-11 w-11'
+                  isMobileComposer ? 'h-10 w-10' : 'h-9 w-9'
                 } ${
                   !isMemberSession && isActive
                     ? 'bg-[var(--color-brand)] text-[var(--color-token-main-surface-primary)] hover:brightness-110'
-                    : 'bg-[var(--color-token-input-placeholder-foreground)] text-[var(--color-token-main-surface-primary)] hover:brightness-110'
+                    : 'bg-[var(--color-brand)] text-white hover:brightness-110'
                 }`}
               >
                 <span className="material-symbols-outlined icon-sm">

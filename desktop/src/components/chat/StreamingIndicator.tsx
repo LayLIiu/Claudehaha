@@ -196,7 +196,7 @@ export function StreamingIndicator() {
 
   return (
     <div className="mb-2 flex w-fit items-center gap-2 rounded-full border border-[var(--color-token-border)]/40 bg-[var(--color-surface-container-low)] px-3 py-1">
-      <span className="text-[var(--color-brand)] animate-shimmer text-xs">✦</span>
+      <span className="text-[var(--color-brand)] animate-shimmer text-sm">✦</span>
       <CadencedShimmerText>
         <span className="text-xs font-medium text-[var(--color-token-text-secondary)]">{verb}...</span>
       </CadencedShimmerText>
@@ -246,12 +246,12 @@ export function StickyThinkingIndicator({ visible, compact }: { visible: boolean
     <div className={`sticky-thinking-indicator ${visible ? 'sticky-thinking-indicator--visible' : 'sticky-thinking-indicator--hidden'}`}>
       <div className={compact ? 'mx-auto max-w-full' : 'mx-auto max-w-[800px]'}>
         <div className="flex items-center gap-2.5 px-3.5 py-2">
-          <span className="text-[var(--color-brand)] animate-shimmer text-xs">✦</span>
+          <span className="text-[var(--color-brand)] animate-shimmer text-sm">✦</span>
           <CadencedShimmerText>
-            <span className="text-[13px] font-medium text-[var(--color-token-text-secondary)]">{verb}...</span>
+            <span className="text-[14px] font-medium text-[var(--color-token-text-secondary)]">{verb}...</span>
           </CadencedShimmerText>
           {elapsedSeconds > 0 && (
-            <span className="text-[11px] text-[var(--color-token-text-secondary)] font-mono tabular-nums">
+            <span className="text-[12px] text-[var(--color-token-text-secondary)] font-mono tabular-nums">
               {formatElapsed(elapsedSeconds)}
             </span>
           )}

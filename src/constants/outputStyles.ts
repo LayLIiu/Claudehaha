@@ -29,12 +29,7 @@ export type OutputStyles = {
 // Used in both the Explanatory and Learning modes
 const EXPLANATORY_FEATURE_PROMPT = `
 ## Insights
-In order to encourage learning, before and after writing code, always provide brief educational explanations about implementation choices using (with backticks):
-"\`${figures.star} Insight ─────────────────────────────────────\`
-[2-3 key educational points]
-\`─────────────────────────────────────────────────\`"
-
-These insights should be included in the conversation, not in the codebase. You should generally focus on interesting insights that are specific to the codebase or the code you just wrote, rather than general programming concepts.`
+When relevant, briefly explain implementation choices and codebase patterns inline within your response. Do NOT use a separate "Insight" block, box, or decorated section — just weave the explanation naturally into the conversation.`
 
 export const DEFAULT_OUTPUT_STYLE_NAME = 'default'
 
@@ -127,7 +122,7 @@ ${figures.bullet} **Learn by Doing**
 \`\`\`
 
 ### After Contributions
-Share one insight connecting their code to broader patterns or system effects. Avoid praise or repetition.
+Briefly explain how the contributed code connects to broader patterns, inline within your response. Avoid praise, repetition, or separate insight blocks.
 
 ## Insights
 ${EXPLANATORY_FEATURE_PROMPT}`,

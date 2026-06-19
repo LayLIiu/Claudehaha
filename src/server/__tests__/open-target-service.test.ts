@@ -79,6 +79,8 @@ describe('openTargetService', () => {
       paths: {
         '/Applications/Visual Studio Code.app': true,
         '/Applications/Sublime Text.app': true,
+        '/Applications/Xcode.app': true,
+        '/System/Applications/Utilities/Terminal.app': true,
       },
     })
 
@@ -88,7 +90,9 @@ describe('openTargetService', () => {
     expect(result.targets.map((target) => target.id)).toEqual([
       'vscode',
       'sublime',
+      'xcode',
       'finder',
+      'terminal',
     ])
     expect(result.primaryTargetId).toBe('vscode')
     expect(result.targets.find((target) => target.id === 'finder')?.kind).toBe('file_manager')
@@ -107,7 +111,7 @@ describe('openTargetService', () => {
 
     const result = await service.listTargets()
 
-    expect(result.targets.map((target) => target.id)).toEqual(['finder'])
+    expect(result.targets.map((target) => target.id)).toEqual(['finder', 'terminal'])
     expect(result.primaryTargetId).toBe('finder')
   })
 
@@ -184,13 +188,37 @@ describe('openTargetService', () => {
     expect(state.commandProbes).toBeGreaterThan(initialProbes)
   })
 
-  it('rejects unknown targets', async () => {
+  it('opens directories in macOS Terminal', async () => {
     const dir = await makeDir()
-    const { service } = createService('darwin', { commands: { code: true } })
+    const { service, launched } = createService('darwin', {
+      paths: { '/System/Applications/Utilities/Terminal.app': true },
+    })
 
     try {
-      await expect(service.openTarget({ targetId: 'terminal', path: dir }))
-        .rejects.toMatchObject({ code: 'OPEN_TARGET_UNKNOWN' })
+      await service.openTarget({ targetId: 'terminal', path: dir })
+
+      expect(launched).toEqual([
+        { command: 'open', args: ['-a', '/System/Applications/Utilities/Terminal.app', dir] },
+      ])
+    } finally {
+      await rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('opens file parent directories in macOS Terminal', async () => {
+    const dir = await makeDir()
+    const file = join(dir, 'note.txt')
+    await writeFile(file, 'contents')
+    const { service, launched } = createService('darwin', {
+      paths: { '/System/Applications/Utilities/Terminal.app': true },
+    })
+
+    try {
+      await service.openTarget({ targetId: 'terminal', path: file })
+
+      expect(launched).toEqual([
+        { command: 'open', args: ['-a', '/System/Applications/Utilities/Terminal.app', dir] },
+      ])
     } finally {
       await rm(dir, { recursive: true, force: true })
     }

@@ -1,23 +1,27 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import type React from 'react'
 import {
+  CheckCircle2,
   ChevronDown,
-  FolderGit2,
-  FolderOpen,
+  Circle,
+  Ellipsis,
+  Expand,
   GitBranch,
   GitCommitHorizontal,
-  Github,
+  GitGraph,
   Plus,
+  RefreshCw,
+  Search,
   SquarePen,
+  X,
 } from 'lucide-react'
-import { sessionsApi, type RepositoryContextResult } from '../../api/sessions'
+import { sessionsApi, type GitLogEntry, type RepositoryContextResult } from '../../api/sessions'
 import { useTranslation } from '../../i18n'
-import { getDesktopHost } from '../../lib/desktopHost'
-import { useOpenTargetStore } from '../../stores/openTargetStore'
-import { useWorkspaceChatContextStore } from '../../stores/workspaceChatContextStore'
+import { useOpenTargetStore, type OpenTarget } from '../../stores/openTargetStore'
 import { useWorkspacePanelStore } from '../../stores/workspacePanelStore'
 import { useCLITaskStore } from '../../stores/cliTaskStore'
-import { useChatStore } from '../../stores/chatStore'
+import { useGlassPanelAnimation } from '../../hooks/useGlassPanelAnimation'
 import { TargetIcon } from '../common/TargetIcon'
 import { GitActionsDialog } from './GitActionsDialog'
 
@@ -25,21 +29,34 @@ type Props = {
   path: string | null | undefined
   sessionId?: string | null
   variant?: 'simple' | 'environment'
-  /** When true, forces the environment panel open (controlled by external button). */
   externalOpen?: boolean
-  /** Called when the panel closes itself (click-away, Escape). Use to sync external state. */
   onExternalClose?: () => void
+  hideTrigger?: boolean
+  anchorElement?: HTMLElement | null
+  simpleTargetIds?: string[]
 }
 
-function getPathLeaf(path: string | null | undefined) {
-  if (!path) return ''
-  return path.replace(/\\/g, '/').split('/').filter(Boolean).pop() || path
-}
-
-function formatReferenceLocation(path: string, lineStart?: number, lineEnd?: number) {
-  if (!lineStart) return path
-  if (lineEnd && lineEnd !== lineStart) return `${path}:L${lineStart}-L${lineEnd}`
-  return `${path}:L${lineStart}`
+type GitDialogInitialView = 'menu' | 'commit' | 'push' | 'branch'
+const SIMPLE_TARGET_ORDER = ['finder', 'terminal', 'xcode']
+const SIMPLE_TARGET_FALLBACKS: Record<string, Omit<OpenTarget, 'platform'>> = {
+  finder: {
+    id: 'finder',
+    kind: 'file_manager',
+    label: 'Finder',
+    icon: 'finder',
+  },
+  terminal: {
+    id: 'terminal',
+    kind: 'ide',
+    label: 'Terminal',
+    icon: 'terminal',
+  },
+  xcode: {
+    id: 'xcode',
+    kind: 'ide',
+    label: 'Xcode',
+    icon: 'xcode',
+  },
 }
 
 export function OpenProjectMenu({
@@ -48,6 +65,9 @@ export function OpenProjectMenu({
   variant = 'simple',
   externalOpen,
   onExternalClose,
+  hideTrigger = false,
+  anchorElement = null,
+  simpleTargetIds,
 }: Props) {
   const t = useTranslation()
   const targets = useOpenTargetStore((state) => state.targets)
@@ -59,31 +79,36 @@ export function OpenProjectMenu({
   const openWorkspacePanel = useWorkspacePanelStore((state) => state.openPanel)
   const setWorkspaceMode = useWorkspacePanelStore((state) => state.setMode)
   const setWorkspaceView = useWorkspacePanelStore((state) => state.setActiveView)
-  const referencesBySession = useWorkspaceChatContextStore((state) => state.referencesBySession)
   const tasks = useCLITaskStore((state) => state.tasks)
   const resetCompletedTasks = useCLITaskStore((state) => state.resetCompletedTasks)
-  const sessionState = useChatStore((state) => sessionId ? state.sessions[sessionId] : undefined)
-  const stopGeneration = useChatStore((state) => state.stopGeneration)
-  const activeGoal = sessionState?.activeGoal ?? null
-  const backgroundTasks = sessionState?.backgroundAgentTasks ?? {}
   const [open, setOpen] = useState(false)
-  const [branchesExpanded, setBranchesExpanded] = useState(false)
+  const [branchPopoverOpen, setBranchPopoverOpen] = useState(false)
+  const [branchSearch, setBranchSearch] = useState('')
   const [gitDialogOpen, setGitDialogOpen] = useState(false)
+  const [gitDialogInitialView, setGitDialogInitialView] = useState<GitDialogInitialView>('menu')
+  const [graphOpen, setGraphOpen] = useState(false)
+  const [gitCommits, setGitCommits] = useState<GitLogEntry[]>([])
+  const [gitLogLoading, setGitLogLoading] = useState(false)
+  const [gitLogError, setGitLogError] = useState<string | null>(null)
   const [repoLoading, setRepoLoading] = useState(false)
   const [repoContext, setRepoContext] = useState<RepositoryContextResult | null>(null)
-  const buttonRef = useRef<HTMLButtonElement>(null)
+  const buttonRef = useRef<HTMLElement | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+  const branchButtonRef = useRef<HTMLButtonElement>(null)
+  const graphDialogRef = useRef<HTMLDivElement>(null)
+  const { animatingOut, requestClose: requestAnimClose } = useGlassPanelAnimation(() => {
+    setOpen(false)
+    setBranchPopoverOpen(false)
+    onExternalClose?.()
+  })
 
-  // External open control: when externalOpen becomes true, open the panel
   useEffect(() => {
     if (externalOpen) setOpen(true)
   }, [externalOpen])
 
-  // Wrap setOpen to notify parent when panel closes
   const handleClose = useCallback(() => {
-    setOpen(false)
-    onExternalClose?.()
-  }, [onExternalClose])
+    requestAnimClose()
+  }, [requestAnimClose])
 
   useEffect(() => {
     if (!path) {
@@ -98,7 +123,14 @@ export function OpenProjectMenu({
 
     const handleDocumentMouseDown = (event: MouseEvent) => {
       const target = event.target as Node
-      if (buttonRef.current?.contains(target) || menuRef.current?.contains(target)) return
+      if (
+        buttonRef.current?.contains(target) ||
+        anchorElement?.contains(target) ||
+        menuRef.current?.contains(target) ||
+        graphDialogRef.current?.contains(target)
+      ) {
+        return
+      }
       handleClose()
     }
 
@@ -112,7 +144,7 @@ export function OpenProjectMenu({
       document.removeEventListener('mousedown', handleDocumentMouseDown)
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [open])
+  }, [anchorElement, handleClose, open])
 
   useEffect(() => {
     if (!open || variant !== 'environment' || !path) return
@@ -143,7 +175,34 @@ export function OpenProjectMenu({
     () => targets.find((target) => target.id === primaryTargetId) ?? targets[0] ?? null,
     [primaryTargetId, targets],
   )
-  const hasMenu = targets.length > 1
+  const simpleTargets = useMemo(
+    () => {
+      const orderedTargets = [...targets].sort((a, b) => {
+        const aIndex = SIMPLE_TARGET_ORDER.indexOf(a.id)
+        const bIndex = SIMPLE_TARGET_ORDER.indexOf(b.id)
+        if (aIndex !== -1 || bIndex !== -1) {
+          return (aIndex === -1 ? SIMPLE_TARGET_ORDER.length : aIndex)
+            - (bIndex === -1 ? SIMPLE_TARGET_ORDER.length : bIndex)
+        }
+        return 0
+      })
+
+      if (!simpleTargetIds?.length) return orderedTargets
+
+      const targetById = new Map(orderedTargets.map((target) => [target.id, target]))
+      const preferredTargets = simpleTargetIds
+        .map((id) => targetById.get(id) ?? (
+          SIMPLE_TARGET_FALLBACKS[id]
+            ? { ...SIMPLE_TARGET_FALLBACKS[id], platform: 'darwin' }
+            : undefined
+        ))
+        .filter((target): target is typeof orderedTargets[number] => Boolean(target))
+
+      return preferredTargets.length > 0 ? preferredTargets : orderedTargets
+    },
+    [simpleTargetIds, targets],
+  )
+  const hasMenu = simpleTargets.length > 1
 
   const handleOpenTarget = async (targetId: string) => {
     if (!path) return
@@ -156,66 +215,119 @@ export function OpenProjectMenu({
     }
   }
 
+  const openWorkspaceChanged = () => {
+    if (!sessionId) return
+    setWorkspaceMode(sessionId, 'workspace')
+    setWorkspaceView(sessionId, 'changed')
+    openWorkspacePanel(sessionId)
+    void loadStatus(sessionId)
+    handleClose()
+  }
+
+  const openGitDialog = (initialView: GitDialogInitialView) => {
+    if (!sessionId) return
+    setGitDialogInitialView(initialView)
+    setGitDialogOpen(true)
+  }
+
+  const loadGitLog = useCallback(async () => {
+    if (!sessionId) return
+    setGitLogLoading(true)
+    setGitLogError(null)
+    try {
+      const result = await sessionsApi.gitLog(sessionId)
+      setGitCommits(result.commits)
+    } catch (error) {
+      setGitLogError(error instanceof Error ? error.message : '加载 Git 图谱失败')
+    } finally {
+      setGitLogLoading(false)
+    }
+  }, [sessionId])
+
+  const openGitGraph = () => {
+    if (!sessionId) return
+    setGraphOpen(true)
+    setBranchPopoverOpen(false)
+    void loadGitLog()
+  }
+
   if (!path || !primaryTarget) return null
+  const simplePrimaryTarget = simpleTargets.find((target) => target.id === primaryTargetId) ?? simpleTargets[0] ?? primaryTarget
 
   const buttonLabel = hasMenu
     ? t('openProject.openProject')
     : t('openProject.openIn', { target: primaryTarget.label })
 
-  const rect = buttonRef.current?.getBoundingClientRect()
+  const rect = (hideTrigger && anchorElement ? anchorElement : buttonRef.current)?.getBoundingClientRect()
+  const branchRect = branchButtonRef.current?.getBoundingClientRect()
   const workspaceStatus = sessionId ? statusBySession[sessionId] : undefined
   const changeCount = workspaceStatus?.changedFiles.length ?? 0
-  const totalAdditions = workspaceStatus?.changedFiles.reduce((sum, f) => sum + f.additions, 0) ?? 0
-  const totalDeletions = workspaceStatus?.changedFiles.reduce((sum, f) => sum + f.deletions, 0) ?? 0
+  const totalAdditions = workspaceStatus?.changedFiles.reduce((sum, file) => sum + file.additions, 0) ?? 0
+  const totalDeletions = workspaceStatus?.changedFiles.reduce((sum, file) => sum + file.deletions, 0) ?? 0
   const branchLabel = repoContext?.currentBranch || workspaceStatus?.branch || '无分支'
-  const localLabel = primaryTarget.label || '本地'
-  const references = sessionId ? (referencesBySession[sessionId] ?? []) : []
-  const sources = references.slice(0, 4)
+  const completedTaskCount = tasks.filter((task) => task.status === 'completed').length
+  const activeTask = tasks.find((task) => task.status === 'in_progress')
+  const taskProgressLabel = tasks.length > 0
+    ? `进程 ${completedTaskCount}/${tasks.length}`
+    : '进程 0/0'
+  const filteredBranches = repoContext?.branches
+    .filter((branch) => !branchSearch || branch.name.toLowerCase().includes(branchSearch.toLowerCase()))
+    .slice(0, 18) ?? []
 
   if (variant === 'simple') {
+    const simpleButtonLabel = hasMenu
+      ? t('openProject.openProject')
+      : t('openProject.openIn', { target: simplePrimaryTarget.label })
+
     return (
       <div className="relative flex items-center">
-        <button
-          ref={buttonRef}
-          type="button"
-          aria-label={buttonLabel}
-          aria-haspopup={hasMenu ? 'menu' : undefined}
-          aria-expanded={hasMenu ? open : undefined}
-          title={buttonLabel}
-          onClick={() => {
-            if (hasMenu) {
-              setOpen((value) => !value)
-              return
-            }
-            void handleOpenTarget(primaryTarget.id)
-          }}
-          className={`inline-flex h-8 items-center justify-center gap-1 rounded-[var(--radius-md)] border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] text-[var(--color-token-text-secondary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] ${
-            hasMenu
-              ? 'min-w-[2.75rem] px-2 hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]'
-              : 'w-8 hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]'
-          }`}
+        <div
+          ref={(node) => { buttonRef.current = node }}
+          className="inline-flex h-8 overflow-hidden rounded-[13px] border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.075)] text-[rgba(255,255,255,0.78)] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_5px_14px_rgba(0,0,0,0.18)] backdrop-blur-xl"
         >
-          <TargetIcon target={primaryTarget} />
-          {hasMenu && <ChevronDown size={14} strokeWidth={1.9} />}
-        </button>
+          <button
+            type="button"
+            aria-label={t('openProject.openIn', { target: simplePrimaryTarget.label })}
+            title={t('openProject.openIn', { target: simplePrimaryTarget.label })}
+            onClick={() => void handleOpenTarget(simplePrimaryTarget.id)}
+            className="inline-flex h-full w-[42px] items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))]"
+          >
+            <span className="flex h-6 w-6 items-center justify-center overflow-hidden rounded-[6px] border border-[rgba(255,255,255,0.18)] bg-[rgba(0,0,0,0.34)] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+              <TargetIcon target={simplePrimaryTarget} size={18} />
+            </span>
+          </button>
+          {hasMenu ? (
+            <button
+              type="button"
+              aria-label={simpleButtonLabel}
+              aria-haspopup="menu"
+              aria-expanded={open}
+              title={simpleButtonLabel}
+              onClick={() => setOpen((value) => !value)}
+              className="inline-flex h-full w-[34px] items-center justify-center border-l border-[rgba(255,255,255,0.08)] bg-[rgba(0,0,0,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))]"
+            >
+              <ChevronDown size={16} strokeWidth={1.9} />
+            </button>
+          ) : null}
+        </div>
 
         {open && hasMenu && rect ? createPortal(
           <div
             ref={menuRef}
             role="menu"
-            className="liquid-glass glass-panel fixed z-50 min-w-[220px] overflow-hidden rounded-[var(--radius-2xl)] p-1.5 shadow-[var(--shadow-dropdown)]"
+            className={`liquid-glass glass-panel fixed z-50 w-[min(260px,calc(100vw-32px))] overflow-hidden rounded-[14px] border border-[rgba(255,255,255,0.1)] bg-[rgba(32,32,32,0.93)] p-1.5 shadow-[0_14px_42px_rgba(0,0,0,0.36)] backdrop-blur-xl ${animatingOut ? 'glass-animate-exit' : ''}`}
             style={{ top: rect.bottom + 6, right: Math.max(12, window.innerWidth - rect.right) }}
           >
-            {targets.map((target) => (
+            {simpleTargets.map((target) => (
               <button
                 key={target.id}
                 type="button"
                 role="menuitem"
                 onClick={() => void handleOpenTarget(target.id)}
-                className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm font-medium text-[var(--color-token-foreground)] transition-colors hover:bg-[rgba(255,255,255,0.04)] focus-visible:bg-[rgba(255,255,255,0.04)]"
+                className="flex h-9 w-full items-center gap-2.5 rounded-[8px] px-2.5 text-left text-[14px] font-medium leading-5 text-[rgba(255,255,255,0.9)] transition-colors hover:bg-[rgba(255,255,255,0.055)] focus-visible:bg-[rgba(255,255,255,0.055)]"
               >
-                <span className="flex h-7 w-7 items-center justify-center text-[var(--color-token-text-secondary)]">
-                  <TargetIcon target={target} size={24} />
+                <span className="flex h-5 w-5 items-center justify-center text-[var(--color-token-text-secondary)]">
+                  <TargetIcon target={target} size={18} />
                 </span>
                 <span className="min-w-0 truncate">{target.label}</span>
               </button>
@@ -227,346 +339,255 @@ export function OpenProjectMenu({
     )
   }
 
+  const trigger = hideTrigger ? null : (
+    <button
+      ref={(node) => { buttonRef.current = node }}
+      type="button"
+      aria-label={buttonLabel}
+      aria-haspopup="dialog"
+      aria-expanded={open}
+      title={buttonLabel}
+      onClick={() => setOpen((value) => !value)}
+      className={`inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] transition-colors spring-bounce-btn focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] ${open ? 'bg-[var(--color-surface)] text-[var(--color-token-foreground)] shadow-[0_8px_18px_rgba(0,0,0,0.12)]' : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-token-foreground)]'}`}
+    >
+      <TargetIcon target={primaryTarget} size={17} />
+    </button>
+  )
+
   return (
-    <div className="relative flex items-center">
-      <button
-        ref={buttonRef}
-        type="button"
-        aria-label={buttonLabel}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        title={buttonLabel}
-        onClick={() => setOpen((value) => !value)}
-        className="inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))]"
-      >
-        <TargetIcon target={primaryTarget} size={17} />
-      </button>
+    <div className={hideTrigger ? 'contents' : 'relative flex items-center'}>
+      {trigger}
 
       {open && rect ? createPortal(
         <div
           ref={menuRef}
           role="dialog"
-          aria-label="环境信息"
-          className="liquid-glass glass-panel fixed z-[340] w-[min(280px,calc(100vw-32px))] overflow-hidden rounded-[var(--radius-lg)] p-1.5 shadow-[var(--shadow-dropdown)]"
+          aria-label="Git 工具"
+          className={`liquid-glass glass-panel fixed z-[340] w-[min(320px,calc(100vw-32px))] overflow-hidden rounded-[18px] border border-[rgba(255,255,255,0.12)] bg-[rgba(28,28,30,0.93)] p-3 shadow-[0_18px_56px_rgba(0,0,0,0.36)] backdrop-blur-xl ${animatingOut ? 'glass-animate-exit' : ''}`}
           style={{
-            top: rect.bottom + 6,
-            right: Math.max(12, window.innerWidth - rect.right),
+            top: rect.bottom + 8,
+            right: 14,
           }}
         >
-          <div className="px-2.5 py-2">
-            <div className="flex items-center justify-between gap-2">
-              <div className="text-[11px] font-semibold text-[rgba(255,255,255,0.88)]">
-                环境信息
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  if (!sessionId) return
-                  setWorkspaceMode(sessionId, 'workspace')
-                  setWorkspaceView(sessionId, 'all')
-                  openWorkspacePanel(sessionId)
-                  void loadStatus(sessionId)
-                  handleClose()
-                }}
-                className="inline-flex h-5 w-5 items-center justify-center rounded-[var(--radius-xs)] text-[rgba(255,255,255,0.7)] transition-colors hover:bg-[rgba(255,255,255,0.06)] hover:text-[rgba(255,255,255,0.95)]"
-                title="打开工作区"
-              >
-                <Plus size={12} />
-              </button>
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0 text-[15px] font-semibold leading-5 text-[rgba(255,255,255,0.92)]">Git 工具</div>
+            <div className="flex items-center gap-1">
+              <IconButton label="Git 操作" onClick={() => openGitDialog('menu')}>
+                <Ellipsis size={18} />
+              </IconButton>
+              <IconButton label="打开 Git 图谱" onClick={openGitGraph}>
+                <Expand size={17} />
+              </IconButton>
             </div>
+          </div>
 
-            <div className="mt-1.5 space-y-px">
-              <button
-                type="button"
-                onClick={() => {
-                  if (!sessionId) return
-                  setWorkspaceMode(sessionId, 'workspace')
-                  setWorkspaceView(sessionId, 'changed')
-                  openWorkspacePanel(sessionId)
-                  void loadStatus(sessionId)
-                  handleClose()
-                }}
-                className="flex w-full items-center gap-1.5 rounded-[var(--radius-xs)] px-1.5 py-1 text-left transition-colors hover:bg-[rgba(255,255,255,0.04)]"
-              >
-                <SquarePen size={13} className="shrink-0 text-[rgba(255,255,255,0.9)]" />
-                <span className="flex min-w-0 flex-1 items-center gap-1.5">
-                  <span className="text-[11px] font-medium text-[rgba(255,255,255,0.96)]">变更</span>
-                  <span className="rounded-full bg-[rgba(255,255,255,0.08)] px-1.5 py-px text-[9px] text-[rgba(255,255,255,0.68)]">
-                    {changeCount}
-                  </span>
-                </span>
-              </button>
+          <div className="mt-2.5 space-y-1">
+            <ToolRow
+              icon={<SquarePen size={15} />}
+              label="更改"
+              detail={changeCount > 0 ? <><span className="text-[#31d873]">+{totalAdditions.toLocaleString()}</span> <span className="text-[#ff4f57]">-{totalDeletions.toLocaleString()}</span></> : <span className="text-[rgba(255,255,255,0.48)]">无变更</span>}
+              onClick={openWorkspaceChanged}
+              disabled={!sessionId}
+            />
 
-              <div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (path) void getDesktopHost().shell.openPath(path)
-                    handleClose()
-                  }}
-                  className="flex w-full items-center gap-1.5 rounded-[var(--radius-xs)] px-1.5 py-1 text-left transition-colors hover:bg-[rgba(255,255,255,0.04)]"
-                >
-                  <FolderOpen size={13} className="shrink-0 text-[rgba(255,255,255,0.9)]" />
-                  <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-[rgba(255,255,255,0.96)]">
-                    {localLabel}
-                  </span>
-                </button>
-              </div>
+            <button
+              ref={branchButtonRef}
+              type="button"
+              disabled={repoContext?.state !== 'ok' || repoLoading}
+              onClick={() => setBranchPopoverOpen((value) => !value)}
+              className="flex h-9 w-full items-center gap-2 rounded-[10px] px-2 text-left transition-colors hover:bg-[rgba(255,255,255,0.06)] disabled:cursor-default disabled:opacity-70 disabled:hover:bg-transparent"
+            >
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center text-[rgba(255,255,255,0.82)]">
+                <GitBranch size={15} />
+              </span>
+              <span className="min-w-0 flex-1 truncate text-[13px] font-semibold leading-5 text-[rgba(255,255,255,0.9)]">
+                {repoLoading ? '加载分支中…' : branchLabel}
+              </span>
+              <ChevronDown size={14} className={`shrink-0 text-[rgba(255,255,255,0.52)] transition-transform ${branchPopoverOpen ? 'rotate-180' : ''}`} />
+            </button>
 
-              <div>
-                <button
-                  type="button"
-                  disabled={repoContext?.state !== 'ok' || (repoContext?.branches.length ?? 0) === 0}
-                  onClick={() => setBranchesExpanded((value) => !value)}
-                  className="flex w-full items-center gap-1.5 rounded-[var(--radius-xs)] px-1.5 py-1 text-left transition-colors hover:bg-[rgba(255,255,255,0.04)] disabled:cursor-default disabled:opacity-70 disabled:hover:bg-transparent"
-                >
-                  <GitBranch size={13} className="shrink-0 text-[rgba(255,255,255,0.9)]" />
-                  <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-[rgba(255,255,255,0.96)]">
-                    {repoLoading ? '加载分支中…' : branchLabel}
-                  </span>
-                  {(repoContext?.branches.length ?? 0) > 0 ? <ChevronDown size={12} className={`shrink-0 text-[rgba(255,255,255,0.7)] transition-transform ${branchesExpanded ? 'rotate-180' : ''}`} /> : null}
-                </button>
-
-                {branchesExpanded && repoContext?.state === 'ok' ? (
-                  <div className="ml-5 mt-0.5 max-h-[120px] space-y-px overflow-y-auto">
-                    {repoContext.branches.slice(0, 12).map((branch) => (
-                      <div
-                        key={branch.name}
-                        className="flex items-center gap-1.5 rounded-[var(--radius-xs)] px-1.5 py-1"
-                      >
-                        <span className={`h-1 w-1 rounded-full ${branch.current ? 'bg-[rgba(255,255,255,0.86)]' : 'bg-[rgba(255,255,255,0.18)]'}`} />
-                        <span className="min-w-0 flex-1 truncate text-[10px] text-[rgba(255,255,255,0.76)]">
-                          {branch.name}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-
+            <div className="flex h-9 items-center gap-2 rounded-[10px] px-2 transition-colors hover:bg-[rgba(255,255,255,0.06)]">
               <button
                 type="button"
                 disabled={!sessionId}
-                onClick={() => setGitDialogOpen((v) => !v)}
-                className="flex w-full items-center gap-1.5 rounded-[var(--radius-xs)] px-1.5 py-1 text-left transition-colors hover:bg-[rgba(255,255,255,0.04)] disabled:cursor-default disabled:opacity-70 disabled:hover:bg-transparent"
+                onClick={() => openGitDialog('commit')}
+                className="flex min-w-0 flex-1 items-center gap-2 text-left disabled:cursor-default disabled:opacity-70"
               >
-                <GitCommitHorizontal size={13} className="shrink-0 text-[rgba(255,255,255,0.9)]" />
-                <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-[rgba(255,255,255,0.96)]">
-                  提交更改…
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center text-[rgba(255,255,255,0.82)]">
+                  <GitCommitHorizontal size={15} />
                 </span>
-                {changeCount > 0 && (
-                  <span className="rounded-full bg-[rgba(255,255,255,0.08)] px-1.5 py-px text-[9px] text-[rgba(255,255,255,0.68)]">
-                    {changeCount}
-                  </span>
-                )}
+                <span className="min-w-0 flex-1 truncate text-[13px] font-semibold leading-5 text-[rgba(255,255,255,0.9)]">提交</span>
               </button>
-
-              <div className="flex items-center gap-1.5 rounded-[var(--radius-xs)] px-1.5 py-1 opacity-80">
-                <Github size={13} className="shrink-0 text-[rgba(255,255,255,0.6)]" />
-                <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-[rgba(255,255,255,0.6)]">
-                  GitHub CLI 不可用
-                </span>
-              </div>
+              <button
+                type="button"
+                disabled={!sessionId}
+                onClick={() => openGitDialog('menu')}
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] text-[rgba(255,255,255,0.56)] transition-colors hover:bg-[rgba(255,255,255,0.07)] hover:text-[rgba(255,255,255,0.9)] disabled:cursor-default disabled:opacity-45"
+                aria-label="更多 Git 操作"
+              >
+                <Ellipsis size={15} />
+              </button>
             </div>
+          </div>
 
-            <div className="my-2 h-px rounded-full bg-[rgba(255,255,255,0.08)]" />
+          <div className="my-2.5 h-px rounded-full bg-[rgba(255,255,255,0.09)]" />
 
-            <div className="flex items-center justify-between gap-2">
-              <div className="text-[10px] font-semibold text-[rgba(255,255,255,0.7)]">
-                任务
-              </div>
-              {tasks.length > 0 && tasks.every((tk) => tk.status === 'completed') ? (
-                <button
-                  type="button"
-                  onClick={() => { void resetCompletedTasks(sessionId ?? undefined) }}
-                  className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[var(--radius-2xs)] text-[rgba(255,255,255,0.5)] transition-colors hover:bg-[rgba(255,255,255,0.06)] hover:text-[rgba(255,255,255,0.8)]"
-                >
-                  <span className="material-symbols-outlined text-[10px]">close</span>
-                </button>
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <div className="text-[13px] font-semibold leading-5 text-[rgba(255,255,255,0.86)]">{taskProgressLabel}</div>
+              {activeTask ? (
+                <div className="truncate text-[11px] leading-4 text-[rgba(255,255,255,0.42)]">
+                  当前第 {tasks.findIndex((task) => task.id === activeTask.id) + 1} 步
+                </div>
               ) : null}
             </div>
-            <div className="mt-1 space-y-px">
-              {tasks.length > 0 ? tasks.map((task) => {
-                const isCompleted = task.status === 'completed'
-                const isActive = task.status === 'in_progress'
-                const icon = isCompleted ? 'check_circle' : isActive ? 'pending' : 'radio_button_unchecked'
-                const color = isCompleted ? 'var(--color-success)' : isActive ? 'var(--color-warning)' : 'rgba(255,255,255,0.5)'
-                return (
-                  <div key={task.id} className="flex items-center gap-1.5 rounded-[var(--radius-xs)] px-1.5 py-1">
-                    <span
-                      className="material-symbols-outlined shrink-0 text-[13px]"
-                      style={{ color, fontVariationSettings: "'FILL' 1" }}
-                    >
-                      {icon}
-                    </span>
-                    <span className="text-[9px] font-mono text-[rgba(255,255,255,0.4)]">
-                      #{task.id}
-                    </span>
-                    <span className={`text-[11px] ${
-                      isCompleted
-                        ? 'text-[rgba(255,255,255,0.5)] line-through'
-                        : 'text-[rgba(255,255,255,0.92)]'
-                    }`}>
-                      {task.subject}
-                    </span>
-                    {isActive && task.activeForm && (
-                      <span className="text-[9px] text-[var(--color-warning)] truncate">
-                        {task.activeForm}
-                      </span>
-                    )}
-                  </div>
-                )
-              }) : (
-                <div className="text-[10px] text-[rgba(255,255,255,0.45)] px-1.5 py-1">
-                  暂无任务
-                </div>
-              )}
-            </div>
-
-            {activeGoal && activeGoal.action !== 'completed' ? (
-              <>
-                <div className="my-2 h-px rounded-full bg-[rgba(255,255,255,0.08)]" />
-
-                <div className="text-[10px] font-semibold text-[rgba(255,255,255,0.7)]">
-                  目标
-                </div>
-                <div className="mt-1 space-y-px">
-                  <div className="flex items-center gap-1.5 rounded-[var(--radius-xs)] px-1.5 py-1">
-                    <span
-                      className="material-symbols-outlined shrink-0 text-[13px]"
-                      style={{
-                        color: activeGoal.status === 'paused' ? 'var(--color-warning)' : 'var(--color-success)',
-                        fontVariationSettings: "'FILL' 1",
-                      }}
-                    >
-                      {activeGoal.status === 'paused' ? 'pause_circle' : 'target'}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-[rgba(255,255,255,0.92)]">
-                      {activeGoal.objective ?? activeGoal.message ?? '—'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 px-1.5">
-                    {activeGoal.status && (
-                      <span className={`text-[9px] font-medium ${
-                        activeGoal.status === 'paused' ? 'text-[var(--color-warning)]' : 'text-[var(--color-success)]'
-                      }`}>
-                        {activeGoal.status === 'paused' ? '已暂停' : activeGoal.status === 'running' ? '运行中' : activeGoal.status}
-                      </span>
-                    )}
-                    {activeGoal.budget && (
-                      <span className="text-[9px] text-[rgba(255,255,255,0.46)]">
-                        预算 {activeGoal.budget}
-                      </span>
-                    )}
-                    {activeGoal.elapsed && (
-                      <span className="text-[9px] text-[rgba(255,255,255,0.46)]">
-                        已用 {activeGoal.elapsed}
-                      </span>
-                    )}
-                    {activeGoal.continuations && (
-                      <span className="text-[9px] text-[rgba(255,255,255,0.46)]">
-                        续轮 {activeGoal.continuations}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </>
+            {tasks.length > 0 && tasks.every((task) => task.status === 'completed') ? (
+              <IconButton label="清空已完成任务" onClick={() => { void resetCompletedTasks(sessionId ?? undefined) }}>
+                <X size={16} />
+              </IconButton>
             ) : null}
+          </div>
 
-            {Object.values(backgroundTasks).some((t) => t.status === 'running') ? (
-              <>
-                <div className="my-2 h-px rounded-full bg-[rgba(255,255,255,0.08)]" />
-
-                <div className="text-[10px] font-semibold text-[rgba(255,255,255,0.7)]">
-                  运行中
+          <div className="mt-2 space-y-0.5">
+            {tasks.length > 0 ? tasks.map((task, index) => {
+              const isCompleted = task.status === 'completed'
+              const isActive = task.status === 'in_progress'
+              return (
+                <div key={task.id} className="flex min-h-7 items-center gap-1.5 rounded-[8px] px-1.5 py-1">
+                  {isCompleted ? (
+                    <CheckCircle2 size={13} className="shrink-0 text-[var(--color-success)]" />
+                  ) : (
+                    <Circle size={13} className={`shrink-0 ${isActive ? 'text-[var(--color-warning)]' : 'text-[rgba(255,255,255,0.34)]'}`} />
+                  )}
+                  <span className="shrink-0 text-[11px] font-medium tabular-nums text-[rgba(255,255,255,0.38)]">
+                    {index + 1}
+                  </span>
+                  <span className={`min-w-0 flex-1 truncate text-[11px] leading-4 ${isCompleted ? 'text-[rgba(255,255,255,0.44)] line-through' : 'text-[rgba(255,255,255,0.86)]'}`}>
+                    {task.subject}
+                  </span>
+                  {isActive && task.activeForm ? (
+                    <span className="max-w-[120px] truncate text-[11px] text-[var(--color-warning)]">
+                      {task.activeForm}
+                    </span>
+                  ) : null}
                 </div>
-                <div className="mt-1 space-y-px">
-                  {Object.values(backgroundTasks)
-                    .filter((t) => t.status === 'running')
-                    .map((task) => {
-                      const elapsedMs = Date.now() - task.startedAt
-                      const elapsedStr = elapsedMs < 60000
-                        ? `${Math.floor(elapsedMs / 1000)}秒`
-                        : elapsedMs < 3600000
-                          ? `${Math.floor(elapsedMs / 60000)}分${Math.floor((elapsedMs % 60000) / 1000)}秒`
-                          : `${Math.floor(elapsedMs / 3600000)}时${Math.floor((elapsedMs % 3600000) / 60000)}分`
-                      return (
-                        <div key={task.taskId} className="flex items-center gap-1.5 rounded-[var(--radius-xs)] px-1.5 py-1">
-                          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-success)] animate-pulse-dot" />
-                          <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-[rgba(255,255,255,0.92)]">
-                            {task.description ?? task.workflowName ?? task.taskId}
-                          </span>
-                          <span className="shrink-0 text-[9px] text-[rgba(255,255,255,0.46)] tabular-nums">
-                            {elapsedStr}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (sessionId) stopGeneration(sessionId)
-                            }}
-                            className="flex h-4 w-4 shrink-0 items-center justify-center rounded-[var(--radius-2xs)] text-[rgba(255,255,255,0.5)] transition-colors hover:bg-[rgba(255,255,255,0.06)] hover:text-[rgba(255,255,255,0.8)]"
-                            title="停止"
-                          >
-                            <span className="material-symbols-outlined text-[10px]">stop</span>
-                          </button>
-                        </div>
-                      )
-                    })}
-                </div>
-              </>
-            ) : null}
+              )
+            }) : (
+              <div className="rounded-[8px] px-1.5 py-1.5 text-[11px] text-[rgba(255,255,255,0.42)]">暂无任务</div>
+            )}
+          </div>
 
-            <div className="my-2 h-px rounded-full bg-[rgba(255,255,255,0.08)]" />
+        </div>,
+        document.body,
+      ) : null}
 
-            <div className="text-[10px] font-semibold text-[rgba(255,255,255,0.7)]">
-              来源
+      {branchPopoverOpen && branchRect ? createPortal(
+        <div
+          className="liquid-glass glass-panel fixed z-[350] w-[min(280px,calc(100vw-32px))] overflow-hidden rounded-[16px] border border-[rgba(255,255,255,0.11)] bg-[rgba(28,28,30,0.94)] p-2.5 shadow-[0_18px_56px_rgba(0,0,0,0.38)] backdrop-blur-xl"
+          style={{
+            top: Math.max(12, branchRect.top - 22),
+            left: Math.max(12, branchRect.left - 292),
+          }}
+        >
+          <div className="flex h-8 items-center gap-2 rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[rgba(0,0,0,0.18)] px-2.5">
+            <Search size={13} className="shrink-0 text-[rgba(255,255,255,0.42)]" />
+            <input
+              type="text"
+              value={branchSearch}
+              onChange={(event) => setBranchSearch(event.target.value)}
+              placeholder="搜索"
+              className="min-w-0 flex-1 bg-transparent text-[12px] text-[rgba(255,255,255,0.9)] placeholder:text-[rgba(255,255,255,0.36)] outline-none"
+            />
+          </div>
+
+          <div className="mt-2 rounded-[12px] bg-[rgba(255,255,255,0.055)] p-2.5">
+            <div className="flex items-center gap-2 text-[12px] font-semibold text-[rgba(255,255,255,0.9)]">
+              <GitBranch size={14} />
+              <span className="min-w-0 flex-1 truncate">{branchLabel}</span>
+              <span className="rounded-full bg-[rgba(255,255,255,0.1)] px-1.5 py-0.5 text-[10px] text-[rgba(255,255,255,0.58)]">当前</span>
             </div>
-            <div className="mt-1 space-y-px">
-              {sources.length > 0 ? sources.map((reference) => (
-                <div
-                  key={reference.id}
-                  className="rounded-[var(--radius-xs)] bg-[rgba(255,255,255,0.03)] px-2 py-1.5"
-                >
-                  <div className="truncate text-[11px] font-medium text-[rgba(255,255,255,0.86)]">
-                    {reference.name}
-                  </div>
-                  <div className="mt-0.5 truncate text-[9px] text-[rgba(255,255,255,0.52)]">
-                    {formatReferenceLocation(reference.path, reference.lineStart, reference.lineEnd)}
-                  </div>
-                </div>
-              )) : (
-                <div className="text-[10px] font-medium text-[rgba(255,255,255,0.6)]">
-                  暂无来源
-                </div>
-              )}
-              {sources.length < references.length ? (
-                <div className="text-[9px] text-[rgba(255,255,255,0.46)]">
-                  还有 {references.length - sources.length} 项未显示
-                </div>
-              ) : null}
-              {workspaceStatus?.changedFiles.length ? (
-                <div className="pt-0.5">
-                  <div className="mb-0.5 text-[9px] text-[rgba(255,255,255,0.46)]">
-                    最近变更
-                  </div>
-                  <div className="space-y-px">
-                    {workspaceStatus.changedFiles.slice(0, 4).map((file) => (
-                      <div
-                        key={file.path}
-                        className="flex items-center gap-1.5 rounded-[var(--radius-xs)] bg-[rgba(255,255,255,0.025)] px-2 py-1"
-                      >
-                        <FolderGit2 size={11} className="shrink-0 text-[rgba(255,255,255,0.6)]" />
-                        <span className="min-w-0 flex-1 truncate text-[10px] text-[rgba(255,255,255,0.76)]">
-                          {getPathLeaf(file.path)}
-                        </span>
-                        <span className="shrink-0 text-[9px] text-[rgba(255,255,255,0.52)] tabular-nums">
-                          +{file.additions} -{file.deletions}
-                        </span>
+          </div>
+
+          <div className="mt-1.5 max-h-[180px] space-y-0.5 overflow-y-auto">
+            {filteredBranches.map((branch) => (
+              <div key={branch.name} className="flex h-7 items-center gap-2 rounded-[8px] px-2 text-[11px] text-[rgba(255,255,255,0.72)]">
+                <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${branch.current ? 'bg-[var(--color-success)]' : 'bg-[rgba(255,255,255,0.24)]'}`} />
+                <span className="min-w-0 flex-1 truncate">{branch.name}</span>
+              </div>
+            ))}
+            {filteredBranches.length === 0 ? (
+              <div className="px-2 py-2 text-[11px] text-[rgba(255,255,255,0.42)]">无匹配分支</div>
+            ) : null}
+          </div>
+
+          <div className="mt-1.5 border-t border-[rgba(255,255,255,0.08)] pt-1.5">
+            <BranchAction icon={<Plus size={14} />} label="创建并检出新分支" onClick={() => openGitDialog('branch')} />
+            <BranchAction icon={<GitGraph size={14} />} label="Git 图谱" onClick={openGitGraph} />
+          </div>
+        </div>,
+        document.body,
+      ) : null}
+
+      {graphOpen ? createPortal(
+        <div className="fixed inset-0 z-[370] flex items-center justify-center bg-[rgba(0,0,0,0.42)] px-4 backdrop-blur-[14px]">
+          <div
+            ref={graphDialogRef}
+            role="dialog"
+            aria-label="Git 图谱"
+            className="liquid-glass glass-panel w-[min(760px,calc(100vw-32px))] max-h-[min(560px,calc(100vh-48px))] overflow-hidden rounded-[18px] border border-[rgba(255,255,255,0.11)] bg-[rgba(28,28,30,0.94)] shadow-[0_24px_72px_rgba(0,0,0,0.46)]"
+          >
+            <div className="flex items-center justify-between gap-2 border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
+              <div className="text-[15px] font-semibold text-[rgba(255,255,255,0.92)]">Git 图谱</div>
+              <div className="flex items-center gap-1">
+                <IconButton label="刷新 Git 图谱" onClick={() => void loadGitLog()}>
+                  <RefreshCw size={16} className={gitLogLoading ? 'animate-spin' : ''} />
+                </IconButton>
+                <IconButton label="关闭 Git 图谱" onClick={() => setGraphOpen(false)}>
+                  <X size={17} />
+                </IconButton>
+              </div>
+            </div>
+            <div className="max-h-[488px] overflow-auto p-3">
+              <div className="grid grid-cols-[44px_minmax(180px,1fr)_96px_104px_76px] gap-2 border-b border-[rgba(255,255,255,0.08)] px-2 pb-2 text-[11px] font-semibold text-[rgba(255,255,255,0.42)]">
+                <span>图</span>
+                <span>描述</span>
+                <span>日期</span>
+                <span>作者</span>
+                <span>提交</span>
+              </div>
+              {gitLogLoading && gitCommits.length === 0 ? (
+                <div className="px-2 py-6 text-center text-[12px] text-[rgba(255,255,255,0.46)]">加载中…</div>
+              ) : gitLogError ? (
+                <div className="px-2 py-6 text-center text-[12px] text-[var(--color-danger)]">{gitLogError}</div>
+              ) : gitCommits.length > 0 ? (
+                <div className="divide-y divide-[rgba(255,255,255,0.06)]">
+                  {gitCommits.map((commit, index) => (
+                    <div key={commit.hash} className="grid min-h-10 grid-cols-[44px_minmax(180px,1fr)_96px_104px_76px] items-center gap-2 px-2 text-[11px]">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-[var(--color-success)]" />
+                        <span className="h-6 w-px bg-[rgba(255,255,255,0.16)]" style={{ opacity: index === gitCommits.length - 1 ? 0 : 1 }} />
                       </div>
-                    ))}
-                  </div>
+                      <div className="min-w-0">
+                        <div className="truncate font-medium text-[rgba(255,255,255,0.88)]">{commit.subject}</div>
+                        {commit.refs.length > 0 ? (
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {commit.refs.slice(0, 3).map((ref) => (
+                              <span key={ref} className="rounded-full bg-[rgba(255,255,255,0.09)] px-1.5 py-0.5 text-[10px] text-[rgba(255,255,255,0.55)]">
+                                {ref}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                      <span className="truncate text-[rgba(255,255,255,0.55)]">{commit.date}</span>
+                      <span className="truncate text-[rgba(255,255,255,0.68)]">{commit.author}</span>
+                      <span className="font-mono text-[rgba(255,255,255,0.58)]">{commit.shortHash}</span>
+                    </div>
+                  ))}
                 </div>
-              ) : null}
+              ) : (
+                <div className="px-2 py-6 text-center text-[12px] text-[rgba(255,255,255,0.46)]">暂无提交记录</div>
+              )}
             </div>
           </div>
         </div>,
@@ -582,8 +603,63 @@ export function OpenProjectMenu({
           changeCount={changeCount}
           totalAdditions={totalAdditions}
           totalDeletions={totalDeletions}
+          initialView={gitDialogInitialView}
         />
       ) : null}
     </div>
+  )
+}
+
+function IconButton({ label, children, onClick }: { label: string; children: React.ReactNode; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[8px] text-[rgba(255,255,255,0.56)] transition-colors hover:bg-[rgba(255,255,255,0.07)] hover:text-[rgba(255,255,255,0.9)]"
+    >
+      {children}
+    </button>
+  )
+}
+
+function ToolRow({
+  icon,
+  label,
+  detail,
+  disabled,
+  onClick,
+}: {
+  icon: React.ReactNode
+  label: string
+  detail: React.ReactNode
+  disabled?: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className="flex h-9 w-full items-center gap-2 rounded-[10px] px-2 text-left transition-colors hover:bg-[rgba(255,255,255,0.06)] disabled:cursor-default disabled:opacity-70 disabled:hover:bg-transparent"
+    >
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center text-[rgba(255,255,255,0.82)]">{icon}</span>
+      <span className="min-w-0 flex-1 truncate text-[13px] font-semibold leading-5 text-[rgba(255,255,255,0.9)]">{label}</span>
+      <span className="shrink-0 text-[12px] font-medium tabular-nums">{detail}</span>
+    </button>
+  )
+}
+
+function BranchAction({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex h-8 w-full items-center gap-2 rounded-[9px] px-2 text-left text-[12px] font-semibold text-[rgba(255,255,255,0.84)] transition-colors hover:bg-[rgba(255,255,255,0.06)]"
+    >
+      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[rgba(255,255,255,0.68)]">{icon}</span>
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+    </button>
   )
 }
