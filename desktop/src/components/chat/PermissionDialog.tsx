@@ -176,29 +176,40 @@ export function PermissionDialog({ sessionId, requestId, toolName, input, descri
   const detailChipClassName = isFloating
     ? 'flex items-center gap-2 rounded-[14px] border border-white/7 bg-[rgba(255,255,255,0.035)] px-3 py-2 text-xs font-[var(--font-mono)] text-[var(--color-text-secondary)]'
     : 'flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-surface-container)] px-3 py-2 text-xs font-[var(--font-mono)] text-[var(--color-text-secondary)]'
+  const floatingActionButtonClassName = 'inline-flex h-11 items-center justify-center gap-2 rounded-[14px] border px-4 text-[13px] font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/15'
+  const floatingSecondaryButtonClassName = `${floatingActionButtonClassName} border-white/8 bg-transparent text-[var(--color-text-secondary)] hover:bg-white/[0.04] hover:text-[var(--color-text-primary)]`
+  const floatingPrimaryButtonClassName = `${floatingActionButtonClassName} border-white/10 bg-[rgba(238,238,238,0.16)] text-white hover:bg-[rgba(238,238,238,0.22)]`
+  const floatingDangerButtonClassName = `${floatingActionButtonClassName} border-[rgba(255,160,160,0.18)] bg-[rgba(255,123,123,0.18)] text-[#ffd3d3] hover:bg-[rgba(255,123,123,0.24)]`
+  const rawPreviewClassName = isFloating
+    ? 'mt-2 max-h-[220px] overflow-y-auto overflow-x-auto rounded-[16px] border border-white/8 bg-[rgba(8,8,8,0.58)] px-3 py-3 font-[var(--font-mono)] text-[11px] leading-[1.3] text-[var(--color-terminal-fg)] whitespace-pre-wrap break-words'
+    : 'mt-2 max-h-[220px] overflow-y-auto overflow-x-auto rounded-[var(--radius-md)] bg-[var(--color-terminal-bg)] px-3 py-2.5 font-[var(--font-mono)] text-[11px] leading-[1.3] text-[var(--color-terminal-fg)] whitespace-pre-wrap break-words'
 
   return (
     <div className={containerClassName}>
       {/* Header */}
       <div className={headerClassName}>
         <div
-          className="flex items-center justify-center w-8 h-8 rounded-[var(--radius-md)]"
-          style={{ backgroundColor: `${meta.color}18` }}
+          className={isFloating
+            ? 'flex h-10 w-10 items-center justify-center rounded-[14px] border border-white/8 bg-[rgba(255,255,255,0.025)]'
+            : 'flex items-center justify-center w-8 h-8 rounded-[var(--radius-md)]'}
+          style={isFloating ? undefined : { backgroundColor: `${meta.color}18` }}
         >
           <span
-            className="material-symbols-outlined text-[18px]"
+            className={`material-symbols-outlined ${isFloating ? 'text-[20px]' : 'text-[18px]'}`}
             style={{ color: meta.color }}
           >
             {meta.icon}
           </span>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-[var(--color-text-primary)]">
+          <div className="flex items-center gap-2.5">
+            <span className={isFloating ? 'text-[15px] font-semibold text-white' : 'text-sm font-semibold text-[var(--color-text-primary)]'}>
               {title}
             </span>
             {isPending && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[var(--color-warning)]/15 text-[var(--color-warning)]">
+              <span className={isFloating
+                ? 'inline-flex items-center gap-1 rounded-full border border-[rgba(224,177,68,0.16)] bg-[rgba(224,177,68,0.14)] px-2 py-0.5 text-[10px] font-semibold tracking-[0.01em] text-[#e4bf68]'
+                : 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[var(--color-warning)]/15 text-[var(--color-warning)]'}>
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-warning)] animate-pulse-dot" />
                 {t('permission.awaitingApproval')}
               </span>
@@ -209,9 +220,9 @@ export function PermissionDialog({ sessionId, requestId, toolName, input, descri
               </span>
             )}
           </div>
-          {description && (
-            <p className="mt-0.5 text-xs text-[var(--color-text-secondary)] truncate">{description}</p>
-          )}
+          <p className={`mt-0.5 truncate ${isFloating ? 'text-[12px] text-[rgba(255,255,255,0.46)]' : 'text-xs text-[var(--color-text-secondary)]'}`}>
+            {description || `${meta.label} · 等待你确认后继续执行`}
+          </p>
         </div>
       </div>
 
@@ -242,13 +253,15 @@ export function PermissionDialog({ sessionId, requestId, toolName, input, descri
 
         {/* Secondary detail */}
         {details.secondary && (
-          <p className="mt-2 text-xs text-[var(--color-text-tertiary)]">{details.secondary}</p>
+          <p className={`mt-2 ${isFloating ? 'text-[12px] text-[rgba(255,255,255,0.42)]' : 'text-xs text-[var(--color-text-tertiary)]'}`}>{details.secondary}</p>
         )}
 
         {allowRawToggle && (
           <button
             onClick={() => setShowRaw(!showRaw)}
-            className="mt-2 flex cursor-pointer items-center gap-1 text-[11px] text-[var(--color-text-accent)] hover:underline"
+            className={isFloating
+              ? 'mt-3 flex cursor-pointer items-center gap-1 rounded-[10px] px-2 py-1 text-[11px] text-[rgba(255,255,255,0.52)] transition-colors hover:bg-white/[0.04] hover:text-white'
+              : 'mt-2 flex cursor-pointer items-center gap-1 text-[11px] text-[var(--color-text-accent)] hover:underline'}
           >
             <span className="material-symbols-outlined text-[14px]">
               {showRaw ? 'expand_less' : 'expand_more'}
@@ -258,7 +271,7 @@ export function PermissionDialog({ sessionId, requestId, toolName, input, descri
         )}
 
         {allowRawToggle && showRaw && (
-          <pre className="mt-2 max-h-[220px] overflow-y-auto overflow-x-auto rounded-[var(--radius-md)] bg-[var(--color-terminal-bg)] px-3 py-2.5 font-[var(--font-mono)] text-[11px] leading-[1.3] text-[var(--color-terminal-fg)] whitespace-pre-wrap break-words">
+          <pre className={rawPreviewClassName}>
             {rawInput}
           </pre>
         )}
@@ -267,37 +280,69 @@ export function PermissionDialog({ sessionId, requestId, toolName, input, descri
       {/* Action buttons */}
       {isPending && (
         <div className={actionClassName}>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => targetSessionId && respondToPermission(targetSessionId, requestId, true)}
-            icon={
-              <span className="material-symbols-outlined text-[14px]">check</span>
-            }
-          >
-            {t('permission.allow')}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => targetSessionId && respondToPermission(targetSessionId, requestId, true, { rule: 'always' })}
-            icon={
-              <span className="material-symbols-outlined text-[14px]">verified</span>
-            }
-          >
-            {t('permission.allowForSession')}
-          </Button>
-          <div className="flex-1" />
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={() => targetSessionId && respondToPermission(targetSessionId, requestId, false)}
-            icon={
-              <span className="material-symbols-outlined text-[14px]">close</span>
-            }
-          >
-            {t('permission.deny')}
-          </Button>
+          {isFloating ? (
+            <>
+              <button
+                type="button"
+                onClick={() => targetSessionId && respondToPermission(targetSessionId, requestId, true)}
+                className={floatingPrimaryButtonClassName}
+              >
+                <span className="material-symbols-outlined text-[16px]">check</span>
+                {t('permission.allow')}
+              </button>
+              <button
+                type="button"
+                onClick={() => targetSessionId && respondToPermission(targetSessionId, requestId, true, { rule: 'always' })}
+                className={floatingSecondaryButtonClassName}
+              >
+                <span className="material-symbols-outlined text-[16px]">verified</span>
+                {t('permission.allowForSession')}
+              </button>
+              <div className="flex-1" />
+              <button
+                type="button"
+                onClick={() => targetSessionId && respondToPermission(targetSessionId, requestId, false)}
+                className={floatingDangerButtonClassName}
+              >
+                <span className="material-symbols-outlined text-[16px]">close</span>
+                {t('permission.deny')}
+              </button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => targetSessionId && respondToPermission(targetSessionId, requestId, true)}
+                icon={
+                  <span className="material-symbols-outlined text-[14px]">check</span>
+                }
+              >
+                {t('permission.allow')}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => targetSessionId && respondToPermission(targetSessionId, requestId, true, { rule: 'always' })}
+                icon={
+                  <span className="material-symbols-outlined text-[14px]">verified</span>
+                }
+              >
+                {t('permission.allowForSession')}
+              </Button>
+              <div className="flex-1" />
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => targetSessionId && respondToPermission(targetSessionId, requestId, false)}
+                icon={
+                  <span className="material-symbols-outlined text-[14px]">close</span>
+                }
+              >
+                {t('permission.deny')}
+              </Button>
+            </>
+          )}
         </div>
       )}
     </div>

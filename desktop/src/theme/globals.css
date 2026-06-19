@@ -1171,7 +1171,7 @@ button, input, textarea, select, a, [role="button"] {
 .permission-sheet-anchor {
   position: relative;
   z-index: 12;
-  animation: permission-sheet-rise 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: permission-sheet-rise 520ms cubic-bezier(0.18, 0.96, 0.24, 1.18);
   transform-origin: center bottom;
 }
 
@@ -1189,7 +1189,7 @@ button, input, textarea, select, a, [role="button"] {
 .chat-input-covered-shell {
   transition:
     opacity 240ms ease,
-    transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 420ms cubic-bezier(0.2, 0.92, 0.24, 1.06),
     filter 240ms ease;
 }
 
@@ -1222,7 +1222,11 @@ button, input, textarea, select, a, [role="button"] {
 @keyframes permission-sheet-rise {
   0% {
     opacity: 0;
-    transform: translate3d(0, 44px, 0) scale(0.985);
+    transform: translate3d(0, 56px, 0) scale(0.982);
+  }
+  72% {
+    opacity: 1;
+    transform: translate3d(0, -4px, 0) scale(1.003);
   }
   100% {
     opacity: 1;
