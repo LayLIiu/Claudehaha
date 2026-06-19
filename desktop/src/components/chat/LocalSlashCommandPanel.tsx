@@ -75,7 +75,7 @@ function PanelShell({
   onClose: () => void
 }) {
   return (
-    <div className="sidebar-codex-menu absolute bottom-full left-0 right-0 z-50 mb-3 overflow-hidden rounded-[18px] border border-[var(--color-border)] p-1.5 shadow-[var(--shadow-dropdown)]">
+    <div className="sidebar-codex-menu glass-panel absolute bottom-full left-0 right-0 z-50 mb-3 overflow-hidden rounded-[18px] p-1.5 shadow-[var(--shadow-dropdown)]">
       <div className="flex items-start justify-between gap-4 px-3 py-3">
         <div>
           <h3 className="text-base font-semibold text-[var(--color-text-primary)]">{title}</h3>

@@ -60,8 +60,6 @@ type TurnProcessGroup = {
   startTime: number | null
   /** End time (timestamp of the final assistant message) */
   endTime: number | null
-  /** Whether this turn is currently being processed */
-  isActive: boolean
 }
 
 type RenderItem =
@@ -564,7 +562,7 @@ function appendChildToolCall(
 /** Max visible tool calls before burst-fold kicks in (mirrors iOS collapsedVisibleCount = 5) */
 const TOOL_BURST_VISIBLE_COUNT = 5
 
-export function buildRenderModel(messages: UIMessage[], activeAskUserQuestionToolUseId?: string | null): RenderModel {
+export function buildRenderModel(messages: UIMessage[], activeAskUserQuestionToolUseId?: string | null, isChatActive?: boolean): RenderModel {
   const items: RenderItem[] = []
   const toolResultMap = new Map<string, ToolResult>()
   const childToolCallsByParent = new Map<string, ToolCall[]>()
@@ -684,10 +682,12 @@ export function buildRenderModel(messages: UIMessage[], activeAskUserQuestionToo
   flushGroup()
 
   // ── Turn collapse projection ──
-  // Group intermediate items (thinking, tool_groups, tool_bursts, non-final
-  // assistant_text) into turn_process render items. Active turns show "已处理"
-  // always expanded; completed turns are collapsible with elapsed time.
-  return { renderItems: applyTurnCollapse(items), toolResultMap, childToolCallsByParent }
+  // Only collapse when chat is idle — active turns keep all items visible.
+  if (isChatActive === false) {
+    return { renderItems: applyTurnCollapse(items), toolResultMap, childToolCallsByParent }
+  }
+
+  return { renderItems: items, toolResultMap, childToolCallsByParent }
 }
 
 /**
@@ -707,7 +707,7 @@ function applyTurnCollapse(items: RenderItem[]): RenderItem[] {
     if (currentUserMsgId === null) return
 
     if (lastAssistantItem !== null) {
-      // This turn is complete — collapsible process section
+      // This turn is complete — collapse into "已处理"
       const stepCount = countProcessSteps(processItems)
       if (stepCount > 0) {
         result.push({
@@ -718,28 +718,15 @@ function applyTurnCollapse(items: RenderItem[]): RenderItem[] {
             stepCount,
             startTime: currentUserMsgTimestamp,
             endTime: lastAssistantTimestamp,
-            isActive: false,
           },
           id: `turn-${currentUserMsgId}`,
         })
       }
       // Final assistant_text stays visible
       result.push(lastAssistantItem)
-    } else if (processItems.length > 0) {
-      // Turn is still active — show "已处理" but always expanded (not collapsible)
-      const stepCount = countProcessSteps(processItems)
-      result.push({
-        kind: 'turn_process',
-        group: {
-          userMsgId: currentUserMsgId!,
-          processItems: [...processItems],
-          stepCount,
-          startTime: currentUserMsgTimestamp,
-          endTime: null,
-          isActive: true,
-        },
-        id: `turn-${currentUserMsgId}`,
-      })
+    } else {
+      // Turn is still active — keep everything visible as-is
+      for (const pi of processItems) result.push(pi)
     }
   }
 
@@ -1851,9 +1838,10 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
     return () => observer.disconnect()
   }, [scrollToBottom])
 
+  const isChatActive = chatState !== 'idle'
   const { toolResultMap, childToolCallsByParent, renderItems } = useMemo(
-    () => buildRenderModel(messages, activeAskUserQuestionToolUseId),
-    [activeAskUserQuestionToolUseId, messages],
+    () => buildRenderModel(messages, activeAskUserQuestionToolUseId, isChatActive),
+    [activeAskUserQuestionToolUseId, isChatActive, messages],
   )
   // Find the last tool_group/tool_burst index — used to keep the last group in
   // "running" mode while chatState === 'tool_executing', preventing premature
@@ -2177,7 +2165,6 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
               chatState === 'tool_executing' &&
               item.toolCalls.some((tc) => !toolResultMap.has(tc.toolUseId))
             }
-            flat
           />
         )
       case 'tool_burst':
@@ -2437,7 +2424,7 @@ function formatProcessElapsed(seconds: number): string {
   return `${m}m ${s}s`
 }
 
-/** Collapsible section for completed turn process items (thinking, tool calls, intermediate assistant text) */
+/** Collapsible section for completed turn process items */
 function TurnProcessSection({
   group,
   isExpanded,
@@ -2449,7 +2436,7 @@ function TurnProcessSection({
   onToggle: () => void
   renderInnerItem: (item: RenderItem) => ReactNode
 }) {
-  const { processItems, startTime, endTime, isActive } = group
+  const { processItems, startTime, endTime } = group
 
   // Compute elapsed time for this turn
   let elapsedText = ''
@@ -2458,60 +2445,53 @@ function TurnProcessSection({
     if (elapsedSec > 0) elapsedText = formatProcessElapsed(elapsedSec)
   }
 
+  // Animate from expanded to collapsed on first mount, so the user sees
+  // the content collapse rather than it appearing already collapsed.
+  const [hasAnimated, setHasAnimated] = useState(false)
+  useEffect(() => {
+    const timer = requestAnimationFrame(() => setHasAnimated(true))
+    return () => cancelAnimationFrame(timer)
+  }, [])
+
+  const collapseState = isExpanded ? 'open' : (hasAnimated ? 'closed' : 'open')
+
   return (
     <div className="flex flex-col">
-      {/* "已处理" header — collapsible only when turn is complete */}
-      {isActive ? (
-        <div className="flex items-center gap-2 px-1 py-2 text-[13px] text-[var(--color-text-tertiary)]">
-          <span className="text-[var(--color-brand)] animate-shimmer text-xs">✦</span>
-          <span className="shimmer-sweep-text font-medium">已处理</span>
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={onToggle}
-          className="flex items-center gap-2 px-1 py-2 text-[13px] text-[var(--color-text-tertiary)] transition-colors cursor-pointer hover:text-[var(--color-text-secondary)]"
+      {/* Toggle: "已处理" + elapsed timer */}
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex items-center gap-2 px-1 py-2 text-[13px] text-[var(--color-text-tertiary)] transition-colors cursor-pointer hover:text-[var(--color-text-secondary)]"
+      >
+        <span
+          className="turn-chevron text-[10px] text-[var(--color-outline)]"
+          data-rotated={isExpanded ? 'true' : 'false'}
         >
-          <span
-            className="turn-chevron text-[10px] text-[var(--color-outline)]"
-            data-rotated={isExpanded ? 'true' : 'false'}
-          >
-            {'▸'}
+          {'▸'}
+        </span>
+        <span className="font-medium">已处理</span>
+        {elapsedText && (
+          <span className="text-[11px] font-mono tabular-nums text-[var(--color-text-tertiary)]">
+            {elapsedText}
           </span>
-          <span className="font-medium">已处理</span>
-          {elapsedText && (
-            <span className="text-[11px] font-mono tabular-nums text-[var(--color-text-tertiary)]">
-              {elapsedText}
-            </span>
-          )}
-        </button>
-      )}
+        )}
+      </button>
 
-      {/* Content — always visible when active, collapsible when complete */}
-      {isActive ? (
-        <div className="space-y-1 pl-2 border-l border-[var(--color-border)]/30">
-          {processItems.map((pi) => (
-            <div key={pi.kind === 'message' ? pi.message.id : pi.id}>
-              {renderInnerItem(pi)}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div
-          className="turn-collapse-content"
-          data-collapse-state={isExpanded ? 'open' : 'closed'}
-        >
-          <div className="turn-collapse-content-inner">
-            <div className="space-y-1 pl-2 border-l border-[var(--color-border)]/30">
-              {processItems.map((pi) => (
-                <div key={pi.kind === 'message' ? pi.message.id : pi.id}>
-                  {renderInnerItem(pi)}
-                </div>
-              ))}
-            </div>
+      {/* Collapsible content */}
+      <div
+        className="turn-collapse-content"
+        data-collapse-state={collapseState}
+      >
+        <div className="turn-collapse-content-inner">
+          <div className="space-y-1 pl-2 border-l border-[var(--color-border)]/30">
+            {processItems.map((pi) => (
+              <div key={pi.kind === 'message' ? pi.message.id : pi.id}>
+                {renderInnerItem(pi)}
+              </div>
+            ))}
           </div>
         </div>
-      )}
+      </div>
 
       {/* Divider */}
       <div className="h-px bg-[rgba(255,255,255,0.08)]" />

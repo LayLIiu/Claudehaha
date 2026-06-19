@@ -166,7 +166,7 @@ export function GlobalSearchModal({ open, onClose }: Props) {
       />
 
       <div
-        className="glass-panel relative z-10 flex max-h-[70vh] w-[640px] max-w-[calc(100vw-48px)] flex-col overflow-hidden rounded-[var(--radius-xl)]"
+        className="glass-panel relative z-10 flex max-h-[70vh] w-[640px] max-w-[calc(100vw-48px)] flex-col overflow-hidden rounded-[18px]"
         role="dialog"
         aria-modal="true"
         aria-label={t('search.global.placeholder')}

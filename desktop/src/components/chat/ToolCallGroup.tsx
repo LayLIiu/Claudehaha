@@ -34,8 +34,6 @@ type Props = {
   agentTaskNotifications: Record<string, AgentTaskNotification>
   /** When true, the last tool is still executing — show expanded */
   isStreaming?: boolean
-  /** When true, render without the collapsible header — just the tool list */
-  flat?: boolean
 }
 
 const TOOL_VERBS: Record<string, (count: number, t: (key: TranslationKey, params?: Record<string, string | number>) => string) => string> = {
@@ -65,47 +63,46 @@ function generateSummary(toolCalls: ToolCall[], t: (key: TranslationKey, params?
   return parts.join(', ')
 }
 
-/** Generate a live title showing what's currently being executed (e.g. "npm test" / "src/app.tsx") */
+/** Generate a live title showing the LAST currently executing tool (e.g. "npm test" / "src/app.tsx") */
 function generateActiveTitle(toolCalls: ToolCall[], resultMap: Map<string, ToolResult>): string {
-  const activeParts: string[] = []
-  for (const tc of toolCalls) {
+  // Find the last unresolved tool — that's what the user sees as "currently running"
+  for (let i = toolCalls.length - 1; i >= 0; i--) {
+    const tc = toolCalls[i]!
     if (resultMap.has(tc.toolUseId)) continue
     const obj = tc.input && typeof tc.input === 'object' ? (tc.input as Record<string, unknown>) : {}
     switch (tc.toolName) {
       case 'Bash': {
         const cmd = typeof obj.command === 'string' ? obj.command : ''
-        if (cmd) activeParts.push(cmd)
+        if (cmd) return cmd
         break
       }
       case 'Write':
       case 'Edit':
       case 'Read': {
         const fp = typeof obj.file_path === 'string' ? obj.file_path.split('/').pop() : ''
-        if (fp) activeParts.push(fp)
+        if (fp) return fp
         break
       }
       case 'Glob': {
         const pat = typeof obj.pattern === 'string' ? obj.pattern : ''
-        if (pat) activeParts.push(pat)
+        if (pat) return pat
         break
       }
       case 'Grep': {
         const pat = typeof obj.pattern === 'string' ? obj.pattern : ''
-        if (pat) activeParts.push(pat)
+        if (pat) return pat
         break
       }
       case 'Agent': {
         const desc = typeof obj.description === 'string' ? obj.description : ''
-        if (desc) activeParts.push(desc)
+        if (desc) return desc
         break
       }
       default:
-        activeParts.push(tc.toolName)
+        return tc.toolName
     }
   }
-  if (activeParts.length === 0) return ''
-  const display = activeParts.slice(0, 3).join(', ')
-  return activeParts.length > 3 ? `${display} ...` : display
+  return ''
 }
 
 function isToolCallResolved(
@@ -137,7 +134,6 @@ export const ToolCallGroup = memo(function ToolCallGroup({
   childToolCallsByParent,
   agentTaskNotifications,
   isStreaming,
-  flat,
 }: Props) {
   const memoryActivity = getMemoryToolActivity(toolCalls, resultMap)
   if (memoryActivity) {
@@ -159,7 +155,6 @@ export const ToolCallGroup = memo(function ToolCallGroup({
             childToolCallsByParent={childToolCallsByParent}
             agentTaskNotifications={agentTaskNotifications}
             isStreaming={isStreaming}
-            flat={flat}
           />
         </div>
       )
@@ -182,7 +177,6 @@ export const ToolCallGroup = memo(function ToolCallGroup({
       childToolCallsByParent={childToolCallsByParent}
       agentTaskNotifications={agentTaskNotifications}
       isStreaming={isStreaming}
-      flat={flat}
     />
   )
 })
@@ -193,7 +187,6 @@ function ToolCallGroupContent({
   childToolCallsByParent,
   agentTaskNotifications,
   isStreaming,
-  flat,
 }: Props) {
   const allAgents = toolCalls.every((toolCall) => toolCall.toolName === 'Agent')
 
@@ -205,7 +198,6 @@ function ToolCallGroupContent({
         childToolCallsByParent={childToolCallsByParent}
         agentTaskNotifications={agentTaskNotifications}
         isStreaming={isStreaming}
-        flat={flat}
       />
     )
   }
@@ -217,7 +209,6 @@ function ToolCallGroupContent({
       childToolCallsByParent={childToolCallsByParent}
       agentTaskNotifications={agentTaskNotifications}
       isStreaming={isStreaming}
-      flat={flat}
     />
   )
 }
@@ -346,7 +337,6 @@ function AgentToolGroup({
   childToolCallsByParent,
   agentTaskNotifications,
   isStreaming,
-  flat,
 }: Props) {
   const [expanded, setExpanded] = useState(false)
   const t = useTranslation()
@@ -366,31 +356,6 @@ function AgentToolGroup({
   const anyStopped = statuses.some((status) => status === 'stopped')
 
   // Flat mode: just the agent cards, no collapsible wrapper
-  if (flat) {
-    return (
-      <div className="relative pl-5">
-        <div className="absolute bottom-6 left-[11px] top-4 w-px rounded-full bg-[var(--color-border)]/45" />
-        <div className="space-y-2">
-          {toolCalls.map((toolCall) => (
-            <div key={toolCall.id} className="relative pl-7">
-              <div className="absolute left-0 top-1/2 -translate-y-1/2">
-                <div className="absolute left-[11px] top-1/2 h-px w-4 -translate-y-1/2 bg-[var(--color-border)]/45" />
-                <div className="absolute left-[8px] top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full border border-[var(--color-border)]/65 bg-[var(--color-surface-container-lowest)] shadow-[0_0_0_2px_var(--color-surface)]" />
-              </div>
-              <AgentCallCard
-                toolCall={toolCall}
-                resultMap={resultMap}
-                childToolCallsByParent={childToolCallsByParent}
-                agentTaskNotification={agentTaskNotifications[toolCall.toolUseId]}
-                isStreaming={isStreaming && !resultMap.has(toolCall.toolUseId)}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="mb-[3px]">
       <button
@@ -446,7 +411,7 @@ function AgentToolGroup({
 }
 
 /** Separated so the useState hook is never called conditionally. */
-function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isStreaming, flat }: Props) {
+function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isStreaming }: Props) {
   const [expanded, setExpanded] = useState(false)
   const t = useTranslation()
   const summary = generateSummary(toolCalls, t)
@@ -454,23 +419,6 @@ function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isSt
   const isRunning = !!isStreaming || hasUnresolvedTools
 
   const activeTitle = generateActiveTitle(toolCalls, resultMap)
-
-  // Flat mode: no collapsible header, just the tool list (used inside turn_process)
-  if (flat) {
-    return (
-      <div className="space-y-1 border-l border-[var(--color-border)]/30 pl-3">
-        {toolCalls.map((tc) => (
-          <ToolCallTree
-            key={tc.id}
-            toolCall={tc}
-            resultMap={resultMap}
-            childToolCallsByParent={childToolCallsByParent}
-            compact
-          />
-        ))}
-      </div>
-    )
-  }
 
   return (
     <div className="mb-[3px]">

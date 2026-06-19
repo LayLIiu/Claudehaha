@@ -72,7 +72,7 @@ export function TaskRow({ task, showLogs, onToggleLogs }: Props) {
   const menuItem = 'flex items-center gap-2.5 w-full px-3 py-2 text-xs text-left rounded-[var(--radius-sm)] transition-colors'
 
   return (
-    <div className="border-b border-[var(--color-border-separator)]">
+    <div className="border-b border-[var(--color-surface-glass-border)]">
       <div className="flex items-center justify-between px-4 py-3 hover:bg-[var(--color-surface-hover)] transition-colors group">
         {/* Left: status + info */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -140,7 +140,7 @@ export function TaskRow({ task, showLogs, onToggleLogs }: Props) {
               </button>
 
               {showMenu && !confirmAction && (
-                <div className="absolute right-0 top-full mt-1 z-50 w-44 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg py-1">
+                <div className="absolute right-0 top-full mt-1 z-50 w-44 glass-panel rounded-[14px] shadow-lg py-1">
                   {/* Edit */}
                   <button
                     onClick={() => { setShowMenu(false); setShowEdit(true) }}

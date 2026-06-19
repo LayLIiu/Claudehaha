@@ -266,7 +266,7 @@ export const FileSearchMenu = forwardRef<FileSearchMenuHandle, Props>(({ cwd, fi
   return (
     <div
       id="file-search-menu"
-      className={`sidebar-codex-menu absolute bottom-full mb-2 z-50 w-full overflow-hidden rounded-[18px] border border-[var(--color-border)] p-1.5 shadow-[var(--shadow-dropdown)] ${
+      className={`sidebar-codex-menu glass-panel absolute bottom-full mb-2 z-50 w-full overflow-hidden rounded-[18px] p-1.5 shadow-[var(--shadow-dropdown)] ${
         compact ? 'left-0 right-0 min-w-0 max-w-[calc(100vw-32px)]' : 'left-0 min-w-[480px]'
       }`}
       onMouseDown={(e) => e.stopPropagation()}

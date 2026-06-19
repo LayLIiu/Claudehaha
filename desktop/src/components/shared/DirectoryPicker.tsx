@@ -166,7 +166,7 @@ export function DirectoryPicker({ value, onChange, variant = 'chip', isGitProjec
     ? 'flex h-9 min-w-0 items-center gap-1.5 rounded-[7px] border border-transparent px-2.5 text-[13px] font-medium leading-none text-[var(--color-text-secondary)] transition-colors hover:bg-[var(--color-surface-container-lowest)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35'
     : 'flex items-center gap-2 text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] transition-colors'
 
-  const dropdownClassName = 'overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-container-lowest)] shadow-[var(--shadow-dropdown)]'
+  const dropdownClassName = 'glass-panel overflow-hidden rounded-[16px] shadow-[var(--shadow-dropdown)]'
   const dropdownStyle = {
     position: 'fixed' as const,
     left: dropdownPos?.left,

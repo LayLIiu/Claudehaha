@@ -42,9 +42,9 @@ export function SessionTaskBar() {
 
   return (
     <div className="shrink-0 px-8">
-      <div className="mx-auto max-w-[860px] rounded-[var(--radius-lg)] border border-[var(--color-outline-variant)]/40 bg-[var(--color-surface-container-lowest)] overflow-hidden mb-2">
+      <div className="glass-panel mx-auto max-w-[860px] rounded-[16px] overflow-hidden mb-2 transition-colors">
         {/* Header — always visible, clickable to toggle */}
-        <div className="flex items-center gap-2 bg-[var(--color-surface-container)] px-2 py-1.5">
+        <div className="flex items-center gap-2 px-2 py-1.5">
           <button
             type="button"
             onClick={toggleExpanded}
@@ -101,7 +101,7 @@ export function SessionTaskBar() {
 
         {/* Expanded task list */}
         {expanded && (
-          <div className="px-4 pb-2 pt-1 flex flex-col gap-0.5 max-h-[240px] overflow-y-auto border-t border-[var(--color-outline-variant)]/20">
+          <div className="px-4 pb-2 pt-1 flex flex-col gap-0.5 max-h-[240px] overflow-y-auto border-t border-[var(--color-surface-glass-border)]">
             {tasks.map((task) => (
               <TaskItem key={task.id} task={task} />
             ))}

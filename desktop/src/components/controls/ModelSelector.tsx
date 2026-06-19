@@ -541,7 +541,7 @@ export function ModelSelector({
       <div
         ref={dropdownRef}
         data-testid="model-selector-dropdown"
-        className="sidebar-codex-menu fixed z-[80] overflow-hidden rounded-[18px] border border-[var(--color-border)] p-1.5 shadow-[var(--shadow-dropdown)]"
+        className="sidebar-codex-menu glass-panel fixed z-[80] overflow-hidden rounded-[18px] p-1.5 shadow-[var(--shadow-dropdown)]"
         style={{
           top: dropdownPosition.top,
           bottom: dropdownPosition.bottom,

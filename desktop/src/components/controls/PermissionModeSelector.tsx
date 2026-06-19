@@ -206,7 +206,7 @@ export function PermissionModeSelector({ workDir: workDirProp, compact = false, 
             {permissionOptions}
           </MobileBottomSheet>
         ) : (
-          <div id={menuId} ref={menuRef} role="menu" className="sidebar-codex-menu absolute bottom-full left-0 z-50 mb-2 w-[320px] rounded-[18px] border border-[var(--color-border)] p-1.5 shadow-[var(--shadow-dropdown)]">
+          <div id={menuId} ref={menuRef} role="menu" className="sidebar-codex-menu glass-panel absolute bottom-full left-0 z-50 mb-2 w-[320px] rounded-[18px] p-1.5 shadow-[var(--shadow-dropdown)]">
             {menuContent}
           </div>
         )

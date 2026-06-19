@@ -13,7 +13,7 @@ function RunOutput({ run }: { run: TaskRun }) {
   // Show error prominently if present
   if (run.error) {
     return (
-      <div className="mt-2 max-h-40 overflow-y-auto whitespace-pre-wrap break-words rounded-[var(--radius-sm)] border border-[var(--color-error)]/20 bg-[var(--color-error-container)]/28 p-2.5 text-xs text-[var(--color-error)]">
+      <div className="mt-2 max-h-40 overflow-y-auto whitespace-pre-wrap break-words rounded-[10px] border border-[var(--color-error)]/20 bg-[var(--color-error-container)]/28 p-2.5 text-xs text-[var(--color-error)]">
         {run.error}
       </div>
     )
@@ -23,14 +23,14 @@ function RunOutput({ run }: { run: TaskRun }) {
 
   if (!text) {
     return (
-      <div className="mt-2 p-2.5 rounded-[var(--radius-sm)] bg-[var(--color-surface-container)] text-xs text-[var(--color-text-tertiary)] italic">
+      <div className="mt-2 p-2.5 rounded-[10px] glass-panel text-xs text-[var(--color-text-tertiary)] italic">
         {run.sessionId ? t('tasks.outputHintSession') : t('tasks.noOutputText')}
       </div>
     )
   }
 
   return (
-    <div className="mt-2 max-h-48 overflow-y-auto rounded-[var(--radius-sm)] bg-[var(--color-surface-container)] p-2.5">
+    <div className="mt-2 max-h-48 overflow-y-auto rounded-[10px] glass-panel p-2.5">
       <MarkdownRenderer
         content={text}
         variant="compact"
@@ -105,9 +105,9 @@ export function TaskRunsPanel({ taskId, onClose, refreshKey }: Props) {
   }, [hasRunning, taskId, refreshKey])
 
   return (
-    <div className="mt-2 mb-1 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
+    <div className="mt-2 mb-1 glass-panel rounded-[14px] overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-[var(--color-surface-container)]">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--color-surface-glass-border)]">
         <span className="text-xs font-medium text-[var(--color-text-primary)]">{t('tasks.logsTitle')}</span>
         <button
           onClick={onClose}

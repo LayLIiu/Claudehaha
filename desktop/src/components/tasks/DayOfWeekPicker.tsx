@@ -43,8 +43,8 @@ export function DayOfWeekPicker({ selected, onChange }: Props) {
             className={`
               w-8 h-8 rounded-full text-xs font-medium transition-colors
               ${isActive
-                ? 'bg-[var(--color-surface-selected)] text-[var(--color-text-primary)] border border-[var(--color-border-focus)]'
-                : 'bg-[var(--color-surface)] text-[var(--color-text-tertiary)] border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]'
+                ? 'bg-[var(--color-brand)]/12 text-[var(--color-brand)] border border-[var(--color-brand)]/30'
+                : 'glass-panel text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface-hover)]'
               }
             `}
           >

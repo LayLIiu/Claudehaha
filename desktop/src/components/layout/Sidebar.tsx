@@ -992,7 +992,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                   }}
                                   onContextMenu={(e) => handleContextMenu(e, session.id)}
                                   className={`
-                                    sidebar-session-row group/session w-full px-2 ${isMobile ? 'py-3' : 'py-1.5'} text-left text-[13px] transition-[background,color] duration-150
+                                    sidebar-session-row group/session w-full pl-[28px] pr-2 ${isMobile ? 'py-3' : 'py-1.5'} text-left text-[13px] transition-[background,color] duration-150
                                     ${selectedSessionIds.has(session.id)
                                       ? 'sidebar-session-row--selected text-[var(--color-text-primary)]'
                                       : session.id === activeTabId
@@ -1931,7 +1931,7 @@ function SessionRowMeta({
 
   return (
     <span
-      className="ml-auto flex h-5 min-w-[78px] flex-shrink-0 items-center justify-end gap-1.5 text-[10px] font-medium tabular-nums text-[var(--color-text-tertiary)]"
+      className="ml-auto flex h-5 min-w-0 flex-shrink-0 items-center justify-end gap-1.5 text-[10px] font-medium tabular-nums text-[var(--color-text-tertiary)]"
       title={updatedLabel}
     >
       {isRunning && (
@@ -1952,7 +1952,7 @@ function SessionRowMeta({
           <span className="sr-only">{t('sidebar.worktree')}</span>
         </span>
       )}
-      <span className="inline-flex min-w-[42px] flex-shrink-0 items-center justify-end">
+      <span className="inline-flex flex-shrink-0 items-center justify-end">
         <span>{relativeTime}</span>
       </span>
     </span>

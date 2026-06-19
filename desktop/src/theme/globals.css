@@ -1795,32 +1795,31 @@ html.electron-macos .app-shell,
 .animate-spin { animation: spin 1s linear infinite; }
 .animate-pulse-dot { animation: pulse-dot 1.5s ease-in-out infinite; }
 
-/* Shimmer sweep effect for thinking indicator text (mirrors iOS ShimmerText.swift) */
+/* Shimmer sweep — bright light band sweeps left→right across dim text, clipped to text strokes */
+/* Mirrors iOS CodeIsland TypingIndicator: dim base + white band sweeps left→right */
 @keyframes shimmer-sweep {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(200%); }
+  from { background-position-x: 100%; }
+  to { background-position-x: 0%; }
 }
 
 .shimmer-sweep-text {
-  position: relative;
-  overflow: hidden;
   display: inline-block;
-}
-.shimmer-sweep-text::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  width: 50%;
   background: linear-gradient(
     90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.45) 40%,
-    rgba(255, 255, 255, 0.65) 50%,
-    rgba(255, 255, 255, 0.45) 60%,
-    transparent 100%
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0.3) 35%,
+    rgba(255, 255, 255, 0.55) 43%,
+    rgba(255, 255, 255, 0.9) 49%,
+    rgba(255, 255, 255, 0.9) 51%,
+    rgba(255, 255, 255, 0.55) 57%,
+    rgba(255, 255, 255, 0.3) 65%,
+    rgba(255, 255, 255, 0.3) 100%
   );
-  animation: shimmer-sweep 1.65s ease-in-out infinite;
-  pointer-events: none;
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-sweep 2.5s ease-in-out infinite;
 }
 
 /* Sticky bottom thinking indicator — sits above the chat input */

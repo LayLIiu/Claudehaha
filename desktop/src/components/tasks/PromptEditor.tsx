@@ -34,7 +34,7 @@ export function PromptEditor({
 }: Props) {
   const t = useTranslation()
   return (
-    <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] focus-within:border-[var(--color-border-focus)] transition-colors overflow-visible">
+    <div className="glass-panel rounded-[14px] focus-within:border-[rgba(255,255,255,0.16)] transition-colors overflow-visible">
       {/* Prompt textarea */}
       <textarea
         value={value}
@@ -46,7 +46,7 @@ export function PromptEditor({
       />
 
       {/* Bottom toolbar */}
-      <div className="border-t border-[var(--color-border)]/40 px-3 py-2 flex flex-col gap-2 bg-[var(--color-surface-container-low)] rounded-b-[var(--radius-lg)]">
+      <div className="border-t border-[var(--color-surface-glass-border)] px-3 py-2 flex flex-col gap-2 rounded-b-[14px]">
         {/* Row 1: Permission + Model selectors */}
         <div className="flex items-center justify-between">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-error)]/8 px-2.5 py-1.5 text-xs font-medium text-[var(--color-error)]">

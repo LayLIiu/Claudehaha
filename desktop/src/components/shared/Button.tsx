@@ -13,7 +13,7 @@ const variantStyles: Record<ButtonVariant, string> = {
   primary:
     'bg-[image:var(--gradient-btn-primary)] text-[var(--color-btn-primary-fg)] shadow-[var(--shadow-button-primary)] hover:bg-[image:var(--gradient-btn-primary-hover)] hover:brightness-105 active:translate-y-[1px]',
   secondary:
-    'bg-[var(--color-surface)] text-[var(--color-text-primary)] border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]',
+    'glass-panel text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)]',
   danger:
     'bg-[var(--color-error)] text-white hover:opacity-90',
   ghost:
@@ -40,7 +40,7 @@ export function Button({
     <button
       disabled={disabled || loading}
       className={`
-        inline-flex items-center justify-center gap-1.5 rounded-[var(--radius-md)]
+        inline-flex items-center justify-center gap-1.5 rounded-[10px]
         font-medium transition-colors duration-150 cursor-pointer
         disabled:opacity-50 disabled:cursor-not-allowed
         ${variantStyles[variant]} ${sizeStyles[size]} ${className}

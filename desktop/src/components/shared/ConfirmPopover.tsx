@@ -18,7 +18,7 @@ export function ConfirmPopover({
   confirmVariant = 'primary',
 }: ConfirmPopoverProps) {
   return (
-    <div className="absolute right-0 top-full mt-1.5 z-50 w-52 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg p-3">
+    <div className="absolute right-0 top-full mt-1.5 z-50 w-52 glass-panel rounded-[14px] shadow-lg p-3">
       <p className="mb-2.5 text-xs text-[var(--color-text-secondary)]">{message}</p>
       <div className="flex justify-end gap-1.5">
         <Button type="button" variant="ghost" size="sm" onClick={onCancel}>

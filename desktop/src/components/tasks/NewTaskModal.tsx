@@ -152,7 +152,7 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
     }
   }
 
-  const selectClass = 'w-full h-10 px-3 pr-8 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-border-focus)] appearance-none cursor-pointer'
+  const selectClass = 'w-full h-10 px-3 pr-8 rounded-[12px] border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-border-focus)] focus:shadow-[var(--shadow-focus-ring)] transition-[border-color,box-shadow] duration-150 appearance-none cursor-pointer'
 
   return (
     <Modal
@@ -169,7 +169,7 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
       }
     >
       {/* Info banner */}
-      <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-[var(--radius-md)] bg-[var(--color-surface-container)] mb-5">
+      <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-[12px] glass-panel mb-5">
         <span className="material-symbols-outlined text-[18px] text-[var(--color-text-secondary)]">info</span>
         <span className="text-xs text-[var(--color-text-secondary)]">
           {t('newTask.localWarning')}
@@ -306,7 +306,7 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
               value={customCron}
               onChange={(e) => setCustomCron(e.target.value)}
               placeholder={t('newTask.cronFormatHint')}
-              className="w-full h-10 px-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text-primary)] font-[var(--font-mono)] outline-none focus:border-[var(--color-border-focus)]"
+              className="w-full h-10 px-3 rounded-[12px] border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text-primary)] font-[var(--font-mono)] outline-none focus:border-[var(--color-border-focus)] focus:shadow-[var(--shadow-focus-ring)] transition-[border-color,box-shadow] duration-150"
             />
             <span className="text-xs text-[var(--color-text-tertiary)]">{t('newTask.cronFormatHint')}</span>
             {customCron.trim() && !isValidCron(customCron) && (
@@ -322,14 +322,14 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
               type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
-              className="w-auto h-10 px-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-border-focus)]"
+              className="w-auto h-10 px-3 rounded-[12px] border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-border-focus)] focus:shadow-[var(--shadow-focus-ring)] transition-[border-color,box-shadow] duration-150"
               style={{ maxWidth: 120 }}
             />
           </div>
         )}
 
         {/* Notification */}
-        <div className="flex flex-col gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] p-3">
+        <div className="flex flex-col gap-3 rounded-[12px] glass-panel p-3">
           <label className="flex items-center gap-3 cursor-pointer">
             <input
               type="checkbox"
@@ -409,7 +409,7 @@ export function NewTaskModal({ open, onClose, editTask }: Props) {
         </div>
 
         {/* Cron preview */}
-        <div className="flex items-center gap-2 px-3 py-2 rounded-[var(--radius-md)] bg-[var(--color-surface-container)] text-xs text-[var(--color-text-secondary)]">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-[12px] glass-panel text-xs text-[var(--color-text-secondary)]">
           <span className="material-symbols-outlined text-[16px]">schedule</span>
           <span>
             {frequency === 'customCron' && customCron.trim() && !isValidCron(customCron)
