@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { Archive, Download, Folder, FolderOpen, GitBranch, LoaderCircle, MoreHorizontal, Pencil, Pin, PinOff, SquareTerminal, Target } from 'lucide-react'
+import { Archive, Download, Folder, GitBranch, LoaderCircle, MoreHorizontal, Pencil, Pin, PinOff, SquareTerminal } from 'lucide-react'
 import {
   SCHEDULED_TAB_ID,
   SETTINGS_TAB_ID,
@@ -29,7 +29,6 @@ import { ChatInput } from '../components/chat/ChatInput'
 import { PermissionDialog } from '../components/chat/PermissionDialog'
 import { StickyThinkingIndicator } from '../components/chat/StreamingIndicator'
 import { ComputerUsePermissionModal } from '../components/chat/ComputerUsePermissionModal'
-import { CurrentTurnLiveChangePill } from '../components/chat/CurrentTurnLiveChangePill'
 import { getCurrentTurnLiveChangeSummary } from '../components/chat/turnLiveChangeSummary'
 
 import { ConfirmDialog } from '../components/shared/ConfirmDialog'
@@ -38,9 +37,11 @@ import { TeamStatusBar } from '../components/teams/TeamStatusBar'
 import { TerminalSettings } from './TerminalSettings'
 import { OpenProjectMenu } from '../components/layout/OpenProjectMenu'
 import type { SessionListItem } from '../types/session'
-import type { ActiveGoalState, UIMessage } from '../types/chat'
+import type { UIMessage } from '../types/chat'
 import { useMobileViewport } from '../hooks/useMobileViewport'
 import { DotGridShader } from '../components/shared/DotGridShader'
+import { ActiveGoalStrip } from '../components/chat/ActiveGoalStrip'
+import { TaskProgressDockPill } from '../components/chat/TaskProgressDockPill'
 import { isDesktopRuntime } from '../lib/desktopRuntime'
 import { conversationToMarkdown, downloadMarkdownFile } from '../lib/conversationExport'
 
@@ -48,7 +49,7 @@ const TASK_POLL_INTERVAL_MS = 1000
 const WORKSPACE_RESIZE_STEP = 32
 const TERMINAL_RESIZE_STEP = 24
 const CHAT_COLUMN_WITH_WORKSPACE_CLASS =
-  'min-w-[320px] flex-1'
+  'min-w-[320px] flex-1 bg-[var(--color-surface)]'
 
 function getPathLeaf(path: string | null | undefined) {
   if (!path) return null
@@ -128,60 +129,6 @@ function formatRecentProjectTime(value: string) {
   if (diffMs < hour) return `${Math.max(1, Math.floor(diffMs / minute))} 分钟前`
   if (diffMs < day) return `${Math.floor(diffMs / hour)} 小时前`
   return `${Math.floor(diffMs / day)} 天前`
-}
-
-function ActiveGoalStrip({
-  goal,
-  isRunning,
-  compact,
-}: {
-  goal: ActiveGoalState | null | undefined
-  isRunning: boolean
-  compact: boolean
-}) {
-  const t = useTranslation()
-  if (!goal || goal.action === 'completed') return null
-
-  const objective = goal.objective ?? goal.message
-  if (!objective) return null
-
-  const statusLabel = isRunning
-    ? t('chat.activeGoal.running')
-    : goal.status === 'paused'
-      ? t('chat.activeGoal.paused')
-      : t('chat.activeGoal.active')
-  const meta = [
-    goal.budget ? t('chat.activeGoal.budget', { value: goal.budget }) : null,
-    goal.elapsed ? t('chat.activeGoal.elapsed', { value: goal.elapsed }) : null,
-    goal.continuations ? t('chat.activeGoal.continuations', { value: goal.continuations }) : null,
-  ].filter((value): value is string => value !== null)
-
-  return (
-    <div
-      data-testid="active-goal-strip"
-      className={[
-        'mt-2 flex max-w-full items-center gap-2 rounded-[var(--radius-sm)] border border-[var(--color-memory-border)] bg-[var(--color-memory-surface)] px-2.5 py-1.5',
-        compact ? 'text-[11px]' : 'text-[12px]',
-      ].join(' ')}
-    >
-      <Target size={compact ? 13 : 14} className="shrink-0 text-[var(--color-memory-accent)]" strokeWidth={2.25} aria-hidden="true" />
-      <span className="shrink-0 font-semibold text-[var(--color-token-foreground)]">
-        {t('chat.activeGoal.title')}
-      </span>
-      <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-memory-accent)]" aria-hidden="true" />
-      <span className="shrink-0 text-[var(--color-token-text-secondary)]">{statusLabel}</span>
-      <span className="min-w-0 flex-1 truncate font-medium text-[var(--color-token-foreground)]" title={objective}>
-        {objective}
-      </span>
-      {meta.length > 0 ? (
-        <span className="hidden shrink-0 items-center gap-1.5 text-[11px] text-[var(--color-token-text-secondary)] lg:flex">
-          {meta.map((item) => (
-            <span key={item} className="max-w-[140px] truncate">{item}</span>
-          ))}
-        </span>
-      ) : null}
-    </div>
-  )
 }
 
 function WorkspaceResizeHandle() {
@@ -437,6 +384,7 @@ export function ActiveSession() {
   const titleMenuRef = useRef<HTMLDivElement>(null)
   const titleMenuBtnRef = useRef<HTMLButtonElement>(null)
   const titleMenuPortalRef = useRef<HTMLDivElement>(null)
+  const envPanelAnchorRef = useRef<HTMLButtonElement>(null)
   const activeTabId = useTabStore((s) => s.activeTabId)
   const activeTabType = useTabStore((s) => s.tabs.find((tab) => tab.sessionId === s.activeTabId)?.type ?? null)
   const closeTab = useTabStore((s) => s.closeTab)
@@ -448,6 +396,7 @@ export function ActiveSession() {
   const connectToSession = useChatStore((s) => s.connectToSession)
   const disconnectSession = useChatStore((s) => s.disconnectSession)
   const addToast = useUIStore((s) => s.addToast)
+  const sidebarOpen = useUIStore((s) => s.sidebarOpen)
   const pinnedSessionIds = usePinnedSessionStore((s) => s.pinnedSessionIds)
   const togglePinnedSession = usePinnedSessionStore((s) => s.togglePinned)
   const removePinnedSession = usePinnedSessionStore((s) => s.removePinned)
@@ -749,7 +698,7 @@ export function ActiveSession() {
               {!isMemberSession && !isMobileLayout && (
                 <div
                   data-desktop-drag-region={isDesktopRuntime() ? true : undefined}
-                  className="session-titlebar relative flex w-full items-center border-b border-[var(--color-token-border)]/65 px-4"
+                  className={`session-titlebar relative flex w-full items-center border-b border-[var(--color-token-border)]/65 ${sidebarOpen ? 'pl-4 pr-2' : 'pl-[200px] pr-2'}`}
                 >
                   <div className="session-header-shell flex w-full items-center justify-between">
                     <div className="min-w-0 flex-1 pr-3">
@@ -850,8 +799,22 @@ export function ActiveSession() {
                       />
                     </div>
                     <div className="session-header-actions relative flex shrink-0 items-center gap-1">
-                      <OpenProjectMenu path={openProjectPath} sessionId={activeTabId} variant="environment" externalOpen={envPanelOpen} onExternalClose={() => setEnvPanelOpen(false)} />
+                      <OpenProjectMenu
+                        path={openProjectPath}
+                        sessionId={activeTabId}
+                        simpleTargetIds={['finder', 'terminal', 'xcode']}
+                      />
+                      <OpenProjectMenu
+                        path={openProjectPath}
+                        sessionId={activeTabId}
+                        variant="environment"
+                        externalOpen={envPanelOpen}
+                        onExternalClose={() => setEnvPanelOpen(false)}
+                        hideTrigger
+                        anchorElement={envPanelAnchorRef.current}
+                      />
                       <button
+                        ref={envPanelAnchorRef}
                         type="button"
                         aria-label={t('tasks.toggleSummary')}
                         title={t('tasks.toggleSummary')}
@@ -883,6 +846,7 @@ export function ActiveSession() {
                       >
                         <SquareTerminal size={15} strokeWidth={1.9} />
                       </button>
+                      {!showWorkbench && (
                       <button
                         type="button"
                         aria-label={t('tabs.showWorkspace')}
@@ -890,22 +854,14 @@ export function ActiveSession() {
                         onClick={() => {
                           if (!activeTabId) return
                           const ws = useWorkspacePanelStore.getState()
-                          if (ws.isPanelOpen(activeTabId) && ws.getMode(activeTabId) === 'workspace') {
-                            ws.closePanel(activeTabId)
-                          } else {
-                            ws.setMode(activeTabId, 'workspace')
-                            ws.openPanel(activeTabId)
-                          }
+                          ws.setMode(activeTabId, 'workspace')
+                          ws.openPanel(activeTabId)
                         }}
-                        data-active={showWorkbench ? 'true' : 'false'}
-	                        className={`inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] spring-bounce-btn ${
-	                          showWorkbench
-	                            ? 'bg-[var(--color-surface)] text-[var(--color-token-foreground)] shadow-[0_8px_18px_rgba(0,0,0,0.12)]'
-	                            : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-token-foreground)]'
-	                        }`}
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] spring-bounce-btn"
                       >
-                        {showWorkbench ? <FolderOpen size={15} strokeWidth={1.9} /> : <Folder size={15} strokeWidth={1.9} />}
+                        <Folder size={15} strokeWidth={1.9} />
                       </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -935,9 +891,13 @@ export function ActiveSession() {
                 ? 'chat-input-dock-region chat-input-dock-region--floating'
                 : 'chat-input-dock-region'
             }
+            style={{
+              '--chat-input-width': shouldFloatHeroComposer && !composerDocked ? '760px' : showRightPanel ? '100%' : '800px',
+              ...(showTerminalPanel && terminalPanelRuntimeId ? { bottom: terminalPanelHeight } : {}),
+            } as React.CSSProperties}
           >
-            <CurrentTurnLiveChangePill
-              summary={liveTurnChangeSummary}
+            <TaskProgressDockPill
+              changeSummary={liveTurnChangeSummary}
               compact={showRightPanel}
               onOpenChanges={() => {
                 if (!activeTabId) return
@@ -992,7 +952,7 @@ export function ActiveSession() {
           {terminalPanelRuntimeId && activeTabId ? (
             <div
               data-testid="session-terminal-panel"
-              className="flex shrink-0 flex-col border-t border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))]"
+              className="flex shrink-0 flex-col border-t border-[var(--color-token-border)] bg-[var(--color-surface)]"
               style={{ height: terminalPanelHeight }}
             >
               <TerminalResizeHandle />
