@@ -248,7 +248,7 @@ export function ContextUsageIndicator({
   const strokeColor = percentage >= 90
     ? 'var(--color-error)'
     : 'var(--color-token-text-secondary)'
-  const trackColor = 'var(--color-surface-container-highest)'
+  const trackColor = 'rgba(255,255,255,0.1)'
   const ringStyle = {
     background: displayContext
       ? `conic-gradient(${strokeColor} ${percentage * 3.6}deg, ${trackColor} 0deg)`
