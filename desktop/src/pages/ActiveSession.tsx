@@ -393,6 +393,8 @@ export function ActiveSession() {
   const trackedTaskSessionId = useCLITaskStore((s) => s.sessionId)
   const hasIncompleteTasks = useCLITaskStore((s) => s.tasks.some((task) => task.status !== 'completed'))
   const hasRunningTasks = useCLITaskStore((s) => s.tasks.some((task) => task.status === 'in_progress'))
+  const taskBarOpen = useCLITaskStore((s) => s.taskBarOpen)
+  const toggleTaskBar = useCLITaskStore((s) => s.toggleTaskBar)
   const chatState = sessionState?.chatState ?? 'idle'
   const hasRunningBackgroundTasks = Object.values(sessionState?.backgroundAgentTasks ?? {})
     .some((task) => task.status === 'running')
@@ -762,8 +764,23 @@ export function ActiveSession() {
                         compact
                       />
                     </div>
-                    <div className="session-header-actions flex shrink-0 items-center gap-1">
-                      <OpenProjectMenu path={openProjectPath} />
+                    <div className="session-header-actions relative flex shrink-0 items-center gap-1">
+                      <OpenProjectMenu path={openProjectPath} sessionId={activeTabId} variant="environment" />
+                      <button
+                        type="button"
+                        aria-label={t('tasks.toggleSummary')}
+                        title={t('tasks.toggleSummary')}
+                        onClick={toggleTaskBar}
+                        data-active={taskBarOpen ? 'true' : 'false'}
+                        className={`inline-flex h-7 w-7 items-center justify-center rounded-[8px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-border-focus)] spring-bounce-btn ${
+                          taskBarOpen
+                            ? 'bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-[0_8px_18px_rgba(0,0,0,0.12)]'
+                            : 'text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-text-primary)]'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-[14px]">checklist</span>
+                      </button>
+                      {!isMemberSession && <SessionTaskBar variant="popover" />}
                       <button
                         type="button"
                         aria-label={t('tabs.openTerminal')}
@@ -835,7 +852,6 @@ export function ActiveSession() {
                 : 'chat-input-dock-region'
             }
           >
-            {!isMemberSession && <SessionTaskBar />}
             <StickyThinkingIndicator visible={chatState === 'tool_executing' || chatState === 'thinking' || chatState === 'streaming'} compact={showRightPanel} />
             <div
               className="chat-input-covered-shell"

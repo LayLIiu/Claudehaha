@@ -1,4 +1,4 @@
-import { memo, useState } from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { BookMarked, ChevronDown, ChevronRight, Settings } from 'lucide-react'
 import { ToolCallBlock } from './ToolCallBlock'
 import { MarkdownRenderer } from '../markdown/MarkdownRenderer'
@@ -48,6 +48,12 @@ const TOOL_VERBS: Record<string, (count: number, t: (key: TranslationKey, params
   WebFetch: (n, t) => n === 1 ? t('toolGroup.fetchedOne') : t('toolGroup.fetchedMany', { count: n }),
 }
 
+type ToolEditStats = {
+  label: string
+  additions: number
+  deletions: number
+}
+
 function generateSummary(toolCalls: ToolCall[], t: (key: TranslationKey, params?: Record<string, string | number>) => string): string {
   const counts = new Map<string, number>()
   for (const tc of toolCalls) {
@@ -64,45 +70,278 @@ function generateSummary(toolCalls: ToolCall[], t: (key: TranslationKey, params?
 }
 
 /** Generate a live title showing the LAST currently executing tool (e.g. "npm test" / "src/app.tsx") */
-function generateActiveTitle(toolCalls: ToolCall[], resultMap: Map<string, ToolResult>): string {
-  // Find the last unresolved tool — that's what the user sees as "currently running"
-  for (let i = toolCalls.length - 1; i >= 0; i--) {
-    const tc = toolCalls[i]!
-    if (resultMap.has(tc.toolUseId)) continue
-    const obj = tc.input && typeof tc.input === 'object' ? (tc.input as Record<string, unknown>) : {}
-    switch (tc.toolName) {
-      case 'Bash': {
-        const cmd = typeof obj.command === 'string' ? obj.command : ''
-        if (cmd) return cmd
+function generateActiveTitle(toolCall: ToolCall | null): string {
+  if (!toolCall) return ''
+  const obj = toolCall.input && typeof toolCall.input === 'object' ? (toolCall.input as Record<string, unknown>) : {}
+
+  switch (toolCall.toolName) {
+    case 'Bash': {
+      const cmd = typeof obj.command === 'string' ? obj.command : ''
+      return cmd || '执行命令'
+    }
+    case 'Read': {
+      const fp = typeof obj.file_path === 'string' ? obj.file_path.split('/').pop() : ''
+      return fp ? `读取 ${fp}` : '读取文件'
+    }
+    case 'Write': {
+      const fp = typeof obj.file_path === 'string' ? obj.file_path.split('/').pop() : ''
+      return fp ? `写入 ${fp}` : '写入文件'
+    }
+    case 'Edit': {
+      const fp = typeof obj.file_path === 'string' ? obj.file_path.split('/').pop() : ''
+      return fp ? `编辑 ${fp}` : '编辑文件'
+    }
+    case 'MultiEdit': {
+      const fp = typeof obj.file_path === 'string' ? obj.file_path.split('/').pop() : ''
+      return fp ? `编辑 ${fp}` : '批量编辑文件'
+    }
+    case 'Glob': {
+      const pat = typeof obj.pattern === 'string' ? obj.pattern : ''
+      return pat ? `查找 ${pat}` : '查找文件'
+    }
+    case 'Grep': {
+      const pat = typeof obj.pattern === 'string' ? obj.pattern : ''
+      return pat ? `搜索 ${pat}` : '搜索内容'
+    }
+    case 'Agent': {
+      const desc = typeof obj.description === 'string' ? obj.description : ''
+      return desc || '执行任务'
+    }
+    default:
+      return toolCall.toolName
+  }
+}
+
+function getPathLeaf(path: string): string {
+  return path.replace(/\\/g, '/').split('/').filter(Boolean).pop() || path
+}
+
+function extractStringField(input: unknown, key: string): string | null {
+  if (!input || typeof input !== 'object') return null
+  const value = (input as Record<string, unknown>)[key]
+  return typeof value === 'string' ? value : null
+}
+
+function extractPartialJsonStringField(source: string, field: string): string | null {
+  const key = `"${field}"`
+  const keyIndex = source.indexOf(key)
+  if (keyIndex < 0) return null
+  const colonIndex = source.indexOf(':', keyIndex + key.length)
+  if (colonIndex < 0) return null
+
+  let index = colonIndex + 1
+  while (index < source.length && /\s/.test(source[index] ?? '')) index += 1
+  if (source[index] !== '"') return null
+  index += 1
+
+  let value = ''
+  while (index < source.length) {
+    const char = source[index]
+    if (char === '"') return value
+    if (char !== '\\') {
+      value += char
+      index += 1
+      continue
+    }
+
+    const escaped = source[index + 1]
+    if (escaped === undefined) break
+    switch (escaped) {
+      case 'n':
+        value += '\n'
+        index += 2
         break
-      }
-      case 'Write':
-      case 'Edit':
-      case 'Read': {
-        const fp = typeof obj.file_path === 'string' ? obj.file_path.split('/').pop() : ''
-        if (fp) return fp
+      case 'r':
+        value += '\r'
+        index += 2
         break
-      }
-      case 'Glob': {
-        const pat = typeof obj.pattern === 'string' ? obj.pattern : ''
-        if (pat) return pat
+      case 't':
+        value += '\t'
+        index += 2
         break
-      }
-      case 'Grep': {
-        const pat = typeof obj.pattern === 'string' ? obj.pattern : ''
-        if (pat) return pat
+      case 'b':
+        value += '\b'
+        index += 2
         break
-      }
-      case 'Agent': {
-        const desc = typeof obj.description === 'string' ? obj.description : ''
-        if (desc) return desc
+      case 'f':
+        value += '\f'
+        index += 2
+        break
+      case '"':
+      case '\\':
+      case '/':
+        value += escaped
+        index += 2
+        break
+      case 'u': {
+        const hex = source.slice(index + 2, index + 6)
+        if (/^[0-9a-fA-F]{4}$/.test(hex)) {
+          value += String.fromCharCode(Number.parseInt(hex, 16))
+          index += 6
+        } else {
+          index = source.length
+        }
         break
       }
       default:
-        return tc.toolName
+        value += escaped
+        index += 2
+        break
     }
   }
-  return ''
+  return value
+}
+
+function extractEditStats(toolCall: ToolCall): ToolEditStats | null {
+  const filePath = extractStringField(toolCall.input, 'file_path')
+  const label = filePath ? getPathLeaf(filePath) : ''
+
+  if (toolCall.toolName === 'Write') {
+    const content = extractStringField(toolCall.input, 'content')
+      ?? (toolCall.partialInput ? extractPartialJsonStringField(toolCall.partialInput, 'content') : null)
+    if (content === null) return label ? { label, additions: 0, deletions: 0 } : null
+    return {
+      label: label || '文件',
+      additions: content.length === 0 ? 0 : content.split('\n').length,
+      deletions: 0,
+    }
+  }
+
+  if (toolCall.toolName === 'Edit') {
+    const oldString = extractStringField(toolCall.input, 'old_string') ?? ''
+    const newString = extractStringField(toolCall.input, 'new_string')
+      ?? (toolCall.partialInput ? extractPartialJsonStringField(toolCall.partialInput, 'new_string') : null)
+    if (newString === null) return label ? { label, additions: 0, deletions: 0 } : null
+    const { additions, deletions } = countLineDiff(oldString, newString)
+    return { label: label || '文件', additions, deletions }
+  }
+
+  if (toolCall.toolName === 'MultiEdit') {
+    const edits = Array.isArray((toolCall.input as Record<string, unknown> | null)?.edits)
+      ? ((toolCall.input as Record<string, unknown>).edits as Array<Record<string, unknown>>)
+      : []
+    let additions = 0
+    let deletions = 0
+    for (const edit of edits) {
+      const oldString = typeof edit.old_string === 'string' ? edit.old_string : ''
+      const newString = typeof edit.new_string === 'string' ? edit.new_string : ''
+      const diff = countLineDiff(oldString, newString)
+      additions += diff.additions
+      deletions += diff.deletions
+    }
+    if (!label && edits.length === 0) return null
+    return { label: label || '文件', additions, deletions }
+  }
+
+  return null
+}
+
+function countLineDiff(oldString: string, newString: string): { additions: number; deletions: number } {
+  const oldLines = oldString.length === 0 ? [] : oldString.split('\n')
+  const newLines = newString.length === 0 ? [] : newString.split('\n')
+
+  if (oldLines.length === 0) {
+    return { additions: newLines.length, deletions: 0 }
+  }
+  if (newLines.length === 0) {
+    return { additions: 0, deletions: oldLines.length }
+  }
+
+  const maxCells = 40_000
+  if (oldLines.length * newLines.length > maxCells) {
+    return {
+      additions: Math.max(0, newLines.length - oldLines.length),
+      deletions: Math.max(0, oldLines.length - newLines.length),
+    }
+  }
+
+  const cols = newLines.length + 1
+  const dp = new Uint16Array((oldLines.length + 1) * cols)
+  for (let i = oldLines.length - 1; i >= 0; i -= 1) {
+    for (let j = newLines.length - 1; j >= 0; j -= 1) {
+      const index = i * cols + j
+      if (oldLines[i] === newLines[j]) {
+        dp[index] = (dp[(i + 1) * cols + (j + 1)] ?? 0) + 1
+      } else {
+        dp[index] = Math.max(dp[(i + 1) * cols + j] ?? 0, dp[i * cols + (j + 1)] ?? 0)
+      }
+    }
+  }
+
+  const lcs = dp[0] ?? 0
+  return {
+    additions: newLines.length - lcs,
+    deletions: oldLines.length - lcs,
+  }
+}
+
+function AnimatedDiffNumber({ value, prefix }: { value: number; prefix: '+' | '-' }) {
+  const [displayValue, setDisplayValue] = useState(value)
+  const rafRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    const start = displayValue
+    const end = value
+    if (start === end) return
+    const startAt = performance.now()
+    const duration = 260
+
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - startAt) / duration)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      const next = Math.round(start + (end - start) * eased)
+      setDisplayValue(next)
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(tick)
+      }
+    }
+
+    rafRef.current = requestAnimationFrame(tick)
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    }
+  }, [displayValue, value])
+
+  return (
+    <span className="tabular-nums">
+      {prefix}{displayValue}
+    </span>
+  )
+}
+
+function ActiveEditTitle({
+  stats,
+}: {
+  stats: ToolEditStats
+}) {
+  return (
+    <span className="flex min-w-0 items-center gap-2">
+      <span className="truncate">编辑 {stats.label}</span>
+      <span className="shrink-0 text-[11px] text-[rgba(255,255,255,0.46)]">·</span>
+      <span className="shrink-0 text-[11px] text-[rgba(255,255,255,0.72)]">
+        <AnimatedDiffNumber prefix="+" value={stats.additions} />
+      </span>
+      <span className="shrink-0 text-[11px] text-[rgba(255,255,255,0.58)]">
+        <AnimatedDiffNumber prefix="-" value={stats.deletions} />
+      </span>
+    </span>
+  )
+}
+
+function getLastUnresolvedToolCall(
+  toolCalls: ToolCall[],
+  resultMap: Map<string, ToolResult>,
+  childToolCallsByParent: Map<string, ToolCall[]>,
+): ToolCall | null {
+  for (let index = toolCalls.length - 1; index >= 0; index -= 1) {
+    const toolCall = toolCalls[index]
+    if (!toolCall) continue
+    if (!isToolCallResolved(toolCall, resultMap, childToolCallsByParent)) {
+      return toolCall
+    }
+  }
+  return null
 }
 
 function isToolCallResolved(
@@ -354,6 +593,9 @@ function AgentToolGroup({
   const errorPresent = statuses.some((status) => status === 'failed')
   const allComplete = statuses.every((status) => status === 'done')
   const anyStopped = statuses.some((status) => status === 'stopped')
+  const activeToolTitle = generateActiveTitle(
+    getLastUnresolvedToolCall(toolCalls, resultMap, childToolCallsByParent),
+  )
 
   // Flat mode: just the agent cards, no collapsible wrapper
   return (
@@ -368,7 +610,7 @@ function AgentToolGroup({
         </span>
         <span className="flex-1 truncate text-[12px] text-[var(--color-text-secondary)]">
 {isAnyRunning
-            ? generateActiveTitle(toolCalls, resultMap) || (toolCalls.length === 1 ? t('toolGroup.agentOne') : t('toolGroup.agentMany', { count: toolCalls.length }))
+            ? activeToolTitle || (toolCalls.length === 1 ? t('toolGroup.agentOne') : t('toolGroup.agentMany', { count: toolCalls.length }))
             : (toolCalls.length === 1 ? t('toolGroup.agentOne') : t('toolGroup.agentMany', { count: toolCalls.length }))}
         </span>
         {isAnyRunning && (
@@ -418,7 +660,14 @@ function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isSt
   const hasUnresolvedTools = hasUnresolvedToolCalls(toolCalls, resultMap, childToolCallsByParent)
   const isRunning = !!isStreaming || hasUnresolvedTools
 
-  const activeTitle = generateActiveTitle(toolCalls, resultMap)
+  const activeToolCall = useMemo(
+    () => getLastUnresolvedToolCall(toolCalls, resultMap, childToolCallsByParent),
+    [childToolCallsByParent, resultMap, toolCalls],
+  )
+  const activeTitle = useMemo(() => generateActiveTitle(activeToolCall), [activeToolCall])
+  const activeEditStats = useMemo(() => {
+    return activeToolCall ? extractEditStats(activeToolCall) : null
+  }, [activeToolCall])
 
   return (
     <div className="mb-[3px]">
@@ -431,7 +680,11 @@ function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isSt
           {expanded ? 'expand_less' : 'expand_more'}
         </span>
         <span className="flex-1 truncate text-[12px] text-[var(--color-text-secondary)]">
-          {isStreaming ? (
+          {isRunning && activeEditStats ? (
+            <span className="shimmer-sweep-text block">
+              <ActiveEditTitle stats={activeEditStats} />
+            </span>
+          ) : isRunning ? (
             <span className="shimmer-sweep-text">
               {activeTitle || t('toolGroup.working')}
             </span>
@@ -1075,4 +1328,3 @@ function extractTextContent(content: unknown): string {
   }
   return ''
 }
-
