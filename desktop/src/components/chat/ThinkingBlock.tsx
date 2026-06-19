@@ -120,23 +120,21 @@ export function ThinkingBlock({ content, isActive = false }: { content: string; 
             {isActive && <span className="thinking-dots" />}
           </span>
         </button>
-        {hasDisplayContent && (
-          <Collapse open={expanded}>
-            <div
-              ref={contentRef}
-              data-thinking-content="expanded"
-              className="relative mt-1 max-h-[300px] overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--color-token-border-light)] bg-[var(--color-token-editor-background)] p-2.5 text-[11px] text-[var(--color-token-description-foreground)]/80 [&_*]:text-[var(--color-token-non-assistant-body-descendant)]"
-            >
-              <MarkdownRenderer
-                content={displayContent}
-                variant="compact"
-                cache={!isActive}
-                streaming={isActive}
-                className="thinking-markdown text-[var(--color-token-non-assistant-body-descendant)]"
-              />
-              {isActive && <span className="thinking-cursor" />}
-            </div>
-          </Collapse>
+        {hasDisplayContent && expanded && (
+          <div
+            ref={contentRef}
+            data-thinking-content="expanded"
+            className="relative mt-1 max-h-[300px] overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--color-token-border-light)] bg-[var(--color-token-editor-background)] p-2.5 text-[11px] text-[var(--color-token-description-foreground)]/80 [&_*]:text-[var(--color-token-non-assistant-body-descendant)]"
+          >
+            <MarkdownRenderer
+              content={displayContent}
+              variant="compact"
+              cache={!isActive}
+              streaming={isActive}
+              className="thinking-markdown text-[var(--color-token-non-assistant-body-descendant)]"
+            />
+            {isActive && <span className="thinking-cursor" />}
+          </div>
         )}
       </div>
     )

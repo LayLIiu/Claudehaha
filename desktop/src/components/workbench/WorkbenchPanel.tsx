@@ -93,7 +93,7 @@ export function WorkbenchPanel({ sessionId, variant = 'panel', onClose }: Workbe
               aria-label={t('workbench.expand')}
               title={t('workbench.expand')}
               onClick={handleExpand}
-              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
             >
               <Maximize2 size={15} strokeWidth={2} aria-hidden="true" />
             </button>
@@ -102,7 +102,7 @@ export function WorkbenchPanel({ sessionId, variant = 'panel', onClose }: Workbe
             type="button"
             aria-label={t('workbench.close')}
             onClick={handleClose}
-            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="codex-sidebar-toggle-icon">
               <rect x="2.25" y="2.5" width="11.5" height="11" rx="2" />

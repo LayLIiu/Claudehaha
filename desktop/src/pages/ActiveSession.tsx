@@ -724,7 +724,7 @@ export function ActiveSession() {
                               event.stopPropagation()
                               setTitleMenuOpen((open) => !open)
                             }}
-                            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] data-[state=open]:bg-[var(--color-surface-hover)] data-[state=open]:text-[var(--color-token-foreground)]"
+                            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] data-[state=open]:bg-[var(--color-surface-hover)] data-[state=open]:text-[var(--color-token-foreground)]"
                             data-state={titleMenuOpen ? 'open' : 'closed'}
                           >
                             <MoreHorizontal size={16} strokeWidth={2} aria-hidden="true" />
@@ -820,7 +820,7 @@ export function ActiveSession() {
                         title={t('tasks.toggleSummary')}
                         onClick={() => setEnvPanelOpen((v) => !v)}
                         data-active={envPanelOpen ? 'true' : 'false'}
-	                        className={`inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] spring-bounce-btn ${
+	                        className={`inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] spring-bounce-btn ${
 	                          envPanelOpen
 	                            ? 'bg-[var(--color-surface)] text-[var(--color-token-foreground)] shadow-[0_8px_18px_rgba(0,0,0,0.12)]'
 	                            : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-token-foreground)]'
@@ -838,7 +838,7 @@ export function ActiveSession() {
                           }
                         }}
                         data-active={showTerminalPanel ? 'true' : 'false'}
-	                        className={`inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] spring-bounce-btn ${
+	                        className={`inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] spring-bounce-btn ${
 	                          showTerminalPanel
 	                            ? 'bg-[var(--color-surface)] text-[var(--color-token-foreground)] shadow-[0_8px_18px_rgba(0,0,0,0.12)]'
 	                            : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-token-foreground)]'
@@ -857,7 +857,7 @@ export function ActiveSession() {
                           ws.setMode(activeTabId, 'workspace')
                           ws.openPanel(activeTabId)
                         }}
-                        className="inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] spring-bounce-btn"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] spring-bounce-btn"
                       >
                         <Folder size={15} strokeWidth={1.9} />
                       </button>
