@@ -247,9 +247,7 @@ export function ContextUsageIndicator({
   const freeTokens = Math.max(0, maxTokens - usedTokens)
   const strokeColor = percentage >= 90
     ? 'var(--color-error)'
-    : percentage >= 75
-      ? 'var(--color-warning)'
-      : 'var(--color-secondary)'
+    : 'var(--color-token-text-secondary)'
   const ringStyle = {
     background: displayContext
       ? `conic-gradient(${strokeColor} ${percentage * 3.6}deg, var(--color-surface-container-high) 0deg)`
