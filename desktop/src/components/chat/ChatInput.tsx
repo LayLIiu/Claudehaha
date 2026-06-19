@@ -982,13 +982,13 @@ export function ChatInput({
           ? `bg-transparent ${isMobileComposer ? 'px-4 pb-3' : 'px-8 pb-4'}`
           : compact
             ? `bg-transparent ${isMobileComposer ? 'px-3 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-0' : 'px-2 pb-2 pt-0'}`
-            : `bg-transparent ${isMobileComposer ? 'px-3 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-0' : 'px-0 pb-[25px] pt-0'}`
+            : `bg-transparent ${isMobileComposer ? 'px-3 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-0' : 'px-0 pb-[16px] pt-0'}`
       }
     >
       <div
         className={
           isHeroComposer
-            ? 'codex-new-task-composer mx-auto flex w-full max-w-[980px] flex-col'
+            ? 'codex-new-task-composer mx-auto flex w-full max-w-[760px] flex-col'
           : compact
               ? 'mx-auto max-w-full'
               : `${isMobileComposer ? 'mx-0 max-w-none' : 'mx-auto max-w-[800px]'}`
@@ -1004,10 +1004,10 @@ export function ChatInput({
           ref={panelRef}
           data-testid="chat-input-panel"
           className={isHeroComposer
-            ? `glass-panel codex-new-task-input-panel relative flex flex-col gap-3 overflow-visible ${embedLaunchControlsInHero ? 'rounded-[var(--radius-4xl)]' : 'rounded-t-[var(--radius-4xl)] rounded-b-none'} p-4 transition-colors ${isDragActive ? 'composer-drop-target-active' : ''}`
+            ? `glass-panel codex-new-task-input-panel relative flex flex-col gap-2 overflow-visible ${embedLaunchControlsInHero ? 'rounded-[var(--radius-4xl)]' : 'rounded-t-[var(--radius-4xl)] rounded-b-none'} p-3 transition-colors ${isDragActive ? 'composer-drop-target-active' : ''}`
             : compact
               ? `glass-panel relative overflow-visible p-3 transition-colors ${isMobileComposer ? 'rounded-[var(--radius-2xl)] shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[var(--radius-3xl)]'} ${isDragActive ? 'composer-drop-target-active' : ''}`
-              : `glass-panel relative overflow-visible transition-colors ${isMobileComposer ? 'rounded-[var(--radius-2xl)] p-3 shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[var(--radius-3xl)] pt-[24px] pb-4 px-4 -ml-[8px] w-[calc(100%+8px)]'} ${isDragActive ? 'composer-drop-target-active' : ''}`}
+              : `glass-panel relative overflow-visible transition-colors ${isMobileComposer ? 'rounded-[var(--radius-2xl)] p-3 shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[var(--radius-3xl)] pt-[10px] pb-3 px-4 -ml-[8px] w-[calc(100%+8px)]'} ${isDragActive ? 'composer-drop-target-active' : ''}`}
           {...dragHandlers}
         >
           {isDragActive && (
@@ -1133,7 +1133,7 @@ export function ChatInput({
               data-testid="pending-user-message-list"
               className={[
 	                'overflow-hidden border-b border-[var(--color-token-border)]',
-                isHeroComposer ? '-mx-4 -mt-4' : useCompactControls ? '-mx-3 -mt-3' : '-mx-4 -mt-4',
+                isHeroComposer ? '-mx-3 -mt-3' : useCompactControls ? '-mx-3 -mt-3' : '-mx-4 -mt-[10px]',
               ].join(' ')}
             >
               {queuedUserMessages.map((message) => {
@@ -1240,8 +1240,8 @@ export function ChatInput({
           )}
 
           {isHeroComposer ? (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-start gap-3">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-start gap-2">
                 <textarea
                   ref={textareaRef}
                   value={input}
@@ -1252,8 +1252,8 @@ export function ChatInput({
                   onPaste={handlePaste}
                   placeholder={composerPlaceholder}
                   disabled={isWorkspaceMissing}
-                  rows={2}
-                  className="flex-1 resize-none border-none bg-transparent py-2 leading-7 text-[15px] text-[var(--color-token-foreground)] outline-none placeholder:text-[var(--color-token-input-placeholder-foreground)] disabled:opacity-50"
+                  rows={1}
+                  className="flex-1 resize-none border-none bg-transparent py-1.5 leading-6 text-[15px] text-[var(--color-token-foreground)] outline-none placeholder:text-[var(--color-token-input-placeholder-foreground)] disabled:opacity-50"
                 />
               </div>
             </div>
@@ -1269,16 +1269,16 @@ export function ChatInput({
               placeholder={composerPlaceholder}
               disabled={isWorkspaceMissing}
               rows={1}
-              className={`w-full resize-none bg-transparent text-[15px] leading-7 text-[var(--color-token-foreground)] outline-none placeholder:text-[var(--color-token-input-placeholder-foreground)] disabled:opacity-50 ${
-                useCompactControls ? 'py-1.5' : 'py-2'
+              className={`w-full resize-none bg-transparent text-[15px] leading-6 text-[var(--color-token-foreground)] outline-none placeholder:text-[var(--color-token-input-placeholder-foreground)] disabled:opacity-50 ${
+                useCompactControls ? 'py-1' : 'py-1.5'
               }`}
             />
           )}
 
           <div data-testid="chat-input-toolbar" className={`composer-footer ${isHeroComposer
-            ? 'flex items-center justify-between pt-3'
-            : `mt-2 flex items-center justify-between ${
-              useCompactControls ? '-mx-3 -mb-3 gap-2 px-2.5 py-2' : '-mx-4 -mb-4 px-3 py-3'
+            ? 'flex items-center justify-between pt-2'
+            : `mt-1 flex items-center justify-between ${
+              useCompactControls ? '-mx-3 -mb-3 gap-2 px-2.5 py-2' : '-mx-4 -mb-3 px-3 py-2'
             }`}`}>
             <div className="flex min-w-0 items-center gap-2">
               {!isMemberSession && (
@@ -1367,7 +1367,7 @@ export function ChatInput({
           </div>
 
           {embedLaunchControlsInHero && (
-            <div className="-mx-4 -mb-4 mt-3">
+            <div className="-mx-3 -mb-3 mt-2">
               <RepositoryLaunchControls
                 workDir={activeLaunchWorkDir}
                 onWorkDirChange={handleLaunchWorkDirChange}

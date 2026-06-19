@@ -3350,7 +3350,7 @@ mark.codex-thread-find-active {
   align-items: stretch;
 }
 .codex-new-task-title {
-  margin: 0 0 34px;
+  margin: 0 0 24px;
   text-align: center;
   color: var(--color-token-foreground);
   font-size: clamp(28px, 3.2vw, 38px);
@@ -3367,13 +3367,13 @@ mark.codex-thread-find-active {
     0 18px 52px rgba(0,0,0,0.24) !important;
 }
 .codex-new-task-input-panel textarea {
-  min-height: 76px;
-  padding-top: 4px !important;
-  font-size: 16px !important;
-  line-height: 1.55 !important;
+  min-height: 36px;
+  padding-top: 2px !important;
+  font-size: 15px !important;
+  line-height: 1.35 !important;
 }
 .codex-new-task-input-panel .composer-footer {
-  padding-top: 6px !important;
+  padding-top: 2px !important;
 }
 .codex-new-task-input-panel [data-testid='repository-launch-controls'],
 .codex-new-task-input-panel .repository-launch-controls {
