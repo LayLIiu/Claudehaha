@@ -49,7 +49,7 @@ const TASK_POLL_INTERVAL_MS = 1000
 const WORKSPACE_RESIZE_STEP = 32
 const TERMINAL_RESIZE_STEP = 24
 const CHAT_COLUMN_WITH_WORKSPACE_CLASS =
-  'min-w-[320px] flex-1 bg-[var(--color-surface)]'
+  'min-w-[320px] flex-1'
 
 function getPathLeaf(path: string | null | undefined) {
   if (!path) return null
