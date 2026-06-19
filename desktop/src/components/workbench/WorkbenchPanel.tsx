@@ -1,4 +1,4 @@
-import { FolderOpen, Globe, Maximize2, X } from 'lucide-react'
+import { FolderOpen, Globe, Maximize2 } from 'lucide-react'
 import { useTranslation } from '../../i18n'
 import {
   useWorkspacePanelStore,
@@ -58,7 +58,7 @@ export function WorkbenchPanel({ sessionId, variant = 'panel', onClose }: Workbe
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col bg-[var(--color-surface)]">
-      <div className="flex h-10 shrink-0 items-center gap-2 border-b border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-2.5">
+      <div className="flex h-[50px] shrink-0 items-center gap-2 border-b border-[var(--color-token-border)] bg-[var(--color-surface)] pl-2.5 pr-2">
         <div
           role="tablist"
           aria-label={t('workbench.modeSwitch')}
@@ -104,12 +104,16 @@ export function WorkbenchPanel({ sessionId, variant = 'panel', onClose }: Workbe
             onClick={handleClose}
             className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
           >
-            <X size={16} strokeWidth={2} aria-hidden="true" />
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="codex-sidebar-toggle-icon">
+              <rect x="2.25" y="2.5" width="11.5" height="11" rx="2" />
+              <path d="M6.25 2.75v10.5" />
+              <path d="M9.2 6 11.2 8 9.2 10" />
+            </svg>
           </button>
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col bg-[var(--color-surface)]">
         {mode === 'browser' ? (
           <BrowserSurface sessionId={sessionId} />
         ) : (
