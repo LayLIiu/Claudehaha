@@ -94,6 +94,7 @@ export const en = {
   'sidebar.timeGroup.older': 'Older',
   'sidebar.collapse': 'Collapse sidebar',
   'sidebar.expand': 'Expand sidebar',
+  'sidebar.needsApproval': 'Needs approval',
 
   // ─── Title Bar ──────────────────────────────────────
   'titlebar.code': 'Code',

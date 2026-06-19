@@ -156,6 +156,15 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
     }
     return ids
   }, [chatSessions, tabs])
+  const pendingPermissionSessionIds = useMemo(() => {
+    const ids = new Set<string>()
+    for (const [sessionId, sessionState] of Object.entries(chatSessions)) {
+      if (sessionState.pendingPermission || sessionState.pendingComputerUsePermission) {
+        ids.add(sessionId)
+      }
+    }
+    return ids
+  }, [chatSessions, tabs])
   const pendingBatchDeleteSessions = useMemo(
     () => (pendingBatchDeleteSessionIds ?? [])
       .map((sessionId) => sessionsById.get(sessionId))
@@ -1017,7 +1026,14 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                         )}
                                       </span>
                                     ) : null}
-                                    <span className="min-w-0 flex-1 truncate font-medium tracking-normal">{session.title || 'Untitled'}</span>
+                                    <span className="min-w-0 flex-1 truncate font-medium tracking-normal">
+                                      {pendingPermissionSessionIds.has(session.id) && (
+                                        <span className="mr-1.5 inline-flex items-center gap-0.5 rounded-[4px] bg-[var(--color-warning)]/15 px-1.5 py-0.5 text-[10px] font-semibold text-[var(--color-warning)]">
+                                          {t('sidebar.needsApproval')}
+                                        </span>
+                                      )}
+                                      {session.title || 'Untitled'}
+                                    </span>
                                     {pinnedSessionIdSet.has(session.id) && !isBatchMode && (
                                       <Pin className="h-3.5 w-3.5 flex-shrink-0 text-[var(--color-text-tertiary)]" strokeWidth={1.8} aria-hidden="true" />
                                     )}

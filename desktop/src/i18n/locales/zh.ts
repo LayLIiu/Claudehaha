@@ -96,6 +96,7 @@ export const zh: Record<TranslationKey, string> = {
   'sidebar.timeGroup.older': '更早',
   'sidebar.collapse': '折叠侧边栏',
   'sidebar.expand': '展开侧边栏',
+  'sidebar.needsApproval': '需要审批',
 
   // ─── Title Bar ──────────────────────────────────────
   'titlebar.code': '代码',

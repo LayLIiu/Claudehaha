@@ -96,6 +96,7 @@ export const jp: Record<TranslationKey, string> = {
   'sidebar.timeGroup.older': 'それ以前',
   'sidebar.collapse': 'サイドバーを折りたたむ',
   'sidebar.expand': 'サイドバーを展開',
+  'sidebar.needsApproval': '承認待ち',
 
   // ─── Title Bar ──────────────────────────────────────
   'titlebar.code': 'コード',

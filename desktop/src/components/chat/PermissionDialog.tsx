@@ -99,16 +99,16 @@ function renderPermissionPreview(toolName: string, input: unknown) {
   const filePath = typeof obj.file_path === 'string' ? obj.file_path : 'file'
 
   if (toolName === 'Edit' && typeof obj.old_string === 'string' && typeof obj.new_string === 'string') {
-    return <DiffViewer filePath={filePath} oldString={obj.old_string} newString={obj.new_string} />
+    return <DiffViewer filePath={filePath} oldString={obj.old_string} newString={obj.new_string} monochrome />
   }
 
   if (toolName === 'Write' && typeof obj.content === 'string') {
-    return <DiffViewer filePath={filePath} oldString="" newString={obj.content} />
+    return <DiffViewer filePath={filePath} oldString="" newString={obj.content} monochrome />
   }
 
   if (toolName === 'Bash' && typeof obj.command === 'string') {
     return (
-      <div className="overflow-x-auto rounded-[16px] border border-white/8 bg-[rgba(8,8,8,0.58)] px-3 py-3">
+      <div className="overflow-x-auto rounded-[16px] border border-white/8 bg-[rgba(255,255,255,0.02)] px-3 py-3">
         <pre className="font-[var(--font-mono)] text-[11px] leading-[1.3] text-[var(--color-terminal-fg)] whitespace-pre-wrap break-words">
           <span className="text-[var(--color-terminal-accent)] select-none">$ </span>{obj.command}
         </pre>
@@ -127,6 +127,7 @@ export function PermissionDialog({ sessionId, requestId, toolName, input, descri
   const t = useTranslation()
   const isPending = pendingPermission?.requestId === requestId
   const [showRaw, setShowRaw] = useState(false)
+  const [expanded, setExpanded] = useState(variant !== 'floating')
 
   if (isExitPlanModeTool(toolName)) {
     return (
@@ -150,8 +151,8 @@ export function PermissionDialog({ sessionId, requestId, toolName, input, descri
   const containerClassName = isFloating
     ? `overflow-hidden rounded-[22px] border ${
         isPending
-          ? 'border-white/10 bg-[rgba(26,26,26,0.96)] shadow-[0_28px_90px_rgba(0,0,0,0.52)] backdrop-blur-[18px]'
-          : 'border-white/7 bg-[rgba(26,26,26,0.88)] opacity-85 backdrop-blur-[18px]'
+          ? 'border-white/10 bg-[rgba(42,42,42,0.96)] shadow-[0_28px_90px_rgba(0,0,0,0.52)] backdrop-blur-[18px]'
+          : 'border-white/7 bg-[rgba(42,42,42,0.9)] opacity-85 backdrop-blur-[18px]'
       }`
     : `mb-4 overflow-hidden rounded-[var(--radius-lg)] border ${
         isPending
@@ -174,15 +175,16 @@ export function PermissionDialog({ sessionId, requestId, toolName, input, descri
     ? 'flex items-center gap-2 border-t border-white/8 bg-white/[0.02] px-4 py-3.5'
     : 'flex items-center gap-2 border-t border-[var(--color-outline-variant)]/20 bg-[var(--color-surface-container-low)] px-4 py-3'
   const detailChipClassName = isFloating
-    ? 'flex items-center gap-2 rounded-[14px] border border-white/7 bg-[rgba(255,255,255,0.035)] px-3 py-2 text-xs font-[var(--font-mono)] text-[var(--color-text-secondary)]'
+    ? 'flex items-center gap-2 rounded-[14px] border border-white/8 bg-[rgba(255,255,255,0.025)] px-3 py-2 text-xs font-[var(--font-mono)] text-[rgba(255,255,255,0.62)]'
     : 'flex items-center gap-2 rounded-[var(--radius-md)] bg-[var(--color-surface-container)] px-3 py-2 text-xs font-[var(--font-mono)] text-[var(--color-text-secondary)]'
-  const floatingActionButtonClassName = 'inline-flex h-11 items-center justify-center gap-2 rounded-[14px] border px-4 text-[13px] font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/15'
-  const floatingSecondaryButtonClassName = `${floatingActionButtonClassName} border-white/8 bg-transparent text-[var(--color-text-secondary)] hover:bg-white/[0.04] hover:text-[var(--color-text-primary)]`
-  const floatingPrimaryButtonClassName = `${floatingActionButtonClassName} border-white/10 bg-[rgba(238,238,238,0.16)] text-white hover:bg-[rgba(238,238,238,0.22)]`
-  const floatingDangerButtonClassName = `${floatingActionButtonClassName} border-[rgba(255,160,160,0.18)] bg-[rgba(255,123,123,0.18)] text-[#ffd3d3] hover:bg-[rgba(255,123,123,0.24)]`
+  const floatingActionButtonClassName = 'inline-flex h-12 w-full items-center justify-start gap-2 rounded-[14px] border px-4 text-[14px] font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/15'
+  const floatingSecondaryButtonClassName = `${floatingActionButtonClassName} border-white/8 bg-[rgba(255,255,255,0.025)] text-[rgba(255,255,255,0.82)] hover:bg-[rgba(255,255,255,0.05)]`
+  const floatingPrimaryButtonClassName = `${floatingActionButtonClassName} border-white/10 bg-[rgba(255,255,255,0.08)] text-white hover:bg-[rgba(255,255,255,0.12)]`
+  const floatingDangerButtonClassName = `${floatingActionButtonClassName} border-white/8 bg-[rgba(255,255,255,0.025)] text-[rgba(255,255,255,0.82)] hover:bg-[rgba(255,255,255,0.05)]`
   const rawPreviewClassName = isFloating
-    ? 'mt-2 max-h-[220px] overflow-y-auto overflow-x-auto rounded-[16px] border border-white/8 bg-[rgba(8,8,8,0.58)] px-3 py-3 font-[var(--font-mono)] text-[11px] leading-[1.3] text-[var(--color-terminal-fg)] whitespace-pre-wrap break-words'
+    ? 'mt-2 max-h-[220px] overflow-y-auto overflow-x-auto rounded-[16px] border border-white/8 bg-[rgba(255,255,255,0.02)] px-3 py-3 font-[var(--font-mono)] text-[11px] leading-[1.3] text-[rgba(255,255,255,0.76)] whitespace-pre-wrap break-words'
     : 'mt-2 max-h-[220px] overflow-y-auto overflow-x-auto rounded-[var(--radius-md)] bg-[var(--color-terminal-bg)] px-3 py-2.5 font-[var(--font-mono)] text-[11px] leading-[1.3] text-[var(--color-terminal-fg)] whitespace-pre-wrap break-words'
+  const summaryText = details.primary || details.secondary || description || meta.label
 
   return (
     <div className={containerClassName}>
@@ -190,7 +192,7 @@ export function PermissionDialog({ sessionId, requestId, toolName, input, descri
       <div className={headerClassName}>
         <div
           className={isFloating
-            ? 'flex h-10 w-10 items-center justify-center rounded-[14px] border border-white/8 bg-[rgba(255,255,255,0.025)]'
+            ? 'flex h-10 w-10 items-center justify-center rounded-[14px] border border-white/8 bg-[rgba(255,255,255,0.02)]'
             : 'flex items-center justify-center w-8 h-8 rounded-[var(--radius-md)]'}
           style={isFloating ? undefined : { backgroundColor: `${meta.color}18` }}
         >
@@ -208,9 +210,9 @@ export function PermissionDialog({ sessionId, requestId, toolName, input, descri
             </span>
             {isPending && (
               <span className={isFloating
-                ? 'inline-flex items-center gap-1 rounded-full border border-[rgba(224,177,68,0.16)] bg-[rgba(224,177,68,0.14)] px-2 py-0.5 text-[10px] font-semibold tracking-[0.01em] text-[#e4bf68]'
+                ? 'inline-flex items-center gap-1 rounded-full border border-white/8 bg-[rgba(255,255,255,0.045)] px-2 py-0.5 text-[10px] font-medium tracking-[0.01em] text-[rgba(255,255,255,0.72)]'
                 : 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[var(--color-warning)]/15 text-[var(--color-warning)]'}>
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-warning)] animate-pulse-dot" />
+                <span className={`w-1.5 h-1.5 rounded-full ${isFloating ? 'bg-[rgba(255,255,255,0.6)]' : 'bg-[var(--color-warning)] animate-pulse-dot'}`} />
                 {t('permission.awaitingApproval')}
               </span>
             )}
@@ -220,60 +222,89 @@ export function PermissionDialog({ sessionId, requestId, toolName, input, descri
               </span>
             )}
           </div>
-          <p className={`mt-0.5 truncate ${isFloating ? 'text-[12px] text-[rgba(255,255,255,0.46)]' : 'text-xs text-[var(--color-text-secondary)]'}`}>
+          <p className={`mt-0.5 truncate ${isFloating ? 'text-[12px] text-[rgba(255,255,255,0.44)]' : 'text-xs text-[var(--color-text-secondary)]'}`}>
             {description || `${meta.label} · 等待你确认后继续执行`}
           </p>
         </div>
+        {isFloating ? (
+          <button
+            type="button"
+            onClick={() => setExpanded((value) => !value)}
+            className="inline-flex h-9 shrink-0 items-center gap-1 rounded-[12px] border border-white/8 bg-[rgba(255,255,255,0.02)] px-3 text-[12px] text-[rgba(255,255,255,0.62)] transition-colors hover:bg-[rgba(255,255,255,0.05)] hover:text-white"
+          >
+            <span className="material-symbols-outlined text-[16px]">
+              {expanded ? 'expand_less' : 'expand_more'}
+            </span>
+            {expanded ? '收起详情' : '展开详情'}
+          </button>
+        ) : null}
       </div>
 
       {/* Tool details */}
       <div className={bodyClassName}>
-        {preview ? (
+        {!expanded && isFloating ? (
           <div className="space-y-2">
-            {details.primary && toolName !== 'Bash' ? (
+            {summaryText ? (
               <div className={detailChipClassName}>
                 <span className="material-symbols-outlined text-[14px] text-[var(--color-outline)] flex-shrink-0">
-                  folder_open
+                  {toolName === 'Glob' || toolName === 'Grep' ? 'search' : toolName === 'Bash' ? 'terminal' : 'folder_open'}
                 </span>
-                <span className="truncate">{details.primary}</span>
+                <span className="truncate">{summaryText}</span>
               </div>
             ) : null}
-            {preview}
+            <p className="text-[12px] text-[rgba(255,255,255,0.38)]">
+              点击“展开详情”后查看完整审批内容
+            </p>
           </div>
-        ) : details.primary ? (
-          <div className="mb-2">
-            <div className={detailChipClassName}>
-              <span className="material-symbols-outlined text-[14px] text-[var(--color-outline)] flex-shrink-0">
-                {toolName === 'Glob' || toolName === 'Grep' ? 'search' : 'folder_open'}
-              </span>
-              <span className="truncate">{details.primary}</span>
-            </div>
-          </div>
-        ) : null}
+        ) : (
+          <>
+            {preview ? (
+              <div className="space-y-2">
+                {details.primary && toolName !== 'Bash' ? (
+                  <div className={detailChipClassName}>
+                    <span className="material-symbols-outlined text-[14px] text-[var(--color-outline)] flex-shrink-0">
+                      folder_open
+                    </span>
+                    <span className="truncate">{details.primary}</span>
+                  </div>
+                ) : null}
+                {preview}
+              </div>
+            ) : details.primary ? (
+              <div className="mb-2">
+                <div className={detailChipClassName}>
+                  <span className="material-symbols-outlined text-[14px] text-[var(--color-outline)] flex-shrink-0">
+                    {toolName === 'Glob' || toolName === 'Grep' ? 'search' : 'folder_open'}
+                  </span>
+                  <span className="truncate">{details.primary}</span>
+                </div>
+              </div>
+            ) : null}
 
-        {/* Secondary detail */}
-        {details.secondary && (
-          <p className={`mt-2 ${isFloating ? 'text-[12px] text-[rgba(255,255,255,0.42)]' : 'text-xs text-[var(--color-text-tertiary)]'}`}>{details.secondary}</p>
-        )}
+            {details.secondary && (
+              <p className={`mt-2 ${isFloating ? 'text-[12px] text-[rgba(255,255,255,0.42)]' : 'text-xs text-[var(--color-text-tertiary)]'}`}>{details.secondary}</p>
+            )}
 
-        {allowRawToggle && (
-          <button
-            onClick={() => setShowRaw(!showRaw)}
-            className={isFloating
-              ? 'mt-3 flex cursor-pointer items-center gap-1 rounded-[10px] px-2 py-1 text-[11px] text-[rgba(255,255,255,0.52)] transition-colors hover:bg-white/[0.04] hover:text-white'
-              : 'mt-2 flex cursor-pointer items-center gap-1 text-[11px] text-[var(--color-text-accent)] hover:underline'}
-          >
-            <span className="material-symbols-outlined text-[14px]">
-              {showRaw ? 'expand_less' : 'expand_more'}
-            </span>
-            {showRaw ? t('permission.hideDetails') : t('permission.showFullInput')}
-          </button>
-        )}
+            {allowRawToggle && (
+              <button
+                onClick={() => setShowRaw(!showRaw)}
+                className={isFloating
+                  ? 'mt-3 flex cursor-pointer items-center gap-1 rounded-[10px] px-2 py-1 text-[11px] text-[rgba(255,255,255,0.52)] transition-colors hover:bg-white/[0.04] hover:text-white'
+                  : 'mt-2 flex cursor-pointer items-center gap-1 text-[11px] text-[var(--color-text-accent)] hover:underline'}
+              >
+                <span className="material-symbols-outlined text-[14px]">
+                  {showRaw ? 'expand_less' : 'expand_more'}
+                </span>
+                {showRaw ? t('permission.hideDetails') : t('permission.showFullInput')}
+              </button>
+            )}
 
-        {allowRawToggle && showRaw && (
-          <pre className={rawPreviewClassName}>
-            {rawInput}
-          </pre>
+            {allowRawToggle && showRaw && (
+              <pre className={rawPreviewClassName}>
+                {rawInput}
+              </pre>
+            )}
+          </>
         )}
       </div>
 
@@ -281,7 +312,7 @@ export function PermissionDialog({ sessionId, requestId, toolName, input, descri
       {isPending && (
         <div className={actionClassName}>
           {isFloating ? (
-            <>
+            <div className="flex w-full flex-col gap-2">
               <button
                 type="button"
                 onClick={() => targetSessionId && respondToPermission(targetSessionId, requestId, true)}
@@ -298,7 +329,6 @@ export function PermissionDialog({ sessionId, requestId, toolName, input, descri
                 <span className="material-symbols-outlined text-[16px]">verified</span>
                 {t('permission.allowForSession')}
               </button>
-              <div className="flex-1" />
               <button
                 type="button"
                 onClick={() => targetSessionId && respondToPermission(targetSessionId, requestId, false)}
@@ -307,7 +337,7 @@ export function PermissionDialog({ sessionId, requestId, toolName, input, descri
                 <span className="material-symbols-outlined text-[16px]">close</span>
                 {t('permission.deny')}
               </button>
-            </>
+            </div>
           ) : (
             <>
               <Button

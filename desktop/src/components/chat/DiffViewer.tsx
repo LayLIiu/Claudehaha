@@ -7,6 +7,7 @@ type Props = {
   filePath: string
   oldString: string
   newString: string
+  monochrome?: boolean
 }
 
 function inferLanguage(filePath: string): string {
@@ -45,9 +46,32 @@ const warmSyntaxTheme: PrismTheme = {
   ],
 }
 
-function highlightSyntax(str: string, language: string) {
+const monochromeSyntaxTheme: PrismTheme = {
+  plain: {
+    color: 'rgba(255,255,255,0.78)',
+    backgroundColor: 'transparent',
+  },
+  styles: [
+    { types: ['comment', 'prolog', 'doctype', 'cdata'], style: { color: 'rgba(255,255,255,0.36)', fontStyle: 'italic' as const } },
+    { types: ['string', 'attr-value', 'template-string'], style: { color: 'rgba(255,255,255,0.74)' } },
+    { types: ['keyword', 'selector', 'important', 'atrule'], style: { color: 'rgba(255,255,255,0.74)' } },
+    { types: ['function'], style: { color: 'rgba(255,255,255,0.78)' } },
+    { types: ['tag'], style: { color: 'rgba(255,255,255,0.74)' } },
+    { types: ['number', 'boolean'], style: { color: 'rgba(255,255,255,0.7)' } },
+    { types: ['operator'], style: { color: 'rgba(255,255,255,0.72)' } },
+    { types: ['punctuation'], style: { color: 'rgba(255,255,255,0.52)' } },
+    { types: ['variable', 'parameter'], style: { color: 'rgba(255,255,255,0.78)' } },
+    { types: ['property', 'attr-name'], style: { color: 'rgba(255,255,255,0.7)' } },
+    { types: ['builtin', 'class-name', 'constant', 'symbol'], style: { color: 'rgba(255,255,255,0.72)' } },
+    { types: ['regex'], style: { color: 'rgba(255,255,255,0.7)' } },
+    { types: ['inserted'], style: { color: 'rgba(255,255,255,0.78)' } },
+    { types: ['deleted'], style: { color: 'rgba(255,255,255,0.72)' } },
+  ],
+}
+
+function highlightSyntax(str: string, language: string, monochrome = false) {
   return (
-    <Highlight theme={warmSyntaxTheme} code={str} language={language}>
+    <Highlight theme={monochrome ? monochromeSyntaxTheme : warmSyntaxTheme} code={str} language={language}>
       {({ tokens, getTokenProps }) => (
         <>
           {tokens.map((line, i) => (
@@ -112,7 +136,68 @@ const diffStyles = {
   },
 }
 
-export function DiffViewer({ filePath, oldString, newString }: Props) {
+const monochromeDiffStyles = {
+  variables: {
+    light: {
+      diffViewerBackground: 'rgba(255,255,255,0.02)',
+      diffViewerColor: 'rgba(255,255,255,0.78)',
+      addedBackground: 'rgba(255,255,255,0.03)',
+      addedColor: 'rgba(255,255,255,0.78)',
+      removedBackground: 'rgba(255,255,255,0.025)',
+      removedColor: 'rgba(255,255,255,0.72)',
+      wordAddedBackground: 'rgba(255,255,255,0.055)',
+      wordRemovedBackground: 'rgba(255,255,255,0.05)',
+      addedGutterBackground: 'rgba(255,255,255,0.03)',
+      removedGutterBackground: 'rgba(255,255,255,0.025)',
+      gutterBackground: 'rgba(255,255,255,0.02)',
+      gutterBackgroundDark: 'rgba(255,255,255,0.02)',
+      highlightBackground: 'rgba(255,255,255,0.04)',
+      highlightGutterBackground: 'rgba(255,255,255,0.035)',
+      codeFoldGutterBackground: 'rgba(255,255,255,0.02)',
+      codeFoldBackground: 'rgba(255,255,255,0.02)',
+      emptyLineBackground: 'rgba(255,255,255,0.02)',
+      gutterColor: 'rgba(255,255,255,0.32)',
+      addedGutterColor: 'rgba(255,255,255,0.48)',
+      removedGutterColor: 'rgba(255,255,255,0.42)',
+      codeFoldContentColor: 'rgba(255,255,255,0.42)',
+      diffViewerTitleBackground: 'rgba(255,255,255,0.02)',
+      diffViewerTitleColor: 'rgba(255,255,255,0.5)',
+      diffViewerTitleBorderColor: 'rgba(255,255,255,0.08)',
+    },
+    dark: {
+      diffViewerBackground: 'rgba(255,255,255,0.02)',
+      diffViewerColor: 'rgba(255,255,255,0.78)',
+      addedBackground: 'rgba(255,255,255,0.03)',
+      addedColor: 'rgba(255,255,255,0.78)',
+      removedBackground: 'rgba(255,255,255,0.025)',
+      removedColor: 'rgba(255,255,255,0.72)',
+      wordAddedBackground: 'rgba(255,255,255,0.055)',
+      wordRemovedBackground: 'rgba(255,255,255,0.05)',
+      addedGutterBackground: 'rgba(255,255,255,0.03)',
+      removedGutterBackground: 'rgba(255,255,255,0.025)',
+      gutterBackground: 'rgba(255,255,255,0.02)',
+      gutterBackgroundDark: 'rgba(255,255,255,0.02)',
+      highlightBackground: 'rgba(255,255,255,0.04)',
+      highlightGutterBackground: 'rgba(255,255,255,0.035)',
+      codeFoldGutterBackground: 'rgba(255,255,255,0.02)',
+      codeFoldBackground: 'rgba(255,255,255,0.02)',
+      emptyLineBackground: 'rgba(255,255,255,0.02)',
+      gutterColor: 'rgba(255,255,255,0.32)',
+      addedGutterColor: 'rgba(255,255,255,0.48)',
+      removedGutterColor: 'rgba(255,255,255,0.42)',
+      codeFoldContentColor: 'rgba(255,255,255,0.42)',
+      diffViewerTitleBackground: 'rgba(255,255,255,0.02)',
+      diffViewerTitleColor: 'rgba(255,255,255,0.5)',
+      diffViewerTitleBorderColor: 'rgba(255,255,255,0.08)',
+    },
+  },
+  diffContainer: diffStyles.diffContainer,
+  line: diffStyles.line,
+  gutter: diffStyles.gutter,
+  wordDiff: diffStyles.wordDiff,
+}
+
+export function DiffViewer({ filePath, oldString, newString, monochrome = false }: Props) {
   const theme = useUIStore((state) => state.theme)
   const language = inferLanguage(filePath)
 
@@ -122,22 +207,34 @@ export function DiffViewer({ filePath, oldString, newString }: Props) {
   const deletions = oldLines.filter((l, i) => l !== (newLines[i] ?? null)).length
 
   return (
-    <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-outline-variant)]/50 bg-[var(--color-surface-container-low)]">
+    <div className={monochrome
+      ? 'overflow-hidden rounded-[16px] border border-white/8 bg-[rgba(255,255,255,0.02)]'
+      : 'overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-outline-variant)]/50 bg-[var(--color-surface-container-low)]'}>
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-[var(--color-outline-variant)]/40 bg-[var(--color-surface-container)] px-3 py-1.5">
+      <div className={monochrome
+        ? 'flex items-center justify-between border-b border-white/8 bg-[rgba(255,255,255,0.02)] px-3 py-1.5'
+        : 'flex items-center justify-between border-b border-[var(--color-outline-variant)]/40 bg-[var(--color-surface-container)] px-3 py-1.5'}>
         <div className="min-w-0">
-          <div className="truncate font-[var(--font-mono)] text-[11px] text-[var(--color-text-tertiary)]">
+          <div className={monochrome
+            ? 'truncate font-[var(--font-mono)] text-[11px] text-[rgba(255,255,255,0.38)]'
+            : 'truncate font-[var(--font-mono)] text-[11px] text-[var(--color-text-tertiary)]'}>
             {filePath}
           </div>
           <div className="mt-1 flex items-center gap-2 text-[10px] uppercase tracking-[0.14em]">
-            <span className="rounded-full bg-[var(--color-diff-added-bg)] px-2 py-0.5 text-[var(--color-diff-added-text)]">+{additions}</span>
-            <span className="rounded-full bg-[var(--color-diff-removed-bg)] px-2 py-0.5 text-[var(--color-diff-removed-text)]">-{deletions}</span>
+            <span className={monochrome
+              ? 'rounded-full border border-white/8 bg-[rgba(255,255,255,0.03)] px-2 py-0.5 text-[rgba(255,255,255,0.5)]'
+              : 'rounded-full bg-[var(--color-diff-added-bg)] px-2 py-0.5 text-[var(--color-diff-added-text)]'}>+{additions}</span>
+            <span className={monochrome
+              ? 'rounded-full border border-white/8 bg-[rgba(255,255,255,0.03)] px-2 py-0.5 text-[rgba(255,255,255,0.5)]'
+              : 'rounded-full bg-[var(--color-diff-removed-bg)] px-2 py-0.5 text-[var(--color-diff-removed-text)]'}>-{deletions}</span>
           </div>
         </div>
         <CopyButton
           text={`--- ${filePath}\n+++ ${filePath}`}
           label="Copy path"
-          className="rounded-md border border-[var(--color-outline-variant)]/40 bg-[var(--color-surface-container-lowest)] px-2 py-1 text-[11px] text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-container-high)] hover:text-[var(--color-text-primary)]"
+          className={monochrome
+            ? 'rounded-md border border-white/8 bg-[rgba(255,255,255,0.02)] px-2 py-1 text-[11px] text-[rgba(255,255,255,0.42)] transition-colors hover:bg-[rgba(255,255,255,0.05)] hover:text-[rgba(255,255,255,0.78)]'
+            : 'rounded-md border border-[var(--color-outline-variant)]/40 bg-[var(--color-surface-container-lowest)] px-2 py-1 text-[11px] text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-container-high)] hover:text-[var(--color-text-primary)]'}
         />
       </div>
 
@@ -148,10 +245,10 @@ export function DiffViewer({ filePath, oldString, newString }: Props) {
           newValue={newString}
           splitView={false}
           compareMethod={DiffMethod.WORDS}
-          renderContent={(str) => highlightSyntax(str, language)}
+          renderContent={(str) => highlightSyntax(str, language, monochrome)}
           hideLineNumbers={false}
-          styles={diffStyles}
-          useDarkTheme={theme === 'dark'}
+          styles={monochrome ? monochromeDiffStyles : diffStyles}
+          useDarkTheme={monochrome ? false : theme === 'dark'}
         />
       </div>
     </div>

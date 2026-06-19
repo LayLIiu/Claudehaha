@@ -96,6 +96,7 @@ export const kr: Record<TranslationKey, string> = {
   'sidebar.timeGroup.older': '그 이전',
   'sidebar.collapse': '사이드바 접기',
   'sidebar.expand': '사이드바 펼치기',
+  'sidebar.needsApproval': '승인 필요',
 
   // ─── Title Bar ──────────────────────────────────────
   'titlebar.code': '코드',
