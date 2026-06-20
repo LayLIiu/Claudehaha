@@ -44,7 +44,7 @@ function hasArgFlag(flag: string): boolean {
 function resolveServerOptions() {
   const portArg = readArgValue('--port')
   const port = Number.parseInt(portArg || process.env.SERVER_PORT || '3456', 10)
-  const host = readArgValue('--host') || process.env.SERVER_HOST || '127.0.0.1'
+  const host = readArgValue('--host') || process.env.SERVER_HOST || '0.0.0.0'
   const cliPath = readArgValue('--cli-path')
   const authRequired = hasArgFlag('--auth-required')
 

@@ -7,6 +7,7 @@ import {
   buildSidecarEnv,
   createAdapterPlan,
   createServerPlan,
+  DEFAULT_DESKTOP_SERVER_PORT,
   httpToWebSocketUrl,
   killSidecar,
   mergeProxyEnv,
@@ -215,13 +216,13 @@ describe('Electron sidecar manager', () => {
     const configDir = mkdtempSync(path.join(tmpdir(), 'cchh-server-state-'))
     const env = { CLAUDE_CONFIG_DIR: configDir } as NodeJS.ProcessEnv
     try {
-      // Nothing stored yet: no preferred ports.
-      expect(preferredServerPorts(env)).toEqual([])
+      // Nothing stored yet: default to the mobile-friendly desktop port.
+      expect(preferredServerPorts(env)).toEqual([DEFAULT_DESKTOP_SERVER_PORT])
 
       // Sticky port from the previous run.
       writeLastServerPort(50123, env)
       expect(readLastServerPort(env)).toBe(50123)
-      expect(preferredServerPorts(env)).toEqual([50123])
+      expect(preferredServerPorts(env)).toEqual([DEFAULT_DESKTOP_SERVER_PORT, 50123])
 
       // An explicit fixed port wins over the sticky port.
       mkdirSync(path.join(configDir, 'cc-haha'), { recursive: true })

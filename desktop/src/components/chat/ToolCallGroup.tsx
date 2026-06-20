@@ -148,43 +148,125 @@ export function generateToolActivitySummary(
 function generateActiveTitle(toolCall: ToolCall | null): string {
   if (!toolCall) return ''
   const obj = toolCall.input && typeof toolCall.input === 'object' ? (toolCall.input as Record<string, unknown>) : {}
+  const partialInput = typeof toolCall.partialInput === 'string' ? toolCall.partialInput : ''
+
+  const getStringField = (field: string) => {
+    const fromInput = typeof obj[field] === 'string' ? obj[field] as string : ''
+    if (fromInput) return fromInput
+    return extractPartialJsonStringField(partialInput, field) ?? ''
+  }
 
   switch (toolCall.toolName) {
     case 'Bash': {
-      const cmd = typeof obj.command === 'string' ? obj.command : ''
-      return cmd || '执行命令'
+      const cmd = getStringField('command')
+      return cmd || ''
     }
     case 'Read': {
-      const fp = typeof obj.file_path === 'string' ? obj.file_path.split('/').pop() : ''
+      const filePath = getStringField('file_path')
+      const fp = filePath ? filePath.split('/').pop() : ''
       return fp ? `读取 ${fp}` : '读取文件'
     }
     case 'Write': {
-      const fp = typeof obj.file_path === 'string' ? obj.file_path.split('/').pop() : ''
-      return fp ? `写入 ${fp}` : '写入文件'
+      const filePath = getStringField('file_path')
+      const fp = filePath ? filePath.split('/').pop() : ''
+      return fp ? `正在写入 ${fp}` : ''
     }
     case 'Edit': {
-      const fp = typeof obj.file_path === 'string' ? obj.file_path.split('/').pop() : ''
-      return fp ? `编辑 ${fp}` : '编辑文件'
+      const filePath = getStringField('file_path')
+      const fp = filePath ? filePath.split('/').pop() : ''
+      return fp ? `正在编辑 ${fp}` : ''
     }
     case 'MultiEdit': {
-      const fp = typeof obj.file_path === 'string' ? obj.file_path.split('/').pop() : ''
-      return fp ? `编辑 ${fp}` : '批量编辑文件'
+      const filePath = getStringField('file_path')
+      const fp = filePath ? filePath.split('/').pop() : ''
+      return fp ? `正在批量编辑 ${fp}` : ''
     }
     case 'Glob': {
-      const pat = typeof obj.pattern === 'string' ? obj.pattern : ''
+      const pat = getStringField('pattern')
       return pat ? `查找 ${pat}` : '查找文件'
     }
     case 'Grep': {
-      const pat = typeof obj.pattern === 'string' ? obj.pattern : ''
+      const pat = getStringField('pattern')
       return pat ? `搜索 ${pat}` : '搜索内容'
     }
     case 'Agent': {
-      const desc = typeof obj.description === 'string' ? obj.description : ''
+      const desc = getStringField('description')
       return desc || '执行任务'
     }
     default:
       return toolCall.toolName
   }
+}
+
+function extractPartialJsonStringField(source: string, field: string): string | null {
+  if (!source) return null
+  const key = `"${field}"`
+  const keyIndex = source.indexOf(key)
+  if (keyIndex < 0) return null
+  const colonIndex = source.indexOf(':', keyIndex + key.length)
+  if (colonIndex < 0) return null
+
+  let index = colonIndex + 1
+  while (index < source.length && /\s/.test(source[index] ?? '')) index += 1
+  if (source[index] !== '"') return null
+  index += 1
+
+  let value = ''
+  while (index < source.length) {
+    const char = source[index]
+    if (char === '"') return value
+    if (char !== '\\') {
+      value += char
+      index += 1
+      continue
+    }
+
+    const escaped = source[index + 1]
+    if (escaped === undefined) break
+    switch (escaped) {
+      case 'n':
+        value += '\n'
+        index += 2
+        break
+      case 'r':
+        value += '\r'
+        index += 2
+        break
+      case 't':
+        value += '\t'
+        index += 2
+        break
+      case 'b':
+        value += '\b'
+        index += 2
+        break
+      case 'f':
+        value += '\f'
+        index += 2
+        break
+      case '"':
+      case '\\':
+      case '/':
+        value += escaped
+        index += 2
+        break
+      case 'u': {
+        const hex = source.slice(index + 2, index + 6)
+        if (/^[0-9a-fA-F]{4}$/.test(hex)) {
+          value += String.fromCharCode(Number.parseInt(hex, 16))
+          index += 6
+        } else {
+          index = source.length
+        }
+        break
+      }
+      default:
+        value += escaped
+        index += 2
+        break
+    }
+  }
+  return null
 }
 
 function getSummaryKey(toolCalls: ToolCall[]): string {
@@ -194,16 +276,35 @@ function getSummaryKey(toolCalls: ToolCall[]): string {
 }
 
 function ActiveEditTitle({
+  toolName,
   stats,
 }: {
+  toolName: string
   stats: ToolEditStats
 }) {
+  const verb = toolName === 'Write'
+    ? '正在写入'
+    : toolName === 'MultiEdit'
+      ? '正在批量编辑'
+      : '正在编辑'
+
   return (
     <span className="flex min-w-0 items-center gap-1.5">
-      <span className="truncate">编辑 {stats.label}</span>
+      <span className="truncate">{verb} {stats.label}</span>
       <span className="shrink-0 text-[11px] text-[rgba(255,255,255,0.46)]">·</span>
       <RollingDiffStats stats={stats} variant="inline" className="text-[13px] font-medium" />
     </span>
+  )
+}
+
+function RunningTitlePlaceholder() {
+  return (
+    <CadencedShimmerText className="block">
+      <span
+        aria-hidden="true"
+        className="block h-[1em] w-24 rounded-full bg-[rgba(255,255,255,0.08)]"
+      />
+    </CadencedShimmerText>
   )
 }
 
@@ -246,6 +347,56 @@ function getLastUnresolvedToolCall(
       return toolCall
     }
   }
+  return null
+}
+
+function getActiveOrLatestToolCall(
+  toolCalls: ToolCall[],
+  resultMap: Map<string, ToolResult>,
+  childToolCallsByParent: Map<string, ToolCall[]>,
+  isStreaming?: boolean,
+): ToolCall | null {
+  const unresolvedToolCall = getLastUnresolvedToolCall(toolCalls, resultMap, childToolCallsByParent)
+  if (unresolvedToolCall) return unresolvedToolCall
+  if (isStreaming) return toolCalls[toolCalls.length - 1] ?? null
+  return null
+}
+
+function getLatestConcreteRunningDisplay(
+  toolCalls: ToolCall[],
+  resultMap: Map<string, ToolResult>,
+  childToolCallsByParent: Map<string, ToolCall[]>,
+  isStreaming?: boolean,
+): {
+  toolCall: ToolCall
+  title: string
+  editStats: ToolEditStats | null
+} | null {
+  const activeToolCall = getActiveOrLatestToolCall(toolCalls, resultMap, childToolCallsByParent, isStreaming)
+  const orderedToolCalls = activeToolCall
+    ? [activeToolCall, ...toolCalls.filter((toolCall) => toolCall.id !== activeToolCall.id).reverse()]
+    : [...toolCalls].reverse()
+
+  for (const toolCall of orderedToolCalls) {
+    const editStats = extractEditStats(toolCall)
+    if (editStats?.label) {
+      return {
+        toolCall,
+        title: '',
+        editStats,
+      }
+    }
+
+    const title = generateActiveTitle(toolCall)
+    if (title) {
+      return {
+        toolCall,
+        title,
+        editStats: null,
+      }
+    }
+  }
+
   return null
 }
 
@@ -508,7 +659,7 @@ function AgentToolGroup({
       <button
         type="button"
         onClick={() => setExpanded((value) => !value)}
-        className="flex w-full items-center gap-2 rounded-[var(--radius-xl)] border border-[var(--color-token-border)]/40 bg-[var(--color-token-bg-subtle)] px-3 py-2 text-left transition-colors"
+        className="agent-card-glow flex w-full items-center gap-2 rounded-[var(--radius-2xl)] bg-[var(--color-surface-container-high)] px-3 py-2 text-left transition-colors"
       >
         <span className="material-symbols-outlined icon-xs text-[var(--color-token-foreground)]">
           {expanded ? 'expand_less' : 'expand_more'}
@@ -558,21 +709,17 @@ function AgentToolGroup({
 }
 
 /** Separated so the useState hook is never called conditionally. */
-function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent }: Props) {
+function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isStreaming }: Props) {
   const [expanded, setExpanded] = useState(false)
   const t = useTranslation()
   const summary = generateToolActivitySummary(toolCalls, t)
   const hasUnresolvedTools = hasUnresolvedToolCalls(toolCalls, resultMap, childToolCallsByParent)
-  const isRunning = hasUnresolvedTools
+  const isRunning = Boolean(isStreaming) || hasUnresolvedTools
 
-  const activeToolCall = useMemo(
-    () => getLastUnresolvedToolCall(toolCalls, resultMap, childToolCallsByParent),
-    [childToolCallsByParent, resultMap, toolCalls],
+  const runningDisplay = useMemo(
+    () => getLatestConcreteRunningDisplay(toolCalls, resultMap, childToolCallsByParent, isStreaming),
+    [childToolCallsByParent, isStreaming, resultMap, toolCalls],
   )
-  const activeTitle = useMemo(() => generateActiveTitle(activeToolCall), [activeToolCall])
-  const activeEditStats = useMemo(() => {
-    return activeToolCall ? extractEditStats(activeToolCall) : null
-  }, [activeToolCall])
   const completedEditStats = useMemo(() => aggregateToolEditStats(toolCalls), [toolCalls])
   const editFileSummaries = useMemo(() => summarizeToolEditFiles(toolCalls), [toolCalls])
   const summaryKey = useMemo(() => getSummaryKey(toolCalls), [toolCalls])
@@ -595,14 +742,18 @@ function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent }: Pr
           {expanded ? 'expand_less' : 'expand_more'}
         </span>
         <span className="flex-1 truncate text-[var(--text-size-chat)] text-[var(--color-token-conversation-summary-trailing)] group-hover/collapsed-tool-activity:text-[var(--color-token-foreground)]">
-          {isRunning && activeEditStats ? (
-            <CadencedShimmerText className="block">
-              <ActiveEditTitle stats={activeEditStats} />
-            </CadencedShimmerText>
-          ) : isRunning ? (
-            <CadencedShimmerText>
-              {activeTitle || t('toolGroup.working')}
-            </CadencedShimmerText>
+          {isRunning ? (
+            runningDisplay?.editStats ? (
+              <CadencedShimmerText className="block">
+                <ActiveEditTitle toolName={runningDisplay.toolCall.toolName} stats={runningDisplay.editStats} />
+              </CadencedShimmerText>
+            ) : runningDisplay?.title ? (
+              <CadencedShimmerText>
+                {runningDisplay.title}
+              </CadencedShimmerText>
+            ) : (
+              <RunningTitlePlaceholder />
+            )
           ) : summaryContent}
         </span>
 
@@ -684,7 +835,7 @@ function AgentCallCard({
   const description = typeof input.description === 'string' ? input.description : ''
 
   return (
-    <div className="overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-token-border)]/50 bg-[var(--color-surface-container-low)]/76 backdrop-blur-[10px]">
+    <div className="agent-card-glow overflow-hidden rounded-[var(--radius-2xl)] bg-[var(--color-surface-container-high)]">
       <div className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors">
         <span className="material-symbols-outlined icon-md text-[var(--color-outline)]">smart_toy</span>
         <div className="min-w-0 flex-1">

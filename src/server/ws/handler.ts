@@ -362,6 +362,7 @@ async function handleUserMessage(
 
   // Send thinking status
   sendMessage(ws, { type: 'status', state: 'thinking', verb: 'Thinking' })
+  void broadcastSessionActivated(sessionId)
 
   const activeTurn: ActiveUserTurnState = { messageSent: false }
   activeUserTurns.set(sessionId, activeTurn)
@@ -475,6 +476,10 @@ async function handleUserMessage(
 
   userMessageSent = true
   activeTurn.messageSent = true
+  sendToSessionExcept(sessionId, ws, {
+    type: 'user_message_replay',
+    content: message.content,
+  })
 }
 
 function clearActiveUserTurn(sessionId: string, activeTurn: ActiveUserTurnState): void {
@@ -2702,6 +2707,42 @@ export function sendToSession(sessionId: string, message: ServerMessage): boolea
   return true
 }
 
+function sendToSessionExcept(
+  sessionId: string,
+  excludedClient: ServerWebSocket<WebSocketData>,
+  message: ServerMessage,
+): boolean {
+  const clients = activeSessions.get(sessionId)
+  if (!clients || clients.size === 0) return false
+
+  const payload = JSON.stringify(message)
+  let sent = false
+  for (const ws of clients) {
+    if (ws === excludedClient) continue
+    ws.send(payload)
+    sent = true
+  }
+
+  if (shouldBroadcastToGlobal(message)) {
+    broadcastToGlobalClients({
+      type: 'session_broadcast',
+      sessionId,
+      event: message,
+    } as ServerMessage)
+  }
+
+  return sent
+}
+
+async function broadcastSessionActivated(sessionId: string): Promise<void> {
+  const title = await sessionService.getCustomTitle(sessionId).catch(() => null)
+  broadcastToGlobalClients({
+    type: 'session_activated',
+    sessionId,
+    ...(title ? { title } : {}),
+  })
+}
+
 /**
  * Server messages that should be mirrored to the global channel.
  */
@@ -2712,6 +2753,7 @@ function shouldBroadcastToGlobal(message: ServerMessage): boolean {
     case 'message_complete':
     case 'permission_request':
     case 'permission_mode_changed':
+    case 'user_message_replay':
     case 'error':
       return true
     default:
@@ -2854,6 +2896,7 @@ export function __resetWebSocketHandlerStateForTests(): void {
   for (const timer of prewarmIdleTimers.values()) clearTimeout(timer)
   for (const remove of sessionDisconnectWatchers.values()) remove()
   activeSessions.clear()
+  globalClients.clear()
   clientOutputCallbacks.clear()
   sessionCleanupTimers.clear()
   sessionDisconnectWatchers.clear()

@@ -10,7 +10,7 @@ vi.mock('./client', () => ({
   getAuthToken: () => clientMocks.authToken,
 }))
 
-import { buildSessionWebSocketUrl, wsManager } from './websocket'
+import { buildGlobalWebSocketUrl, buildSessionWebSocketUrl, wsManager } from './websocket'
 
 type SocketHandler = (() => void) | ((event: { data: string }) => void)
 
@@ -121,5 +121,35 @@ describe('wsManager reconnect buffering', () => {
     expect(buildSessionWebSocketUrl('s1')).toBe(
       'wss://public.example.com/app/ws/s1',
     )
+  })
+
+  it('builds global websocket URLs from the same backend base', () => {
+    clientMocks.baseUrl = 'http://10.0.0.2:3456/app'
+    clientMocks.authToken = 'desktop token'
+
+    expect(buildGlobalWebSocketUrl()).toBe(
+      'ws://10.0.0.2:3456/app/ws/global?token=desktop+token',
+    )
+  })
+
+  it('connects to the global channel and dispatches global messages', () => {
+    const handler = vi.fn()
+
+    wsManager.connectGlobal()
+    const off = wsManager.onGlobalMessage(handler)
+
+    const socket = FakeWebSocket.instances[0]
+    expect(socket?.url).toBe('ws://127.0.0.1:3456/ws/global')
+
+    socket!.onmessage?.({
+      data: JSON.stringify({ type: 'session_activated', sessionId: 'remote-session' }),
+    })
+
+    expect(handler).toHaveBeenCalledWith({
+      type: 'session_activated',
+      sessionId: 'remote-session',
+    })
+
+    off()
   })
 })

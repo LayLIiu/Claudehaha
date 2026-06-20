@@ -118,6 +118,10 @@ export type ServerMessage =
   | { type: 'team_deleted'; teamName: string }
   | { type: 'task_update'; taskId: string; status: string; progress?: string }
   | { type: 'session_title_updated'; sessionId: string; title: string }
+  | { type: 'session_broadcast'; sessionId: string; event: ServerMessage }
+  | { type: 'session_activated'; sessionId: string; title?: string }
+  | { type: 'session_status_changed'; sessionId: string; state: ChatState }
+  | { type: 'sessions_updated'; sessions: SessionSummary[] }
 
 export type TokenUsage = {
   input_tokens: number
@@ -127,6 +131,13 @@ export type TokenUsage = {
 }
 
 export type ChatState = 'idle' | 'thinking' | 'compacting' | 'tool_executing' | 'streaming' | 'permission_pending'
+
+export type SessionSummary = {
+  sessionId: string
+  title?: string
+  state: ChatState
+  updatedAt: number
+}
 
 export type ApiRetryState = {
   attempt: number

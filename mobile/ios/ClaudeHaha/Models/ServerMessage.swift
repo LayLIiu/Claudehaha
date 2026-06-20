@@ -3,7 +3,7 @@ import Foundation
 // MARK: - ServerMessage (WebSocket 接收)
 
 /// 对应桌面端 WebSocket 接收的所有 ServerMessage 类型
-indirect enum ServerMessage: Codable, Hashable, Sendable {
+indirect enum ServerMessage: Decodable, Hashable, Sendable {
     case connected(sessionId: String)
     case contentStart(sessionId: String, itemId: String?, role: String?)
     case contentDelta(sessionId: String, itemId: String?, delta: String)
@@ -14,24 +14,31 @@ indirect enum ServerMessage: Codable, Hashable, Sendable {
     case status(sessionId: String, state: ChatState)
     case error(sessionId: String, message: String)
     case permissionRequest(sessionId: String, requestId: String, toolName: String, input: String)
+    case userMessageReplay(sessionId: String, content: String)
     case sessionTitleUpdated(sessionId: String, title: String)
     case permissionModeChanged(sessionId: String, mode: String)
     case sessionBroadcast(sessionId: String, event: ServerMessage)
+    case sessionActivated(sessionId: String, title: String?)
     case sessionsUpdated(sessions: [SessionSummary])
     case pong
+    case ignored(type: String)
 
     // Codable
     private enum CodingKeys: String, CodingKey { case type }
     private enum MessageType: String, Codable {
         case connected, content_start, content_delta, tool_use_complete, tool_result
-        case thinking, message_complete, status, error, permission_request
-        case session_title_updated, permission_mode_changed, session_broadcast
+        case thinking, message_complete, status, error, permission_request, user_message_replay
+        case session_title_updated, permission_mode_changed, session_broadcast, session_activated
         case sessions_updated, pong
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: DynamicCodingKeys.self)
-        let type = try container.decode(MessageType.self, forKey: DynamicCodingKeys(stringValue: "type")!)
+        let rawType = try container.decode(String.self, forKey: DynamicCodingKeys(stringValue: "type")!)
+        guard let type = MessageType(rawValue: rawType) else {
+            self = .ignored(type: rawType)
+            return
+        }
 
         switch type {
         case .connected:
@@ -39,34 +46,38 @@ indirect enum ServerMessage: Codable, Hashable, Sendable {
             self = .connected(sessionId: sid)
         case .content_start:
             let sid = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "sessionId")!) ?? ""
-            let itemId = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "itemId")!)
+            let itemId = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "toolUseId")!)
             let role = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "role")!)
+                ?? container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "blockType")!)
             self = .contentStart(sessionId: sid, itemId: itemId, role: role)
         case .content_delta:
             let sid = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "sessionId")!) ?? ""
-            let itemId = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "itemId")!)
-            let delta = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "delta")!) ?? ""
+            let itemId = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "toolUseId")!)
+            let delta = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "text")!)
+                ?? container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "toolInput")!)
+                ?? ""
             self = .contentDelta(sessionId: sid, itemId: itemId, delta: delta)
         case .tool_use_complete:
             let sid = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "sessionId")!) ?? ""
-            let itemId = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "itemId")!)
-            let name = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "name")!)
-            let input = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "input")!)
+            let itemId = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "toolUseId")!)
+            let name = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "toolName")!)
+            let input = try container.decodeJSONStringIfPresent(forKey: DynamicCodingKeys(stringValue: "input")!)
             self = .toolUseComplete(sessionId: sid, itemId: itemId, name: name, input: input)
         case .tool_result:
             let sid = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "sessionId")!) ?? ""
-            let itemId = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "itemId")!)
-            let output = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "output")!)
+            let itemId = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "toolUseId")!)
+            let output = try container.decodeJSONStringIfPresent(forKey: DynamicCodingKeys(stringValue: "content")!)
             self = .toolResult(sessionId: sid, itemId: itemId, output: output)
         case .thinking:
             let sid = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "sessionId")!) ?? ""
-            let itemId = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "itemId")!)
+            let itemId = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "toolUseId")!)
             let text = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "text")!)
             self = .thinking(sessionId: sid, itemId: itemId, text: text)
         case .message_complete:
             let sid = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "sessionId")!) ?? ""
-            let itemId = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "itemId")!)
-            let usage = try container.decodeIfPresent(TokenUsage.self, forKey: DynamicCodingKeys(stringValue: "tokenUsage")!)
+            let itemId = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "toolUseId")!)
+            let usage = try container.decodeIfPresent(TokenUsage.self, forKey: DynamicCodingKeys(stringValue: "usage")!)
+                ?? container.decodeIfPresent(TokenUsage.self, forKey: DynamicCodingKeys(stringValue: "tokenUsage")!)
             self = .messageComplete(sessionId: sid, itemId: itemId, tokenUsage: usage)
         case .status:
             let sid = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "sessionId")!) ?? ""
@@ -80,8 +91,12 @@ indirect enum ServerMessage: Codable, Hashable, Sendable {
             let sid = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "sessionId")!) ?? ""
             let rid = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "requestId")!) ?? ""
             let toolName = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "toolName")!) ?? ""
-            let input = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "input")!) ?? ""
+            let input = try container.decodeJSONStringIfPresent(forKey: DynamicCodingKeys(stringValue: "input")!) ?? ""
             self = .permissionRequest(sessionId: sid, requestId: rid, toolName: toolName, input: input)
+        case .user_message_replay:
+            let sid = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "sessionId")!) ?? ""
+            let content = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "content")!) ?? ""
+            self = .userMessageReplay(sessionId: sid, content: content)
         case .session_title_updated:
             let sid = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "sessionId")!) ?? ""
             let title = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "title")!) ?? ""
@@ -94,6 +109,10 @@ indirect enum ServerMessage: Codable, Hashable, Sendable {
             let sid = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "sessionId")!) ?? ""
             let event = try container.decode(ServerMessage.self, forKey: DynamicCodingKeys(stringValue: "event")!)
             self = .sessionBroadcast(sessionId: sid, event: event)
+        case .session_activated:
+            let sid = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "sessionId")!) ?? ""
+            let title = try container.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "title")!)
+            self = .sessionActivated(sessionId: sid, title: title)
         case .sessions_updated:
             let sessions = try container.decodeIfPresent([SessionSummary].self, forKey: DynamicCodingKeys(stringValue: "sessions")!) ?? []
             self = .sessionsUpdated(sessions: sessions)
@@ -102,61 +121,69 @@ indirect enum ServerMessage: Codable, Hashable, Sendable {
         }
     }
 
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: DynamicCodingKeys.self)
-        switch self {
-        case .connected(let sid):
-            try container.encode(MessageType.connected.rawValue, forKey: DynamicCodingKeys(stringValue: "type")!)
-            try container.encode(sid, forKey: DynamicCodingKeys(stringValue: "sessionId")!)
-        case .pong:
-            try container.encode(MessageType.pong.rawValue, forKey: DynamicCodingKeys(stringValue: "type")!)
-        default:
-            break // 其他编码按需实现
-        }
-    }
 }
 
 // MARK: - Supporting Types
 
-struct TokenUsage: Codable, Hashable, Sendable {
+struct TokenUsage: Decodable, Hashable, Sendable {
     let inputTokens: Int?
     let outputTokens: Int?
     let cacheReadTokens: Int?
     let cacheWriteTokens: Int?
+
+    private enum CodingKeys: String, CodingKey {
+        case inputTokens = "input_tokens"
+        case outputTokens = "output_tokens"
+        case cacheReadTokens = "cache_read_tokens"
+        case cacheWriteTokens = "cache_creation_tokens"
+    }
 }
 
-struct SessionSummary: Codable, Hashable, Sendable {
+struct SessionSummary: Decodable, Hashable, Sendable {
     let sessionId: String
     let title: String?
     let state: ChatState?
     let updatedAt: Date?
+
+    private enum CodingKeys: String, CodingKey {
+        case sessionId
+        case title
+        case state
+        case updatedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        sessionId = try container.decode(String.self, forKey: .sessionId)
+        title = try container.decodeIfPresent(String.self, forKey: .title)
+        state = try container.decodeIfPresent(ChatState.self, forKey: .state)
+        updatedAt = try container.decodeFlexibleDateIfPresent(forKey: .updatedAt)
+    }
 }
 
 // MARK: - ClientMessage (WebSocket 发送)
 
 /// 对应桌面端的 ClientMessage 类型
 enum ClientMessage {
-    case userMessage(content: String, attachments: [String])
+    case userMessage(content: String)
     case permissionResponse(requestId: String, approved: Bool)
     case stopGeneration
     case setPermissionMode(mode: String)
     case ping
 
     var jsonData: Data? {
-        let encoder = JSONEncoder()
         switch self {
-        case .userMessage(let content, let attachments):
+        case .userMessage(let content):
             let dict: [String: Any] = [
                 "type": "user_message",
-                "content": content,
-                "attachments": attachments
+                "content": content
             ]
             return try? JSONSerialization.data(withJSONObject: dict)
         case .permissionResponse(let requestId, let approved):
             let dict: [String: Any] = [
                 "type": "permission_response",
                 "requestId": requestId,
-                "approved": approved
+                "allowed": approved
             ]
             return try? JSONSerialization.data(withJSONObject: dict)
         case .stopGeneration:
@@ -179,4 +206,59 @@ private struct DynamicCodingKeys: CodingKey {
     var intValue: Int?
     init?(stringValue: String) { self.stringValue = stringValue }
     init?(intValue: Int) { self.stringValue = "\(intValue)"; self.intValue = intValue }
+}
+
+private extension KeyedDecodingContainer where Key == DynamicCodingKeys {
+    func decodeJSONStringIfPresent(forKey key: Key) throws -> String? {
+        if let value = try decodeIfPresent(String.self, forKey: key) {
+            return value
+        }
+        if let value = try decodeIfPresent(AnyJSON.self, forKey: key) {
+            return value.displayText
+        }
+        return nil
+    }
+}
+
+private enum AnyJSON: Decodable {
+    case string(String)
+    case number(Double)
+    case bool(Bool)
+    case array([AnyJSON])
+    case object([String: AnyJSON])
+    case null
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if container.decodeNil() {
+            self = .null
+        } else if let value = try? container.decode(String.self) {
+            self = .string(value)
+        } else if let value = try? container.decode(Double.self) {
+            self = .number(value)
+        } else if let value = try? container.decode(Bool.self) {
+            self = .bool(value)
+        } else if let value = try? container.decode([AnyJSON].self) {
+            self = .array(value)
+        } else {
+            self = .object(try container.decode([String: AnyJSON].self))
+        }
+    }
+
+    var displayText: String {
+        switch self {
+        case .string(let value):
+            return value
+        case .number(let value):
+            return String(value)
+        case .bool(let value):
+            return value ? "true" : "false"
+        case .array(let values):
+            return values.map(\.displayText).joined(separator: "\n")
+        case .object:
+            return String(describing: self)
+        case .null:
+            return ""
+        }
+    }
 }

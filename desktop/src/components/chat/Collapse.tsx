@@ -1,12 +1,17 @@
 import { useRef, useEffect, type ReactNode } from 'react'
+import { useReducedMotion } from '../../hooks/useReducedMotion'
+
+// Codex-aligned easing constants
+export const CODEX_COLLAPSE_EASE = 'cubic-bezier(0.19, 1, 0.22, 1)' // easeOutExpo
+export const CODEX_COLLAPSE_DURATION = 500
 
 type CollapseProps = {
   /** Whether content is visible */
   open: boolean
   children: ReactNode
-  /** Duration in ms (default 360) */
+  /** Duration in ms (default 500, Codex-aligned) */
   duration?: number
-  /** Easing curve (default Codex-style spring) */
+  /** Easing curve (default Codex easeOutExpo) */
   easing?: string
   /** Optional class for the measured outer shell */
   className?: string
@@ -27,8 +32,8 @@ type CollapseProps = {
 export function Collapse({
   open,
   children,
-  duration = 360,
-  easing = 'cubic-bezier(0.2, 1.12, 0.24, 1)',
+  duration = CODEX_COLLAPSE_DURATION,
+  easing = CODEX_COLLAPSE_EASE,
   className,
   contentClassName,
   collapsedOffset = 6,
@@ -36,6 +41,7 @@ export function Collapse({
 }: CollapseProps) {
   const ref = useRef<HTMLDivElement>(null)
   const isFirstRender = useRef(true)
+  const prefersReducedMotion = useReducedMotion()
 
   useEffect(() => {
     // Skip animation on first render — just use the initial inline styles
@@ -46,6 +52,21 @@ export function Collapse({
 
     const el = ref.current
     if (!el) return
+
+    // When reduced motion is preferred, skip animation entirely
+    if (prefersReducedMotion) {
+      el.style.transition = 'none'
+      if (open) {
+        el.style.height = 'auto'
+        el.style.opacity = '1'
+        el.style.transform = 'translate3d(0, 0, 0)'
+      } else {
+        el.style.height = '0px'
+        el.style.opacity = '0'
+        el.style.transform = `translate3d(0, -${collapsedOffset}px, 0)`
+      }
+      return
+    }
 
     // Clean up any lingering transitionend listener from a previous animation
     const controller = new AbortController()
@@ -89,7 +110,7 @@ export function Collapse({
     }
 
     return () => controller.abort()
-  }, [open, duration, easing, collapsedOffset])
+  }, [open, duration, easing, collapsedOffset, prefersReducedMotion])
 
   return (
     <div

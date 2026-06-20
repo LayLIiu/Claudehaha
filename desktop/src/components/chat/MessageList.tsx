@@ -15,7 +15,7 @@ import { UserMessage } from './UserMessage'
 import { AssistantMessage } from './AssistantMessage'
 import { ThinkingBlock } from './ThinkingBlock'
 import { ToolCallBlock } from './ToolCallBlock'
-import { ToolCallGroup, hasUnresolvedToolCalls, generateToolActivitySummary } from './ToolCallGroup'
+import { ToolCallGroup, hasUnresolvedToolCalls } from './ToolCallGroup'
 import { Collapse } from './Collapse'
 import { ToolResultBlock } from './ToolResultBlock'
 import { AskUserQuestion } from './AskUserQuestion'
@@ -256,7 +256,7 @@ function CompactStatusDivider({ message, state }: { message?: CompactSummaryEven
         <div className="h-px flex-1 bg-[color-mix(in_srgb,var(--color-border)_92%,transparent)]" aria-hidden="true" />
       </div>
       {hasDetails && expanded && (
-        <div className="mx-auto mt-2 w-full max-w-[620px] rounded-[var(--radius-xl)] border border-[var(--color-token-border)]/60 bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3.5 py-2.5 shadow-[0_10px_26px_rgba(0,0,0,0.08)]">
+        <div className="mx-auto mt-2 w-full max-w-[620px] rounded-[var(--radius-lg)] border border-[var(--color-token-border)]/60 bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3.5 py-2.5 shadow-[var(--shadow-md)]">
           {meta.length > 0 && (
             <div className="mb-1.5 flex flex-wrap gap-x-2 gap-y-1 text-[11px] font-medium text-[var(--color-token-text-secondary)]">
               {meta.map((item) => <span key={item}>{item}</span>)}
@@ -288,7 +288,7 @@ function GoalEventCard({ message }: { message: GoalEvent }) {
     <div className="mb-2">
       <div
         data-testid="goal-event-card"
-        className="overflow-hidden rounded-[var(--radius-xl)] border border-[var(--color-memory-border)] bg-[var(--color-memory-surface)] shadow-[0_10px_24px_rgba(0,0,0,0.08)]"
+        className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-memory-border)] bg-[var(--color-memory-surface)] shadow-[var(--shadow-md)]"
       >
         <button
           type="button"
@@ -367,7 +367,7 @@ function BackgroundTaskEventCard({ message }: { message: BackgroundTaskEvent }) 
       <div
         data-testid="background-task-event-card"
         data-status={task.status}
-        className="flex min-w-0 items-start gap-2 rounded-[var(--radius-xl)] border border-[var(--color-token-border)]/70 bg-[var(--color-surface-container-low)] px-3.5 py-2.5 shadow-[0_8px_22px_rgba(0,0,0,0.06)]"
+        className="flex min-w-0 items-start gap-2 rounded-[var(--radius-lg)] border border-[var(--color-token-border)]/70 bg-[var(--color-surface-container-low)] px-3.5 py-2.5 shadow-[var(--shadow-sm)]"
       >
         <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center">
           {isRunning ? (
@@ -1178,7 +1178,7 @@ function MemoryEventCard({ message }: { message: MemoryEvent }) {
 
   return (
     <div className="mb-3 flex justify-center px-3">
-      <div className="w-full max-w-2xl rounded-[var(--radius-xl)] border border-[var(--color-token-border)]/70 bg-[var(--color-surface-container-low)] px-3.5 py-3 text-xs shadow-[0_8px_22px_rgba(0,0,0,0.06)]">
+      <div className="w-full max-w-2xl rounded-[var(--radius-lg)] border border-[var(--color-token-border)]/70 bg-[var(--color-surface-container-low)] px-3.5 py-3 text-xs shadow-[var(--shadow-sm)]">
         <div className="flex items-start gap-3">
           <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-[var(--color-token-border)] bg-[var(--color-surface)] text-[var(--color-brand)]">
             <BookMarked size={15} aria-hidden="true" />
@@ -2204,9 +2204,10 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
               return []
             }
             const editSummary = editSummaryByTurn.get(target.messageId)
-            const displayCheckpoint = editSummary
-              ? applyTurnEditSummaryToCheckpoint(checkpoint, editSummary)
-              : checkpoint
+            if (!editSummary || editSummary.fileStats.size === 0) {
+              return []
+            }
+            const displayCheckpoint = applyTurnEditSummaryToCheckpoint(checkpoint, editSummary)
             if (!displayCheckpoint || displayCheckpoint.code.filesChanged.length === 0) {
               return []
             }
@@ -2352,6 +2353,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
   // ── Turn collapse expand state ──
   const [expandedTurns, setExpandedTurns] = useState<Set<string>>(new Set())
   const [expandedToolBursts, setExpandedToolBursts] = useState<Set<string>>(new Set())
+
   const toggleTurnExpand = useCallback((userMsgId: string) => {
     setExpandedTurns(prev => {
       const next = new Set(prev)
@@ -2588,6 +2590,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
         ref={scrollContainerRef}
         onScroll={updateAutoScrollState}
         className={`${CHAT_SCROLL_AREA_CLASS} h-full overflow-y-auto ${compact ? 'px-3 py-3 pb-5' : 'px-5 py-5'}`}
+        style={{ scrollbarGutter: 'stable' }}
       >
         <div
           ref={scrollContentRef}
@@ -2763,6 +2766,34 @@ function WebSearchGroupSection({
   const t = useTranslation()
   const hasUnresolved = hasUnresolvedToolCalls(toolCalls, resultMap, childToolCallsByParent)
   const isRunning = isStreaming || hasUnresolved
+  const activeToolCall = useMemo(() => {
+    if (hasUnresolved) {
+      for (let index = toolCalls.length - 1; index >= 0; index -= 1) {
+        const toolCall = toolCalls[index]
+        if (!toolCall) continue
+        if (!resultMap.has(toolCall.toolUseId)) return toolCall
+      }
+    }
+    return isRunning ? (toolCalls[toolCalls.length - 1] ?? null) : null
+  }, [hasUnresolved, isRunning, resultMap, toolCalls])
+  const activeTitle = useMemo(() => {
+    if (!activeToolCall) return ''
+    const input = activeToolCall.input && typeof activeToolCall.input === 'object'
+      ? activeToolCall.input as Record<string, unknown>
+      : {}
+    switch (activeToolCall.toolName) {
+      case 'WebSearch': {
+        const query = typeof input.query === 'string' ? input.query : ''
+        return query ? `搜索 ${query}` : 'WebSearch'
+      }
+      case 'WebFetch': {
+        const url = typeof input.url === 'string' ? input.url : ''
+        return url || 'WebFetch'
+      }
+      default:
+        return activeToolCall.toolName
+    }
+  }, [activeToolCall])
 
   const webCount = toolCalls.filter((tc) => tc.toolName === 'WebSearch').length
   const fetchCount = toolCalls.filter((tc) => tc.toolName === 'WebFetch').length
@@ -2781,7 +2812,7 @@ function WebSearchGroupSection({
         <Globe className="icon-xs text-[var(--color-token-text-secondary)]" />
         <span className="flex-1 truncate text-[var(--text-size-chat)] text-[var(--color-token-conversation-summary-trailing)]">
           {isRunning ? (
-            <CadencedShimmerText>{summaryText}</CadencedShimmerText>
+            <CadencedShimmerText>{activeTitle || summaryText}</CadencedShimmerText>
           ) : summaryText}
         </span>
         <span className={`material-symbols-outlined icon-2xs text-[var(--color-token-input-placeholder-foreground)] transition-transform duration-300 ${expanded ? 'rotate-90' : ''}`}>
@@ -2792,7 +2823,7 @@ function WebSearchGroupSection({
         )}
       </button>
 
-      <div className={`tool-group-content${expanded ? ' expanded' : ''}`}>
+      <Collapse open={expanded}>
         <div className="ml-3 mt-1 space-y-1 border-l border-[var(--color-token-border)]/38 pl-3">
           {toolCalls.map((tc) => {
             const toolResult = resultMap.get(tc.toolUseId)
@@ -2812,7 +2843,7 @@ function WebSearchGroupSection({
             )
           })}
         </div>
-      </div>
+      </Collapse>
     </div>
   )
 }
@@ -2835,6 +2866,39 @@ function ExplorationGroupSection({
   const t = useTranslation()
   const hasUnresolved = hasUnresolvedToolCalls(toolCalls, resultMap, childToolCallsByParent)
   const isRunning = isStreaming || hasUnresolved
+  const activeToolCall = useMemo(() => {
+    if (hasUnresolved) {
+      for (let index = toolCalls.length - 1; index >= 0; index -= 1) {
+        const toolCall = toolCalls[index]
+        if (!toolCall) continue
+        if (!resultMap.has(toolCall.toolUseId)) return toolCall
+      }
+    }
+    return isRunning ? (toolCalls[toolCalls.length - 1] ?? null) : null
+  }, [hasUnresolved, isRunning, resultMap, toolCalls])
+  const activeTitle = useMemo(() => {
+    if (!activeToolCall) return ''
+    const input = activeToolCall.input && typeof activeToolCall.input === 'object'
+      ? activeToolCall.input as Record<string, unknown>
+      : {}
+    switch (activeToolCall.toolName) {
+      case 'Read': {
+        const filePath = typeof input.file_path === 'string' ? input.file_path : ''
+        const fileName = filePath.split('/').pop() || filePath
+        return fileName ? `Read ${fileName}` : 'Read'
+      }
+      case 'Glob': {
+        const pattern = typeof input.pattern === 'string' ? input.pattern : ''
+        return pattern ? `Glob ${pattern}` : 'Glob'
+      }
+      case 'Grep': {
+        const pattern = typeof input.pattern === 'string' ? input.pattern : ''
+        return pattern ? `Grep ${pattern}` : 'Grep'
+      }
+      default:
+        return activeToolCall.toolName
+    }
+  }, [activeToolCall])
 
   const readCount = toolCalls.filter((tc) => tc.toolName === 'Read').length
   const searchCount = toolCalls.filter((tc) => tc.toolName === 'Glob' || tc.toolName === 'Grep').length
@@ -2853,7 +2917,7 @@ function ExplorationGroupSection({
         <FolderSearch className="icon-xs text-[var(--color-token-text-secondary)]" />
         <span className="flex-1 truncate text-[var(--text-size-chat)] text-[var(--color-token-conversation-summary-trailing)]">
           {isRunning ? (
-            <CadencedShimmerText>{summaryText}</CadencedShimmerText>
+            <CadencedShimmerText>{activeTitle || summaryText}</CadencedShimmerText>
           ) : summaryText}
         </span>
         <span className={`material-symbols-outlined icon-2xs text-[var(--color-token-input-placeholder-foreground)] transition-transform duration-300 ${expanded ? 'rotate-90' : ''}`}>
@@ -2864,7 +2928,7 @@ function ExplorationGroupSection({
         )}
       </button>
 
-      <div className={`tool-group-content${expanded ? ' expanded' : ''}`}>
+      <Collapse open={expanded}>
         <div className="ml-3 mt-1 space-y-1 border-l border-[var(--color-token-border)]/38 pl-3">
           {toolCalls.map((tc) => {
             const toolResult = resultMap.get(tc.toolUseId)
@@ -2884,7 +2948,7 @@ function ExplorationGroupSection({
             )
           })}
         </div>
-      </div>
+      </Collapse>
     </div>
   )
 }
@@ -2901,7 +2965,7 @@ function TurnProcessSection({
   onToggle: () => void
   renderInnerItem: (item: RenderItem) => ReactNode
 }) {
-  const { processItems, startTime, endTime, stepCount } = group
+  const { processItems, startTime, endTime } = group
   const t = useTranslation()
 
   // Compute elapsed time for this turn (WorkedForTimer)
@@ -2910,27 +2974,6 @@ function TurnProcessSection({
     const elapsedSec = Math.round((endTime - startTime) / 1000)
     if (elapsedSec > 0) elapsedText = formatProcessElapsed(elapsedSec)
   }
-
-  // Collect all tool calls from processItems for activity summary
-  const allToolCalls = useMemo(() => {
-    const calls: ToolCall[] = []
-    for (const item of processItems) {
-      if (item.kind === 'tool_group' || item.kind === 'web_search_group' || item.kind === 'exploration_group') {
-        calls.push(...item.toolCalls)
-      } else if (item.kind === 'tool_burst') {
-        calls.push(...item.burst.pinnedToolCalls, ...item.burst.overflowToolCalls)
-      } else if (item.kind === 'message' && item.message.type === 'tool_use') {
-        calls.push(item.message)
-      }
-    }
-    return calls
-  }, [processItems])
-
-  const activitySummary = useMemo(() => {
-    if (allToolCalls.length === 0) return ''
-    return generateToolActivitySummary(allToolCalls, t)
-  }, [allToolCalls, t])
-  const trailingSummary = activitySummary || (stepCount > 0 ? `${stepCount} 个步骤` : '')
 
   return (
     <div className="codex-turn-process" data-expanded={isExpanded ? 'true' : 'false'}>
@@ -2949,11 +2992,6 @@ function TurnProcessSection({
           {'▸'}
         </span>
         <span className="codex-turn-process-title">{t('chat.turnProcessed')}</span>
-        {!isExpanded && trailingSummary && (
-          <span className="codex-turn-process-summary">
-            {trailingSummary}
-          </span>
-        )}
         {elapsedText && (
           <span className="codex-turn-process-time">
             {elapsedText}
@@ -2965,7 +3003,7 @@ function TurnProcessSection({
         open={isExpanded}
         duration={560}
         easing="cubic-bezier(0.16, 1, 0.3, 1)"
-        collapsedOffset={8}
+        collapsedOffset={0}
         className="codex-turn-process-collapse"
         contentClassName="codex-turn-process-content"
         testId="turn-process-collapse"

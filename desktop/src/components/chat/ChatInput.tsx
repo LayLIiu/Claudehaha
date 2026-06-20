@@ -1241,7 +1241,15 @@ export function ChatInput({
 
           {isHeroComposer ? (
             <div className="flex flex-col gap-2">
-              <div className="flex items-start gap-2">
+              <div className="flex items-start gap-2 relative">
+                {!input && !isWorkspaceMissing && (
+                  <span
+                    className="shimmer-sweep-text pointer-events-none absolute top-0 left-0 py-1.5 leading-6 text-[15px]"
+                    aria-hidden="true"
+                  >
+                    {composerPlaceholder}
+                  </span>
+                )}
                 <textarea
                   ref={textareaRef}
                   value={input}
@@ -1250,29 +1258,41 @@ export function ChatInput({
                   onCompositionStart={() => { composingRef.current = true }}
                   onCompositionEnd={() => { composingRef.current = false }}
                   onPaste={handlePaste}
-                  placeholder={composerPlaceholder}
+                  placeholder=""
                   disabled={isWorkspaceMissing}
                   rows={1}
-                  className="flex-1 resize-none border-none bg-transparent py-1.5 leading-6 text-[15px] text-[var(--color-token-foreground)] outline-none placeholder:text-[var(--color-token-input-placeholder-foreground)] disabled:opacity-50"
+                  className="flex-1 resize-none border-none bg-transparent py-1.5 leading-6 text-[15px] text-[var(--color-token-foreground)] outline-none disabled:opacity-50"
                 />
               </div>
             </div>
           ) : (
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              onCompositionStart={() => { composingRef.current = true }}
-              onCompositionEnd={() => { composingRef.current = false }}
-              onPaste={handlePaste}
-              placeholder={composerPlaceholder}
-              disabled={isWorkspaceMissing}
-              rows={1}
-              className={`w-full resize-none bg-transparent text-[15px] leading-6 text-[var(--color-token-foreground)] outline-none placeholder:text-[var(--color-token-input-placeholder-foreground)] disabled:opacity-50 ${
-                useCompactControls ? 'py-1' : 'py-1.5'
-              }`}
-            />
+            <div className="relative">
+              {!input && !isWorkspaceMissing && (
+                <span
+                  className={`shimmer-sweep-text pointer-events-none absolute top-0 left-0 text-[15px] leading-6 ${
+                    useCompactControls ? 'py-1' : 'py-1.5'
+                  }`}
+                  aria-hidden="true"
+                >
+                  {composerPlaceholder}
+                </span>
+              )}
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                onCompositionStart={() => { composingRef.current = true }}
+                onCompositionEnd={() => { composingRef.current = false }}
+                onPaste={handlePaste}
+                placeholder=""
+                disabled={isWorkspaceMissing}
+                rows={1}
+                className={`w-full resize-none bg-transparent text-[15px] leading-6 text-[var(--color-token-foreground)] outline-none disabled:opacity-50 ${
+                  useCompactControls ? 'py-1' : 'py-1.5'
+                }`}
+              />
+            </div>
           )}
 
           <div data-testid="chat-input-toolbar" className={`composer-footer ${isHeroComposer

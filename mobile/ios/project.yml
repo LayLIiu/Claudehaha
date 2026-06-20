@@ -72,5 +72,7 @@ targets:
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         NSLocalNetworkUsageDescription: "ClaudeHaha 需要访问本地网络来连接您的桌面端"
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
         NSBonjourServices:
           - _cc-haha._tcp

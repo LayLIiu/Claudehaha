@@ -17,6 +17,7 @@ export type ToolEditFileSummary = ToolEditStats & {
 
 export function extractToolEditStats(toolCall: ToolEditSummaryInput): ToolEditStats | null {
   const filePath = extractStringField(toolCall.input, 'file_path')
+    ?? (toolCall.partialInput ? extractPartialJsonStringField(toolCall.partialInput, 'file_path') : null)
   const label = filePath ? getPathLeaf(filePath) : ''
 
   if (toolCall.toolName === 'Write') {
@@ -24,7 +25,7 @@ export function extractToolEditStats(toolCall: ToolEditSummaryInput): ToolEditSt
       ?? (toolCall.partialInput ? extractPartialJsonStringField(toolCall.partialInput, 'content') : null)
     if (content === null) return filePath ? { path: filePath, label, additions: 0, deletions: 0 } : null
     const { additions, deletions } = calculateDiffStats('', content)
-    return { path: filePath || label || '文件', label: label || '文件', additions, deletions }
+    return { path: filePath || '', label, additions, deletions }
   }
 
   if (toolCall.toolName === 'Edit') {
@@ -33,7 +34,7 @@ export function extractToolEditStats(toolCall: ToolEditSummaryInput): ToolEditSt
       ?? (toolCall.partialInput ? extractPartialJsonStringField(toolCall.partialInput, 'new_string') : null)
     if (newString === null) return filePath ? { path: filePath, label, additions: 0, deletions: 0 } : null
     const { additions, deletions } = calculateDiffStats(oldString, newString)
-    return { path: filePath || label || '文件', label: label || '文件', additions, deletions }
+    return { path: filePath || '', label, additions, deletions }
   }
 
   if (toolCall.toolName === 'MultiEdit') {
@@ -50,7 +51,7 @@ export function extractToolEditStats(toolCall: ToolEditSummaryInput): ToolEditSt
       deletions += diff.deletions
     }
     if (!filePath && edits.length === 0) return null
-    return { path: filePath || label || '文件', label: label || '文件', additions, deletions }
+    return { path: filePath || '', label, additions, deletions }
   }
 
   return null

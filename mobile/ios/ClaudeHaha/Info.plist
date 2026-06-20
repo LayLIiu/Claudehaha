@@ -28,6 +28,11 @@
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>ClaudeHaha 需要访问本地网络来连接您的桌面端</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

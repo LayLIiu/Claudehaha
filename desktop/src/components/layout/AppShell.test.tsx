@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   setActiveTab: vi.fn(),
   openTab: vi.fn(),
   openTraceTab: vi.fn(),
+  useGlobalSessionSync: vi.fn(),
   tabState: {
     activeTabId: null as string | null,
     tabs: [] as Array<{ sessionId: string; title: string; type: string; status: string }>,
@@ -76,6 +77,10 @@ vi.mock('../../hooks/useKeyboardShortcuts', () => ({
   useKeyboardShortcuts: vi.fn(),
 }))
 
+vi.mock('../../hooks/useGlobalSessionSync', () => ({
+  useGlobalSessionSync: mocks.useGlobalSessionSync,
+}))
+
 vi.mock('../../i18n', () => ({
   useTranslation: () => (key: string) => key,
 }))
@@ -130,6 +135,7 @@ describe('AppShell boot flow', () => {
     mocks.restoreTabs.mockResolvedValue(undefined)
     mocks.openTab.mockReset()
     mocks.openTraceTab.mockReset()
+    mocks.useGlobalSessionSync.mockReset()
     mocks.setActiveTab.mockImplementation((sessionId: string) => {
       mocks.tabState.activeTabId = sessionId
     })
@@ -150,6 +156,9 @@ describe('AppShell boot flow', () => {
     expect(screen.getByText('window controls loaded')).toBeInTheDocument()
     expect(screen.getByText('content loaded')).toBeInTheDocument()
     expect(screen.getByText('updates loaded')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(mocks.useGlobalSessionSync).toHaveBeenLastCalledWith(true)
+    })
   })
 
   it('shows startup diagnostics instead of a blank shell when bootstrap fails', async () => {

@@ -458,6 +458,7 @@
   --shadow-xl: 0px 8px 16px -4px rgba(0, 0, 0, 0.12);
   --shadow-2xl: 0px 16px 32px -8px rgba(0, 0, 0, 0.19);
   --shadow-hairline: 0px 0px 0px 0.5px rgba(0, 0, 0, 0.10);
+  --shadow-codex-toast: 0 4px 12px rgba(0, 0, 0, 0.1);
 
   /* Button colors */
   --color-btn-primary-fg: var(--color-on-primary);
@@ -869,6 +870,7 @@
   --shadow-xl: 0px 8px 16px -4px rgba(0, 0, 0, 0.12);
   --shadow-2xl: 0px 16px 32px -8px rgba(0, 0, 0, 0.19);
   --shadow-hairline: 0px 0px 0px 0.5px rgba(0, 0, 0, 0.10);
+  --shadow-codex-toast: 0 4px 12px rgba(0, 0, 0, 0.12);
 
   --color-btn-primary-fg: var(--color-on-primary);
   --gradient-btn-primary: linear-gradient(135deg, #4A4A4A, #5A5A5A);
@@ -1238,6 +1240,7 @@
   --shadow-xl: 0px 8px 16px -4px rgba(0, 0, 0, 0.16);
   --shadow-2xl: 0px 16px 32px -8px rgba(0, 0, 0, 0.24);
   --shadow-hairline: 0px 0px 0px 0.5px rgba(0, 0, 0, 0.16);
+  --shadow-codex-toast: 0 4px 12px rgba(0, 0, 0, 0.2);
 
   --gradient-btn-primary: linear-gradient(135deg, #0169cc, #0A7CE8);
   --gradient-btn-primary-hover: linear-gradient(135deg, #0A7CE8, #0169cc);
@@ -1563,11 +1566,12 @@ button, input, textarea, select, a, [role="button"] {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 40%, rgba(0, 0, 0, 0.04) 100%),
     rgba(30, 30, 30, 0.92) !important;
-  border-color: rgba(255, 255, 255, 0.20) !important;
+  border-color: transparent !important;
   box-shadow:
     0 24px 64px rgba(0, 0, 0, 0.40),
     0 2px 12px rgba(0, 0, 0, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 0 0 0.5px var(--color-surface-glass-border) !important;
   backdrop-filter: blur(40px) saturate(1.8) brightness(1.05) !important;
   -webkit-backdrop-filter: blur(40px) saturate(1.8) brightness(1.05) !important;
   /* Codex-style enter animation applied by default to all liquid-glass panels */
@@ -2158,14 +2162,12 @@ html.electron-macos .app-shell,
   cursor: pointer;
   transition:
     color 180ms ease,
-    background 180ms ease,
-    transform 360ms cubic-bezier(0.16, 1, 0.3, 1);
+    background 180ms ease;
 }
 
 .codex-turn-process-trigger:hover {
   color: var(--color-token-foreground);
   background: rgba(255,255,255,0.035);
-  transform: translateX(1px);
 }
 
 .codex-turn-process-trigger:focus-visible {
@@ -2581,9 +2583,9 @@ html.electron-macos .app-shell,
   0%, 100% { opacity: 0.96; }
   50% { opacity: 1; }
 }
-.animate-shimmer { animation: shimmer 1.5s ease-in-out infinite; }
+.animate-shimmer { animation: shimmer 1.1s ease-in-out infinite; }
 .animate-spin { animation: spin 1s linear infinite; }
-.animate-pulse-dot { animation: pulse-dot 1.5s ease-in-out infinite; }
+.animate-pulse-dot { animation: pulse-dot 1.1s ease-in-out infinite; }
 
 /* Shimmer sweep — bright light band sweeps left→right across dim text, clipped to text strokes */
 /* Mirrors iOS CodeIsland TypingIndicator: dim base + white band sweeps left→right */
@@ -2609,7 +2611,7 @@ html.electron-macos .app-shell,
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: shimmer-sweep 2.5s ease-in-out infinite;
+  animation: shimmer-sweep 1.8s ease-in-out infinite;
 }
 
 /* ── Cadenced shimmer — stepped sweep highlight every 4s (mirrors Codex ThinkingShimmer) ── */
@@ -2638,7 +2640,7 @@ html.electron-macos .app-shell,
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-fill-color: transparent;
-  animation: cadenced-shimmer-sweep 1s steps(48, end) forwards;
+  animation: cadenced-shimmer-sweep 0.75s steps(48, end) forwards;
 }
 @media (prefers-reduced-motion: reduce) {
   .cadenced-shimmer-active {
@@ -3042,7 +3044,8 @@ mark.codex-thread-find-active {
   color: var(--color-token-text-secondary) !important;
 }
 
-.user-message-bubble {
+.user-message-bubble,
+.agent-card-glow {
   box-shadow: inset 0 1px 0 var(--color-token-border-light);
 }
 
@@ -3411,7 +3414,7 @@ mark.codex-thread-find-active {
 .codex-loading-shimmer {
   background: linear-gradient(90deg, transparent 0%, var(--color-token-description-foreground) 16%, transparent 33%);
   background-size: 300% 100%;
-  animation: codex-loading-shimmer 3s linear infinite;
+  animation: codex-loading-shimmer 2.2s linear infinite;
 }
 
 /* ── Codex-aligned rolling diff stats ───────────────────────────── */

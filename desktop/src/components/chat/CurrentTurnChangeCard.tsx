@@ -110,12 +110,12 @@ export function CurrentTurnChangeCard({
 
   return (
     <section
-      className="mx-auto mb-4 w-full max-w-[860px] overflow-hidden rounded-[var(--radius-xl)] border border-white/12 bg-[#171717] shadow-[0_8px_24px_rgba(0,0,0,0.16)]"
+      className="mx-auto mb-4 w-full max-w-[860px] overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-surface-glass-border)] bg-[var(--color-surface-container-low)] shadow-[var(--shadow-lg)]"
       aria-label={cardLabel}
     >
-      <div className="flex min-h-[74px] items-center justify-between gap-3 border-b border-white/12 px-4 py-3">
+      <div className="flex min-h-[74px] items-center justify-between gap-3 border-b border-[var(--color-surface-glass-border)] px-4 py-3">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-black/35 text-[var(--color-token-text-secondary)] shadow-inner shadow-white/[0.03] ring-1 ring-white/[0.04]">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-surface-glass-border)] bg-[var(--color-surface)] text-[var(--color-token-text-secondary)]">
             <FileDiff size={20} strokeWidth={2.2} />
           </div>
           <div className="min-w-0">
@@ -135,7 +135,7 @@ export function CurrentTurnChangeCard({
             onClick={onUndo}
             disabled={isUndoing}
             aria-label={undoAria}
-            className="inline-flex h-8 items-center gap-1.5 rounded-[var(--radius-md)] px-2 text-[14px] font-semibold text-[var(--color-token-foreground)] transition-colors hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-8 items-center gap-1.5 rounded-[var(--radius-md)] px-2 text-[14px] font-semibold text-[var(--color-token-foreground)] transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isUndoing ? t('chat.turnChangesUndoing') : t('chat.turnChangesUndo')}
             <RotateCcw size={16} strokeWidth={2.2} />
@@ -144,14 +144,14 @@ export function CurrentTurnChangeCard({
             type="button"
             onClick={handleReview}
             disabled={files.length === 0}
-            className="inline-flex h-9 items-center rounded-[var(--radius-md)] border border-white/12 bg-white/[0.035] px-3 text-[14px] font-semibold text-[var(--color-token-foreground)] transition-colors hover:border-white/20 hover:bg-white/[0.065] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex h-9 items-center rounded-[var(--radius-md)] border border-[var(--color-surface-glass-border)] bg-[var(--color-surface-container-high)] px-3 text-[14px] font-semibold text-[var(--color-token-foreground)] transition-colors hover:border-[var(--color-brand)]/35 hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {t('chat.turnChangesReview')}
           </button>
         </div>
       </div>
 
-      <div className="divide-y divide-white/[0.055]">
+      <div className="divide-y divide-[var(--color-surface-glass-border)]">
         {visibleFiles.map((fileEntry) => (
           <button
             key={fileEntry.apiPath}
@@ -159,7 +159,7 @@ export function CurrentTurnChangeCard({
             onClick={() => openChangedFile(fileEntry)}
             aria-label={t('chat.turnChangesOpenInWorkspaceAria', { path: fileEntry.displayPath })}
             title={fileEntry.displayPath}
-            className="flex min-h-[46px] w-full min-w-0 items-center justify-between gap-4 px-4 text-left transition-colors hover:bg-white/[0.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-brand)]/35"
+            className="flex min-h-[46px] w-full min-w-0 items-center justify-between gap-4 px-4 text-left transition-colors hover:bg-[var(--color-surface-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-brand)]/35"
           >
             <span className="min-w-0 flex-1 truncate text-[15px] font-normal leading-5 tracking-[-0.01em] text-[var(--color-token-foreground)]">
               {fileEntry.displayPath}

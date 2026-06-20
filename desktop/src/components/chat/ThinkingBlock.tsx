@@ -114,9 +114,13 @@ export function ThinkingBlock({ content, isActive = false }: { content: string; 
             {expanded ? '\u25BE' : '\u25B8'}
           </span>
           <span className="shrink-0 font-medium italic">
-            <CadencedShimmerText>
-              {isActive ? t('thinking.label') : t('thinking.labelDone')}
-            </CadencedShimmerText>
+            {isActive ? (
+              <CadencedShimmerText>
+                {t('thinking.label')}
+              </CadencedShimmerText>
+            ) : (
+              t('thinking.labelDone')
+            )}
             {isActive && <span className="thinking-dots" />}
           </span>
         </button>

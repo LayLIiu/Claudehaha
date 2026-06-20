@@ -2,12 +2,14 @@ import SwiftUI
 
 @main
 struct ClaudeHahaApp: App {
-    @State private var service = DesktopService.shared
+    @State private var desktop = DesktopService.shared
+    @State private var codex = CodexService()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(service)
+                .environment(desktop)
+                .environment(codex)
         }
     }
 }

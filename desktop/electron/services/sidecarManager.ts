@@ -7,6 +7,7 @@ import path from 'node:path'
 
 export const SERVER_BIND_HOST = '0.0.0.0'
 export const SERVER_CONTROL_HOST = '127.0.0.1'
+export const DEFAULT_DESKTOP_SERVER_PORT = 3456
 export const SERVER_STARTUP_LOG_LIMIT = 80
 // Shared with the Tauri shell (src-tauri/src/lib.rs) so both desktop builds
 // reuse the same sticky port across restarts (issue #767).
@@ -157,6 +158,7 @@ export function preferredServerPorts(env: NodeJS.ProcessEnv = process.env): numb
   const ports: number[] = []
   const fixedPort = readH5FixedPort(env)
   if (fixedPort !== null) ports.push(fixedPort)
+  if (fixedPort === null) ports.push(DEFAULT_DESKTOP_SERVER_PORT)
   const lastPort = readLastServerPort(env)
   if (lastPort !== null && !ports.includes(lastPort)) ports.push(lastPort)
   return ports

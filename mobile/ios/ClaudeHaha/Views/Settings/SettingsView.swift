@@ -49,7 +49,6 @@ struct SettingsView: View {
         switch service.connectionState {
         case .connected: return "已连接"
         case .connecting: return "连接中"
-        case .pairing: return "配对中"
         case .disconnected: return "未连接"
         case .failed(let msg): return "错误: \(msg)"
         }

@@ -57,9 +57,9 @@ export function CadencedShimmerText({
     const el = ref.current
     if (!el) return
 
-    const SWEEP_DURATION_MS = 1000
-    const CADENCE_INTERVAL_MS = 4000
-    const INITIAL_DELAY_MS = 600
+    const SWEEP_DURATION_MS = 750
+    const CADENCE_INTERVAL_MS = 3000
+    const INITIAL_DELAY_MS = 400
 
     let timeout: ReturnType<typeof setTimeout> | undefined
     let interval: ReturnType<typeof setInterval> | undefined
@@ -247,8 +247,8 @@ export function StickyThinkingIndicator({ visible, compact }: { visible: boolean
       <div className={compact ? 'mx-auto max-w-full' : 'mx-auto max-w-[800px]'}>
         <div className="flex items-center gap-2.5 px-3.5 py-2">
           <span className="text-[var(--color-brand)] animate-shimmer text-sm">✦</span>
-          <CadencedShimmerText>
-            <span className="text-[14px] font-medium text-[var(--color-token-text-secondary)]">{verb}...</span>
+          <CadencedShimmerText active={false}>
+            <span className="text-[14px] font-medium">{verb}...</span>
           </CadencedShimmerText>
           {elapsedSeconds > 0 && (
             <span className="text-[12px] text-[var(--color-token-text-secondary)] font-mono tabular-nums">

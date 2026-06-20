@@ -84,7 +84,7 @@ export function AssistantOutputTargetCard({ target, sessionId, workDir }: Props)
   }, [openWith, sessionId, t, target.href, workDir])
 
   return (
-    <section className="flex items-start gap-3 rounded-[var(--radius-lg)] border border-[var(--color-token-border)]/70 bg-[var(--color-surface-container-low)] px-3 py-2.5 shadow-sm">
+    <section className="flex items-start gap-3 rounded-[var(--radius-lg)] border border-[var(--color-surface-glass-border)] bg-[var(--color-surface-container-low)] px-3 py-2.5 shadow-sm">
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-surface)] text-[var(--color-token-text-secondary)]">
         {isLocalhost ? (
           <Globe size={17} strokeWidth={2.1} aria-hidden="true" />
@@ -98,7 +98,7 @@ export function AssistantOutputTargetCard({ target, sessionId, workDir }: Props)
           <span className="truncate text-sm font-semibold text-[var(--color-token-foreground)]">
             {target.title}
           </span>
-          <span className="shrink-0 rounded-full border border-[var(--color-token-border)]/70 bg-[var(--color-surface)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--color-token-text-secondary)]">
+          <span className="shrink-0 rounded-full border border-[var(--color-surface-glass-border)] bg-[var(--color-surface)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--color-token-text-secondary)]">
             {badge}
           </span>
         </div>
@@ -115,7 +115,7 @@ export function AssistantOutputTargetCard({ target, sessionId, workDir }: Props)
           onClick={handleOpen}
           aria-label={t('assistantOutputs.open')}
           title={t('assistantOutputs.open')}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--color-token-border)]/70 bg-[var(--color-surface)] text-[var(--color-token-text-secondary)] transition-colors hover:border-[var(--color-brand)]/35 hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--color-surface-glass-border)] bg-[var(--color-surface)] text-[var(--color-token-text-secondary)] transition-colors hover:border-[var(--color-brand)]/35 hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
         >
           <ExternalLink size={14} strokeWidth={2.2} aria-hidden="true" />
         </button>
@@ -123,7 +123,7 @@ export function AssistantOutputTargetCard({ target, sessionId, workDir }: Props)
           type="button"
           aria-label={t('openWith.title')}
           onClick={handleOpenWith}
-          className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full border border-[var(--color-token-border)]/70 bg-[var(--color-surface)] px-2.5 text-xs font-medium text-[var(--color-token-text-secondary)] transition-colors hover:border-[var(--color-brand)]/35 hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
+          className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full border border-[var(--color-surface-glass-border)] bg-[var(--color-surface)] px-2.5 text-xs font-medium text-[var(--color-token-text-secondary)] transition-colors hover:border-[var(--color-brand)]/35 hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
         >
           {t('openWith.title')}
           <ChevronDown size={13} strokeWidth={2.2} aria-hidden="true" />

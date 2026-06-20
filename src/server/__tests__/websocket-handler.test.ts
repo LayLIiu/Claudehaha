@@ -15,6 +15,7 @@ import {
 } from '../ws/disconnectGraceConfig.js'
 import { conversationService } from '../services/conversationService.js'
 import { computerUseApprovalService } from '../services/computerUseApprovalService.js'
+import { sessionService } from '../services/sessionService.js'
 
 function makeClientSocket(sessionId: string) {
   const sent: string[] = []
@@ -33,6 +34,39 @@ function makeClientSocket(sessionId: string) {
     close: mock(() => {}),
     sent,
   } as unknown as ServerWebSocket<WebSocketData> & { sent: string[] }
+}
+
+function makeGlobalSocket() {
+  const sent: string[] = []
+  return {
+    data: {
+      sessionId: '__global__',
+      connectedAt: Date.now(),
+      channel: 'global',
+      sdkToken: null,
+      serverPort: 0,
+      serverHost: '127.0.0.1',
+    },
+    send: mock((payload: string) => {
+      sent.push(payload)
+    }),
+    close: mock(() => {}),
+    sent,
+  } as unknown as ServerWebSocket<WebSocketData> & { sent: string[] }
+}
+
+async function waitForCondition(assertion: () => void, attempts = 20): Promise<void> {
+  let lastError: unknown
+  for (let i = 0; i < attempts; i++) {
+    try {
+      assertion()
+      return
+    } catch (error) {
+      lastError = error
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    }
+  }
+  throw lastError
 }
 
 describe('WebSocket handler session isolation', () => {
@@ -118,6 +152,63 @@ describe('WebSocket handler session isolation', () => {
         ],
       },
       description: 'Answer questions?',
+    })
+  })
+
+  it('broadcasts remote user turns to global listeners and other same-session clients', async () => {
+    const sessionId = `remote-turn-${crypto.randomUUID()}`
+    const phone = makeClientSocket(sessionId)
+    const desktop = makeClientSocket(sessionId)
+    const global = makeGlobalSocket()
+
+    spyOn(conversationService, 'hasSession').mockReturnValue(true)
+    spyOn(sessionService, 'getCustomTitle').mockResolvedValue('Remote Session')
+    spyOn(conversationService, 'onOutput').mockImplementation(() => {})
+    spyOn(conversationService, 'removeOutputCallback').mockImplementation(() => {})
+    spyOn(conversationService, 'sendMessage').mockResolvedValue(true)
+
+    handleWebSocket.open(phone)
+    handleWebSocket.open(desktop)
+    handleWebSocket.open(global)
+
+    handleWebSocket.message(phone, JSON.stringify({
+      type: 'user_message',
+      content: '从手机发来的消息',
+    }))
+
+    await waitForCondition(() => {
+      const globalMessages = global.sent.map((payload) => JSON.parse(payload))
+      expect(globalMessages).toContainEqual({
+        type: 'session_activated',
+        sessionId,
+        title: 'Remote Session',
+      })
+    })
+
+    await waitForCondition(() => {
+      const desktopMessages = desktop.sent.map((payload) => JSON.parse(payload))
+      expect(desktopMessages).toContainEqual({
+        type: 'user_message_replay',
+        content: '从手机发来的消息',
+      })
+    })
+
+    await waitForCondition(() => {
+      const globalMessages = global.sent.map((payload) => JSON.parse(payload))
+      expect(globalMessages).toContainEqual({
+        type: 'session_broadcast',
+        sessionId,
+        event: {
+          type: 'user_message_replay',
+          content: '从手机发来的消息',
+        },
+      })
+    })
+
+    const phoneMessages = phone.sent.map((payload) => JSON.parse(payload))
+    expect(phoneMessages).not.toContainEqual({
+      type: 'user_message_replay',
+      content: '从手机发来的消息',
     })
   })
 
