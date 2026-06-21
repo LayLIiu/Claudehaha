@@ -2096,6 +2096,30 @@ html.electron-macos .app-shell,
   -webkit-app-region: no-drag;
 }
 
+/* Additional no-drag zones: message list, sidebar, workspace, terminal, empty composer */
+.chat-scroll-area,
+[data-testid="workbench-panel"],
+[data-testid="session-terminal-panel"],
+[data-testid="empty-session-composer-shell"],
+[data-testid="active-session-content-row"],
+[data-testid="sidebar-session-list-section"],
+.permission-sheet-overlay,
+.sidebar-panel nav {
+  -webkit-app-region: no-drag;
+}
+
+/* Desktop drag overlay: invisible absolutely-positioned strip at top of content area for window dragging.
+   Does NOT consume layout space — content sits behind it naturally. */
+.desktop-drag-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--titlebar-height, 40px);
+  pointer-events: auto;
+  z-index: 1;
+}
+
 .sidebar-settings-dock {
   background: transparent;
   pointer-events: auto;

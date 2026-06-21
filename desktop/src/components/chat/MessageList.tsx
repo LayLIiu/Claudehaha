@@ -2091,9 +2091,17 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
       }
     }
 
-    if (currentAssistantMessageId) ids.add(currentAssistantMessageId)
+    // Only mark the trailing assistant_text as "final" when the turn has
+    // actually completed (chatState === 'idle').  While the turn is still
+    // active (streaming, tool_executing, thinking, …) the last flushed
+    // assistant_text is NOT the final one — more content or tool calls may
+    // follow — so it must not show the action bar (copy/branch/timestamp).
+    if (chatState === 'idle') {
+      if (currentAssistantMessageId) ids.add(currentAssistantMessageId)
+    }
+
     return ids
-  }, [renderItems])
+  }, [renderItems, chatState])
   const turnCardsByRenderIndex = useMemo(
     () => buildTurnCardInsertionMap(renderItems, turnChangeCards),
     [renderItems, turnChangeCards],
@@ -2681,7 +2689,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
           ) : null}
 
           {streamingText.trim() && (
-            <AssistantMessage content={streamingText} isStreaming={chatState === 'streaming'} />
+            <AssistantMessage content={streamingText} isStreaming={chatState === 'streaming'} showActions={false} />
           )}
 
           {chatState === 'compacting' && !hasCompactingDivider && (

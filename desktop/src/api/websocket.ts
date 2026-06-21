@@ -65,6 +65,7 @@ class WebSocketManager {
     ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data as string) as ServerMessage
+        console.warn(`[WS-DEBUG] session=${sessionId} handlers=${conn.handlers.size} msg=${msg.type}`)
         for (const handler of conn.handlers) {
           handler(msg)
         }
@@ -137,7 +138,14 @@ class WebSocketManager {
     const conn = this.connections.get(sessionId)
     if (!conn) return () => {}
     conn.handlers.add(handler)
-    return () => { conn.handlers.delete(handler) }
+    // Return a cleanup that always resolves the *current* connection
+    // rather than the captured `conn` — after a reconnect the old
+    // Connection object is replaced in the Map, so a stale closure
+    // would delete from the wrong Set.
+    return () => {
+      const current = this.connections.get(sessionId)
+      if (current) current.handlers.delete(handler)
+    }
   }
 
   clearHandlers(sessionId: string) {
@@ -179,6 +187,7 @@ class WebSocketManager {
     ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data as string) as ServerMessage
+        console.warn(`[WS-DEBUG-GLOBAL] handlers=${conn.handlers.size} msg=${msg.type}`)
         for (const handler of conn.handlers) {
           handler(msg)
         }
@@ -218,7 +227,12 @@ class WebSocketManager {
     const conn = this.globalConnection
     if (!conn) return () => {}
     conn.handlers.add(handler)
-    return () => { conn.handlers.delete(handler) }
+    // Same pattern as onMessage: resolve current globalConnection
+    // at cleanup time instead of capturing a potentially-stale ref.
+    return () => {
+      const current = this.globalConnection
+      if (current) current.handlers.delete(handler)
+    }
   }
 
   private startPingLoop(sessionId: string) {

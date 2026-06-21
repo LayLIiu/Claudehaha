@@ -56,6 +56,11 @@ function handleSessionBroadcast(sessionId: string, event: ServerMessage): void {
     void activateRemoteSession(sessionId)
   }
 
+  // Only apply lightweight UI side-effects from the global channel.
+  // The session-specific WebSocket delivers all chat messages (content_delta,
+  // status, message_complete, permission_request, etc.) directly, so
+  // forwarding them again from the global channel would produce duplicates
+  // on H5 clients that maintain both connections simultaneously.
   if (event.type === 'session_title_updated') {
     useSessionStore.getState().updateSessionTitle(sessionId, event.title)
     useTabStore.getState().updateTabTitle(sessionId, event.title)
@@ -65,6 +70,4 @@ function handleSessionBroadcast(sessionId: string, event: ServerMessage): void {
       event.state === 'idle' ? 'idle' : 'running',
     )
   }
-
-  chatStore.handleServerMessage(sessionId, event)
 }

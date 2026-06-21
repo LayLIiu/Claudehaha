@@ -640,6 +640,10 @@ export class ConversationService {
     return this.sessions.has(sessionId)
   }
 
+  getSessionOutputCallbackCount(sessionId: string): number {
+    return this.sessions.get(sessionId)?.outputCallbacks.length ?? 0
+  }
+
   getSessionWorkDir(sessionId: string): string {
     const session = this.sessions.get(sessionId)
     return session?.workDir || ''

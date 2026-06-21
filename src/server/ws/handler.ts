@@ -188,6 +188,7 @@ export const handleWebSocket = {
     }
 
     console.log(`[WS] Client connected for session: ${sessionId}`)
+    console.log(`[WS-DEBUG] activeClients for ${sessionId}: ${activeSessions.get(sessionId)?.size ?? 0}, outputCallbacks: ${conversationService.getSessionOutputCallbackCount?.(sessionId) ?? 'N/A'}`)
 
     // Cancel pending cleanup timer if client reconnects
     const pendingTimer = sessionCleanupTimers.get(sessionId)

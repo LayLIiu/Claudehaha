@@ -123,6 +123,35 @@ export type PerSessionState = {
   queuedUserMessages?: QueuedUserMessage[]
 }
 
+// Short-window dedup for server messages.  When the same message is
+// dispatched to handleServerMessage more than once within this window
+// (e.g. due to a stale WS handler still in the Set), the duplicate
+// is silently dropped.  200ms covers the worst-case React batch.
+const DEDUP_WINDOW_MS = 200
+const recentServerMessages = new Map<string, { digest: string; ts: number }>()
+
+function isDuplicateServerMessage(sessionId: string, msg: ServerMessage): boolean {
+  // Only dedup message types that carry content or mutate chat state.
+  // "connected", "pong" etc. are idempotent and cheap — skip them.
+  if (msg.type === 'connected') return false
+
+  const digest = `${msg.type}:${JSON.stringify(msg).slice(0, 200)}`
+  const key = `${sessionId}:${digest}`
+  const prev = recentServerMessages.get(key)
+  const now = Date.now()
+  if (prev && now - prev.ts < DEDUP_WINDOW_MS) return true
+  recentServerMessages.set(key, { digest, ts: now })
+  return false
+}
+
+// Prune entries older than the dedup window to avoid unbounded growth.
+setInterval(() => {
+  const cutoff = Date.now() - DEDUP_WINDOW_MS * 2
+  for (const [k, v] of recentServerMessages) {
+    if (v.ts < cutoff) recentServerMessages.delete(k)
+  }
+}, 5_000)
+
 const DEFAULT_SESSION_STATE: PerSessionState = {
   messages: [],
   chatState: 'idle',
@@ -453,6 +482,19 @@ function appendAssistantTextMessage(
     return messages
   }
 
+  // Suppress duplicates from dual-channel delivery (session WS + global
+  // session_broadcast). When the same text has already been appended
+  // without a transcriptMessageId, skip it instead of merging it in and
+  // producing "texttext" in the chat bubble.
+  if (
+    last?.type === 'assistant_text' &&
+    !last.transcriptMessageId &&
+    !transcriptMessageId &&
+    last.content.trim() === trimmedContent
+  ) {
+    return messages
+  }
+
   const canMergeIntoLast =
     last?.type === 'assistant_text' &&
     (
@@ -681,6 +723,7 @@ function mergeRestoredTranscriptMessageIds(
 
 function dropDuplicateTranscriptTextMessages(messages: UIMessage[]): UIMessage[] {
   const seen = new Set<string>()
+  const seenContentByType = new Map<string, Set<string>>()
   const deduped: UIMessage[] = []
   let changed = false
 
@@ -695,6 +738,26 @@ function dropDuplicateTranscriptTextMessages(messages: UIMessage[]): UIMessage[]
         continue
       }
       seen.add(key)
+      // Track content of messages that have a transcriptMessageId so we can
+      // drop streaming-flushed duplicates that lack one (H5 reconnect case).
+      const contentSet = seenContentByType.get(message.type) ?? new Set<string>()
+      contentSet.add(message.content.trim())
+      seenContentByType.set(message.type, contentSet)
+    }
+
+    // Drop streaming-flushed text that duplicates a hydrated history entry.
+    // This happens when the WS reconnects mid-stream: the client flushes
+    // streamingText as an assistant_text (no transcriptMessageId), then
+    // loadHistory restores the same content with a transcriptMessageId.
+    if (
+      (message.type === 'user_text' || message.type === 'assistant_text') &&
+      !message.transcriptMessageId
+    ) {
+      const contentSet = seenContentByType.get(message.type)
+      if (contentSet?.has(message.content.trim())) {
+        changed = true
+        continue
+      }
     }
 
     deduped.push(message)
@@ -929,7 +992,32 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     wsManager.connect(sessionId)
     wsManager.onMessage(sessionId, (msg) => {
       if (msg.type === 'connected') {
-        set((s) => ({ sessions: updateSessionIn(s.sessions, sessionId, () => ({ connectionState: 'connected' })) }))
+        set((s) => {
+          const session = s.sessions[sessionId]
+          // On WS reconnect, discard stale streaming text to prevent it from
+          // being flushed as a duplicate assistant message when the server
+          // sends status:idle. loadHistory (below) will restore the
+          // authoritative message list from the server transcript.
+          const hasStaleStreamingText = session && (session.streamingText?.trim() || pendingDeltaBySession.get(sessionId))
+          return {
+            sessions: updateSessionIn(s.sessions, sessionId, () => ({
+              connectionState: 'connected',
+              ...(hasStaleStreamingText ? { streamingText: '' } : {}),
+            })),
+          }
+        })
+        if (pendingDeltaBySession.has(sessionId)) {
+          pendingDeltaBySession.delete(sessionId)
+          const flushTimer = flushTimerBySession.get(sessionId)
+          if (flushTimer) {
+            clearTimeout(flushTimer)
+            flushTimerBySession.delete(sessionId)
+          }
+        }
+        // Re-sync history on reconnect so the local message list matches the
+        // server transcript exactly — any streaming text that was flushed
+        // before the disconnect is already persisted server-side.
+        void get().loadHistory(sessionId)
       }
       get().handleServerMessage(sessionId, msg)
     })
@@ -1487,6 +1575,18 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   handleServerMessage: (sessionId, msg) => {
+    // Debug: track message source to diagnose H5 duplication
+    const caller = new Error().stack?.split('\n')[2]?.trim() || 'unknown'
+    console.warn(`[H5-DEBUG] handleServerMessage type=${msg.type} caller=${caller} session=${sessionId}`)
+
+    // Short-window dedup: if the same message was already processed
+    // within DEDUP_WINDOW_MS, skip it.  This prevents content doubling
+    // when a stale WS handler fires alongside the current one.
+    if (isDuplicateServerMessage(sessionId, msg)) {
+      console.warn(`[H5-DEDUP] Skipping duplicate ${msg.type} for session=${sessionId}`)
+      return
+    }
+
     const update = (updater: (session: PerSessionState) => Partial<PerSessionState>) => {
       set((s) => ({ sessions: updateSessionIn(s.sessions, sessionId, updater) }))
     }
