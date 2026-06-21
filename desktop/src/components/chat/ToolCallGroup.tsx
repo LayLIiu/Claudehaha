@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from 'react'
+import { memo, useMemo, useRef, useState } from 'react'
 import { BookMarked, ChevronDown, ChevronRight, Settings } from 'lucide-react'
 import { ToolCallBlock } from './ToolCallBlock'
 import { MarkdownRenderer } from '../markdown/MarkdownRenderer'
@@ -294,17 +294,6 @@ function ActiveEditTitle({
       <span className="shrink-0 text-[11px] text-[rgba(255,255,255,0.46)]">·</span>
       <RollingDiffStats stats={stats} variant="inline" className="text-[13px] font-medium" />
     </span>
-  )
-}
-
-function RunningTitlePlaceholder() {
-  return (
-    <CadencedShimmerText className="block">
-      <span
-        aria-hidden="true"
-        className="block h-[1em] w-24 rounded-full bg-[rgba(255,255,255,0.08)]"
-      />
-    </CadencedShimmerText>
   )
 }
 
@@ -720,6 +709,17 @@ function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isSt
     () => getLatestConcreteRunningDisplay(toolCalls, resultMap, childToolCallsByParent, isStreaming),
     [childToolCallsByParent, isStreaming, resultMap, toolCalls],
   )
+  // Keep the last valid running display so the title stays visible when
+  // a new tool starts but hasn't yielded a concrete name yet (e.g. the
+  // partial JSON hasn't been parsed).  Resets when the turn ends.
+  const lastRunningDisplayRef = useRef(runningDisplay)
+  if (isRunning && runningDisplay) {
+    lastRunningDisplayRef.current = runningDisplay
+  }
+  if (!isRunning) {
+    lastRunningDisplayRef.current = null
+  }
+  const effectiveRunningDisplay = isRunning ? (runningDisplay ?? lastRunningDisplayRef.current) : null
   const completedEditStats = useMemo(() => aggregateToolEditStats(toolCalls), [toolCalls])
   const editFileSummaries = useMemo(() => summarizeToolEditFiles(toolCalls), [toolCalls])
   const summaryKey = useMemo(() => getSummaryKey(toolCalls), [toolCalls])
@@ -743,17 +743,15 @@ function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isSt
         </span>
         <span className="flex-1 truncate text-[var(--text-size-chat)] text-[var(--color-token-conversation-summary-trailing)] group-hover/collapsed-tool-activity:text-[var(--color-token-foreground)]">
           {isRunning ? (
-            runningDisplay?.editStats ? (
+            effectiveRunningDisplay?.editStats ? (
               <CadencedShimmerText className="block">
-                <ActiveEditTitle toolName={runningDisplay.toolCall.toolName} stats={runningDisplay.editStats} />
+                <ActiveEditTitle toolName={effectiveRunningDisplay.toolCall.toolName} stats={effectiveRunningDisplay.editStats} />
               </CadencedShimmerText>
-            ) : runningDisplay?.title ? (
+            ) : effectiveRunningDisplay?.title ? (
               <CadencedShimmerText>
-                {runningDisplay.title}
+                {effectiveRunningDisplay.title}
               </CadencedShimmerText>
-            ) : (
-              <RunningTitlePlaceholder />
-            )
+            ) : null
           ) : summaryContent}
         </span>
 
