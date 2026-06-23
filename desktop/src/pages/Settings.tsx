@@ -209,10 +209,11 @@ export function Settings() {
   ]
 
   return (
-    <div className="settings-page-root flex-1 grid min-h-0 grid-cols-[64px_minmax(0,1fr)] lg:grid-cols-[300px_minmax(0,1fr)] overflow-hidden">
+    <div className="settings-page-root flex-1 grid min-h-0 grid-cols-[64px_minmax(0,1fr)] lg:grid-cols-[300px_minmax(0,1fr)] overflow-hidden" data-desktop-drag-region={isDesktopRuntime() ? true : undefined}>
       {/* Sidebar navigation */}
       <aside
         data-testid="settings-sidebar-panel"
+        data-desktop-drag-region={isDesktopRuntime() ? true : undefined}
         className="settings-sidebar-panel relative flex flex-col py-2 pt-[36px]"
       >
         {/* Back button */}
@@ -257,6 +258,7 @@ export function Settings() {
       {/* Content area */}
       <div
         data-testid="settings-content-panel"
+        data-desktop-drag-region={isDesktopRuntime() ? true : undefined}
         className={
           activeTab === 'trace'
             ? 'settings-content-panel flex-1 flex min-h-0 flex-col overflow-hidden'

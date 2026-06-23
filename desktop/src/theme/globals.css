@@ -474,7 +474,7 @@
   --color-surface-glass-border: rgba(255, 255, 255, 0.085);
 
   /* Code + diff */
-  --color-code-bg: #0A0A0A;
+  --color-code-bg: #1A1A1C;
   --color-code-fg: #E8E8E8;
   --color-code-comment: #8A8A8A;
   --color-code-string: #437220;
@@ -525,8 +525,8 @@
 
   /* Misc */
   --color-window-close-hover: #E81123;
-  --color-selection-bg: rgba(255, 219, 208, 0.9);
-  --color-selection-fg: #390C00;
+  --color-selection-bg: rgba(56, 120, 215, 0.28);
+  --color-selection-fg: inherit;
   --color-text-secondary-a72: rgba(168, 168, 168, 0.72);
   --color-text-secondary-a68: rgba(168, 168, 168, 0.68);
   --color-text-primary-a88: rgba(255, 255, 255, 0.88);
@@ -882,7 +882,7 @@
   --color-surface-glass: rgba(30, 30, 30, 0.95);
   --color-surface-glass-border: rgba(255, 255, 255, 0.08);
 
-  --color-code-bg: #0A0A0A;
+  --color-code-bg: #1A1A1C;
   --color-code-fg: #E8E8E8;
   --color-code-comment: #8A8A8A;
   --color-code-string: #16794C;
@@ -927,8 +927,8 @@
   --color-terminal-warning: #FDB022;
 
   --color-window-close-hover: #E5484D;
-  --color-selection-bg: rgba(255, 219, 208, 0.9);
-  --color-selection-fg: #390C00;
+  --color-selection-bg: rgba(56, 120, 215, 0.28);
+  --color-selection-fg: inherit;
   --color-text-secondary-a72: rgba(168, 168, 168, 0.72);
   --color-text-secondary-a68: rgba(168, 168, 168, 0.68);
   --color-text-primary-a88: rgba(255, 255, 255, 0.88);
@@ -1251,7 +1251,7 @@
   --color-surface-glass: #242424;
   --color-surface-glass-border: rgba(255, 255, 255, 0.085);
 
-  --color-code-bg: #0E0E0E;
+  --color-code-bg: #1C1C1E;
   --color-code-fg: #E8E8E8;
   --color-code-comment: #8A8A8A;
   --color-code-string: #88C988;
@@ -1296,8 +1296,8 @@
   --color-terminal-warning: #F8C55F;
 
   --color-window-close-hover: #C63B44;
-  --color-selection-bg: rgba(255, 181, 159, 0.32);
-  --color-selection-fg: #FBE7E1;
+  --color-selection-bg: rgba(56, 120, 215, 0.38);
+  --color-selection-fg: inherit;
   --color-text-secondary-a72: rgba(168, 168, 168, 0.72);
   --color-text-secondary-a68: rgba(168, 168, 168, 0.68);
   --color-text-primary-a88: rgba(255, 255, 255, 0.88);
@@ -2038,11 +2038,13 @@ html.electron-macos .app-shell,
   background: var(--color-surface) !important;
 }
 
-.electron-macos .sidebar-settings-dock,
-.electron-macos .sidebar-settings-dock::before,
 .electron-macos .sidebar-settings-dock::after {
-  background: transparent !important;
-  background-color: transparent !important;
+  background: #1a1a1a !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.electron-macos .sidebar-settings-dock::before {
+  background: linear-gradient(to bottom, transparent, #1a1a1a) !important;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -2106,18 +2108,6 @@ html.electron-macos .app-shell,
 .permission-sheet-overlay,
 .sidebar-panel nav {
   -webkit-app-region: no-drag;
-}
-
-/* Desktop drag overlay: invisible absolutely-positioned strip at top of content area for window dragging.
-   Does NOT consume layout space — content sits behind it naturally. */
-.desktop-drag-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--titlebar-height, 40px);
-  pointer-events: auto;
-  z-index: 1;
 }
 
 .sidebar-settings-dock {
@@ -2191,7 +2181,6 @@ html.electron-macos .app-shell,
 
 .codex-turn-process-trigger:hover {
   color: var(--color-token-foreground);
-  background: rgba(255,255,255,0.035);
 }
 
 .codex-turn-process-trigger:focus-visible {
@@ -2210,7 +2199,7 @@ html.electron-macos .app-shell,
 
 .codex-turn-process-title {
   flex: 0 0 auto;
-  font-weight: 560;
+  font-weight: 400;
   letter-spacing: -0.015em;
 }
 
@@ -2499,6 +2488,37 @@ html.electron-macos .app-shell,
 .sidebar-settings-dock {
   z-index: 30;
   background: transparent;
+  padding-top: 16px !important;
+}
+
+/* Gradient fade above the settings dock so project items don't show through */
+.sidebar-settings-dock::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 48px;
+  background: linear-gradient(to bottom, transparent, var(--color-surface-sidebar));
+  pointer-events: none;
+}
+
+/* Solid background behind the settings dock itself */
+.sidebar-settings-dock::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--color-surface-sidebar);
+  border-radius: inherit;
+}
+
+/* Keep the settings button above the ::after backdrop */
+.sidebar-settings-dock > * {
+  position: relative;
+  z-index: 1;
 }
 
 .sidebar-scroll-area::-webkit-scrollbar {

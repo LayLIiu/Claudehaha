@@ -439,6 +439,28 @@ export function ActiveSession() {
     () => chatState === 'idle' ? null : getCurrentTurnLiveChangeSummary(messages),
     [chatState, messages],
   )
+  const { tasks, completedAndDismissed, taskBarOpen, tasksExplicitlySet } = useCLITaskStore()
+  const taskPillHasTasks = tasks.length > 0
+  const taskPillAllCompleted = taskPillHasTasks && tasks.every((task) => task.status === 'completed')
+  const taskPillTasksVisible = (taskBarOpen || tasksExplicitlySet) &&
+    (taskBarOpen || taskPillHasTasks) &&
+    !(taskPillAllCompleted && completedAndDismissed && !taskBarOpen)
+  const taskPillVisible = taskPillTasksVisible || Boolean(liveTurnChangeSummary && liveTurnChangeSummary.fileCount > 0)
+  const taskPillRef = useRef<HTMLDivElement>(null)
+  const [taskPillOffset, setTaskPillOffset] = useState(0)
+  useEffect(() => {
+    if (!taskPillVisible) { setTaskPillOffset(0); return }
+    const el = taskPillRef.current
+    if (!el) return
+    const update = () => {
+      const h = el.getBoundingClientRect().height
+      setTaskPillOffset(h > 0 ? h + 8 : 0)
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [taskPillVisible])
   const latestBranchTarget = getLatestBranchTarget(messages)
 
   useEffect(() => {
@@ -877,7 +899,7 @@ export function ActiveSession() {
                   {historyError}
                 </div>
               ) : (
-                <MessageList compact={showRightPanel} bottomPadding={240} />
+                <MessageList compact={showRightPanel} bottomPadding={240} taskPillOffset={taskPillOffset} />
               )}
             </>
           )}
@@ -896,18 +918,20 @@ export function ActiveSession() {
               ...(showTerminalPanel && terminalPanelRuntimeId ? { bottom: terminalPanelHeight } : {}),
             } as React.CSSProperties}
           >
-            <TaskProgressDockPill
-              changeSummary={liveTurnChangeSummary}
-              compact={showRightPanel}
-              onOpenChanges={() => {
-                if (!activeTabId) return
-                const workspace = useWorkspacePanelStore.getState()
-                workspace.setMode(activeTabId, 'workspace')
-                workspace.setActiveView(activeTabId, 'changed')
-                workspace.openPanel(activeTabId)
-                void workspace.loadStatus(activeTabId)
-              }}
-            />
+            <div ref={taskPillRef}>
+              <TaskProgressDockPill
+                changeSummary={liveTurnChangeSummary}
+                compact={showRightPanel}
+                onOpenChanges={() => {
+                  if (!activeTabId) return
+                  const workspace = useWorkspacePanelStore.getState()
+                  workspace.setMode(activeTabId, 'workspace')
+                  workspace.setActiveView(activeTabId, 'changed')
+                  workspace.openPanel(activeTabId)
+                  void workspace.loadStatus(activeTabId)
+                }}
+              />
+            </div>
             <StickyThinkingIndicator visible={chatState === 'tool_executing' || chatState === 'thinking' || chatState === 'streaming'} compact={showRightPanel} />
             <div
               className="chat-input-covered-shell"

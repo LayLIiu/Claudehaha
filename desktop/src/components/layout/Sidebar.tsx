@@ -669,6 +669,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
       {...(isMacOSDesktop ? { style: { background: 'transparent' } } : {})}
       className={`sidebar-panel relative h-full flex flex-col ${isMacOSDesktop ? '' : 'bg-[var(--color-surface-sidebar)]'} select-none`}
       data-state={expanded ? 'open' : 'closed'}
+      data-desktop-drag-region={isDesktopRuntime ? true : undefined}
       aria-label="Sidebar"
     >
       {isMobile && (

@@ -753,12 +753,10 @@ export function buildRenderModel(messages: UIMessage[], activeAskUserQuestionToo
   flushGroup()
 
   // ── Turn collapse projection ──
-  // Only collapse when chat is idle — active turns keep all items visible.
-  if (isChatActive === false) {
-    return { renderItems: applyTurnCollapse(items), toolResultMap, childToolCallsByParent }
-  }
-
-  return { renderItems: items, toolResultMap, childToolCallsByParent }
+  // Apply turn collapse in both idle and streaming states.
+  // During streaming, collapse the active turn only when tools are done (AI is writing summary).
+  // While tools are still executing, keep the active turn fully visible.
+  return { renderItems: applyTurnCollapse(items, isChatActive), toolResultMap, childToolCallsByParent }
 }
 
 /**
@@ -811,7 +809,7 @@ function buildTurnGroups(renderItems: RenderItem[]): TurnGroup[] {
  * A "turn" = user_text → [process items] → final assistant_text.
  * Process items include thinking, tool_group, tool_burst, and non-final assistant_text.
  */
-function applyTurnCollapse(items: RenderItem[]): RenderItem[] {
+function applyTurnCollapse(items: RenderItem[], isChatActive?: boolean): RenderItem[] {
   const result: RenderItem[] = []
   let currentUserMsgId: string | null = null
   let currentUserMsgTimestamp: number | null = null
@@ -819,27 +817,35 @@ function applyTurnCollapse(items: RenderItem[]): RenderItem[] {
   let lastAssistantItem: RenderItem | null = null
   let lastAssistantTimestamp: number | null = null
 
-  const flushCurrentTurn = () => {
+  const flushCurrentTurn = (isLast: boolean) => {
     if (currentUserMsgId === null) return
 
     if (lastAssistantItem !== null) {
-      // This turn is complete — collapse into "已处理"
-      const stepCount = countProcessSteps(processItems)
-      if (stepCount > 0) {
-        result.push({
-          kind: 'turn_process',
-          group: {
-            userMsgId: currentUserMsgId,
-            processItems: [...processItems],
-            stepCount,
-            startTime: currentUserMsgTimestamp,
-            endTime: lastAssistantTimestamp,
-          },
-          id: `turn-${currentUserMsgId}`,
-        })
+      // Only collapse process items into a turn_process group when the turn
+      // has truly ended (chatState === 'idle').  While the turn is still
+      // active (streaming, thinking, tool_executing, etc.) the assistant
+      // text that appeared is intermediate process output, not a final
+      // summary — collapsing it would hide work-in-progress from the user.
+      if (isLast && isChatActive) {
+        for (const pi of processItems) result.push(pi)
+        result.push(lastAssistantItem)
+      } else {
+        const stepCount = countProcessSteps(processItems)
+        if (stepCount > 0) {
+          result.push({
+            kind: 'turn_process',
+            group: {
+              userMsgId: currentUserMsgId,
+              processItems: [...processItems],
+              stepCount,
+              startTime: currentUserMsgTimestamp,
+              endTime: lastAssistantTimestamp,
+            },
+            id: `turn-${currentUserMsgId}`,
+          })
+        }
+        result.push(lastAssistantItem)
       }
-      // Final assistant_text stays visible
-      result.push(lastAssistantItem)
     } else {
       // Turn is still active — keep everything visible as-is
       for (const pi of processItems) result.push(pi)
@@ -848,7 +854,7 @@ function applyTurnCollapse(items: RenderItem[]): RenderItem[] {
 
   for (const item of items) {
     if (item.kind === 'message' && item.message.type === 'user_text' && !item.message.pending) {
-      flushCurrentTurn()
+      flushCurrentTurn(false)
       currentUserMsgId = item.message.id
       currentUserMsgTimestamp = item.message.timestamp
       processItems = []
@@ -878,7 +884,7 @@ function applyTurnCollapse(items: RenderItem[]): RenderItem[] {
     processItems.push(item)
   }
 
-  flushCurrentTurn()
+  flushCurrentTurn(true)
   return result
 }
 
@@ -1227,6 +1233,7 @@ type MessageListProps = {
   sessionId?: string | null
   compact?: boolean
   bottomPadding?: number
+  taskPillOffset?: number
 }
 
 const AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 48
@@ -1715,7 +1722,7 @@ const MeasuredRenderItem = memo(function MeasuredRenderItem({
   )
 })
 
-export function MessageList({ sessionId, compact = false, bottomPadding = 160 }: MessageListProps = {}) {
+export function MessageList({ sessionId, compact = false, bottomPadding = 160, taskPillOffset = 0 }: MessageListProps = {}) {
   const activeTabId = useTabStore((s) => s.activeTabId)
   const resolvedSessionId = sessionId ?? activeTabId
   const sessionState = useChatStore((s) =>
@@ -2046,16 +2053,40 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
     () => buildRenderModel(messages, activeAskUserQuestionToolUseId, isChatActive),
     [activeAskUserQuestionToolUseId, isChatActive, messages],
   )
-  // Find the last tool_group/tool_burst index — used to keep the last group in
-  // "running" mode while chatState === 'tool_executing', preventing premature
-  // summary display when more tool calls may still arrive in the group.
-  const lastActiveToolGroupIndex = useMemo(() => {
-    for (let i = renderItems.length - 1; i >= 0; i--) {
-      const k = renderItems[i]!.kind
-      if (k === 'tool_group' || k === 'tool_burst') return i
+  // Tool groups that have been followed by assistant text, meaning the group's
+  // work is done and it should show its summary (even if the turn is still
+  // active).  Groups NOT in this set should stay in running mode because the
+  // AI hasn't produced text after them yet — more tools may follow.
+  const toolGroupsFollowedByText = useMemo(() => {
+    const set = new Set<number>()
+    let pendingGroups: number[] = []
+    for (let i = 0; i < renderItems.length; i++) {
+      const item = renderItems[i]!
+      if (item.kind === 'tool_group' || item.kind === 'tool_burst' || item.kind === 'web_search_group' || item.kind === 'exploration_group') {
+        pendingGroups.push(i)
+      } else if (item.kind === 'message' && item.message.type === 'assistant_text' && item.message.content.trim()) {
+        for (const idx of pendingGroups) {
+          set.add(idx)
+        }
+        pendingGroups = []
+      } else if (item.kind === 'message' && item.message.type === 'user_text') {
+        pendingGroups = []
+      }
     }
-    return -1
-  }, [renderItems])
+    // streamingText is rendered below the renderItems but is real visible
+    // text — if present, all pending (unresolved) groups have text after them.
+    // Also mark groups as followed by text when chatState is 'streaming',
+    // even if streamingText hasn't been flushed yet (content_delta is
+    // buffered with a 50ms throttle, so streamingText may be empty for
+    // a short window after content_start(text) arrives).
+    const hasStreamingText = streamingText.trim() || chatState === 'streaming'
+    if (hasStreamingText) {
+      for (const idx of pendingGroups) {
+        set.add(idx)
+      }
+    }
+    return set
+  }, [renderItems, streamingText, chatState])
   // Defer the per-message branchable / completed-turn computations so the first
   // commit on tab switch can render the virtualization window without doing two
   // additional O(N) walks synchronously. They re-run in a low-priority render
@@ -2389,10 +2420,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
             resultMap={toolResultMap}
             childToolCallsByParent={childToolCallsByParent}
             agentTaskNotifications={agentTaskNotifications}
-            isStreaming={
-              chatState === 'tool_executing' &&
-              item.toolCalls.some((tc) => !toolResultMap.has(tc.toolUseId))
-            }
+            isStreaming={false}
           />
         )
       case 'tool_burst':
@@ -2404,10 +2432,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
             resultMap={toolResultMap}
             childToolCallsByParent={childToolCallsByParent}
             agentTaskNotifications={agentTaskNotifications}
-            isStreaming={
-              chatState === 'tool_executing' &&
-              item.toolCalls.some((tc) => !toolResultMap.has(tc.toolUseId))
-            }
+            isStreaming={false}
           />
         )
       case 'exploration_group':
@@ -2417,10 +2442,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
             resultMap={toolResultMap}
             childToolCallsByParent={childToolCallsByParent}
             agentTaskNotifications={agentTaskNotifications}
-            isStreaming={
-              chatState === 'tool_executing' &&
-              item.toolCalls.some((tc) => !toolResultMap.has(tc.toolUseId))
-            }
+            isStreaming={false}
           />
         )
       case 'message':
@@ -2451,9 +2473,10 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
   }
 
   /** Render a tool_burst item: pinned calls visible + overflow behind fold */
-  const renderToolBurst = (item: Extract<RenderItem, { kind: 'tool_burst' }>, isLastActiveGroup: boolean) => {
+  const renderToolBurst = (item: Extract<RenderItem, { kind: 'tool_burst' }>, streaming = false) => {
     const { pinnedToolCalls, overflowToolCalls, hiddenCount } = item.burst
     const isExpanded = expandedToolBursts.has(item.id)
+    const burstStreaming = streaming
     return (
       <div className="mb-[3px]">
         {/* Pinned (visible) tool calls */}
@@ -2462,12 +2485,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
           resultMap={toolResultMap}
           childToolCallsByParent={childToolCallsByParent}
           agentTaskNotifications={agentTaskNotifications}
-          isStreaming={
-            isLastActiveGroup
-              ? chatState === 'tool_executing'
-              : chatState === 'tool_executing' &&
-                pinnedToolCalls.some((tc) => !toolResultMap.has(tc.toolUseId))
-          }
+          isStreaming={burstStreaming}
         />
         {/* "+N tool calls" overflow fold */}
         <button
@@ -2499,6 +2517,23 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
   const renderTranscriptItem = (item: RenderItem, index: number) => {
     const cardsForItem = turnCardsByRenderIndex.get(index) ?? []
 
+    // A tool group shows its running title when:
+    // 1. It has unresolved tool calls (tools still executing), AND
+    //    no assistant text has appeared after this group yet.
+    //    Once assistant text follows the group, the group's work
+    //    is done — the AI wouldn't be replying if tools were still running,
+    //    so we treat the group as complete even if tool_result messages
+    //    haven't arrived yet.
+    // 2. The turn is still active AND no assistant text has appeared after this
+    //    group yet.
+    const isToolGroupStreaming = (toolCalls: ToolCall[]) => {
+      if (toolGroupsFollowedByText.has(index)) return false
+      const hasUnresolved = toolCalls.some((tc) => !toolResultMap.has(tc.toolUseId))
+      if (hasUnresolved) return true
+      if (chatState !== 'idle') return true
+      return false
+    }
+
     return (
       <>
         {item.kind === 'tool_group' ? (
@@ -2507,18 +2542,10 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
             resultMap={toolResultMap}
             childToolCallsByParent={childToolCallsByParent}
             agentTaskNotifications={agentTaskNotifications}
-            isStreaming={
-              // For the last tool group, stay in "running" mode while chat is
-              // still executing — prevents premature summary when a brief gap
-              // exists between tool calls in the same group.
-              index === lastActiveToolGroupIndex
-                ? chatState === 'tool_executing'
-                : chatState === 'tool_executing' &&
-                  item.toolCalls.some((tc) => !toolResultMap.has(tc.toolUseId))
-            }
+            isStreaming={isToolGroupStreaming(item.toolCalls)}
           />
         ) : item.kind === 'tool_burst' ? (
-          renderToolBurst(item, index === lastActiveToolGroupIndex)
+          renderToolBurst(item, chatState !== 'idle' && !toolGroupsFollowedByText.has(index))
         ) : item.kind === 'turn_process' ? (
           <TurnProcessSection
             group={item.group}
@@ -2532,12 +2559,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
             resultMap={toolResultMap}
             childToolCallsByParent={childToolCallsByParent}
             agentTaskNotifications={agentTaskNotifications}
-            isStreaming={
-              index === lastActiveToolGroupIndex
-                ? chatState === 'tool_executing'
-                : chatState === 'tool_executing' &&
-                  item.toolCalls.some((tc) => !toolResultMap.has(tc.toolUseId))
-            }
+            isStreaming={isToolGroupStreaming(item.toolCalls)}
           />
         ) : item.kind === 'exploration_group' ? (
           <ExplorationGroupSection
@@ -2545,12 +2567,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
             resultMap={toolResultMap}
             childToolCallsByParent={childToolCallsByParent}
             agentTaskNotifications={agentTaskNotifications}
-            isStreaming={
-              index === lastActiveToolGroupIndex
-                ? chatState === 'tool_executing'
-                : chatState === 'tool_executing' &&
-                  item.toolCalls.some((tc) => !toolResultMap.has(tc.toolUseId))
-            }
+            isStreaming={isToolGroupStreaming(item.toolCalls)}
           />
         ) : (
           <MessageBlock
@@ -2688,7 +2705,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
             <VirtualSpacer height={virtualTranscriptWindow.afterHeight} position="bottom" />
           ) : null}
 
-          {streamingText.trim() && (
+          {streamingText.trim() && chatState !== 'tool_executing' && (
             <AssistantMessage content={streamingText} isStreaming={chatState === 'streaming'} showActions={false} />
           )}
 
@@ -2717,7 +2734,8 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160 }:
           onClick={handleJumpToLatest}
           title={t('chat.jumpToLatest')}
           aria-label={t('chat.jumpToLatest')}
-          className="absolute bottom-[200px] left-1/2 -translate-x-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-surface-container-high)] text-xs font-medium text-[var(--color-token-foreground)] shadow-[var(--shadow-dropdown)] transition-colors hover:bg-[var(--color-surface-hover)]"
+          className="absolute left-1/2 -translate-x-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-surface-container-high)] text-xs font-medium text-[var(--color-token-foreground)] shadow-[var(--shadow-dropdown)] transition-all hover:bg-[var(--color-surface-hover)]"
+          style={{ bottom: 200 + taskPillOffset }}
         >
           <ArrowDown size={15} aria-hidden="true" />
         </button>

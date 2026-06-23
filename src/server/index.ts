@@ -168,7 +168,7 @@ export function startServer(port = PORT, host = HOST) {
         const h5RequestContext = { clientAddress }
         const h5Settings = await h5AccessService.getSettings()
         const h5PublicOrigin = originFromUrl(h5Settings.publicBaseUrl)
-        const cors = await resolveCors(origin, url.origin, {
+        let cors = await resolveCors(origin, url.origin, {
           h5Enabled: h5Settings.enabled,
           isOriginAllowed: async (candidateOrigin) =>
             candidateOrigin === h5PublicOrigin ||
@@ -246,8 +246,27 @@ export function startServer(port = PORT, host = HOST) {
 
         // WebSocket upgrade
         if (url.pathname.startsWith('/ws/')) {
+          // 对于 WebSocket 升级请求，如果 CORS 被拒绝，先检查 h5Token：
+          // 移动端 WebSocket 库可能发送非 localhost 的 Origin header 导致 CORS 失败，
+          // 但只要 h5Token 有效就应允许连接
           if (cors.rejected) {
-            return corsRejectedResponse(cors)
+            const tokenFromQuery = url.searchParams.get('token')
+            const authHeader = req.headers.get('Authorization')
+            let h5TokenValue: string | null = tokenFromQuery
+            if (!h5TokenValue && authHeader?.startsWith('Bearer ')) {
+              h5TokenValue = authHeader.substring(7)
+            }
+            if (h5TokenValue) {
+              const h5AccessSvc = new H5AccessService()
+              const tokenValid = await h5AccessSvc.validateToken(h5TokenValue)
+              if (tokenValid) {
+                // Token 有效，覆盖 CORS 拒绝
+                cors = { allowed: true, rejected: false, headers: { ...cors.headers, 'Access-Control-Allow-Origin': origin || '*' } }
+              }
+            }
+            if (cors.rejected) {
+              return corsRejectedResponse(cors)
+            }
           }
 
           // Enforce authentication when required

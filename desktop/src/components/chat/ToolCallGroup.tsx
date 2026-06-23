@@ -13,6 +13,7 @@ import {
   summarizeToolEditFiles,
   type ToolEditStats,
 } from './toolEditSummary'
+import { extractPartialJsonStringField } from './extractPartialJsonStringField'
 import { useTranslation } from '../../i18n'
 import type { TranslationKey } from '../../i18n'
 import { SETTINGS_TAB_ID, useTabStore } from '../../stores/tabStore'
@@ -196,77 +197,6 @@ function generateActiveTitle(toolCall: ToolCall | null): string {
     default:
       return toolCall.toolName
   }
-}
-
-function extractPartialJsonStringField(source: string, field: string): string | null {
-  if (!source) return null
-  const key = `"${field}"`
-  const keyIndex = source.indexOf(key)
-  if (keyIndex < 0) return null
-  const colonIndex = source.indexOf(':', keyIndex + key.length)
-  if (colonIndex < 0) return null
-
-  let index = colonIndex + 1
-  while (index < source.length && /\s/.test(source[index] ?? '')) index += 1
-  if (source[index] !== '"') return null
-  index += 1
-
-  let value = ''
-  while (index < source.length) {
-    const char = source[index]
-    if (char === '"') return value
-    if (char !== '\\') {
-      value += char
-      index += 1
-      continue
-    }
-
-    const escaped = source[index + 1]
-    if (escaped === undefined) break
-    switch (escaped) {
-      case 'n':
-        value += '\n'
-        index += 2
-        break
-      case 'r':
-        value += '\r'
-        index += 2
-        break
-      case 't':
-        value += '\t'
-        index += 2
-        break
-      case 'b':
-        value += '\b'
-        index += 2
-        break
-      case 'f':
-        value += '\f'
-        index += 2
-        break
-      case '"':
-      case '\\':
-      case '/':
-        value += escaped
-        index += 2
-        break
-      case 'u': {
-        const hex = source.slice(index + 2, index + 6)
-        if (/^[0-9a-fA-F]{4}$/.test(hex)) {
-          value += String.fromCharCode(Number.parseInt(hex, 16))
-          index += 6
-        } else {
-          index = source.length
-        }
-        break
-      }
-      default:
-        value += escaped
-        index += 2
-        break
-    }
-  }
-  return null
 }
 
 function getSummaryKey(toolCalls: ToolCall[]): string {
@@ -703,7 +633,10 @@ function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isSt
   const t = useTranslation()
   const summary = generateToolActivitySummary(toolCalls, t)
   const hasUnresolvedTools = hasUnresolvedToolCalls(toolCalls, resultMap, childToolCallsByParent)
-  const isRunning = Boolean(isStreaming) || hasUnresolvedTools
+  // When isStreaming is false (assistant text already follows this group),
+  // the tools are logically complete even if tool_result messages haven't
+  // arrived yet — the AI wouldn't be replying if tools were still running.
+  const isRunning = Boolean(isStreaming) || (isStreaming ? hasUnresolvedTools : false)
 
   const runningDisplay = useMemo(
     () => getLatestConcreteRunningDisplay(toolCalls, resultMap, childToolCallsByParent, isStreaming),

@@ -254,14 +254,6 @@ export function AppShell() {
         data-sidebar-state={showDesktopSidebar && effectiveSidebarOpen ? 'open' : 'closed'}
         className={`app-shell-main min-w-0 flex-1 flex flex-col overflow-hidden bg-[var(--color-surface)] relative${isSettingsTab ? ' app-shell-main--settings' : ''}${isMobileShell ? ' app-shell-main--mobile' : ''}`}
       >
-        {/* Invisible drag strip overlay at the top for macOS window dragging — does NOT take layout space */}
-        {desktopRuntime && !isMobileShell ? (
-          <div
-            data-desktop-drag-region
-            className="desktop-drag-overlay"
-            aria-hidden="true"
-          />
-        ) : null}
         {isMobileShell ? (
           <div
             data-testid="mobile-session-header"

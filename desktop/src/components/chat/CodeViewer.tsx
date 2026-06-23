@@ -133,7 +133,7 @@ function PrismCodeContent({
             margin: 0,
             padding: CODE_AREA_PADDING,
             fontFamily: CODE_FONT_FAMILY,
-            fontSize: '16px',
+            fontSize: '14px',
             lineHeight: String(CODE_LINE_HEIGHT),
             whiteSpace: wrapLongLines ? 'pre-wrap' : 'pre',
             wordBreak: wrapLongLines ? 'break-word' : 'normal',
@@ -278,7 +278,7 @@ function CodeArea({
             style={{
               margin: 0,
               fontFamily: CODE_FONT_FAMILY,
-              fontSize: '16px',
+              fontSize: '14px',
               lineHeight: String(CODE_LINE_HEIGHT),
               whiteSpace: wrapLongLines ? 'pre-wrap' : 'pre',
               wordBreak: wrapLongLines ? 'break-word' : 'normal',

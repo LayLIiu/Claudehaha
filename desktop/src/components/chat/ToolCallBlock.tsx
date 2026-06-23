@@ -9,6 +9,7 @@ import type { TranslationKey } from '../../i18n'
 import { InlineImageGallery } from './InlineImageGallery'
 import type { AgentTaskNotification } from '../../types/chat'
 import { PlanPreviewCard, extractPlanPreview, isExitPlanModeTool } from './PlanModePreview'
+import { extractPartialJsonStringField } from './extractPartialJsonStringField'
 import { RollingDiffStats } from './RollingDiffStats'
 import type { DiffStats } from './diffStats'
 
@@ -36,6 +37,21 @@ const TOOL_ICONS: Record<string, string> = {
   WebFetch: 'cloud_download',
   NotebookEdit: 'note',
   Skill: 'auto_awesome',
+}
+
+/* Chinese action labels: [进行中, 已完成] */
+const TOOL_ACTION_LABEL: Record<string, [string, string]> = {
+  Bash: ['正在运行', '已运行'],
+  Read: ['正在读取', '已读取'],
+  Write: ['正在写入', '已写入'],
+  Edit: ['正在编辑', '已编辑'],
+  Glob: ['正在搜索', '已搜索'],
+  Grep: ['正在搜索', '已搜索'],
+  Agent: ['正在派发', '已派发'],
+  WebSearch: ['正在搜索', '已搜索'],
+  WebFetch: ['正在获取', '已获取'],
+  NotebookEdit: ['正在编辑', '已编辑'],
+  Skill: ['正在执行', '已执行'],
 }
 
 const WRITER_PREVIEW_MAX_LINES = 120
@@ -109,7 +125,7 @@ export const ToolCallBlock = memo(function ToolCallBlock({ toolName, input, resu
       >
         <span className="codex-execution-icon material-symbols-outlined icon-xs text-[var(--color-outline)]">{icon}</span>
           <span className="text-[11px] font-semibold tracking-[0.03em] text-[var(--color-token-text-secondary)]">
-            {toolName}
+            {isPending && !result ? (TOOL_ACTION_LABEL[toolName]?.[0] || '正在执行') : (TOOL_ACTION_LABEL[toolName]?.[1] || '已执行')} {toolName}
           </span>
         {filePath ? (
           <span className="flex min-w-0 flex-1 items-center gap-1.5">
@@ -388,76 +404,6 @@ function renderDetails(
       <CodeViewer code={text} language="json" maxLines={18} />
     </div>
   )
-}
-
-function extractPartialJsonStringField(source: string, field: string): string | null {
-  const key = `"${field}"`
-  const keyIndex = source.indexOf(key)
-  if (keyIndex < 0) return null
-  const colonIndex = source.indexOf(':', keyIndex + key.length)
-  if (colonIndex < 0) return null
-
-  let index = colonIndex + 1
-  while (index < source.length && /\s/.test(source[index] ?? '')) index += 1
-  if (source[index] !== '"') return null
-  index += 1
-
-  let value = ''
-  while (index < source.length) {
-    const char = source[index]
-    if (char === '"') return value
-    if (char !== '\\') {
-      value += char
-      index += 1
-      continue
-    }
-
-    const escaped = source[index + 1]
-    if (escaped === undefined) break
-    switch (escaped) {
-      case 'n':
-        value += '\n'
-        index += 2
-        break
-      case 'r':
-        value += '\r'
-        index += 2
-        break
-      case 't':
-        value += '\t'
-        index += 2
-        break
-      case 'b':
-        value += '\b'
-        index += 2
-        break
-      case 'f':
-        value += '\f'
-        index += 2
-        break
-      case '"':
-      case '\\':
-      case '/':
-        value += escaped
-        index += 2
-        break
-      case 'u': {
-        const hex = source.slice(index + 2, index + 6)
-        if (/^[0-9a-fA-F]{4}$/.test(hex)) {
-          value += String.fromCharCode(Number.parseInt(hex, 16))
-          index += 6
-        } else {
-          index = source.length
-        }
-        break
-      }
-      default:
-        value += escaped
-        index += 2
-        break
-    }
-  }
-  return value
 }
 
 function getToolContentStats(

@@ -1684,13 +1684,19 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           }))
         }
         if (msg.blockType === 'text') {
-          update((s) => ({
-            ...(pendingText !== s.streamingText ? { streamingText: pendingText } : {}),
-            chatState: 'streaming',
-            activeThinkingId: null,
-            apiRetry: null,
-            streamingFallback: null,
-          }))
+          update((s) => {
+            // If a tool result hasn't arrived yet (activeToolUseId preserved from
+            // tool_use_complete), buffer the text but stay in tool_executing so the
+            // tool call card shows completion before assistant text appears.
+            const toolResultPending = Boolean(s.activeToolUseId)
+            return {
+              ...(pendingText !== s.streamingText ? { streamingText: pendingText } : {}),
+              chatState: toolResultPending ? 'tool_executing' : 'streaming',
+              activeThinkingId: null,
+              apiRetry: null,
+              streamingFallback: null,
+            }
+          })
         } else if (msg.blockType === 'tool_use') {
           clearPendingToolInputDelta(sessionId)
           rememberPendingToolParentUseId(sessionId, msg.toolUseId, msg.parentToolUseId)
@@ -1864,7 +1870,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
                 input: msg.input,
                 timestamp: existing?.timestamp ?? Date.now(),
                 parentToolUseId,
-                isPending: false,
+              isPending: false,
               }))
             : [...s.messages, {
                 id: nextId(), type: 'tool_use', toolName,
@@ -1872,7 +1878,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
                 input: msg.input, timestamp: Date.now(), parentToolUseId,
                 isPending: false,
               }],
-          activeToolUseId: null, activeToolName: null, activeThinkingId: null, streamingToolInput: '',
+          // Keep activeToolUseId/activeToolName until tool_result arrives so the
+          // UI knows a tool is still in-flight (isPending=false but no result yet).
+          // This prevents streamingText from appearing before the tool result is shown.
+          activeToolUseId: toolUseId || null, activeToolName: toolName || null, activeThinkingId: null, streamingToolInput: '',
+          chatState: 'tool_executing',
         }))
         if (toolName === 'TodoWrite' && Array.isArray((msg.input as any)?.todos)) {
           useCLITaskStore.getState().setTasksFromTodos((msg.input as any).todos, sessionId)
@@ -1908,6 +1918,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
             ...(stoppedTask ? { backgroundAgentTasks } : {}),
             chatState: 'thinking',
             activeThinkingId: null,
+            // Now that tool_result has arrived, clear the active tool state that was
+            // preserved from tool_use_complete. This allows content_start(text) to
+            // transition chatState to 'streaming' and show streamingText.
+            ...(s.activeToolUseId === msg.toolUseId ? { activeToolUseId: null, activeToolName: null } : {}),
           }
         })
         if (consumePendingTaskToolUseId(sessionId, msg.toolUseId)) {
@@ -1998,6 +2012,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           tokenUsage: msg.usage,
           chatState: 'idle',
           activeThinkingId: null,
+          activeToolUseId: null,
+          activeToolName: null,
           pendingPermission: null,
           pendingComputerUsePermission: null,
           elapsedTimer: null,
