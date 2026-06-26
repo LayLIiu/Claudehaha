@@ -71,6 +71,7 @@ export const en = {
   'sidebar.collapseProject': 'Collapse {project}',
   'sidebar.worktree': 'worktree',
   'sidebar.sessionRunning': 'Session running',
+  'sidebar.sessionUnread': 'New response',
   'sidebar.missingDir': 'missing dir',
   'sidebar.confirmDelete': 'Delete this session? This cannot be undone.',
   'sidebar.batchManage': 'Batch manage',

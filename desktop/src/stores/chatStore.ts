@@ -495,6 +495,20 @@ function appendAssistantTextMessage(
     return messages
   }
 
+  // Suppress flush-after-flush duplicates: when message_complete flushes
+  // streamingText and then status:idle arrives before the state update
+  // propagates, the same content would be merged into the last message,
+  // producing "texttext".  If the last assistant_text already contains the
+  // full incoming content, skip it.
+  if (
+    last?.type === 'assistant_text' &&
+    !transcriptMessageId &&
+    !last.transcriptMessageId &&
+    last.content.trim().includes(trimmedContent)
+  ) {
+    return messages
+  }
+
   const canMergeIntoLast =
     last?.type === 'assistant_text' &&
     (

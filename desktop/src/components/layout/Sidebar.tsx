@@ -156,6 +156,34 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
     }
     return ids
   }, [chatSessions, tabs])
+
+  // Unread indicator: blue dot appears when a session finishes responding
+  // and disappears when the user clicks on that session.
+  const [unreadSessionIds, setUnreadSessionIds] = useState<Set<string>>(new Set())
+  const prevRunningRef = useRef<Set<string>>(runningSessionIds)
+  useEffect(() => {
+    const prev = prevRunningRef.current
+    const next = new Set<string>(unreadSessionIds)
+    for (const id of prev) {
+      if (!runningSessionIds.has(id)) {
+        // Session just finished running → mark as unread
+        next.add(id)
+      }
+    }
+    prevRunningRef.current = runningSessionIds
+    if (next.size !== unreadSessionIds.size || [...next].some(id => !unreadSessionIds.has(id))) {
+      setUnreadSessionIds(next)
+    }
+  }, [runningSessionIds])
+
+  const clearUnread = useCallback((sessionId: string) => {
+    setUnreadSessionIds(prev => {
+      if (!prev.has(sessionId)) return prev
+      const next = new Set(prev)
+      next.delete(sessionId)
+      return next
+    })
+  }, [])
   const pendingPermissionSessionIds = useMemo(() => {
     const ids = new Set<string>()
     for (const [sessionId, sessionState] of Object.entries(chatSessions)) {
@@ -999,6 +1027,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                       handleBatchSessionClick(event, session.id)
                                       return
                                     }
+                                    clearUnread(session.id)
                                     setSelectedProjectKey(null)
                                     useTabStore.getState().openTab(session.id, session.title)
                                     useChatStore.getState().connectToSession(session.id)
@@ -1052,6 +1081,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                     )}
                                     <SessionRowMeta
                                       isRunning={runningSessionIds.has(session.id)}
+                                      hasUnread={unreadSessionIds.has(session.id)}
                                       isWorktree={isWorktreeSession(session)}
                                       modifiedAt={session.modifiedAt}
                                       t={t}
@@ -1947,11 +1977,13 @@ function ProjectMenuItem({
 
 function SessionRowMeta({
   isRunning,
+  hasUnread,
   isWorktree,
   modifiedAt,
   t,
 }: {
   isRunning: boolean
+  hasUnread?: boolean
   isWorktree: boolean
   modifiedAt: string
   t: (key: TranslationKey, params?: Record<string, string | number>) => string
@@ -1964,6 +1996,13 @@ function SessionRowMeta({
       className="ml-auto flex h-5 min-w-0 flex-shrink-0 items-center justify-end gap-1.5 text-[10px] font-medium tabular-nums text-[var(--color-token-description-foreground)]"
       title={updatedLabel}
     >
+      {hasUnread && !isRunning && (
+        <span
+          className="inline-block h-[7px] w-[7px] flex-shrink-0 rounded-full bg-[var(--color-brand)]"
+          aria-label={t('sidebar.sessionUnread')}
+          title={t('sidebar.sessionUnread')}
+        />
+      )}
       {isRunning && (
         <span
           className="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center text-[var(--color-token-charts-green)]"

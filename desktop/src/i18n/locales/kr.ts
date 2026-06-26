@@ -73,6 +73,7 @@ export const kr: Record<TranslationKey, string> = {
   'sidebar.collapseProject': '{project} 접기',
   'sidebar.worktree': 'worktree',
   'sidebar.sessionRunning': '세션 실행 중',
+  'sidebar.sessionUnread': '새 응답',
   'sidebar.missingDir': '디렉터리 없음',
   'sidebar.confirmDelete': '이 세션을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.',
   'sidebar.batchManage': '일괄 관리',

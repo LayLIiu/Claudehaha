@@ -73,6 +73,7 @@ export const zh: Record<TranslationKey, string> = {
   'sidebar.collapseProject': '摺疊 {project}',
   'sidebar.worktree': 'worktree',
   'sidebar.sessionRunning': '會話執行中',
+  'sidebar.sessionUnread': '新回覆',
   'sidebar.missingDir': '目錄缺失',
   'sidebar.confirmDelete': '確定要刪除這個會話嗎？此操作不可撤銷。',
   'sidebar.batchManage': '批次管理',

@@ -73,6 +73,7 @@ export const jp: Record<TranslationKey, string> = {
   'sidebar.collapseProject': '{project} を折りたたむ',
   'sidebar.worktree': 'worktree',
   'sidebar.sessionRunning': 'セッション実行中',
+  'sidebar.sessionUnread': '新しい返信',
   'sidebar.missingDir': 'ディレクトリがありません',
   'sidebar.confirmDelete': 'このセッションを削除しますか？この操作は取り消せません。',
   'sidebar.batchManage': '一括管理',
