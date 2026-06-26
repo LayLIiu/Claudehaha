@@ -492,14 +492,18 @@ function SelectableChatMessage({
 
   useEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {
+      // Ignore right-click / non-primary buttons to preserve native context menu copy
+      if (event.button !== 0) return
       lastSelectionPointerRef.current = getSelectionPointer(event)
     }
 
     const handlePointerUp = (event: PointerEvent) => {
+      if (event.button !== 0) return
       queueSelectionMenuUpdate(getSelectionPointer(event))
     }
 
     const handleMouseUp = (event: MouseEvent) => {
+      if (event.button !== 0) return
       queueSelectionMenuUpdate(getSelectionPointer(event))
     }
 

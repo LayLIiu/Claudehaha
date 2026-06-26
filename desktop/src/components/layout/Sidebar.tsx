@@ -1035,7 +1035,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                   }}
                                   onContextMenu={(e) => handleContextMenu(e, session.id)}
                                   className={`
-                                    sidebar-session-row group/session w-full pl-[28px] pr-2 ${isMobile ? 'py-3' : 'py-[5px]'} text-left text-[13px] transition-[background,color] duration-150
+                                    sidebar-session-row group/session relative w-full pl-[28px] pr-2 ${isMobile ? 'py-3' : 'py-[5px]'} text-left text-[13px] transition-[background,color] duration-150
                                     ${selectedSessionIds.has(session.id)
                                       ? 'sidebar-session-row--selected text-[var(--color-token-foreground)]'
                                       : session.id === activeTabId
@@ -1045,6 +1045,13 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                   `}
                                   aria-pressed={isBatchMode ? selectedSessionIds.has(session.id) : undefined}
                                 >
+                                  {unreadSessionIds.has(session.id) && !runningSessionIds.has(session.id) && !isBatchMode && (
+                                    <span
+                                      className="absolute left-2.5 top-1/2 -translate-y-1/2 inline-block h-[7px] w-[7px] rounded-full bg-[#5B9BF5] shadow-[0_0_4px_rgba(91,155,245,0.6)]"
+                                      aria-label={t('sidebar.sessionUnread')}
+                                      title={t('sidebar.sessionUnread')}
+                                    />
+                                  )}
                                   <span className="flex min-w-0 items-center gap-2">
                                     {isBatchMode ? (
                                       <span
@@ -1081,7 +1088,6 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                     )}
                                     <SessionRowMeta
                                       isRunning={runningSessionIds.has(session.id)}
-                                      hasUnread={unreadSessionIds.has(session.id)}
                                       isWorktree={isWorktreeSession(session)}
                                       modifiedAt={session.modifiedAt}
                                       t={t}
@@ -1977,13 +1983,11 @@ function ProjectMenuItem({
 
 function SessionRowMeta({
   isRunning,
-  hasUnread,
   isWorktree,
   modifiedAt,
   t,
 }: {
   isRunning: boolean
-  hasUnread?: boolean
   isWorktree: boolean
   modifiedAt: string
   t: (key: TranslationKey, params?: Record<string, string | number>) => string
@@ -1996,13 +2000,6 @@ function SessionRowMeta({
       className="ml-auto flex h-5 min-w-0 flex-shrink-0 items-center justify-end gap-1.5 text-[10px] font-medium tabular-nums text-[var(--color-token-description-foreground)]"
       title={updatedLabel}
     >
-      {hasUnread && !isRunning && (
-        <span
-          className="inline-block h-[7px] w-[7px] flex-shrink-0 rounded-full bg-[var(--color-brand)]"
-          aria-label={t('sidebar.sessionUnread')}
-          title={t('sidebar.sessionUnread')}
-        />
-      )}
       {isRunning && (
         <span
           className="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center text-[var(--color-token-charts-green)]"

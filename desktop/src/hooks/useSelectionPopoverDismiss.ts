@@ -156,6 +156,8 @@ export function useSelectionPopoverDismiss({
     }
 
     const handlePointerDown = (event: PointerEvent) => {
+      // Ignore right-click / non-primary buttons to preserve native context menu copy
+      if (event.button !== 0) return
       const popover = popoverRef.current
       const target = event.target
       if (popover && target instanceof Node && popover.contains(target)) {

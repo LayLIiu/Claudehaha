@@ -125,7 +125,7 @@ export const ToolCallBlock = memo(function ToolCallBlock({ toolName, input, resu
       >
         <span className="codex-execution-icon material-symbols-outlined icon-xs text-[var(--color-outline)]">{icon}</span>
           <span className="text-[11px] font-semibold tracking-[0.03em] text-[var(--color-token-text-secondary)]">
-            {isPending && !result ? (TOOL_ACTION_LABEL[toolName]?.[0] || '正在执行') : (TOOL_ACTION_LABEL[toolName]?.[1] || '已执行')} {toolName}
+            {!result ? (TOOL_ACTION_LABEL[toolName]?.[0] || '正在执行') : (TOOL_ACTION_LABEL[toolName]?.[1] || '已执行')} {toolName}
           </span>
         {filePath ? (
           <span className="flex min-w-0 flex-1 items-center gap-1.5">

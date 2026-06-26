@@ -12,7 +12,7 @@
     -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https: http://127.0.0.1:* http://localhost:*; connect-src 'self' https: http://127.0.0.1:* http://localhost:* ws://127.0.0.1:* ws://localhost:*; worker-src 'self' blob:; object-src 'none'; base-uri 'self'"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https: http:; connect-src 'self' https: http: ws: wss:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Claude Code Haha</title>
@@ -108,6 +108,27 @@
         window.setTimeout(function () {
           renderStartupError('Desktop app did not finish bootstrapping within ' + bootDeadlineMs + 'ms. This usually means the WebView could not execute the app bundle or startup code stopped before React mounted.')
         }, bootDeadlineMs)
+      })()
+    </script>
+    <!-- HarmonyOS JS bridge for H5 token injection -->
+    <script>
+      (function() {
+        var maxWait = 5000
+        var start = Date.now()
+        var interval = setInterval(function() {
+          try {
+            if (window.harmonyBridge && typeof window.harmonyBridge.getConfig === 'function') {
+              clearInterval(interval)
+              var raw = window.harmonyBridge.getConfig()
+              if (!raw) return
+              var config = typeof raw === 'string' ? JSON.parse(raw) : raw
+              if (config.serverUrl) localStorage.setItem('cc-haha-h5-server-url', config.serverUrl)
+              if (config.token) localStorage.setItem('cc-haha-h5-token', config.token)
+              console.log('[harmony] bridge config loaded:', config.serverUrl)
+            }
+          } catch(e) {}
+          if (Date.now() - start > maxWait) clearInterval(interval)
+        }, 50)
       })()
     </script>
   </head>

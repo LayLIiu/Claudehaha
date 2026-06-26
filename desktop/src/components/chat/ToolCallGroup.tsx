@@ -25,6 +25,21 @@ type ToolCall = Extract<UIMessage, { type: 'tool_use' }>
 type ToolResult = Extract<UIMessage, { type: 'tool_result' }>
 type MemoryToolAction = 'saved' | 'referenced'
 
+/** Chinese action labels: [进行中, 已完成] — mirrors ToolCallBlock.tsx */
+const TOOL_ACTION_LABEL: Record<string, [string, string]> = {
+  Bash: ['正在运行', '已运行'],
+  Read: ['正在读取', '已读取'],
+  Write: ['正在写入', '已写入'],
+  Edit: ['正在编辑', '已编辑'],
+  Glob: ['正在搜索', '已搜索'],
+  Grep: ['正在搜索', '已搜索'],
+  Agent: ['正在派发', '已派发'],
+  WebSearch: ['正在搜索', '已搜索'],
+  WebFetch: ['正在获取', '已获取'],
+  NotebookEdit: ['正在编辑', '已编辑'],
+  Skill: ['正在执行', '已执行'],
+}
+
 type MemoryToolFile = {
   path: string
   label: string
@@ -145,7 +160,8 @@ export function generateToolActivitySummary(
   return parts.length === 0 ? t('toolActivity.fallback') : parts.join(', ')
 }
 
-/** Generate a live title showing the LAST currently executing tool (e.g. "npm test" / "src/app.tsx") */
+/** Generate a live detail string for the currently executing tool (file name, command, pattern, etc.).
+ *  Returns only the detail part — the verb prefix is added by RunningToolTitle. */
 function generateActiveTitle(toolCall: ToolCall | null): string {
   if (!toolCall) return ''
   const obj = toolCall.input && typeof toolCall.input === 'object' ? (toolCall.input as Record<string, unknown>) : {}
@@ -164,35 +180,39 @@ function generateActiveTitle(toolCall: ToolCall | null): string {
     }
     case 'Read': {
       const filePath = getStringField('file_path')
-      const fp = filePath ? filePath.split('/').pop() : ''
-      return fp ? `读取 ${fp}` : '读取文件'
+      return filePath ? filePath.split('/').pop() || '' : ''
     }
     case 'Write': {
       const filePath = getStringField('file_path')
-      const fp = filePath ? filePath.split('/').pop() : ''
-      return fp ? `正在写入 ${fp}` : ''
+      return filePath ? filePath.split('/').pop() || '' : ''
     }
     case 'Edit': {
       const filePath = getStringField('file_path')
-      const fp = filePath ? filePath.split('/').pop() : ''
-      return fp ? `正在编辑 ${fp}` : ''
+      return filePath ? filePath.split('/').pop() || '' : ''
     }
     case 'MultiEdit': {
       const filePath = getStringField('file_path')
-      const fp = filePath ? filePath.split('/').pop() : ''
-      return fp ? `正在批量编辑 ${fp}` : ''
+      return filePath ? filePath.split('/').pop() || '' : ''
     }
     case 'Glob': {
       const pat = getStringField('pattern')
-      return pat ? `查找 ${pat}` : '查找文件'
+      return pat || ''
     }
     case 'Grep': {
       const pat = getStringField('pattern')
-      return pat ? `搜索 ${pat}` : '搜索内容'
+      return pat || ''
     }
     case 'Agent': {
       const desc = getStringField('description')
-      return desc || '执行任务'
+      return desc || ''
+    }
+    case 'WebSearch': {
+      const q = getStringField('query')
+      return q || ''
+    }
+    case 'WebFetch': {
+      const url = getStringField('url')
+      return url || ''
     }
     default:
       return toolCall.toolName
@@ -223,6 +243,23 @@ function ActiveEditTitle({
       <span className="truncate">{verb} {stats.label}</span>
       <span className="shrink-0 text-[11px] text-[rgba(255,255,255,0.46)]">·</span>
       <RollingDiffStats stats={stats} variant="inline" className="text-[13px] font-medium" />
+    </span>
+  )
+}
+
+/** Shimmer only on the verb prefix (e.g. "正在运行"), not on the detail (file name / command). */
+function RunningToolTitle({ toolName, detail }: { toolName: string; detail: string }) {
+  const verb = TOOL_ACTION_LABEL[toolName]?.[0] || '正在执行'
+  return (
+    <span className="flex min-w-0 items-center gap-1">
+      <CadencedShimmerText>
+        <span>{verb}</span>
+      </CadencedShimmerText>
+      {detail && (
+        <span className="min-w-0 truncate font-[var(--font-mono)] text-[11px] text-[var(--color-token-text-secondary)]">
+          {detail}
+        </span>
+      )}
     </span>
   )
 }
@@ -677,13 +714,9 @@ function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isSt
         <span className="flex-1 truncate text-[var(--text-size-chat)] text-[var(--color-token-conversation-summary-trailing)] group-hover/collapsed-tool-activity:text-[var(--color-token-foreground)]">
           {isRunning ? (
             effectiveRunningDisplay?.editStats ? (
-              <CadencedShimmerText className="block">
-                <ActiveEditTitle toolName={effectiveRunningDisplay.toolCall.toolName} stats={effectiveRunningDisplay.editStats} />
-              </CadencedShimmerText>
+              <ActiveEditTitle toolName={effectiveRunningDisplay.toolCall.toolName} stats={effectiveRunningDisplay.editStats} />
             ) : effectiveRunningDisplay?.title ? (
-              <CadencedShimmerText>
-                {effectiveRunningDisplay.title}
-              </CadencedShimmerText>
+              <RunningToolTitle toolName={effectiveRunningDisplay.toolCall.toolName} detail={effectiveRunningDisplay.title} />
             ) : null
           ) : summaryContent}
         </span>

@@ -1619,8 +1619,11 @@ fn reserve_local_port(bind_host: &str) -> Result<u16, String> {
 
 /// 按优先级尝试给定端口（h5Access.fixedPort > 上次使用的端口），
 /// 全部被占用时回退到 OS 随机分配。保证 app 总能启动。
+///
+/// 对于 h5Access.fixedPort（preferred[0]），如果被占用，尝试杀掉占用进程后重试，
+/// 确保手机端始终能通过固定端口连接桌面端。
 fn reserve_local_port_with_preference(bind_host: &str, preferred: &[u16]) -> Result<u16, String> {
-    for &port in preferred {
+    for (i, &port) in preferred.iter().enumerate() {
         match TcpListener::bind(format!("{bind_host}:{port}")) {
             Ok(listener) => {
                 drop(listener);
@@ -1628,10 +1631,73 @@ fn reserve_local_port_with_preference(bind_host: &str, preferred: &[u16]) -> Res
             }
             Err(err) => {
                 eprintln!("[desktop] preferred server port {port} unavailable: {err}");
+                // 对于 fixedPort（第一个优先端口），尝试杀掉占用进程后重试
+                if i == 0 && cfg!(target_os = "macos") {
+                    eprintln!("[desktop] attempting to kill process occupying fixed port {port}...");
+                    if try_kill_port_occupant(port) {
+                        // 等待端口释放
+                        std::thread::sleep(std::time::Duration::from_millis(500));
+                        match TcpListener::bind(format!("{bind_host}:{port}")) {
+                            Ok(listener2) => {
+                                drop(listener2);
+                                eprintln!("[desktop] successfully reclaimed fixed port {port}");
+                                return Ok(port);
+                            }
+                            Err(err2) => {
+                                eprintln!("[desktop] fixed port {port} still unavailable after kill: {err2}");
+                            }
+                        }
+                    }
+                }
             }
         }
     }
     reserve_local_port(bind_host)
+}
+
+/// 尝试杀掉占用指定端口的进程。返回 true 如果成功杀掉了进程。
+#[cfg(target_os = "macos")]
+fn try_kill_port_occupant(port: u16) -> bool {
+    use std::process::Command;
+    // 用 lsof 找到占用端口的 PID
+    let output = Command::new("lsof")
+        .args(["-i", &format!(":{port}"), "-t", "-sTCP:LISTEN"])
+        .output();
+    match output {
+        Ok(out) if out.status.success() => {
+            let stdout = String::from_utf8_lossy(&out.stdout);
+            let pids: Vec<u32> = stdout
+                .lines()
+                .filter_map(|line| line.trim().parse::<u32>().ok())
+                .collect();
+            if pids.is_empty() {
+                eprintln!("[desktop] no LISTEN process found on port {port}");
+                return false;
+            }
+            for pid in pids {
+                eprintln!("[desktop] killing process {pid} occupying port {port}");
+                let kill_result = Command::new("kill")
+                    .args([&pid.to_string()])
+                    .output();
+                match kill_result {
+                    Ok(ko) if ko.status.success() => {
+                        eprintln!("[desktop] killed process {pid}");
+                    }
+                    _ => {
+                        eprintln!("[desktop] failed to kill process {pid}, trying SIGKILL");
+                        let _ = Command::new("kill")
+                            .args(["-9", &pid.to_string()])
+                            .output();
+                    }
+                }
+            }
+            true
+        }
+        _ => {
+            eprintln!("[desktop] lsof failed for port {port}");
+            false
+        }
+    }
 }
 
 fn wait_for_server(url_host: &str, port: u16) -> Result<(), String> {

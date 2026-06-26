@@ -43,6 +43,7 @@ import {
 } from '../../lib/composerAttachments'
 import { useComposerFileDrop } from './useComposerFileDrop'
 import { shouldSubmitOnEnter } from './sendShortcut'
+import { ClawdPersona } from './ClawdPersona'
 
 type GitInfo = SessionGitInfo
 
@@ -1017,6 +1018,8 @@ export function ChatInput({
               description={t('chat.dropFilesHint')}
             />
           )}
+
+          {isActive && <ClawdPersona width={80} height={55} className="absolute -top-[55px] right-2 z-5" />}
 
           {!isMemberSession && fileSearchOpen && (
             <FileSearchMenu
