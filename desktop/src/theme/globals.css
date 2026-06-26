@@ -1707,7 +1707,11 @@ button, input, textarea, select, a, [role="button"] {
   opacity: 1;
   will-change: opacity;
   transform: translateX(0);
-  transition: opacity 220ms ease;
+}
+
+.sidebar-shell--hidden {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .sidebar-shell:not(.sidebar-shell--mobile)[data-state="closed"] {

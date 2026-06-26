@@ -599,7 +599,7 @@ function isExplorationGroup(toolCalls: ToolCall[]): boolean {
 /** Max visible tool calls before burst-fold kicks in (mirrors iOS collapsedVisibleCount = 5) */
 const TOOL_BURST_VISIBLE_COUNT = 5
 
-export function buildRenderModel(messages: UIMessage[], activeAskUserQuestionToolUseId?: string | null, isChatActive?: boolean): RenderModel {
+export function buildRenderModel(messages: UIMessage[], activeAskUserQuestionToolUseId?: string | null, hasStreamingAnswer?: boolean): RenderModel {
   const items: RenderItem[] = []
   const toolResultMap = new Map<string, ToolResult>()
   const childToolCallsByParent = new Map<string, ToolCall[]>()
@@ -759,8 +759,7 @@ export function buildRenderModel(messages: UIMessage[], activeAskUserQuestionToo
   // ── Turn collapse projection ──
   // Apply turn collapse in both idle and streaming states.
   // During streaming, collapse the active turn only when tools are done (AI is writing summary).
-  // While tools are still executing, keep the active turn fully visible.
-  return { renderItems: applyTurnCollapse(items, isChatActive), toolResultMap, childToolCallsByParent }
+  return { renderItems: applyTurnCollapse(items, hasStreamingAnswer), toolResultMap, childToolCallsByParent }
 }
 
 /**
@@ -813,7 +812,7 @@ function buildTurnGroups(renderItems: RenderItem[]): TurnGroup[] {
  * A "turn" = user_text → [process items] → final assistant_text.
  * Process items include thinking, tool_group, tool_burst, and non-final assistant_text.
  */
-function applyTurnCollapse(items: RenderItem[], isChatActive?: boolean): RenderItem[] {
+function applyTurnCollapse(items: RenderItem[], hasStreamingAnswer?: boolean): RenderItem[] {
   const result: RenderItem[] = []
   let currentUserMsgId: string | null = null
   let currentUserMsgTimestamp: number | null = null
@@ -826,7 +825,6 @@ function applyTurnCollapse(items: RenderItem[], isChatActive?: boolean): RenderI
 
   const flushCurrentTurn = (isLast: boolean) => {
     if (currentUserMsgId === null) return
-    const shouldCollapse = !(isLast && isChatActive)
 
     // Find the last assistant_text — the final answer that stays visible
     let lastAssistantIdx = -1
@@ -838,50 +836,52 @@ function applyTurnCollapse(items: RenderItem[], isChatActive?: boolean): RenderI
       }
     }
 
-    if (lastAssistantIdx >= 0) {
+    // When streaming answer exists but hasn't been committed as a message yet,
+    // treat the entire turnItems as process content (no final assistant in messages).
+    // This ensures the process collapses BEFORE the streaming summary appears.
+    const hasFinalAnswer = lastAssistantIdx >= 0 || (isLast && hasStreamingAnswer)
+
+    if (hasFinalAnswer) {
       // Everything before the final assistant is process content
-      const processItems = turnItems.slice(0, lastAssistantIdx)
-      const finalAssistant = turnItems[lastAssistantIdx]!
+      const processItems = lastAssistantIdx >= 0
+        ? turnItems.slice(0, lastAssistantIdx)
+        : turnItems
+      const finalAssistant = lastAssistantIdx >= 0 ? turnItems[lastAssistantIdx]! : null
       // Items after the final assistant (rare edge case)
-      const afterItems = turnItems.slice(lastAssistantIdx + 1)
+      const afterItems = lastAssistantIdx >= 0 ? turnItems.slice(lastAssistantIdx + 1) : []
 
       if (processItems.length > 0) {
-        if (shouldCollapse) {
-          const stepCount = countProcessSteps(processItems)
-          if (stepCount > 0) {
-            // Derive endTime from the last process item
-            let endTime: number | null = null
-            for (let i = processItems.length - 1; i >= 0; i--) {
-              const pi = processItems[i]!
-              if (pi.kind === 'message' && pi.message.timestamp != null) { endTime = pi.message.timestamp; break }
-              if ((pi.kind === 'tool_group' || pi.kind === 'web_search_group' || pi.kind === 'exploration_group') && pi.toolCalls.length > 0) {
-                endTime = pi.toolCalls[pi.toolCalls.length - 1]!.timestamp; break
-              }
-              if (pi.kind === 'tool_burst') {
-                const all = [...pi.burst.pinnedToolCalls, ...pi.burst.overflowToolCalls]
-                if (all.length > 0) { endTime = all[all.length - 1]!.timestamp; break }
-              }
+        const stepCount = countProcessSteps(processItems)
+        if (stepCount > 0) {
+          // Derive endTime from the last process item
+          let endTime: number | null = null
+          for (let i = processItems.length - 1; i >= 0; i--) {
+            const pi = processItems[i]!
+            if (pi.kind === 'message' && pi.message.timestamp != null) { endTime = pi.message.timestamp; break }
+            if ((pi.kind === 'tool_group' || pi.kind === 'web_search_group' || pi.kind === 'exploration_group') && pi.toolCalls.length > 0) {
+              endTime = pi.toolCalls[pi.toolCalls.length - 1]!.timestamp; break
             }
-            result.push({
-              kind: 'turn_process',
-              group: {
-                userMsgId: currentUserMsgId!,
-                processItems: [...processItems],
-                stepCount,
-                startTime: currentUserMsgTimestamp,
-                endTime,
-              },
-              id: `turn-${currentUserMsgId}-${result.length}`,
-            })
+            if (pi.kind === 'tool_burst') {
+              const all = [...pi.burst.pinnedToolCalls, ...pi.burst.overflowToolCalls]
+              if (all.length > 0) { endTime = all[all.length - 1]!.timestamp; break }
+            }
           }
-        } else {
-          // Active turn — keep everything visible in original order
-          for (const pi of processItems) result.push(pi)
+          result.push({
+            kind: 'turn_process',
+            group: {
+              userMsgId: currentUserMsgId!,
+              processItems: [...processItems],
+              stepCount,
+              startTime: currentUserMsgTimestamp,
+              endTime,
+            },
+            id: `turn-${currentUserMsgId}-${result.length}`,
+          })
         }
       }
 
       // Final assistant answer is always visible
-      result.push(finalAssistant)
+      if (finalAssistant) result.push(finalAssistant)
 
       // Any trailing items after the final assistant
       for (const ai of afterItems) result.push(ai)
@@ -2073,10 +2073,10 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
     return () => observer.disconnect()
   }, [scrollToBottom])
 
-  const isChatActive = chatState !== 'idle'
+  const hasStreamingAnswer = streamingText.trim().length > 0 || chatState === 'streaming'
   const { toolResultMap, childToolCallsByParent, renderItems } = useMemo(
-    () => buildRenderModel(messages, activeAskUserQuestionToolUseId, isChatActive),
-    [activeAskUserQuestionToolUseId, isChatActive, messages],
+    () => buildRenderModel(messages, activeAskUserQuestionToolUseId, hasStreamingAnswer),
+    [activeAskUserQuestionToolUseId, hasStreamingAnswer, messages],
   )
   // Tool groups that have been followed by assistant text, meaning the group's
   // work is done and it should show its summary (even if the turn is still

@@ -832,7 +832,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                 </div>
               </div>
             )}
-            <div className="sidebar-scroll-area min-h-0 flex-1 overflow-y-auto px-3 pb-20">
+            <div className="sidebar-scroll-area min-h-0 flex-1 overflow-y-auto px-0 pb-20">
               {error && (
                 <div className="mx-1 mt-2 rounded-[var(--radius-md)] border border-[var(--color-error)]/20 bg-[var(--color-error)]/5 px-3 py-2">
                   <div className="text-xs font-medium text-[var(--color-error)]">{t('sidebar.sessionListFailed')}</div>
@@ -889,7 +889,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                         setProjectDropTarget((current) => current?.key === project.key ? null : current)
                       }
                     }}
-                    className={`group/project relative mb-0.5 px-1 transition-opacity ${isProjectDragging ? 'opacity-50' : ''}`}
+                    className={`group/project relative mb-0.5 px-0 transition-opacity ${isProjectDragging ? 'opacity-50' : ''}`}
                   >
                     {dropBefore && (
                       <div className="pointer-events-none absolute -top-1 left-1 right-1 z-10 h-0.5 rounded-full bg-[var(--color-brand)]" />
@@ -1035,7 +1035,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                   }}
                                   onContextMenu={(e) => handleContextMenu(e, session.id)}
                                   className={`
-                                    sidebar-session-row group/session relative w-full pl-[28px] pr-2 ${isMobile ? 'py-3' : 'py-[5px]'} text-left text-[13px] transition-[background,color] duration-150
+                                    sidebar-session-row group/session relative w-full -ml-[8px] pl-0 pr-2 ${isMobile ? 'py-3' : 'py-[5px]'} text-left text-[13px] transition-[background,color] duration-150
                                     ${selectedSessionIds.has(session.id)
                                       ? 'sidebar-session-row--selected text-[var(--color-token-foreground)]'
                                       : session.id === activeTabId
@@ -1047,7 +1047,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                 >
                                   {unreadSessionIds.has(session.id) && !runningSessionIds.has(session.id) && !isBatchMode && (
                                     <span
-                                      className="absolute left-2.5 top-1/2 -translate-y-1/2 inline-block h-[7px] w-[7px] rounded-full bg-[#5B9BF5] shadow-[0_0_4px_rgba(91,155,245,0.6)]"
+                                      className="absolute left-[30px] top-1/2 -translate-y-1/2 inline-block h-[7px] w-[7px] rounded-full bg-[#5B9BF5] shadow-[0_0_4px_rgba(91,155,245,0.6)]"
                                       aria-label={t('sidebar.sessionUnread')}
                                       title={t('sidebar.sessionUnread')}
                                     />

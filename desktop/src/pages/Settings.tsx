@@ -209,7 +209,7 @@ export function Settings() {
   ]
 
   return (
-    <div className="settings-page-root flex-1 grid min-h-0 grid-cols-[64px_minmax(0,1fr)] lg:grid-cols-[300px_minmax(0,1fr)] overflow-hidden" data-desktop-drag-region={isDesktopRuntime() ? true : undefined}>
+    <div className="settings-page-root flex-1 grid min-h-0 grid-cols-[64px_minmax(0,1fr)] lg:grid-cols-[283px_minmax(0,1fr)] overflow-hidden" data-desktop-drag-region={isDesktopRuntime() ? true : undefined}>
       {/* Sidebar navigation */}
       <aside
         data-testid="settings-sidebar-panel"
