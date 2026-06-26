@@ -4,6 +4,7 @@ import { useChatStore } from '../../stores/chatStore'
 import { useTabStore } from '../../stores/tabStore'
 import { useTranslation, type TranslationKey } from '../../i18n'
 import { formatTokenCount } from '../../lib/formatTokenCount'
+import { ClaudeLogoWidget } from '../shared/ClaudeLogoWidget'
 
 function formatElapsed(seconds: number): string {
   if (seconds < 60) return `${seconds}s`
@@ -195,18 +196,20 @@ export function StreamingIndicator() {
   }
 
   return (
-    <div className="mb-2 flex w-fit items-center gap-2 rounded-full border border-[var(--color-token-border)]/40 bg-[var(--color-surface-container-low)] px-3 py-1">
-      <span className="text-[var(--color-brand)] animate-shimmer text-sm">✦</span>
+    <div className="mb-2 flex w-fit items-center gap-2.5 rounded-full border border-[var(--color-token-border)]/40 bg-[var(--color-surface-container-low)] px-4 py-1.5">
+      <div className="flex items-center justify-center w-[28px] h-[28px] shrink-0">
+        <ClaudeLogoWidget className="w-full h-full" forceMode={chatState === 'thinking' || chatState === 'tool_executing' ? 'thinking' : 'waiting'} interactive={false} />
+      </div>
       <CadencedShimmerText>
-        <span className="text-xs font-medium text-[var(--color-token-text-secondary)]">{verb}...</span>
+        <span className="text-[13px] font-medium text-[var(--color-token-text-secondary)]">{verb}...</span>
       </CadencedShimmerText>
       {elapsedSeconds > 0 && (
-        <span className="text-[10px] text-[var(--color-token-text-secondary)]">
+        <span className="text-[11px] text-[var(--color-token-text-secondary)]">
           {formatElapsed(elapsedSeconds)}
         </span>
       )}
       {streamingTokens > 0 && (
-        <span className="text-[10px] text-[var(--color-token-text-secondary)]">
+        <span className="text-[11px] text-[var(--color-token-text-secondary)]">
           · ↓ {t('common.tokens', { count: formatTokenCount(streamingTokens) })}
         </span>
       )}
@@ -245,13 +248,15 @@ export function StickyThinkingIndicator({ visible, compact }: { visible: boolean
   return (
     <div className={`sticky-thinking-indicator ${visible ? 'sticky-thinking-indicator--visible' : 'sticky-thinking-indicator--hidden'}`}>
       <div className={compact ? 'mx-auto max-w-full' : 'mx-auto max-w-[800px]'}>
-        <div className="flex items-center gap-2.5 px-3.5 py-2">
-          <span className="text-[var(--color-brand)] animate-shimmer text-sm">✦</span>
+        <div className="flex items-center gap-3 px-4 py-2.5">
+          <div className="flex items-center justify-center w-[28px] h-[28px] shrink-0">
+            <ClaudeLogoWidget className="w-full h-full" forceMode={chatState === 'thinking' || chatState === 'tool_executing' ? 'thinking' : 'waiting'} interactive={false} />
+          </div>
           <CadencedShimmerText active={false}>
-            <span className="text-[14px] font-medium">{verb}...</span>
+            <span className="text-[15px] font-medium">{verb}...</span>
           </CadencedShimmerText>
           {elapsedSeconds > 0 && (
-            <span className="text-[12px] text-[var(--color-token-text-secondary)] font-mono tabular-nums">
+            <span className="text-[13px] text-[var(--color-token-text-secondary)] font-mono tabular-nums">
               {formatElapsed(elapsedSeconds)}
             </span>
           )}

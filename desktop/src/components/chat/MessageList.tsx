@@ -813,42 +813,77 @@ function applyTurnCollapse(items: RenderItem[], isChatActive?: boolean): RenderI
   const result: RenderItem[] = []
   let currentUserMsgId: string | null = null
   let currentUserMsgTimestamp: number | null = null
-  let processItems: RenderItem[] = []
-  let lastAssistantItem: RenderItem | null = null
-  let lastAssistantTimestamp: number | null = null
+  // All items within a turn, preserving original order. The last
+  // assistant_text is the "final answer" that stays visible; everything
+  // before it (including intermediate assistant text like "好的，我去调查")
+  // is collapsed into a turn_process group — matching CodexMobile's
+  // "N 条之前的消息" pattern.
+  let turnItems: RenderItem[] = []
 
   const flushCurrentTurn = (isLast: boolean) => {
     if (currentUserMsgId === null) return
+    const shouldCollapse = !(isLast && isChatActive)
 
-    if (lastAssistantItem !== null) {
-      // Only collapse process items into a turn_process group when the turn
-      // has truly ended (chatState === 'idle').  While the turn is still
-      // active (streaming, thinking, tool_executing, etc.) the assistant
-      // text that appeared is intermediate process output, not a final
-      // summary — collapsing it would hide work-in-progress from the user.
-      if (isLast && isChatActive) {
-        for (const pi of processItems) result.push(pi)
-        result.push(lastAssistantItem)
-      } else {
-        const stepCount = countProcessSteps(processItems)
-        if (stepCount > 0) {
-          result.push({
-            kind: 'turn_process',
-            group: {
-              userMsgId: currentUserMsgId,
-              processItems: [...processItems],
-              stepCount,
-              startTime: currentUserMsgTimestamp,
-              endTime: lastAssistantTimestamp,
-            },
-            id: `turn-${currentUserMsgId}`,
-          })
-        }
-        result.push(lastAssistantItem)
+    // Find the last assistant_text — the final answer that stays visible
+    let lastAssistantIdx = -1
+    for (let i = turnItems.length - 1; i >= 0; i--) {
+      const ti = turnItems[i]!
+      if (ti.kind === 'message' && ti.message.type === 'assistant_text') {
+        lastAssistantIdx = i
+        break
       }
+    }
+
+    if (lastAssistantIdx >= 0) {
+      // Everything before the final assistant is process content
+      const processItems = turnItems.slice(0, lastAssistantIdx)
+      const finalAssistant = turnItems[lastAssistantIdx]!
+      // Items after the final assistant (rare edge case)
+      const afterItems = turnItems.slice(lastAssistantIdx + 1)
+
+      if (processItems.length > 0) {
+        if (shouldCollapse) {
+          const stepCount = countProcessSteps(processItems)
+          if (stepCount > 0) {
+            // Derive endTime from the last process item
+            let endTime: number | null = null
+            for (let i = processItems.length - 1; i >= 0; i--) {
+              const pi = processItems[i]!
+              if (pi.kind === 'message' && pi.message.timestamp != null) { endTime = pi.message.timestamp; break }
+              if ((pi.kind === 'tool_group' || pi.kind === 'web_search_group' || pi.kind === 'exploration_group') && pi.toolCalls.length > 0) {
+                endTime = pi.toolCalls[pi.toolCalls.length - 1]!.timestamp; break
+              }
+              if (pi.kind === 'tool_burst') {
+                const all = [...pi.burst.pinnedToolCalls, ...pi.burst.overflowToolCalls]
+                if (all.length > 0) { endTime = all[all.length - 1]!.timestamp; break }
+              }
+            }
+            result.push({
+              kind: 'turn_process',
+              group: {
+                userMsgId: currentUserMsgId!,
+                processItems: [...processItems],
+                stepCount,
+                startTime: currentUserMsgTimestamp,
+                endTime,
+              },
+              id: `turn-${currentUserMsgId}-${result.length}`,
+            })
+          }
+        } else {
+          // Active turn — keep everything visible in original order
+          for (const pi of processItems) result.push(pi)
+        }
+      }
+
+      // Final assistant answer is always visible
+      result.push(finalAssistant)
+
+      // Any trailing items after the final assistant
+      for (const ai of afterItems) result.push(ai)
     } else {
-      // Turn is still active — keep everything visible as-is
-      for (const pi of processItems) result.push(pi)
+      // No assistant in this turn — push all items as-is
+      for (const ti of turnItems) result.push(ti)
     }
   }
 
@@ -857,9 +892,7 @@ function applyTurnCollapse(items: RenderItem[], isChatActive?: boolean): RenderI
       flushCurrentTurn(false)
       currentUserMsgId = item.message.id
       currentUserMsgTimestamp = item.message.timestamp
-      processItems = []
-      lastAssistantItem = null
-      lastAssistantTimestamp = null
+      turnItems = []
       result.push(item)
       continue
     }
@@ -869,19 +902,7 @@ function applyTurnCollapse(items: RenderItem[], isChatActive?: boolean): RenderI
       continue
     }
 
-    // Check if this is the final assistant_text in the turn
-    if (item.kind === 'message' && item.message.type === 'assistant_text') {
-      // If we already had a previous final assistant, it becomes a process item
-      if (lastAssistantItem !== null) {
-        processItems.push(lastAssistantItem)
-      }
-      lastAssistantItem = item
-      lastAssistantTimestamp = item.message.timestamp
-      continue
-    }
-
-    // Everything else between user and final assistant is a process item
-    processItems.push(item)
+    turnItems.push(item)
   }
 
   flushCurrentTurn(true)
@@ -2549,8 +2570,8 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
         ) : item.kind === 'turn_process' ? (
           <TurnProcessSection
             group={item.group}
-            isExpanded={expandedTurns.has(item.group.userMsgId)}
-            onToggle={() => toggleTurnExpand(item.group.userMsgId)}
+            isExpanded={expandedTurns.has(item.id)}
+            onToggle={() => toggleTurnExpand(item.id)}
             renderInnerItem={renderInnerItem}
           />
         ) : item.kind === 'web_search_group' ? (
