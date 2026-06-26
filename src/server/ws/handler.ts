@@ -1472,9 +1472,13 @@ export function translateCliMessage(cliMsg: any, sessionId: string): ServerMessa
           }
         }
 
-        // Reset flags for next turn
-        streamState.hasReceivedStreamEvents = false
-        streamState.pendingToolBlocks.clear()
+        // NOTE: Do NOT reset hasReceivedStreamEvents / pendingToolBlocks here.
+        // Multiple WS clients share the same SessionStreamState; resetting
+        // inside translateCliMessage (which is called once per client callback)
+        // causes the second callback to see hasReceivedStreamEvents=false and
+        // re-emit text that was already sent via stream_events — producing
+        // duplicate content on H5 clients.  The flags are reset in the
+        // 'result' case instead, which fires once at turn end.
         return messages
       }
       return []
@@ -1692,6 +1696,14 @@ export function translateCliMessage(cliMsg: any, sessionId: string): ServerMessa
       return []
 
     case 'result': {
+      // Reset per-turn streaming flags now that the turn is complete.
+      // This must happen here (not in the 'assistant' case) because
+      // translateCliMessage is called once per WS client callback, and
+      // resetting inside 'assistant' corrupts the shared SessionStreamState
+      // for subsequent callbacks — the root cause of H5 content duplication.
+      streamState.hasReceivedStreamEvents = false
+      streamState.pendingToolBlocks.clear()
+
       // 对话结果（成功或错误）
       const usage = {
         input_tokens: cliMsg.usage?.input_tokens || 0,
@@ -1729,6 +1741,7 @@ export function translateCliMessage(cliMsg: any, sessionId: string): ServerMessa
       // Clear stop flag on successful completion too
       sessionStopRequested.delete(sessionId)
       streamState.lastApiError = undefined
+
       return [{ type: 'message_complete', usage }]
     }
 
