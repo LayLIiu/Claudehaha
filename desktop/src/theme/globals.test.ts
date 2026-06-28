@@ -114,7 +114,9 @@ describe('desktop theme tokens', () => {
   })
 
   it('maps markdown typography colors to theme tokens', () => {
-    const markdownProseStart = normalizedCss.indexOf('.markdown-prose {')
+    // Find the standalone .markdown-prose block (not .assistant-message-flow > .markdown-prose)
+    const standaloneMarker = '\n.markdown-prose {'
+    const markdownProseStart = normalizedCss.indexOf(standaloneMarker)
     expect(markdownProseStart).toBeGreaterThanOrEqual(0)
     const markdownProseEnd = normalizedCss.indexOf('}', markdownProseStart)
     const markdownProseBlock = normalizedCss.slice(markdownProseStart, markdownProseEnd)
@@ -128,7 +130,7 @@ describe('desktop theme tokens', () => {
   })
 
   it('keeps code viewer line hover and line numbers on theme tokens', () => {
-    expect(css).toContain('background: var(--color-surface-hover);')
+    expect(css).toContain('background: transparent;')
     expect(css).toContain('--line-numbers-foreground: var(--color-text-tertiary);')
   })
 })

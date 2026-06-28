@@ -288,7 +288,8 @@ describe('OpenProjectMenu', () => {
 
     expect(await screen.findByRole('dialog', { name: 'Git 工具' })).toBeInTheDocument()
     expect(screen.getByText('更改')).toBeInTheDocument()
-    expect(screen.getByText('+2 -2')).toBeInTheDocument()
+    expect(screen.getByText('+2')).toBeInTheDocument()
+    expect(screen.getByText('-2')).toBeInTheDocument()
     expect(screen.getByText('main')).toBeInTheDocument()
     expect(screen.getByText('进程 1/2')).toBeInTheDocument()
 

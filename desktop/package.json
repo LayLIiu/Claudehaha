@@ -110,7 +110,7 @@
     "html2canvas": "^1.4.1",
     "katex": "^0.16.45",
     "lucide-react": "^0.469.0",
-    "marked": "^15.0.7",
+    "marked": "^17.0.5",
     "mermaid": "^11.14.0",
     "node-pty": "^1.1.0",
     "prism-react-renderer": "^2.4.1",

@@ -242,8 +242,10 @@ export function cloneDeep<T>(value: T): T {
  * @param filePath The path to the file to write to
  * @param data The data to write (string or Buffer)
  * @param options Optional write options (encoding, mode, flag, flush)
- * @deprecated Use `fs.promises.writeFile` instead for non-blocking writes.
+ * @deprecated Use `fs.promises.writeFile` with flush option instead for non-blocking writes.
  * Sync file writes block the event loop and cause performance issues.
+ * Migration: `writeFileSync_DEPRECATED(path, data, 'utf8')` → `await fs.promises.writeFile(path, data, 'utf8')`
+ * For flush behavior: `await fs.promises.writeFile(path, data, { encoding: 'utf8', flush: true })`
  */
 export function writeFileSync_DEPRECATED(
   filePath: string,

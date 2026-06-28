@@ -339,9 +339,9 @@ describe('TabBar', () => {
     const tabBar = screen.getByTestId('tab-bar')
     const tab = screen.getByText('Untitled Session').closest('.tab-bar-interactive')
 
-    expect(tabBar).toHaveClass('min-h-11')
-    expect(tab).toHaveClass('min-h-11')
-    expect(screen.getByTestId('tab-bar-drag-gutter')).toHaveClass('min-h-11')
+    expect(tabBar).toHaveClass('h-[var(--height-toolbar)]')
+    expect(tab).toHaveClass('min-h-[var(--height-toolbar)]')
+    expect(screen.getByTestId('tab-bar-drag-gutter')).toHaveClass('min-h-[var(--height-toolbar)]')
   })
 
   it('passes the active session workdir into the open-project control', async () => {

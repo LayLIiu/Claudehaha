@@ -622,7 +622,7 @@ describe('ChatInput file mentions', () => {
     render(<ChatInput variant="hero" />)
 
     const panel = screen.getByTestId('chat-input-panel')
-    expect(panel).toHaveClass('rounded-xl')
+    expect(panel).toHaveClass('rounded-[var(--radius-4xl)]')
     expect(panel).not.toHaveClass('rounded-b-none')
 
     expect(await screen.findByRole('button', { name: /Select branch: main/ })).toBeInTheDocument()
@@ -1151,11 +1151,11 @@ describe('ChatInput file mentions', () => {
     })
 
     expect(screen.getByRole('button', { name: 'Open composer tools' })).toHaveClass('h-11', 'w-11')
-    expect(screen.getByRole('button', { name: 'Run' })).toHaveClass('h-11', 'w-11')
+    expect(screen.getByRole('button', { name: 'Run' })).toHaveClass('h-10', 'w-10')
     expect(screen.queryByText('Run')).not.toBeInTheDocument()
     expect(screen.getByTestId('chat-input-shell')).toHaveClass('px-3')
     expect(screen.getByTestId('chat-input-shell').className).toContain('safe-area-inset-bottom')
-    expect(screen.getByTestId('chat-input-panel')).toHaveClass('rounded-2xl')
+    expect(screen.getByTestId('chat-input-panel')).toHaveClass('rounded-[var(--radius-2xl)]')
     expect(screen.getByTestId('chat-input-panel')).not.toHaveClass('rounded-b-none')
 
     fireEvent.change(screen.getByRole('textbox'), {
@@ -1180,7 +1180,7 @@ describe('ChatInput file mentions', () => {
     const toolbar = screen.getByTestId('chat-input-toolbar')
 
     expect(toolbar).not.toHaveClass('absolute')
-    expect(toolbar).toHaveClass('mt-2')
+    expect(toolbar).toHaveClass('mt-1')
     expect(input).not.toHaveClass('pb-12')
     expect(input).not.toHaveClass('pb-14')
   })

@@ -358,6 +358,8 @@ export function readFileSyncCached(filePath: string): string {
  * @param options Options for writing the file, including encoding and mode
  * @deprecated Use `fs.promises.writeFile` with flush option instead for non-blocking writes.
  * Sync file writes block the event loop and cause performance issues.
+ * Migration: `writeFileSyncAndFlush_DEPRECATED(path, data, { encoding })` →
+ * `await fs.promises.writeFile(path, data, { encoding, flush: true })`
  */
 export function writeFileSyncAndFlush_DEPRECATED(
   filePath: string,

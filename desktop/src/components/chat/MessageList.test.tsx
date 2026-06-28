@@ -294,16 +294,28 @@ describe('MessageList nested tool calls', () => {
         [ACTIVE_TAB]: makeSessionState({
           messages: [
             {
+              id: 'user-1',
+              type: 'user_text',
+              content: 'first user message',
+              timestamp: 1,
+            },
+            {
               id: 'assistant-1',
               type: 'assistant_text',
               content: 'first assistant reply',
-              timestamp: 1,
+              timestamp: 2,
+            },
+            {
+              id: 'user-2',
+              type: 'user_text',
+              content: 'second user message',
+              timestamp: 3,
             },
             {
               id: 'assistant-2',
               type: 'assistant_text',
               content: 'second assistant reply',
-              timestamp: 2,
+              timestamp: 4,
             },
           ],
         }),
@@ -313,14 +325,24 @@ describe('MessageList nested tool calls', () => {
     const { container } = render(<MessageList />)
     const renderItems = container.querySelectorAll('.chat-render-item')
 
-    expect(renderItems).toHaveLength(2)
-    // Non-virtualized rows carry content-visibility (via the --cv class) so WebKit
-    // (Tauri WKWebView) can skip off-screen paint. Safe here because full-mount
-    // rows have no ResizeObserver — unlike the earlier virtualized-item rollout
-    // that zeroed measured heights. content-visibility:auto still paints visible
-    // rows immediately, so small transcripts are not deferred.
-    for (const item of renderItems) {
+    expect(renderItems).toHaveLength(4)
+    // Non-virtualized rows in non-last turn groups carry content-visibility (via the
+    // --cv class) so WebKit (Tauri WKWebView) can skip off-screen paint. Safe here
+    // because full-mount rows have no ResizeObserver — unlike the earlier virtualized-
+    // item rollout that zeroed measured heights. content-visibility:auto still paints
+    // visible rows immediately, so small transcripts are not deferred.
+    // Items in the last turn group do NOT get --cv because they are always visible.
+    const lastTurnItems = container.querySelectorAll('[data-virtualized-turn-content=""] .chat-render-item')
+    const allItems = container.querySelectorAll('.chat-render-item')
+    const lastTurnItemCount = allItems.length - lastTurnItems.length
+    // First turn items should have --cv
+    for (const item of lastTurnItems) {
       expect(item.className).toContain('chat-render-item--cv')
+    }
+    // Last turn items should NOT have --cv (they are always visible, no need to defer)
+    const lastTurnGroupItems = Array.from(allItems).slice(lastTurnItemCount)
+    for (const item of lastTurnGroupItems) {
+      expect(item.className).not.toContain('chat-render-item--cv')
     }
     expect(container.querySelector('[data-virtual-message-item]')).toBeNull()
   })
@@ -768,7 +790,7 @@ describe('MessageList nested tool calls', () => {
     Object.defineProperty(scrollArea, 'scrollHeight', { configurable: true, value: 222 * 112 })
     await waitForProgrammaticScrollReset()
 
-    expect(screen.queryByText('Read')).toBeNull()
+    expect(screen.queryAllByText('Read', { exact: false })).toHaveLength(0)
     expect(screen.getByText('assistant transcript line 219')).toBeTruthy()
 
     scrollArea.scrollTop = 0
@@ -776,7 +798,7 @@ describe('MessageList nested tool calls', () => {
       fireEvent.scroll(scrollArea)
     })
 
-    expect(screen.getByText('Read')).toBeTruthy()
+    expect(screen.getAllByText('Read', { exact: false }).length).toBeGreaterThan(0)
     expect(screen.queryByText('assistant transcript line 219')).toBeNull()
     expect(container.querySelector('[data-virtual-message-item]')).not.toBeNull()
   })
@@ -1016,10 +1038,10 @@ describe('MessageList nested tool calls', () => {
 
     render(<MessageList />)
 
-    const groupSummary = screen.getByText('TaskUpdate (1), ran a command')
+    const groupSummary = screen.getByText('Ran a command, Called a tool')
     const groupButton = groupSummary.closest('button')
     expect(groupButton?.textContent).not.toContain('check_circle')
-    expect(screen.getByText('local_bash')).toBeTruthy()
+    expect(screen.getByText('local_bash', { exact: false })).toBeTruthy()
   })
 
   it('does not render blank assistant bubbles for whitespace-only text', () => {
@@ -1156,7 +1178,7 @@ describe('MessageList nested tool calls', () => {
     expect(memoryCardClassName).toContain('bg-[var(--color-memory-surface)]')
   })
 
-  it('promotes memory file reads into collapsible memory references', () => {
+  it('promotes memory file reads into collapsible exploration groups', () => {
     useChatStore.setState({
       sessions: {
         [ACTIVE_TAB]: makeSessionState({
@@ -1185,6 +1207,14 @@ describe('MessageList nested tool calls', () => {
               input: { file_path: '/Users/test/.claude/projects/example/memory/workflow.md' },
               timestamp: 3,
             },
+            {
+              id: 'result-read-memory-2',
+              type: 'tool_result',
+              toolUseId: 'read-memory-2',
+              content: '1 # Workflow\n2\n3 deployment steps',
+              isError: false,
+              timestamp: 4,
+            },
           ],
         }),
       },
@@ -1192,10 +1222,12 @@ describe('MessageList nested tool calls', () => {
 
     render(<MessageList sessionId={ACTIVE_TAB} />)
 
-    expect(screen.getByText('2 memory reference(s)')).toBeTruthy()
-    fireEvent.click(screen.getByText('2 memory reference(s)'))
-    expect(screen.getByText('MEMORY.md')).toBeTruthy()
-    expect(screen.getByText('workflow.md')).toBeTruthy()
+    // Read calls to memory files are now grouped into an exploration group
+    // (since Read is in EXPLORATION_TOOLS), rendered by ExplorationGroupSection.
+    expect(screen.getByText('explored 2 files')).toBeTruthy()
+    fireEvent.click(screen.getByText('explored 2 files'))
+    expect(screen.getByText('MEMORY.md', { exact: false })).toBeTruthy()
+    expect(screen.getByText('workflow.md', { exact: false })).toBeTruthy()
   })
 
   it('keeps non-memory tools visible when a tool group also touches memory files', () => {
@@ -1210,6 +1242,14 @@ describe('MessageList nested tool calls', () => {
               toolUseId: 'read-memory',
               input: { file_path: '/Users/test/.claude/projects/example/memory/MEMORY.md' },
               timestamp: 1,
+            },
+            {
+              id: 'result-read-memory',
+              type: 'tool_result',
+              toolUseId: 'read-memory',
+              content: '1 # Memory\n2\n3 project notes',
+              isError: false,
+              timestamp: 2,
             },
             {
               id: 'tool-bash',
@@ -1234,9 +1274,11 @@ describe('MessageList nested tool calls', () => {
 
     render(<MessageList sessionId={ACTIVE_TAB} />)
 
-    expect(screen.getByText('1 memory reference(s)')).toBeTruthy()
-    expect(screen.getByText('Bash')).toBeTruthy()
-    expect(screen.getByText('bun test')).toBeTruthy()
+    // Read calls to memory files are now grouped into an exploration group
+    // (since Read is in EXPLORATION_TOOLS), while Bash stays in its own tool group.
+    expect(screen.getByText('explored a file')).toBeTruthy()
+    expect(screen.getByText('Bash', { exact: false })).toBeTruthy()
+    expect(screen.getByText('bun test', { exact: false })).toBeTruthy()
   })
 
   it('keeps root tool runs split when nested child tool calls appear between them', () => {
@@ -2187,13 +2229,23 @@ describe('MessageList nested tool calls', () => {
     await selectMessageText(assistantText, 'selected reply')
     expect(screen.getByRole('button', { name: 'Add to chat' })).toBeTruthy()
 
+    // The selection popover dismisses on pointerdown outside the popover via
+    // useSelectionPopoverDismiss (capture-phase listener on document).
+    // fireEvent.pointerDown does not reach capture-phase document listeners,
+    // so dispatch a native event directly on document. jsdom lacks PointerEvent,
+    // but the handler only reads event.button and event.target, so MouseEvent
+    // with the same interface works fine.
     await act(async () => {
-      fireEvent.pointerDown(document.body)
+      document.dispatchEvent(new MouseEvent('pointerdown', { button: 0, bubbles: true }))
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => resolve())
+      })
       await Promise.resolve()
     })
 
-    expect(screen.queryByRole('button', { name: 'Add to chat' })).toBeNull()
-    expect(window.getSelection()?.toString()).toBe('')
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'Add to chat' })).toBeNull()
+    })
   })
 
   it('dismisses the selected-message action when the message list scrolls', async () => {
@@ -3399,8 +3451,8 @@ describe('MessageList nested tool calls', () => {
     expect(userShell?.className).toContain('group/message')
     expect(userShell?.className).not.toContain('w-full')
     expect(assistantShell).toBeTruthy()
-    expect(assistantShell?.className).toContain('items-start')
     expect(assistantShell?.className).toContain('group/message')
+    expect(assistantShell?.className).toContain('w-full')
     expect(assistantShell?.className).not.toContain('ml-10')
     expect(userActions?.getAttribute('data-align')).toBe('end')
     expect(assistantActions?.getAttribute('data-align')).toBe('start')
@@ -3484,10 +3536,30 @@ describe('MessageList nested tool calls', () => {
               timestamp: 1,
             },
             {
+              id: 'tool-edit-1',
+              type: 'tool_use',
+              toolName: 'Edit',
+              toolUseId: 'edit-1',
+              input: {
+                file_path: '/tmp/example-project/src/App.tsx',
+                old_string: 'old',
+                new_string: 'new',
+              },
+              timestamp: 2,
+            },
+            {
+              id: 'result-edit-1',
+              type: 'tool_result',
+              toolUseId: 'edit-1',
+              content: 'File edited successfully',
+              isError: false,
+              timestamp: 3,
+            },
+            {
               id: 'assistant-1',
               type: 'assistant_text',
               content: 'done',
-              timestamp: 2,
+              timestamp: 4,
             },
           ],
         }),
@@ -3698,34 +3770,66 @@ describe('MessageList nested tool calls', () => {
               timestamp: 1,
             },
             {
+              id: 'tool-edit-1',
+              type: 'tool_use',
+              toolName: 'Edit',
+              toolUseId: 'edit-1',
+              input: { file_path: '/tmp/example-project/src/first.ts', old_string: 'a', new_string: 'b' },
+              timestamp: 2,
+            },
+            {
+              id: 'result-edit-1',
+              type: 'tool_result',
+              toolUseId: 'edit-1',
+              content: 'ok',
+              isError: false,
+              timestamp: 3,
+            },
+            {
               id: 'assistant-1',
               type: 'assistant_text',
               content: 'ok',
-              timestamp: 2,
+              timestamp: 4,
             },
             {
               id: 'user-2',
               type: 'user_text',
               content: '第二段',
-              timestamp: 3,
+              timestamp: 5,
+            },
+            {
+              id: 'tool-edit-2',
+              type: 'tool_use',
+              toolName: 'Edit',
+              toolUseId: 'edit-2',
+              input: { file_path: '/tmp/example-project/src/second.ts', old_string: 'c', new_string: 'd' },
+              timestamp: 6,
+            },
+            {
+              id: 'result-edit-2',
+              type: 'tool_result',
+              toolUseId: 'edit-2',
+              content: 'ok',
+              isError: false,
+              timestamp: 7,
             },
             {
               id: 'assistant-2',
               type: 'assistant_text',
               content: 'done',
-              timestamp: 4,
+              timestamp: 8,
             },
             {
               id: 'user-3',
               type: 'user_text',
               content: '第三段',
-              timestamp: 5,
+              timestamp: 9,
             },
             {
               id: 'assistant-3',
               type: 'assistant_text',
               content: 'done',
-              timestamp: 6,
+              timestamp: 10,
             },
           ],
         }),
@@ -3736,8 +3840,8 @@ describe('MessageList nested tool calls', () => {
 
     const cards = await screen.findAllByLabelText('Turn changed files')
     expect(cards).toHaveLength(2)
-    expect(screen.getByText('first.ts')).toBeTruthy()
-    expect(screen.getByText('second.ts')).toBeTruthy()
+    expect(within(cards[0]!).getByText('src/first.ts')).toBeTruthy()
+    expect(within(cards[1]!).getByText('src/second.ts')).toBeTruthy()
     expect(screen.queryByText('third.ts')).toBeNull()
   })
 
@@ -3875,22 +3979,54 @@ describe('MessageList nested tool calls', () => {
               timestamp: 1,
             },
             {
+              id: 'tool-edit-1',
+              type: 'tool_use',
+              toolName: 'Edit',
+              toolUseId: 'edit-1',
+              input: { file_path: '/tmp/example-project/src/first.ts', old_string: 'a', new_string: 'b' },
+              timestamp: 2,
+            },
+            {
+              id: 'result-edit-1',
+              type: 'tool_result',
+              toolUseId: 'edit-1',
+              content: 'ok',
+              isError: false,
+              timestamp: 3,
+            },
+            {
               id: 'assistant-1',
               type: 'assistant_text',
               content: 'done',
-              timestamp: 2,
+              timestamp: 4,
             },
             {
               id: 'user-2',
               type: 'user_text',
               content: '第二轮',
-              timestamp: 3,
+              timestamp: 5,
+            },
+            {
+              id: 'tool-edit-2',
+              type: 'tool_use',
+              toolName: 'Edit',
+              toolUseId: 'edit-2',
+              input: { file_path: '/tmp/example-project/src/second.ts', old_string: 'c', new_string: 'de' },
+              timestamp: 6,
+            },
+            {
+              id: 'result-edit-2',
+              type: 'tool_result',
+              toolUseId: 'edit-2',
+              content: 'ok',
+              isError: false,
+              timestamp: 7,
             },
             {
               id: 'assistant-2',
               type: 'assistant_text',
               content: 'done',
-              timestamp: 4,
+              timestamp: 8,
             },
           ],
         }),
@@ -3958,10 +4094,26 @@ describe('MessageList nested tool calls', () => {
               timestamp: 1,
             },
             {
+              id: 'tool-edit-1',
+              type: 'tool_use',
+              toolName: 'Edit',
+              toolUseId: 'edit-1',
+              input: { file_path: '/tmp/old-project/src/first.ts', old_string: 'a', new_string: 'b' },
+              timestamp: 2,
+            },
+            {
+              id: 'result-edit-1',
+              type: 'tool_result',
+              toolUseId: 'edit-1',
+              content: 'ok',
+              isError: false,
+              timestamp: 3,
+            },
+            {
               id: 'assistant-1',
               type: 'assistant_text',
               content: 'done',
-              timestamp: 2,
+              timestamp: 4,
             },
           ],
         }),
@@ -4025,10 +4177,26 @@ describe('MessageList nested tool calls', () => {
               timestamp: 1,
             },
             {
+              id: 'tool-edit-1',
+              type: 'tool_use',
+              toolName: 'Edit',
+              toolUseId: 'edit-1',
+              input: { file_path: '/tmp/example-project/src/live.ts', old_string: 'a', new_string: 'b' },
+              timestamp: 2,
+            },
+            {
+              id: 'result-edit-1',
+              type: 'tool_result',
+              toolUseId: 'edit-1',
+              content: 'ok',
+              isError: false,
+              timestamp: 3,
+            },
+            {
               id: 'assistant-1',
               type: 'assistant_text',
               content: 'done',
-              timestamp: 2,
+              timestamp: 4,
             },
           ],
         }),
@@ -4039,7 +4207,8 @@ describe('MessageList nested tool calls', () => {
 
     // The card only renders if the transcript checkpoint (id 'transcript-user-1') was
     // matched to the local message ('local-user-temp-id') by userMessageIndex.
-    expect(await screen.findByText('live.ts')).toBeTruthy()
+    const card = await screen.findByLabelText('Turn changed files')
+    expect(within(card).getByText('src/live.ts')).toBeTruthy()
     // Clicking the row jumps to the right-side workspace diff for the relativized path.
     fireEvent.click(screen.getByRole('button', { name: 'Open src/live.ts in workspace' }))
     await waitFor(() => {
@@ -4077,10 +4246,26 @@ describe('MessageList nested tool calls', () => {
               timestamp: 1,
             },
             {
+              id: 'tool-edit-1',
+              type: 'tool_use',
+              toolName: 'Edit',
+              toolUseId: 'edit-1',
+              input: { file_path: '/tmp/example-project/src/blank-response.ts', old_string: 'a', new_string: 'bcd' },
+              timestamp: 2,
+            },
+            {
+              id: 'result-edit-1',
+              type: 'tool_result',
+              toolUseId: 'edit-1',
+              content: 'ok',
+              isError: false,
+              timestamp: 3,
+            },
+            {
               id: 'assistant-empty',
               type: 'assistant_text',
               content: '\n  ',
-              timestamp: 2,
+              timestamp: 4,
             },
           ],
         }),
@@ -4089,7 +4274,8 @@ describe('MessageList nested tool calls', () => {
 
     render(<MessageList />)
 
-    expect(await screen.findByText('blank-response.ts')).toBeTruthy()
+    const card = await screen.findByLabelText('Turn changed files')
+    expect(within(card).getByText('src/blank-response.ts')).toBeTruthy()
   })
 
   it('keeps historical turn change cards visible while the next turn is running', async () => {
@@ -4119,10 +4305,26 @@ describe('MessageList nested tool calls', () => {
         timestamp: 1,
       },
       {
+        id: 'tool-edit-1',
+        type: 'tool_use',
+        toolName: 'Edit',
+        toolUseId: 'edit-1',
+        input: { file_path: '/tmp/example-project/src/first.ts', old_string: 'a', new_string: 'b' },
+        timestamp: 2,
+      },
+      {
+        id: 'result-edit-1',
+        type: 'tool_result',
+        toolUseId: 'edit-1',
+        content: 'ok',
+        isError: false,
+        timestamp: 3,
+      },
+      {
         id: 'assistant-1',
         type: 'assistant_text',
         content: 'done',
-        timestamp: 2,
+        timestamp: 4,
       },
     ]
 
@@ -4134,7 +4336,8 @@ describe('MessageList nested tool calls', () => {
 
     render(<MessageList />)
 
-    expect(await screen.findByText('first.ts')).toBeTruthy()
+    const card = await screen.findByLabelText('Turn changed files')
+    expect(within(card).getByText('src/first.ts')).toBeTruthy()
 
     act(() => {
       useChatStore.setState({
@@ -4148,7 +4351,8 @@ describe('MessageList nested tool calls', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByText('first.ts')).toBeTruthy()
+      const cards = screen.getAllByLabelText('Turn changed files')
+      expect(within(cards[0]!).getByText('src/first.ts')).toBeTruthy()
     })
   })
 
@@ -4233,22 +4437,54 @@ describe('MessageList nested tool calls', () => {
               timestamp: 1,
             },
             {
+              id: 'tool-edit-1',
+              type: 'tool_use',
+              toolName: 'Edit',
+              toolUseId: 'edit-1',
+              input: { file_path: '/tmp/example-project/src/first.ts', old_string: 'a', new_string: 'b' },
+              timestamp: 2,
+            },
+            {
+              id: 'result-edit-1',
+              type: 'tool_result',
+              toolUseId: 'edit-1',
+              content: 'ok',
+              isError: false,
+              timestamp: 3,
+            },
+            {
               id: 'assistant-1',
               type: 'assistant_text',
               content: 'first done',
-              timestamp: 2,
+              timestamp: 4,
             },
             {
               id: 'user-2',
               type: 'user_text',
               content: '第二轮需求',
-              timestamp: 3,
+              timestamp: 5,
+            },
+            {
+              id: 'tool-edit-2',
+              type: 'tool_use',
+              toolName: 'Edit',
+              toolUseId: 'edit-2',
+              input: { file_path: '/tmp/example-project/src/second.ts', old_string: 'c', new_string: 'd' },
+              timestamp: 6,
+            },
+            {
+              id: 'result-edit-2',
+              type: 'tool_result',
+              toolUseId: 'edit-2',
+              content: 'ok',
+              isError: false,
+              timestamp: 7,
             },
             {
               id: 'assistant-2',
               type: 'assistant_text',
               content: 'second done',
-              timestamp: 4,
+              timestamp: 8,
             },
           ],
         }),
@@ -4257,7 +4493,9 @@ describe('MessageList nested tool calls', () => {
 
     render(<MessageList />)
 
-    const historicalCard = (await screen.findByText('first.ts')).closest('section')
+    const turnCards = await screen.findAllByLabelText('Turn changed files')
+    // The historical card is the first one (not the latest)
+    const historicalCard = turnCards[0]!
     expect(historicalCard).toBeTruthy()
     fireEvent.click(
       within(historicalCard as HTMLElement).getByRole('button', {
@@ -4332,22 +4570,38 @@ describe('MessageList nested tool calls', () => {
               timestamp: 1,
             },
             {
+              id: 'tool-edit-1',
+              type: 'tool_use',
+              toolName: 'Edit',
+              toolUseId: 'edit-1',
+              input: { file_path: '/tmp/example-project/src/first.ts', old_string: 'ab', new_string: 'de' },
+              timestamp: 2,
+            },
+            {
+              id: 'result-edit-1',
+              type: 'tool_result',
+              toolUseId: 'edit-1',
+              content: 'ok',
+              isError: false,
+              timestamp: 3,
+            },
+            {
               id: 'assistant-1',
               type: 'assistant_text',
               content: 'first done',
-              timestamp: 2,
+              timestamp: 4,
             },
             {
               id: 'user-2',
               type: 'user_text',
               content: '第二轮只解释',
-              timestamp: 3,
+              timestamp: 5,
             },
             {
               id: 'assistant-2',
               type: 'assistant_text',
               content: 'second done',
-              timestamp: 4,
+              timestamp: 6,
             },
           ],
         }),
@@ -4358,7 +4612,7 @@ describe('MessageList nested tool calls', () => {
 
     const cards = await screen.findAllByLabelText('Turn changed files')
     expect(cards).toHaveLength(1)
-    expect(screen.getByText('first.ts')).toBeTruthy()
+    expect(within(cards[0]!).getByText('src/first.ts')).toBeTruthy()
     expect(screen.queryByText('second.ts')).toBeNull()
   })
 

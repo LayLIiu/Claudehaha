@@ -120,7 +120,7 @@ describe('MermaidRenderer', () => {
       themeVariables: expect.objectContaining({ darkMode: false }),
       suppressErrorRendering: true,
     }))
-    expect(screen.getByTestId('mermaid-diagram-surface').className).toContain('bg-[var(--color-surface-container-lowest)]')
+    expect(screen.getByTestId('mermaid-diagram-surface').className).toContain('bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))]')
 
     fireEvent.click(previewButton)
 

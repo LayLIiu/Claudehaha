@@ -83,7 +83,7 @@ describe('DirectoryPicker', () => {
 
     const trigger = screen.getByRole('button')
     expect(trigger).toHaveTextContent('project')
-    expect(trigger.className).toContain('rounded-[7px]')
+    expect(trigger.className).toContain('rounded-[var(--radius-sm)]')
     expect(trigger.className).not.toContain('rounded-full')
   })
 

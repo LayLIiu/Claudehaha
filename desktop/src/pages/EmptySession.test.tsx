@@ -394,7 +394,7 @@ describe('EmptySession', () => {
     render(<EmptySession />)
 
     const panel = screen.getByTestId('empty-session-composer-panel')
-    expect(panel).toHaveClass('rounded-xl', 'p-0')
+    expect(panel).toHaveClass('rounded-[var(--radius-2xl)]', 'p-0')
     expect(panel).not.toHaveClass('rounded-b-none')
 
     fireEvent.click(screen.getByRole('button', { name: 'Pick project' }))

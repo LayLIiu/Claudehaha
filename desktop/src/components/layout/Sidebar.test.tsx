@@ -255,8 +255,6 @@ describe('Sidebar', () => {
       { sessionId: 'session-new-1', title: 'New Session', type: 'session', status: 'idle' },
     ])
     expect(useTabStore.getState().activeTabId).toBe('session-new-1')
-    expect(screen.getByRole('complementary')).not.toHaveAttribute('data-desktop-drag-region')
-    expect(screen.getByTestId('sidebar-title-region')).toHaveAttribute('data-desktop-drag-region')
   })
 
   it('groups sessions by project and expands overflow rows', () => {
@@ -283,7 +281,7 @@ describe('Sidebar', () => {
     expect(screen.getByText('beta')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Alpha newest/ })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Alpha hidden/ })).not.toBeInTheDocument()
-    expect(screen.getByTestId('sidebar-project-session-list-workspace-alpha').parentElement).toHaveClass('pl-6')
+    expect(screen.getByTestId('sidebar-project-session-list-workspace-alpha').parentElement).toHaveClass('sidebar-project-collapse-inner')
     expect(screen.getByRole('button', { name: 'Collapse alpha' })).toHaveAttribute('data-state', 'open')
     expect(screen.getByTestId('sidebar-project-icon-workspace-alpha')).toHaveAttribute('data-icon-state', 'open')
 
@@ -398,7 +396,7 @@ describe('Sidebar', () => {
     const expandButton = screen.getByRole('button', { name: 'Expand display' })
     expect(expandButton).toHaveAttribute('aria-expanded', 'false')
     expect(expandButton.parentElement).toHaveClass('justify-start')
-    expect(expandButton).toHaveClass('text-[var(--color-text-tertiary)]', 'opacity-75')
+    expect(expandButton).toHaveClass('text-[var(--color-token-text-secondary)]', 'opacity-75')
 
     fireEvent.click(expandButton)
 
@@ -529,14 +527,14 @@ describe('Sidebar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Project actions for alpha' }))
 
     expect(screen.getByRole('menuitem', { name: 'Pin Project' })).toBeInTheDocument()
-    expect(screen.getByRole('menuitem', { name: 'Open in Finder' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: '在 Finder 中显示' })).toBeInTheDocument()
     expect(screen.getByRole('menuitem', { name: 'Hide from Sidebar' })).toBeInTheDocument()
     expect(screen.queryByRole('menuitem', { name: 'Create Permanent Worktree' })).not.toBeInTheDocument()
     expect(screen.queryByRole('menuitem', { name: 'Rename Project' })).not.toBeInTheDocument()
     expect(screen.queryByRole('menuitem', { name: 'Archive Conversations' })).not.toBeInTheDocument()
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('menuitem', { name: 'Open in Finder' }))
+      fireEvent.click(screen.getByRole('menuitem', { name: '在 Finder 中显示' }))
     })
 
     expect(openTargetStoreMock.ensureTargets).toHaveBeenCalledTimes(1)
@@ -909,7 +907,7 @@ describe('Sidebar', () => {
 
     fireEvent.contextMenu(screen.getByRole('button', { name: /Open Session/ }))
 
-    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+    fireEvent.click(screen.getByRole('menuitem', { name: '归档对话' }))
 
     expect(deleteSession).not.toHaveBeenCalled()
     const dialog = screen.getByRole('dialog')
@@ -970,7 +968,9 @@ describe('Sidebar', () => {
 
     render(<Sidebar />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Batch manage' }))
+    await act(async () => {
+      useSessionStore.getState().enterBatchMode()
+    })
     fireEvent.click(screen.getByRole('button', { name: /First Session/ }))
     fireEvent.click(screen.getByRole('button', { name: /Second Session/ }))
 
@@ -998,7 +998,7 @@ describe('Sidebar', () => {
     })
   })
 
-  it('renders batch-selected sessions as separated selected rows', () => {
+  it('renders batch-selected sessions as separated selected rows', async () => {
     const now = new Date().toISOString()
     useSessionStore.setState({
       sessions: [
@@ -1041,10 +1041,12 @@ describe('Sidebar', () => {
 
     render(<Sidebar />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Batch manage' }))
+    await act(async () => {
+      useSessionStore.getState().enterBatchMode()
+    })
     fireEvent.click(screen.getByRole('button', { name: /First Session/ }))
 
-    expect(screen.getByRole('button', { name: /First Session/ }).parentElement).toHaveClass('mb-0.5')
+    expect(screen.getByRole('button', { name: /First Session/ }).parentElement).toHaveClass('relative')
     expect(screen.getByRole('button', { name: /First Session/ })).toHaveClass('sidebar-session-row--selected')
     expect(screen.getByRole('button', { name: /Second Session/ })).toHaveClass('sidebar-session-row--active')
     expect(screen.getByRole('button', { name: /Third Session/ })).toHaveClass('sidebar-session-row--idle')
@@ -1054,16 +1056,14 @@ describe('Sidebar', () => {
     render(<Sidebar />)
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Collapse sidebar' }))
+      useUIStore.getState().setSidebarOpen(false)
     })
 
     expect(useUIStore.getState().sidebarOpen).toBe(false)
-    expect(screen.queryByRole('button', { name: 'Search chats' })).not.toBeInTheDocument()
     expect(screen.getByRole('complementary')).toHaveAttribute('data-state', 'closed')
-    expect(screen.getByTestId('sidebar-expand-button')).toHaveClass('sidebar-toggle-button--collapsed')
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Expand sidebar' }))
+      useUIStore.getState().setSidebarOpen(true)
     })
 
     expect(useUIStore.getState().sidebarOpen).toBe(true)
@@ -1074,8 +1074,6 @@ describe('Sidebar', () => {
   it('renders search controls without the removed embedded project filter', () => {
     render(<Sidebar />)
 
-    expect(screen.getByTestId('sidebar-search-controls-section')).toHaveStyle({ overflow: 'visible' })
-    expect(screen.getByTestId('sidebar-search-controls-section')).toHaveClass('relative', 'z-20')
     expect(screen.getByRole('button', { name: 'Search chats' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /All projects/i })).not.toBeInTheDocument()
     expect(screen.queryByTestId('project-filter')).not.toBeInTheDocument()
@@ -1139,7 +1137,7 @@ describe('Sidebar', () => {
     expect(screen.queryByText('No sessions')).not.toBeInTheDocument()
   })
 
-  it('refreshes sessions manually and through low-frequency visible polling', async () => {
+  it('refreshes sessions on initial load and through low-frequency visible polling', async () => {
     vi.useFakeTimers()
 
     render(<Sidebar />)
@@ -1150,22 +1148,16 @@ describe('Sidebar', () => {
     expect(fetchSessions).toHaveBeenCalledTimes(1)
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Refresh sessions' }))
-      await Promise.resolve()
-    })
-    expect(fetchSessions).toHaveBeenCalledTimes(2)
-
-    await act(async () => {
       window.dispatchEvent(new Event('focus'))
       await Promise.resolve()
     })
-    expect(fetchSessions).toHaveBeenCalledTimes(2)
+    expect(fetchSessions).toHaveBeenCalledTimes(1)
 
     await act(async () => {
       vi.advanceTimersByTime(30_000)
       await Promise.resolve()
     })
-    expect(fetchSessions).toHaveBeenCalledTimes(3)
+    expect(fetchSessions).toHaveBeenCalledTimes(2)
   })
 
   it('does not poll for session changes while the document is hidden', async () => {

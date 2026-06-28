@@ -973,7 +973,7 @@ describe('WorkspacePanel', () => {
 
     expect(panel.className).toContain('bg-[var(--color-surface)]')
     expect(panel.className).not.toContain('bg-white')
-    expect(tabList.className).toContain('bg-[var(--color-surface-container-lowest)]')
+    expect(tabList.className).toContain('bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))]')
     expect(tabList.className).not.toContain('bg-white')
     expect(classNameContains(codeSurface, 'bg-[var(--color-code-bg)]')).toBe(true)
     expect(classNameContains(codeSurface, 'bg-white')).toBe(false)
@@ -1858,7 +1858,13 @@ describe('WorkspacePanel', () => {
     expect(view.getAllByRole('button', { name: 'Add to chat' })).toHaveLength(2)
 
     await act(async () => {
-      fireEvent.pointerDown(document.body)
+      // jsdom's PointerEvent is a plain Event without the `button` property,
+      // so the popover dismiss guard (`event.button !== 0`) would reject it.
+      // Dispatch a custom pointerdown with `button: 0` so the hook sees a
+      // primary-button event and proceeds with the dismiss.
+      const pointerdown = new Event('pointerdown', { bubbles: true, cancelable: true })
+      Object.defineProperty(pointerdown, 'button', { value: 0 })
+      document.body.dispatchEvent(pointerdown)
       await Promise.resolve()
     })
     await flushReactWork()
@@ -1991,10 +1997,10 @@ describe('WorkspacePanel', () => {
     expect(viewMenuButton.className).toContain('text-[14px]')
     expect(viewMenuButton.className).not.toContain('text-[18px]')
     expect(viewMenuButton.querySelector('.material-symbols-outlined')?.className).toContain('text-[15px]')
-    expect(refreshButton.className).toContain('h-7 w-7')
-    expect(closeButton.className).toContain('h-7 w-7')
-    expect(refreshButton.querySelector('.material-symbols-outlined')?.className).toContain('text-[16px]')
-    expect(closeButton.querySelector('.material-symbols-outlined')?.className).toContain('text-[16px]')
+    expect(refreshButton.className).toContain('h-8 w-8')
+    expect(closeButton.className).toContain('h-8 w-8')
+    expect(refreshButton.querySelector('.material-symbols-outlined')?.className).toContain('icon-sm')
+    expect(closeButton.querySelector('.material-symbols-outlined')?.className).toContain('icon-sm')
   })
 
   it('shows explicit empty and error states in the changed view', async () => {

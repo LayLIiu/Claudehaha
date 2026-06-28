@@ -1,4 +1,4 @@
-import { getSettings_DEPRECATED } from '../../utils/settings/settings.js'
+import { getInitialSettings } from '../../utils/settings/settings.js'
 import type { SettingsJson } from '../../utils/settings/types.js'
 import type { Input, Output, SearchResult } from './WebSearchTool.js'
 
@@ -46,7 +46,7 @@ export function isLikelyClaudeModel(model: string | undefined): boolean {
 }
 
 export function getConfiguredWebSearchSettings(
-  settings: Pick<SettingsJson, 'webSearch'> = getSettings_DEPRECATED(),
+  settings: Pick<SettingsJson, 'webSearch'> = getInitialSettings(),
 ): WebSearchSettings {
   const raw = settings.webSearch
   if (!raw || typeof raw !== 'object') {

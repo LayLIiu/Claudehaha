@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 
 import { UpdateChecker } from './UpdateChecker'
@@ -38,36 +38,26 @@ describe('UpdateChecker', () => {
     })
   })
 
-  it('renders markdown release notes in the update prompt', () => {
-    useUpdateStore.setState({ status: 'downloaded' })
-
-    render(<UpdateChecker />)
-
-    expect(screen.getByText('Update ready')).toBeInTheDocument()
-    expect(screen.getByText('v0.1.5 has been downloaded. Restart when you are ready to use it.')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Claude Code Haha v0.1.5' })).toBeInTheDocument()
-
-    const link = screen.getByRole('link', { name: 'Release notes' })
-    expect(link).toHaveAttribute('href', 'https://example.com/releases/v0.1.5')
-    expect(link).toHaveAttribute('target', '_blank')
-  })
-
-  it('renders the update prompt in Electron desktop runtime', () => {
+  it('renders nothing when not in a desktop runtime', () => {
     window.desktopHost = {
       ...browserHost,
-      kind: 'electron',
-      isDesktop: true,
-      capabilities: {
-        ...browserHost.capabilities,
-        updates: true,
-      },
+      kind: 'browser',
+      isDesktop: false,
+      capabilities: browserHost.capabilities,
     }
     useUpdateStore.setState({ status: 'downloaded' })
 
-    render(<UpdateChecker />)
+    const { container } = render(<UpdateChecker />)
+    expect(container.innerHTML).toBe('')
+  })
 
-    expect(screen.getByText('Update ready')).toBeInTheDocument()
-    expect(screen.getByText('Install and restart')).toBeInTheDocument()
+  it('renders nothing in Electron desktop runtime even when an update is downloaded', () => {
+    useUpdateStore.setState({ status: 'downloaded' })
+
+    const { container } = render(<UpdateChecker />)
+    expect(container.innerHTML).toBe('')
+    expect(screen.queryByText('Update ready')).not.toBeInTheDocument()
+    expect(screen.queryByText('Install and restart')).not.toBeInTheDocument()
   })
 
   it('shows downloaded bytes when the updater does not provide total size', () => {
@@ -94,34 +84,34 @@ describe('UpdateChecker', () => {
     expect(screen.queryByText(/0%/)).not.toBeInTheDocument()
   })
 
-  it.each(['installing', 'restarting'] as const)('does not keep a forced prompt during %s', (status) => {
+  it.each(['installing', 'restarting'] as const)('does not render UI during %s', (status) => {
     useUpdateStore.setState({
       status,
       availableVersion: '0.1.5',
       shouldPrompt: true,
     })
 
-    render(<UpdateChecker />)
-
+    const { container } = render(<UpdateChecker />)
+    expect(container.innerHTML).toBe('')
     expect(screen.queryByText('Update ready')).not.toBeInTheDocument()
     expect(screen.queryByText('Install and restart')).not.toBeInTheDocument()
   })
 
-  it('keeps the ready prompt retryable when install fails after download', () => {
+  it('renders nothing when install fails after download', () => {
     useUpdateStore.setState({
       status: 'downloaded',
       error: 'installer failed',
       shouldPrompt: true,
     })
 
-    render(<UpdateChecker />)
-
-    expect(screen.getByText('Update ready')).toBeInTheDocument()
-    expect(screen.getByText('Update failed: installer failed')).toBeInTheDocument()
-    expect(screen.getByText('Install and restart')).toBeInTheDocument()
+    const { container } = render(<UpdateChecker />)
+    expect(container.innerHTML).toBe('')
+    expect(screen.queryByText('Update ready')).not.toBeInTheDocument()
+    expect(screen.queryByText('Update failed: installer failed')).not.toBeInTheDocument()
+    expect(screen.queryByText('Install and restart')).not.toBeInTheDocument()
   })
 
-  it('drives the Electron mock-feed check/download/install flow without leaving the prompt stuck', async () => {
+  it('renders nothing throughout the Electron check/download/install flow', async () => {
     Reflect.deleteProperty(window, '__TAURI__')
     const download = vi.fn(async (onEvent?: (event: unknown) => void) => {
       onEvent?.({ event: 'Started', data: { contentLength: 100 } })
@@ -170,23 +160,8 @@ describe('UpdateChecker', () => {
       shouldPrompt: false,
     })
 
-    render(<FreshUpdateChecker />)
-    await act(async () => {
-      await freshUpdateStore.getState().checkForUpdates()
-    })
-
-    expect(await screen.findByText('Update ready')).toBeInTheDocument()
-    expect(screen.getByText('v0.2.0 has been downloaded. Restart when you are ready to use it.')).toBeInTheDocument()
-    await act(async () => {
-      fireEvent.click(screen.getByText('Install and restart'))
-    })
-
-    await waitFor(() => {
-      expect(prepareInstall).toHaveBeenCalledTimes(1)
-      expect(install).toHaveBeenCalledTimes(1)
-      expect(relaunch).toHaveBeenCalledTimes(1)
-      expect(freshUpdateStore.getState().status).toBe('restarting')
-    })
+    const { container } = render(<FreshUpdateChecker />)
+    expect(container.innerHTML).toBe('')
     expect(screen.queryByText('Update ready')).not.toBeInTheDocument()
   })
 })

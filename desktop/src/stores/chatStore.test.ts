@@ -132,6 +132,7 @@ import {
   stripGeneratedImageMetadataLines,
   type PerSessionState,
   useChatStore,
+  __resetModuleStateForTests,
 } from './chatStore'
 
 const TEST_SESSION_ID = 'test-session-1'
@@ -188,6 +189,7 @@ describe('stripGeneratedImageMetadataLines', () => {
 
 describe('chatStore history mapping', () => {
   beforeEach(() => {
+    __resetModuleStateForTests()
     sendMock.mockReset()
     getMemberBySessionIdMock.mockReset()
     getMemberBySessionIdMock.mockReturnValue(null)

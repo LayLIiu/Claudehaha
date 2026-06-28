@@ -4,6 +4,7 @@
 node_modules
 openspec
 .DS_Store
+._*
 
 # Computer Use runtime (auto-generated)
 .runtime/

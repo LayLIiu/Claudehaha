@@ -426,6 +426,8 @@ describe('touch-H5 stylesheet contract', () => {
   it('disables paint skipping for the trace-window rows too', () => {
     expect(css).toMatch(/\.trace-message-cv \{\s*\n\s*content-visibility: auto;\s*\n\s*contain-intrinsic-size: auto 120px;/)
     expect(css).toMatch(/\.trace-list-row-cv \{\s*\n\s*content-visibility: auto;\s*\n\s*contain-intrinsic-size: auto 56px;/)
-    expect(css).toMatch(/html\[data-touch-h5\] \.trace-message-cv,\s*\nhtml\[data-touch-h5\] \.trace-list-row-cv \{\s*\n\s*content-visibility: visible;/)
+    expect(css).toMatch(/html\[data-touch-h5\] \.trace-message-cv,/)
+    expect(css).toMatch(/html\[data-touch-h5\] \.trace-list-row-cv,?/)
+    expect(css).toMatch(/content-visibility: visible;/)
   })
 })

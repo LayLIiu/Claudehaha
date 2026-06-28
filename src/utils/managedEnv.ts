@@ -14,7 +14,7 @@ import { clearMTLSCache } from './mtls.js'
 import { clearProxyCache, configureGlobalAgents } from './proxy.js'
 import { isSettingSourceEnabled } from './settings/constants.js'
 import {
-  getSettings_DEPRECATED,
+  getInitialSettings,
   getSettingsForSource,
 } from './settings/settings.js'
 
@@ -197,7 +197,7 @@ export function applySafeConfigEnvironmentVariables(): void {
   // unchanged (it has the highest merge priority in both loops) — except
   // provider-routing vars, which filterSettingsEnv strips from every source
   // when CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST is set.
-  const settingsEnv = filterSettingsEnv(getSettings_DEPRECATED()?.env)
+  const settingsEnv = filterSettingsEnv(getInitialSettings()?.env)
   for (const [key, value] of Object.entries(settingsEnv)) {
     if (SAFE_ENV_VARS.has(key.toUpperCase())) {
       process.env[key] = value
@@ -215,7 +215,7 @@ export function applySafeConfigEnvironmentVariables(): void {
 export function applyConfigEnvironmentVariables(): void {
   Object.assign(process.env, filterSettingsEnv(getGlobalConfig().env))
 
-  Object.assign(process.env, filterSettingsEnv(getSettings_DEPRECATED()?.env))
+  Object.assign(process.env, filterSettingsEnv(getInitialSettings()?.env))
 
   // cc-haha provider isolation: same as in applySafeConfigEnvironmentVariables,
   // apply Haha-specific env last so it overrides the original settings.

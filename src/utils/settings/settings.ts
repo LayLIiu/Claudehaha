@@ -816,6 +816,8 @@ export function getInitialSettings(): SettingsJson {
 
 /**
  * @deprecated Use getInitialSettings() instead. This alias exists for backwards compatibility.
+ * Migration: replace `getSettings_DEPRECATED()` with `getInitialSettings()` — they are identical.
+ * For React components, prefer `useSettings()` hook for reactive updates.
  */
 export const getSettings_DEPRECATED = getInitialSettings
 

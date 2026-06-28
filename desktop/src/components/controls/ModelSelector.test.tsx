@@ -253,7 +253,7 @@ describe('ModelSelector', () => {
       .getAllByRole('button', { name: /deepseek-v4-flash/i })
       .find((button) => button.textContent?.includes('Main Model'))
     expect(flashOption).toBeDefined()
-    expect(flashOption?.className).toContain('border-[var(--color-model-option-selected-border)]')
+    expect(flashOption?.className).toContain('bg-white/[0.085]')
   })
 
   it('keeps runtime effort scoped to the selected session', async () => {

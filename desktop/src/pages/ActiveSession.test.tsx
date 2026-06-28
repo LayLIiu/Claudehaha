@@ -225,7 +225,7 @@ describe('ActiveSession task polling', () => {
 
     render(<ActiveSession />)
 
-    expect(screen.getByTestId('open-project-menu')).toHaveAttribute('data-path', '/workspace/project')
+    expect(screen.getAllByTestId('open-project-menu')[0]).toHaveAttribute('data-path', '/workspace/project')
   })
 
   it('treats a persisted historical session as non-empty before messages finish loading', () => {
@@ -589,7 +589,7 @@ describe('ActiveSession task polling', () => {
 
     render(<ActiveSession />)
 
-    expect(screen.getByText(/session active|会话活跃中/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/session active|会话活跃中/)).toBeInTheDocument()
     expect(screen.getByTestId('chat-input')).toHaveAttribute('data-variant', 'default')
   })
 
@@ -1141,8 +1141,8 @@ describe('ActiveSession task polling', () => {
 
     expect(screen.getByTestId('active-session-chat-column')).toHaveClass('min-h-0')
     expect(screen.getByTestId('empty-session-hero')).toHaveClass('min-h-0')
-    expect(screen.getByTestId('empty-session-hero')).toHaveClass('pb-6')
-    expect(screen.getByTestId('empty-session-hero')).not.toHaveClass('pb-32')
+    expect(screen.getByTestId('empty-session-hero')).toHaveClass('pb-2')
+    expect(screen.getByTestId('empty-session-hero')).not.toHaveClass('pb-6')
     expect(screen.getByTestId('session-terminal-panel')).toHaveStyle({ height: '420px' })
     expect(screen.getByTestId('terminal-resize-handle')).toHaveAttribute('aria-valuemax', '760')
   })

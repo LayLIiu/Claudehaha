@@ -3439,3 +3439,17 @@ function hasUserMessagesAfterTaskCompletion(messages: MessageEntry[]): boolean {
   for (let i = lastTaskIndex + 1; i < messages.length; i++) { if (messages[i]!.type === 'user') return true }
   return false
 }
+
+/** @internal Reset module-level mutable state between tests. */
+export function __resetModuleStateForTests(): void {
+  for (const [, timer] of flushTimerBySession) clearTimeout(timer)
+  for (const [, timer] of toolInputFlushTimerBySession) clearTimeout(timer)
+  pendingDeltaBySession.clear()
+  flushTimerBySession.clear()
+  pendingToolInputDeltaBySession.clear()
+  toolInputFlushTimerBySession.clear()
+  recentServerMessages.clear()
+  historyLoadsInFlight.clear()
+  pendingTaskToolUseIdsBySession.clear()
+  pendingToolParentUseIdsBySession.clear()
+}

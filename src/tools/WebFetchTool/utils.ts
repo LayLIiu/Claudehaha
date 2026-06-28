@@ -12,7 +12,7 @@ import {
   isBinaryContentType,
   persistBinaryContent,
 } from '../../utils/mcpOutputStorage.js'
-import { getSettings_DEPRECATED } from '../../utils/settings/settings.js'
+import { getInitialSettings } from '../../utils/settings/settings.js'
 import { asSystemPrompt } from '../../utils/systemPromptType.js'
 import { isPreapprovedHost } from './preapproved.js'
 import { makeSecondaryModelPrompt } from './prompt.js'
@@ -78,7 +78,7 @@ const DOMAIN_CHECK_CACHE = new LRUCache<string, true>({
 })
 
 export function shouldSkipWebFetchPreflight(
-  settings: { skipWebFetchPreflight?: boolean } = getSettings_DEPRECATED(),
+  settings: { skipWebFetchPreflight?: boolean } = getInitialSettings(),
 ): boolean {
   if (settings.skipWebFetchPreflight !== undefined) {
     return settings.skipWebFetchPreflight
@@ -396,7 +396,7 @@ export async function getURLMarkdownContent(
     // Check if the user has opted to skip the blocklist check
     // This is for enterprise customers with restrictive security policies
     // that prevent outbound connections to claude.ai
-    const settings = getSettings_DEPRECATED()
+    const settings = getInitialSettings()
     if (!shouldSkipWebFetchPreflight(settings)) {
       const checkResult = await checkDomainBlocklist(hostname)
       switch (checkResult.status) {

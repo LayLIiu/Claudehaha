@@ -63,8 +63,8 @@ describe('MarkdownRenderer', () => {
     )
 
     const root = container.firstChild as HTMLDivElement
-    expect(root.className).toContain('prose-ul:pl-5')
-    expect(root.className).toContain('prose-ol:pl-5')
+    expect(root.className).toContain('prose-ul:pl-[1.3125rem]')
+    expect(root.className).toContain('prose-ol:pl-[1.3125rem]')
     expect(root.className).toContain('prose-ul:list-outside')
     expect(root.className).toContain('prose-ol:list-outside')
     expect(screen.getByText('First item')).toBeInTheDocument()
@@ -93,9 +93,9 @@ describe('MarkdownRenderer', () => {
 
     const root = container.firstChild as HTMLDivElement
     expect(root).toBeInTheDocument()
-    expect(root.className).toContain('prose-code:text-[var(--color-code-fg)]')
-    expect(root.className).toContain('prose-code:bg-[var(--color-code-bg)]')
-    expect(root.className).not.toContain('prose-code:text-[var(--color-primary-fixed)]')
+    expect(root.className).toContain('prose-code:text-[var(--color-token-foreground)]')
+    expect(root.className).toContain('prose-code:bg-[color-mix(in_srgb,var(--color-token-list-hover-background,rgba(255,255,255,0.06))_60%,var(--color-token-foreground)_6%)]')
+    expect(root.className).not.toContain('prose-code:text-[var(--color-code-fg)]')
     expect(screen.getByText('claude-sonnet-4-6')).toBeInTheDocument()
   })
 

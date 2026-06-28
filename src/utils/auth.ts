@@ -71,7 +71,7 @@ import {
   getUsername,
 } from './secureStorage/macOsKeychainHelpers.js'
 import {
-  getSettings_DEPRECATED,
+  getInitialSettings,
   getSettingsForSource,
 } from './settings/settings.js'
 import { sleep } from './sleep.js'
@@ -121,7 +121,7 @@ export function isAnthropicAuthEnabled(): boolean {
 
   // Check if user has configured an external API key source
   // This allows externally-provided API keys to work (without requiring proxy configuration)
-  const settings = getSettings_DEPRECATED() || {}
+  const settings = getInitialSettings() || {}
   const apiKeyHelper = settings.apiKeyHelper
   const hasExternalAuthToken =
     process.env.ANTHROPIC_AUTH_TOKEN ||
@@ -358,7 +358,7 @@ export function getConfiguredApiKeyHelper(): string | undefined {
   if (isBareMode()) {
     return getSettingsForSource('flagSettings')?.apiKeyHelper
   }
-  const mergedSettings = getSettings_DEPRECATED() || {}
+  const mergedSettings = getInitialSettings() || {}
   return mergedSettings.apiKeyHelper
 }
 
@@ -383,7 +383,7 @@ function isApiKeyHelperFromProjectOrLocalSettings(): boolean {
  * Get the configured awsAuthRefresh from settings
  */
 function getConfiguredAwsAuthRefresh(): string | undefined {
-  const mergedSettings = getSettings_DEPRECATED() || {}
+  const mergedSettings = getInitialSettings() || {}
   return mergedSettings.awsAuthRefresh
 }
 
@@ -408,7 +408,7 @@ export function isAwsAuthRefreshFromProjectSettings(): boolean {
  * Get the configured awsCredentialExport from settings
  */
 function getConfiguredAwsCredentialExport(): string | undefined {
-  const mergedSettings = getSettings_DEPRECATED() || {}
+  const mergedSettings = getInitialSettings() || {}
   return mergedSettings.awsCredentialExport
 }
 
@@ -816,7 +816,7 @@ export function clearAwsCredentialsCache(): void {
  * Get the configured gcpAuthRefresh from settings
  */
 function getConfiguredGcpAuthRefresh(): string | undefined {
-  const mergedSettings = getSettings_DEPRECATED() || {}
+  const mergedSettings = getInitialSettings() || {}
   return mergedSettings.gcpAuthRefresh
 }
 
@@ -1766,7 +1766,7 @@ export function isUsing3PServices(): boolean {
  * Get the configured otelHeadersHelper from settings
  */
 function getConfiguredOtelHeadersHelper(): string | undefined {
-  const mergedSettings = getSettings_DEPRECATED() || {}
+  const mergedSettings = getInitialSettings() || {}
   return mergedSettings.otelHeadersHelper
 }
 

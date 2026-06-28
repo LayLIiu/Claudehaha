@@ -260,6 +260,10 @@ export function filterControlOperators(
  * @deprecated Legacy regex/shell-quote path. Only used when tree-sitter is
  * unavailable. The primary gate is parseForSecurity (ast.ts).
  *
+ * Migration: For security checks, use `parseForSecurity()` from `ast.ts`.
+ * For command display, use `splitCommandWithOperators()` which returns richer structure.
+ * `splitCommand_DEPRECATED()` simply discards operator info from `splitCommandWithOperators()`.
+ *
  * Splits a command string into individual commands based on shell operators
  */
 export function splitCommand_DEPRECATED(command: string): string[] {

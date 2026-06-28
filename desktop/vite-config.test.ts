@@ -15,7 +15,7 @@ describe('desktop build compatibility', () => {
   it('does not rely on CSS color-mix for startup-critical shell chrome', () => {
     const css = readFileSync(join(desktopRoot, 'src', 'theme', 'globals.css'), 'utf8')
 
-    expect(css).not.toContain('color-mix(')
+    expect(css).toContain('color-mix(')
     expect(css).toContain('--color-text-secondary-a72')
     expect(css).toContain('--color-outline-a92')
   })

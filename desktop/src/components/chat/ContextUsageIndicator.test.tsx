@@ -207,7 +207,7 @@ describe('ContextUsageIndicator request behavior', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getAllByText('21%').length).toBeGreaterThan(0)
+      expect(screen.getByTestId('context-usage-indicator')).toHaveAttribute('aria-label', expect.stringContaining('21%'))
     })
 
     await act(async () => {
@@ -218,8 +218,8 @@ describe('ContextUsageIndicator request behavior', () => {
       await first.promise
     })
 
-    expect(screen.getAllByText('21%').length).toBeGreaterThan(0)
-    expect(screen.queryByText('90%')).not.toBeInTheDocument()
+    expect(screen.getByTestId('context-usage-indicator')).toHaveAttribute('aria-label', expect.stringContaining('21%'))
+    expect(screen.getByTestId('context-usage-indicator')).not.toHaveAttribute('aria-label', expect.stringContaining('90%'))
   })
 
   it('ignores a stale inspection response when identity changes while hidden', async () => {
@@ -306,7 +306,7 @@ describe('ContextUsageIndicator request behavior', () => {
       expect(sessionsApiMock.getInspection).toHaveBeenCalledTimes(2)
     })
     await waitFor(() => {
-      expect(screen.getByTestId('context-usage-indicator')).toHaveTextContent('5%')
+      expect(screen.getByTestId('context-usage-indicator')).toHaveAttribute('aria-label', expect.stringContaining('5%'))
     })
   })
 

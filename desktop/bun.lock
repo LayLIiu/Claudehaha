@@ -17,7 +17,7 @@
         "html2canvas": "^1.4.1",
         "katex": "^0.16.45",
         "lucide-react": "^0.469.0",
-        "marked": "^15.0.7",
+        "marked": "^17.0.5",
         "mermaid": "^11.14.0",
         "node-pty": "^1.1.0",
         "prism-react-renderer": "^2.4.1",
@@ -1090,7 +1090,7 @@
 
     "make-dir": ["make-dir@4.0.0", "https://registry.npmmirror.com/make-dir/-/make-dir-4.0.0.tgz", { "dependencies": { "semver": "^7.5.3" } }, "sha512-hXdUTZYIVOt1Ex//jAQi+wTZZpUpwBj/0QsOzqegb3rGMMeJiSEu5xLHnYfBrRV4RH2+OCSOO95Is/7x1WJ4bw=="],
 
-    "marked": ["marked@15.0.12", "https://registry.npmmirror.com/marked/-/marked-15.0.12.tgz", { "bin": "bin/marked.js" }, "sha512-8dD6FusOQSrpv9Z1rdNMdlSgQOIP880DHqnohobOmYLElGEqAL/JvxvuxZO16r4HtjTlfPRDC1hbvxC9dPN2nA=="],
+    "marked": ["marked@17.0.6", "https://registry.npmmirror.com/marked/-/marked-17.0.6.tgz", { "bin": { "marked": "bin/marked.js" } }, "sha512-gB0gkNafnonOw0obSTEGZTT86IuhILt2Wfx0mWH/1Au83kybTayroZ/V6nS25mN7u8ASy+5fMhgB3XPNrOZdmA=="],
 
     "matcher": ["matcher@3.0.0", "https://registry.npmmirror.com/matcher/-/matcher-3.0.0.tgz", { "dependencies": { "escape-string-regexp": "^4.0.0" } }, "sha512-OkeDaAZ/bQCxeFAozM55PKcKU0yJMPGifLwV4Qgjitu+5MoAfSQN4lsLJeXZ1b8w0x+/Emda6MZgXS1jvsapng=="],
 

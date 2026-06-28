@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import { Box, Link, Text } from '../ink.js'
 import { useKeybinding } from '../keybindings/useKeybinding.js'
-import { getSettings_DEPRECATED } from '../utils/settings/settings.js'
+import { getInitialSettings } from '../utils/settings/settings.js'
 import { ConsoleOAuthFlow } from './ConsoleOAuthFlow.js'
 import { Select } from './CustomSelect/select.js'
 import { OpenAILoginFlow } from './OpenAILoginFlow.js'
@@ -66,7 +66,7 @@ export function SlashLoginFlow({
   onDone,
   startingMessage,
 }: Props): React.ReactNode {
-  const settings = getSettings_DEPRECATED() || {}
+  const settings = getInitialSettings() || {}
   const forceLoginMethod = settings.forceLoginMethod
 
   const [selection, setSelection] = useState<LoginSelection>(() => {

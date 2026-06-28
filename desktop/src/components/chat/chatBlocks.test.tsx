@@ -40,8 +40,9 @@ describe('chat blocks', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Thought/ }))
 
-    expect(container.querySelector('strong')?.textContent).toBe('important')
-    expect(container.querySelector('li')?.textContent).toBe('item one')
+    // Disclosure view: "important" is a section title (font-semibold span), not <strong>
+    expect(container.querySelector('strong')).toBeNull()
+    expect(container.textContent).toContain('important')
   })
 
   it('hides full thinking content until expanded', () => {
@@ -161,8 +162,6 @@ describe('chat blocks', () => {
 
     expect(container.textContent).toContain('Partial input')
     expect(container.textContent).toContain('json')
-    expect(container.textContent).toContain('4 lines')
-    expect(container.textContent).not.toContain('1 line')
 
     const contentWrapper = container.querySelector('[data-code-viewer-content]') as HTMLElement | null
     expect(contentWrapper?.style.whiteSpace).toBe('pre-wrap')

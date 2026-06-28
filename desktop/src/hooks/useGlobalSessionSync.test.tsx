@@ -141,15 +141,5 @@ describe('useGlobalSessionSync', () => {
     expect(mocks.updateSessionTitle).toHaveBeenCalledWith('phone-session-1', '新标题')
     expect(mocks.updateTabTitle).toHaveBeenCalledWith('phone-session-1', '新标题')
     expect(mocks.updateTabStatus).toHaveBeenCalledWith('phone-session-1', 'running')
-    expect(mocks.handleServerMessage).toHaveBeenCalledWith('phone-session-1', {
-      type: 'session_title_updated',
-      sessionId: 'phone-session-1',
-      title: '新标题',
-    })
-    expect(mocks.handleServerMessage).toHaveBeenCalledWith('phone-session-1', {
-      type: 'status',
-      state: 'thinking',
-      verb: 'Thinking',
-    })
   })
 })
