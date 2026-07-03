@@ -10,8 +10,8 @@ export function TitleBar() {
       className="h-[var(--titlebar-height)] flex items-center border-b border-[var(--color-token-border)] bg-[var(--color-surface)] select-none"
       data-desktop-drag-region
     >
-      {/* macOS traffic light spacer */}
-      <div className="w-[78px] flex-shrink-0" data-desktop-drag-region />
+      {/* Windows: window controls on left (138px); macOS: traffic light spacer (78px) */}
+      <div className={`${isWindows ? 'w-[138px]' : 'w-[78px]'} flex-shrink-0`} data-desktop-drag-region />
 
       {/* Logo */}
       <div className="flex items-center gap-2 mr-4" data-desktop-drag-region>

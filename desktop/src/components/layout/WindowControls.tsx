@@ -184,16 +184,17 @@ function CodexSidebarToggleIcon({ collapsed }: { collapsed: boolean }) {
   return (
     <div
       data-testid="window-controls"
-      className="window-traffic-light-zone fixed top-0 right-0 z-[110] flex h-[34px] items-stretch flex-shrink-0"
+      className="window-traffic-light-zone fixed top-0 left-0 z-[110] flex h-[34px] items-stretch flex-shrink-0"
     >
-      {/* Minimize */}
+      {/* Close */}
       <button
-        onClick={() => runWindowAction(() => win.minimize())}
-        aria-label="Minimize window"
-        className="w-[46px] h-full flex items-center justify-center text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
+        onClick={() => runWindowAction(() => win.close())}
+        aria-label="Close window"
+        className="w-[46px] h-full flex items-center justify-center text-[var(--color-token-text-secondary)] hover:bg-[var(--color-window-close-hover)] hover:text-white transition-colors"
       >
-        <svg width="10" height="1" viewBox="0 0 10 1">
-          <rect width="10" height="1" fill="currentColor" />
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.2">
+          <line x1="0" y1="0" x2="10" y2="10" />
+          <line x1="10" y1="0" x2="0" y2="10" />
         </svg>
       </button>
 
@@ -215,15 +216,14 @@ function CodexSidebarToggleIcon({ collapsed }: { collapsed: boolean }) {
         )}
       </button>
 
-      {/* Close */}
+      {/* Minimize */}
       <button
-        onClick={() => runWindowAction(() => win.close())}
-        aria-label="Close window"
-        className="w-[46px] h-full flex items-center justify-center text-[var(--color-token-text-secondary)] hover:bg-[var(--color-window-close-hover)] hover:text-white transition-colors"
+        onClick={() => runWindowAction(() => win.minimize())}
+        aria-label="Minimize window"
+        className="w-[46px] h-full flex items-center justify-center text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
       >
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.2">
-          <line x1="0" y1="0" x2="10" y2="10" />
-          <line x1="10" y1="0" x2="0" y2="10" />
+        <svg width="10" height="1" viewBox="0 0 10 1">
+          <rect width="10" height="1" fill="currentColor" />
         </svg>
       </button>
     </div>
