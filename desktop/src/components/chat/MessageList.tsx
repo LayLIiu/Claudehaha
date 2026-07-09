@@ -1797,6 +1797,21 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
   const streamingToolInput = sessionState?.streamingToolInput ?? ''
   const activeThinkingId = sessionState?.activeThinkingId ?? null
   const agentTaskNotifications = sessionState?.agentTaskNotifications ?? EMPTY_AGENT_TASK_NOTIFICATIONS
+
+  // Debounce chatState → idle: only treat the turn as "settled" (safe to collapse)
+  // after chatState stays idle for 800ms.  The server briefly sets chatState to
+  // 'idle' between message_complete and the next content_start during a multi-step
+  // turn, which would cause premature collapse without this debounce.
+  const [settledIdle, setSettledIdle] = useState(chatState === 'idle')
+  useEffect(() => {
+    if (chatState !== 'idle' && chatState !== 'permission_pending') {
+      setSettledIdle(false)
+      return
+    }
+    const timer = window.setTimeout(() => setSettledIdle(true), 800)
+    return () => window.clearTimeout(timer)
+  }, [chatState])
+  const isTurnActive = !settledIdle
   const activeAskUserQuestionToolUseId =
     sessionState?.pendingPermission?.toolName === 'AskUserQuestion'
       ? sessionState.pendingPermission.toolUseId
@@ -2103,7 +2118,6 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
     return () => observer.disconnect()
   }, [scrollToBottom])
 
-  const isTurnActive = chatState !== 'idle' && chatState !== 'permission_pending'
   const { toolResultMap, childToolCallsByParent, renderItems } = useMemo(
     () => buildRenderModel(messages, activeAskUserQuestionToolUseId, isTurnActive),
     [activeAskUserQuestionToolUseId, isTurnActive, messages],

@@ -3,7 +3,6 @@ import type { MouseEvent as ReactMouseEvent } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
-import remarkCodeMeta from 'remark-code-meta'
 import rehypeKatex from 'rehype-katex'
 import rehypeRaw from 'rehype-raw'
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
@@ -108,7 +107,7 @@ function getProseClasses(variant: 'default' | 'document' | 'compact', streaming:
     .join(' ')
 }
 
-const remarkPlugins = [remarkGfm, remarkMath, remarkCodeMeta]
+const remarkPlugins = [remarkGfm, remarkMath]
 const rehypePlugins = [rehypeRaw, [rehypeSanitize, sanitizeSchema], rehypeKatex]
 
 /** Single markdown block rendered with react-markdown */
