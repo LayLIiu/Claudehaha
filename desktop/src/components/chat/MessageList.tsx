@@ -22,6 +22,7 @@ import { ToolResultBlock } from './ToolResultBlock'
 import { AskUserQuestion } from './AskUserQuestion'
 import { StreamingIndicator, CadencedShimmerText } from './StreamingIndicator'
 import { InlineTaskSummary } from './InlineTaskSummary'
+import { ShikiProvider } from '../markdown/ShikiContext'
 import { CurrentTurnChangeCard } from './CurrentTurnChangeCard'
 import { summarizeToolEditFiles, type ToolEditFileSummary } from './toolEditSummary'
 import type { AgentTaskNotification, UIMessage } from '../../types/chat'
@@ -603,7 +604,7 @@ function isExplorationGroup(toolCalls: ToolCall[]): boolean {
 /** Max visible tool calls before burst-fold kicks in (mirrors iOS collapsedVisibleCount = 5) */
 const TOOL_BURST_VISIBLE_COUNT = 5
 
-export function buildRenderModel(messages: UIMessage[], activeAskUserQuestionToolUseId?: string | null, hasStreamingAnswer?: boolean): RenderModel {
+export function buildRenderModel(messages: UIMessage[], activeAskUserQuestionToolUseId?: string | null, isTurnActive?: boolean): RenderModel {
   const items: RenderItem[] = []
   const toolResultMap = new Map<string, ToolResult>()
   const childToolCallsByParent = new Map<string, ToolCall[]>()
@@ -761,9 +762,9 @@ export function buildRenderModel(messages: UIMessage[], activeAskUserQuestionToo
   flushGroup()
 
   // ── Turn collapse projection ──
-  // Apply turn collapse in both idle and streaming states.
-  // During streaming, collapse the active turn only when tools are done (AI is writing summary).
-  return { renderItems: applyTurnCollapse(items, hasStreamingAnswer), toolResultMap, childToolCallsByParent }
+  // ZCode rule: only collapse completed turns (chatState is idle).
+  // The active turn stays fully expanded to avoid flicker.
+  return { renderItems: applyTurnCollapse(items, isTurnActive), toolResultMap, childToolCallsByParent }
 }
 
 /**
@@ -813,76 +814,69 @@ function buildTurnGroups(renderItems: RenderItem[]): TurnGroup[] {
 
 /**
  * Post-process render items to collapse completed turn internals.
- * A "turn" = user_text → [process items] → final assistant_text.
- * Process items include thinking, tool_group, tool_burst, and non-final assistant_text.
+ *
+ * ZCode-style rules:
+ * 1. The ACTIVE turn (chatState not idle) is NEVER collapsed — all items
+ *    render as-is, matching ZCode where latestPart is null during streaming.
+ *    This prevents the flicker of collapse→expand→collapse as messages arrive.
+ * 2. Only COMPLETED turns (chatState returned to idle) get the history/latest
+ *    partition and auto-collapse.
+ * 3. The "final answer" is the last assistant_text with NO tool calls after it.
+ *    Intermediate assistant text (e.g., "好的，我去调查") followed by more tools
+ *    belongs in history, not as the latest part.
  */
-function applyTurnCollapse(items: RenderItem[], hasStreamingAnswer?: boolean): RenderItem[] {
+function applyTurnCollapse(items: RenderItem[], isTurnActive?: boolean): RenderItem[] {
   const result: RenderItem[] = []
   let currentUserMsgId: string | null = null
   let currentUserMsgTimestamp: number | null = null
-  // All items within a turn, preserving original order. The last
-  // assistant_text is the "final answer" that stays visible; everything
-  // before it (including intermediate assistant text like "好的，我去调查")
-  // is collapsed into a turn_process group — matching ZCode's
-  // history/latest partition pattern.
   let turnItems: RenderItem[] = []
 
-  const flushCurrentTurn = (isLast: boolean) => {
+  const flushCurrentTurn = (isActive: boolean) => {
     if (currentUserMsgId === null) return
 
-    // Find the last assistant_text that qualifies as the "final answer".
-    // ZCode's rule: only the last content block AFTER all tool calls is the final answer.
-    // If an assistant_text is followed by more tool calls, it's an intermediate
-    // response (e.g., "好的，我去调查") and should be part of history.
+    // ZCode rule: during streaming, no partition happens at all.
+    // The active turn stays fully expanded until it completes.
+    if (isActive) {
+      for (const ti of turnItems) result.push(ti)
+      return
+    }
+
+    // Turn is complete (idle) — find the last assistant_text that qualifies
+    // as the "final answer". Only an assistant_text with NO tool calls after
+    // it counts. If followed by more tool calls, it's intermediate.
     let lastAssistantIdx = -1
-    if (!isLast || !hasStreamingAnswer) {
-      // For completed turns (not actively streaming), find the last assistant_text
-      // that has NO tool calls after it.
-      for (let i = turnItems.length - 1; i >= 0; i--) {
-        const ti = turnItems[i]!
-        if (ti.kind === 'message' && ti.message.type === 'assistant_text') {
-          // Check if there are any tool calls after this assistant_text
-          let hasToolsAfter = false
-          for (let j = i + 1; j < turnItems.length; j++) {
-            const after = turnItems[j]!
-            if (after.kind === 'tool_group' || after.kind === 'tool_burst'
-                || after.kind === 'web_search_group' || after.kind === 'exploration_group') {
-              hasToolsAfter = true
-              break
-            }
-            // Also count tool_use messages
-            if (after.kind === 'message' && after.message.type === 'tool_use') {
-              hasToolsAfter = true
-              break
-            }
-          }
-          if (!hasToolsAfter) {
-            lastAssistantIdx = i
+    for (let i = turnItems.length - 1; i >= 0; i--) {
+      const ti = turnItems[i]!
+      if (ti.kind === 'message' && ti.message.type === 'assistant_text') {
+        let hasToolsAfter = false
+        for (let j = i + 1; j < turnItems.length; j++) {
+          const after = turnItems[j]!
+          if (after.kind === 'tool_group' || after.kind === 'tool_burst'
+              || after.kind === 'web_search_group' || after.kind === 'exploration_group') {
+            hasToolsAfter = true
             break
           }
-          // This assistant_text has tools after it → it's intermediate, keep looking
+          if (after.kind === 'message' && after.message.type === 'tool_use') {
+            hasToolsAfter = true
+            break
+          }
         }
+        if (!hasToolsAfter) {
+          lastAssistantIdx = i
+          break
+        }
+        // This assistant_text has tools after it → intermediate, keep looking
       }
     }
 
-    // When streaming answer exists but hasn't been committed as a message yet,
-    // treat the entire turnItems as process content (no final assistant in messages).
-    // This ensures the process stays expanded while the streaming summary appears.
-    const hasFinalAnswer = lastAssistantIdx >= 0 || (isLast && hasStreamingAnswer)
-
-    if (hasFinalAnswer) {
-      // Everything before the final assistant is process content
-      const processItems = lastAssistantIdx >= 0
-        ? turnItems.slice(0, lastAssistantIdx)
-        : turnItems
-      const finalAssistant = lastAssistantIdx >= 0 ? turnItems[lastAssistantIdx]! : null
-      // Items after the final assistant (rare edge case)
-      const afterItems = lastAssistantIdx >= 0 ? turnItems.slice(lastAssistantIdx + 1) : []
+    if (lastAssistantIdx >= 0) {
+      const processItems = turnItems.slice(0, lastAssistantIdx)
+      const finalAssistant = turnItems[lastAssistantIdx]!
+      const afterItems = turnItems.slice(lastAssistantIdx + 1)
 
       if (processItems.length > 0) {
         const stepCount = countProcessSteps(processItems)
         if (stepCount > 0) {
-          // Derive endTime from the last process item
           let endTime: number | null = null
           for (let i = processItems.length - 1; i >= 0; i--) {
             const pi = processItems[i]!
@@ -903,20 +897,17 @@ function applyTurnCollapse(items: RenderItem[], hasStreamingAnswer?: boolean): R
               stepCount,
               startTime: currentUserMsgTimestamp,
               endTime,
-              hasFinalAssistant: finalAssistant != null,
+              hasFinalAssistant: true,
             },
             id: `turn-${currentUserMsgId}-${result.length}`,
           })
         }
       }
 
-      // Final assistant answer is always visible
-      if (finalAssistant) result.push(finalAssistant)
-
-      // Any trailing items after the final assistant
+      result.push(finalAssistant)
       for (const ai of afterItems) result.push(ai)
     } else {
-      // No assistant in this turn — push all items as-is
+      // No qualifying final answer — push all items as-is (no collapse)
       for (const ti of turnItems) result.push(ti)
     }
   }
@@ -947,7 +938,8 @@ function applyTurnCollapse(items: RenderItem[], hasStreamingAnswer?: boolean): R
     turnItems.push(item)
   }
 
-  flushCurrentTurn(true)
+  // Last turn: active if chatState is not idle/permission_pending
+  flushCurrentTurn(!!isTurnActive)
   return result
 }
 
@@ -2111,10 +2103,10 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
     return () => observer.disconnect()
   }, [scrollToBottom])
 
-  const hasStreamingAnswer = streamingText.trim().length > 0 || chatState === 'streaming'
+  const isTurnActive = chatState !== 'idle' && chatState !== 'permission_pending'
   const { toolResultMap, childToolCallsByParent, renderItems } = useMemo(
-    () => buildRenderModel(messages, activeAskUserQuestionToolUseId, hasStreamingAnswer),
-    [activeAskUserQuestionToolUseId, hasStreamingAnswer, messages],
+    () => buildRenderModel(messages, activeAskUserQuestionToolUseId, isTurnActive),
+    [activeAskUserQuestionToolUseId, isTurnActive, messages],
   )
   // Tool groups that have been followed by assistant text, meaning the group's
   // work is done and it should show its summary (even if the turn is still
@@ -2616,7 +2608,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
             startedAt={item.group.startTime ?? Date.now()}
             hasLatestPart={item.group.hasFinalAssistant}
             settling={false}
-            streaming={chatState !== 'idle' && chatState !== 'permission_pending' && item.group.endTime == null}
+            streaming={false}
           />
         ) : item.kind === 'web_search_group' ? (
           <WebSearchGroupSection
@@ -2674,6 +2666,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
   }
 
   return (
+    <ShikiProvider>
     <div className="relative min-h-0 flex-1">
       <div className="pointer-events-none absolute top-0 z-10 h-[30px]" style={{ left: '50%', width: '820px', transform: 'translateX(-50%)', background: 'linear-gradient(to bottom, var(--color-surface) 0%, transparent 100%)' }} />
       <div
@@ -2828,6 +2821,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
         loading={Boolean(rewindingTurnId)}
       />
     </div>
+    </ShikiProvider>
   )
 }
 

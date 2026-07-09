@@ -1,5 +1,6 @@
-import { memo, useEffect, useState, Suspense } from 'react'
-import { useShikiHighlighter, useShikiTheme } from './ShikiContext'
+import { memo, useEffect, useState, Suspense, useRef } from 'react'
+import { ShikiHighlighter } from 'react-shiki'
+import { useShikiHighlighter } from './ShikiContext'
 import { MermaidRenderer } from '../chat/MermaidRenderer'
 import { CopyButton } from '../shared/CopyButton'
 
@@ -22,6 +23,25 @@ function isMermaid(language: string | undefined, code: string): boolean {
 
 const CODE_PADDING = '0.55rem 1.05rem 1rem'
 const CODE_FONT_FAMILY = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace'
+
+// ── warm-code theme (copied from old CodeViewer.tsx) ──
+const warmShikiTheme = {
+  name: 'warm-code',
+  type: 'dark' as const,
+  fg: '#f2f2f2',
+  bg: 'transparent',
+  tokenColors: [
+    { scope: ['comment', 'punctuation.definition.comment'], settings: { foreground: '#a6a6a6', fontStyle: 'italic' } },
+    { scope: ['support.function.builtin.shell', 'keyword', 'keyword.control', 'storage', 'storage.type', 'storage.modifier'], settings: { foreground: '#ff9f0a' } },
+    { scope: ['string', 'string.quoted', 'string.template', 'string.other.link', 'string.regexp'], settings: { foreground: '#f2f2f2' } },
+    { scope: ['keyword.operator', 'entity.name.function', 'support.function', 'entity.name.type', 'support.type', 'support.class', 'entity.name.class', 'entity.other.inherited-class', 'entity.name.type.parameter', 'variable', 'variable.other', 'variable.other.readwrite', 'variable.parameter', 'variable.other.property', 'support.type.property-name', 'meta.object-literal.key', 'variable.other.constant', 'variable.other.enummember', 'constant.numeric', 'constant.language', 'punctuation', 'meta.brace', 'meta.bracket', 'entity.name.tag', 'punctuation.definition.tag', 'entity.other.attribute-name', 'meta.decorator', 'punctuation.decorator'], settings: { foreground: '#f2f2f2' } },
+    { scope: ['markup.inserted', 'punctuation.definition.inserted'], settings: { foreground: '#30d158' } },
+    { scope: ['markup.deleted', 'punctuation.definition.deleted'], settings: { foreground: '#ff6961' } },
+    { scope: ['markup.heading', 'entity.name.section'], settings: { foreground: '#f2f2f2', fontStyle: 'bold' } },
+    { scope: ['markup.bold'], settings: { fontStyle: 'bold' } },
+    { scope: ['markup.italic'], settings: { fontStyle: 'italic' } },
+  ],
+}
 
 /** Fallback: plain text tokens without syntax highlighting */
 function PlainTextBody({ code }: { code: string }) {
@@ -47,39 +67,64 @@ function PlainTextBody({ code }: { code: string }) {
   )
 }
 
-/** Highlighted code body using Shiki */
+/** Highlighted code body using ShikiHighlighter with IntersectionObserver lazy loading */
 function HighlightedBody({ code, language }: { code: string; language: string }) {
   const engine = useShikiHighlighter()
-  const themes = useShikiTheme()
-  const [html, setHtml] = useState<string | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [inViewport, setInViewport] = useState(false)
 
+  // ── IntersectionObserver: lazy-load Shiki when code block is near the viewport ──
   useEffect(() => {
-    if (!engine) return
-    let cancelled = false
+    const el = containerRef.current
+    if (!el) return
 
-    // Use the engine to generate themed HTML via react-shiki
-    // The highlighter is lazily loaded; codeToHtml will be implemented in Task 8
-    const doHighlight = async () => {
-      try {
-        // For now render plain text; Task 8 will add actual Shiki codeToHtml
-        if (!cancelled) setHtml(null)
-      } catch {
-        if (!cancelled) setHtml(null)
-      }
+    if (typeof IntersectionObserver === 'undefined') {
+      setInViewport(true)
+      return
     }
-    doHighlight()
-    return () => { cancelled = true }
-  }, [code, language, themes, engine])
 
-  if (!html) return <PlainTextBody code={code} />
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setInViewport(true)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '600px' },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  // ── Render ShikiHighlighter when engine is ready and in viewport ──
+  if (!inViewport || !engine) {
+    return (
+      <div ref={containerRef}>
+        <PlainTextBody code={code} />
+      </div>
+    )
+  }
 
   return (
-    <pre
-      data-streamdown="code-block-body"
-      data-highlight-engine="shiki"
-      style={{ margin: 0, padding: CODE_PADDING }}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+    <div ref={containerRef}>
+      <ShikiHighlighter
+        language={language || 'text'}
+        theme={warmShikiTheme}
+        engine={engine}
+        showLineNumbers={false}
+        showLanguage={false}
+        addDefaultStyles={false}
+        style={{
+          margin: 0,
+          padding: CODE_PADDING,
+          fontFamily: CODE_FONT_FAMILY,
+          fontSize: '14px',
+          lineHeight: '1.48',
+        }}
+      >
+        {code}
+      </ShikiHighlighter>
+    </div>
   )
 }
 
