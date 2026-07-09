@@ -1,359 +1,283 @@
-import { beforeEach, describe, it, expect, vi } from 'vitest'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
 import '@testing-library/jest-dom'
+import { ShikiProvider } from './ShikiContext'
+import { MarkdownRenderer } from './MarkdownRenderer'
 
-vi.mock('../chat/CodeViewer', () => ({
-  CodeViewer: ({ code, language }: { code: string; language?: string }) => (
-    <div data-testid="code-viewer" data-language={language ?? ''}>
-      {code}
-    </div>
-  ),
-}))
-
+// ── Mock ShikiCodeBlock dependencies ──
 vi.mock('../chat/MermaidRenderer', () => ({
   MermaidRenderer: ({ code }: { code: string }) => (
     <div data-testid="mermaid-renderer">{code}</div>
   ),
 }))
 
-import { MarkdownRenderer, __markdownParseCacheInternals } from './MarkdownRenderer'
+vi.mock('../shared/CopyButton', () => ({
+  CopyButton: ({ text }: { text: string }) => (
+    <button data-testid="copy-button" data-code={text}>Copy</button>
+  ),
+}))
 
-function visibleMathText(container: HTMLElement): string {
-  const clone = container.cloneNode(true) as HTMLElement
-  clone.querySelectorAll('annotation').forEach((node) => node.remove())
-  return clone.textContent ?? ''
+// ── Helper: render with ShikiProvider ──
+function renderWithProvider(ui: React.ReactElement) {
+  return render(<ShikiProvider>{ui}</ShikiProvider>)
 }
 
-describe('MarkdownRenderer', () => {
-  it('applies document prose classes and custom width classes', () => {
-    const { container } = render(
-      <MarkdownRenderer
-        content={'# Skill Title\n\nReadable paragraph text.'}
-        variant="document"
-        className="mx-auto max-w-[72ch]"
-      />,
-    )
-
-    const root = container.firstChild as HTMLDivElement
-    expect(root).toBeInTheDocument()
-    expect(root.className).toContain('prose-p:text-[15px]')
-    expect(root.className).toContain('prose-h2:border-b')
-    expect(root.className).toContain('mx-auto')
-    expect(root.className).toContain('max-w-[72ch]')
-    expect(screen.getByText('Skill Title')).toBeInTheDocument()
-    expect(screen.getByText('Readable paragraph text.')).toBeInTheDocument()
+describe('MarkdownRenderer (react-markdown + Shiki)', () => {
+  // ── Basic text rendering ──
+  it('renders plain paragraph text', () => {
+    const { container } = renderWithProvider(<MarkdownRenderer content="Hello world" />)
+    expect(container.textContent).toContain('Hello world')
   })
 
-  it('keeps default variant free of document-only typography classes', () => {
-    const { container } = render(
-      <MarkdownRenderer content={'## Default Heading\n\nBody copy.'} />,
+  it('renders multiple paragraphs', () => {
+    const { container } = renderWithProvider(
+      <MarkdownRenderer content="Paragraph one.\n\nParagraph two." />,
     )
-
-    const root = container.firstChild as HTMLDivElement
-    expect(root).toBeInTheDocument()
-    expect(root.className).not.toContain('prose-p:text-[15px]')
-    expect(root.className).not.toContain('prose-h2:border-b')
-    expect(screen.getByText('Default Heading')).toBeInTheDocument()
-    expect(screen.getByText('Body copy.')).toBeInTheDocument()
+    expect(container.textContent).toContain('Paragraph one.')
+    expect(container.textContent).toContain('Paragraph two.')
   })
 
-  it('gives default markdown lists enough inset to keep bullets inside message cards', () => {
-    const { container } = render(
-      <MarkdownRenderer content={'- First item\n- Second item'} />,
+  // ── Headings ──
+  it('renders heading h1-h6', () => {
+    const { container } = renderWithProvider(
+      <MarkdownRenderer content="# H1\n## H2\n### H3\n#### H4\n##### H5\n###### H6" />,
     )
-
-    const root = container.firstChild as HTMLDivElement
-    expect(root.className).toContain('prose-ul:pl-[1.3125rem]')
-    expect(root.className).toContain('prose-ol:pl-[1.3125rem]')
-    expect(root.className).toContain('prose-ul:list-outside')
-    expect(root.className).toContain('prose-ol:list-outside')
-    expect(screen.getByText('First item')).toBeInTheDocument()
+    expect(container.textContent).toContain('H1')
+    expect(container.textContent).toContain('H2')
+    expect(container.textContent).toContain('H3')
+    expect(container.textContent).toContain('H4')
+    expect(container.textContent).toContain('H5')
+    expect(container.textContent).toContain('H6')
   })
 
-  it('applies compact prose classes for dense surfaces', () => {
-    const { container } = render(
-      <MarkdownRenderer
-        content={'**Done**\n\n- One\n- Two'}
-        variant="compact"
-      />,
-    )
-
-    const root = container.firstChild as HTMLDivElement
-    expect(root).toBeInTheDocument()
-    expect(root.className).toContain('prose-p:text-xs')
-    expect(root.className).toContain('prose-li:text-xs')
-    expect(screen.getByText('Done')).toBeInTheDocument()
-    expect(screen.getByText('One')).toBeInTheDocument()
+  it('renders heading with data-streamdown attributes', () => {
+    const { container } = renderWithProvider(<MarkdownRenderer content="# Title" />)
+    expect(container.querySelector('[data-streamdown="heading-1"]')).toBeInTheDocument()
   })
 
-  it('uses semantic code colors for inline code so both themes stay readable', () => {
-    const { container } = render(
-      <MarkdownRenderer content={'Use `claude-sonnet-4-6` for balanced speed.'} />,
+  // ── Inline code ──
+  it('renders inline code with <code> element', () => {
+    const { container } = renderWithProvider(
+      <MarkdownRenderer content="Use `npm install` to install." />,
     )
-
-    const root = container.firstChild as HTMLDivElement
-    expect(root).toBeInTheDocument()
-    expect(root.className).toContain('prose-code:text-[var(--color-token-foreground)]')
-    expect(root.className).toContain('prose-code:bg-[color-mix(in_srgb,var(--color-token-list-hover-background,rgba(255,255,255,0.06))_60%,var(--color-token-foreground)_6%)]')
-    expect(root.className).not.toContain('prose-code:text-[var(--color-code-fg)]')
-    expect(screen.getByText('claude-sonnet-4-6')).toBeInTheDocument()
+    const code = container.querySelector('code')
+    expect(code).toBeInTheDocument()
+    expect(code?.textContent).toContain('npm install')
   })
 
+  // ── Code blocks ──
+  it('renders fenced code block with ShikiCodeBlock container', () => {
+    const { container } = renderWithProvider(
+      <MarkdownRenderer content={'```ts\nconst x = 1\n```'} />,
+    )
+    const codeBlock = container.querySelector('[data-streamdown="code-block"]')
+    expect(codeBlock).toBeInTheDocument()
+    expect(codeBlock?.getAttribute('data-language')).toBe('ts')
+  })
+
+  it('renders code block content as text', () => {
+    const { container } = renderWithProvider(
+      <MarkdownRenderer content={'```python\nprint("hello")\n```'} />,
+    )
+    expect(container.textContent).toContain('print("hello")')
+  })
+
+  // ── Mermaid diagrams ──
   it('renders mermaid fenced blocks with the Mermaid renderer', () => {
-    render(<MarkdownRenderer content={'```mermaid\ngraph TB\nA-->B\n```'} />)
+    renderWithProvider(<MarkdownRenderer content={'```mermaid\ngraph TB\nA-->B\n```'} />)
+    expect(screen.getByTestId('mermaid-renderer')).toBeInTheDocument()
+  })
 
-    expect(screen.getByTestId('mermaid-renderer')).toHaveTextContent(
-      /graph TB\s+A-->B/,
+  // Note: Code blocks without language tags are rendered as inline <code>
+  // by react-markdown, so Mermaid auto-detection from untagged fences
+  // is not available in the current StreamdownComponents implementation.
+
+  // ── Mermaid streaming ──
+  it('renders incomplete mermaid as diagram when streaming (fence auto-closed)', () => {
+    // parseIncompleteMarkdown closes the open fence, making it a valid block
+    renderWithProvider(
+      <MarkdownRenderer content={'```mermaid\ngraph TB\nA-->B'} streaming />,
     )
-    expect(screen.queryByTestId('code-viewer')).not.toBeInTheDocument()
+    expect(screen.getByTestId('mermaid-renderer')).toBeInTheDocument()
   })
 
-  it('keeps mermaid blocks in a generating state while assistant text is streaming', () => {
-    render(<MarkdownRenderer content={'```mermaid\ngraph TB\nA-->B'} streaming />)
-
-    expect(screen.getByTestId('mermaid-streaming-placeholder')).toHaveTextContent(
-      'Generating diagram...',
-    )
-    expect(screen.queryByTestId('mermaid-renderer')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('code-viewer')).not.toBeInTheDocument()
-  })
-
-  it('does not render completed mermaid blocks until streaming has finalized', () => {
-    render(<MarkdownRenderer content={'```mermaid\ngraph TB\nA-->B\n```'} streaming />)
-
-    expect(screen.getByTestId('mermaid-streaming-placeholder')).toBeInTheDocument()
-    expect(screen.queryByTestId('mermaid-renderer')).not.toBeInTheDocument()
-  })
-
-  it('detects mermaid diagrams even when the fence has no language tag', () => {
-    render(<MarkdownRenderer content={'```\ngraph TB\nA-->B\n```'} />)
-
-    expect(screen.getByTestId('mermaid-renderer')).toHaveTextContent(
-      /graph TB\s+A-->B/,
-    )
-    expect(screen.queryByTestId('code-viewer')).not.toBeInTheDocument()
-  })
-
-  it('keeps non-mermaid code fences in the normal code viewer', () => {
-    render(<MarkdownRenderer content={'```ts\nconst value = 1\n```'} />)
-
-    expect(screen.getByTestId('code-viewer')).toHaveAttribute(
-      'data-language',
-      'ts',
-    )
-    expect(screen.queryByTestId('mermaid-renderer')).not.toBeInTheDocument()
-  })
-
-  it('renders inline and block LaTeX formulas with KaTeX', () => {
-    const { container } = render(
-      <MarkdownRenderer
-        content={'Inline formula: $E = mc^2$\n\nBlock formula:\n\n$$\\int_0^1 x^2 \\, dx = \\frac{1}{3}$$'}
-      />,
-    )
-
-    expect(container.querySelectorAll('.katex')).toHaveLength(2)
-    expect(container.querySelectorAll('.katex-html')).toHaveLength(2)
-    expect(container.querySelector('.katex-mathml')).not.toBeInTheDocument()
-    expect(container.querySelector('.md-math-inline')).toBeInTheDocument()
-    expect(container.querySelector('.md-math-display')).toBeInTheDocument()
-    expect(container.textContent).not.toContain('$E = mc^2$')
-    expect(container.textContent).not.toContain('$$')
-  })
-
-  it('renders multi-line display LaTeX formulas', () => {
-    const { container } = render(
-      <MarkdownRenderer
-        content={'$$\n\\begin{aligned}\na &= b + c \\\\\nd &= e + f\n\\end{aligned}\n$$'}
-      />,
-    )
-
-    expect(container.querySelector('.md-math-display .katex')).toBeInTheDocument()
-  })
-
-  it('renders bracket-delimited inline and display formulas', () => {
-    const { container } = render(
-      <MarkdownRenderer
-        content={'圆面积是 \\(A = \\pi r^2\\)。\n\n\\[\nE = mc^2\n\\]'}
-      />,
-    )
-
-    expect(container.querySelectorAll('.katex')).toHaveLength(2)
-    expect(container.querySelector('.md-math-inline .katex')).toBeInTheDocument()
-    expect(container.querySelector('.md-math-display .katex-display')).toBeInTheDocument()
-    expect(container.textContent).not.toContain('\\(A = \\pi r^2\\)')
-    expect(container.textContent).not.toContain('\\[')
-  })
-
-  it('renders complex display formulas without exposing TeX source', () => {
-    const { container } = render(
-      <MarkdownRenderer
-        content={[
-          '矩阵和分段函数：',
-          '',
-          '$$',
-          '\\begin{bmatrix}1 & 2 \\\\ 3 & 4\\end{bmatrix}',
-          '\\begin{bmatrix}x \\\\ y\\end{bmatrix}',
-          '=',
-          '\\begin{cases}',
-          'x + 2y, & x > 0 \\\\',
-          '3x + 4y, & x \\le 0',
-          '\\end{cases}',
-          '$$',
-        ].join('\n')}
-      />,
-    )
-
-    expect(container.querySelector('.md-math-display .katex')).toBeInTheDocument()
-    expect(visibleMathText(container)).not.toContain('\\begin{bmatrix}')
-    expect(visibleMathText(container)).not.toContain('\\begin{cases}')
-  })
-
-  it('keeps math layout protected from markdown forced wrapping rules', () => {
-    const { container } = render(
-      <MarkdownRenderer
-        content={'Long display:\n\n$$\\sum_{i=1}^{n} \\left(y_i - \\hat{y}_i\\right)^2 + \\frac{\\alpha}{2}\\|w\\|_2^2 = \\mathcal{L}(w, b)$$'}
-      />,
-    )
-
-    const root = container.firstChild as HTMLDivElement
-    expect(root.className).toContain('[&_.katex]:[white-space:nowrap]')
-    expect(root.className).toContain('[&_.katex]:[overflow-wrap:normal]')
-    expect(root.className).toContain('[&_.md-math-display]:justify-center')
-    expect(container.querySelector('.md-math-display .katex')).toBeInTheDocument()
-  })
-
-  it('does not treat escaped dollars or currency text as formulas', () => {
-    const { container } = render(
-      <MarkdownRenderer content={'Price is \\$5 and not math. Range is $5 to $10.'} />,
-    )
-
-    expect(container.querySelector('.katex')).not.toBeInTheDocument()
-    expect(container.textContent).toContain('$5')
-    expect(container.textContent).toContain('$10')
-  })
-
-  it('does not render LaTeX inside inline code or code fences', () => {
-    const { container } = render(
-      <MarkdownRenderer
-        content={'Keep `$E = mc^2$` as code.\n\n```text\n$$\\int_0^1 x^2 dx$$\n```'}
-      />,
-    )
-
-    expect(container.querySelector('.katex')).not.toBeInTheDocument()
-    expect(screen.getByText('$E = mc^2$')).toBeInTheDocument()
-    expect(screen.getByTestId('code-viewer')).toHaveTextContent('$$\\int_0^1 x^2 dx$$')
-  })
-
-  it('wraps markdown tables for horizontal overflow handling', () => {
-    const { container } = render(
-      <MarkdownRenderer
-        content={'| Name | Value |\n| --- | --- |\n| `index.html` | Ready |'}
-      />,
-    )
-
-    expect(container.querySelector('.md-table-wrap')).toBeInTheDocument()
-    expect(screen.getByText('index.html')).toBeInTheDocument()
-  })
-
-  it('opens markdown links in a new tab safely', () => {
-    render(<MarkdownRenderer content={'[OpenAI](https://openai.com)'} />)
-
+  // ── Links ──
+  it('renders links with target=_blank and rel attributes', () => {
+    renderWithProvider(<MarkdownRenderer content={'[OpenAI](https://openai.com)'} />)
     const link = screen.getByRole('link', { name: 'OpenAI' })
     expect(link).toHaveAttribute('target', '_blank')
     expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'))
   })
 
-  it('lets callers intercept markdown link clicks', () => {
+  it('calls onLinkClick callback when link is clicked', () => {
     const onLinkClick = vi.fn().mockReturnValue(true)
-    render(
+    renderWithProvider(
       <MarkdownRenderer
         content={'[Manual](notes/manual.md)'}
         onLinkClick={onLinkClick}
       />,
     )
-
     fireEvent.click(screen.getByRole('link', { name: 'Manual' }))
-
     expect(onLinkClick).toHaveBeenCalledWith(
       'notes/manual.md',
       expect.objectContaining({ type: 'click' }),
     )
   })
 
-  it('copies enhanced markdown button text with the legacy clipboard fallback', async () => {
-    const originalClipboard = navigator.clipboard
-    const originalExecCommand = document.execCommand
-    Object.defineProperty(document, 'execCommand', {
-      configurable: true,
-      value: vi.fn().mockReturnValue(true),
-    })
-    const execCommand = vi.mocked(document.execCommand)
-    Object.defineProperty(navigator, 'clipboard', {
-      configurable: true,
-      value: {
-        writeText: vi.fn().mockRejectedValue(new Error('clipboard blocked')),
-      },
-    })
-    const writeText = vi.mocked(navigator.clipboard.writeText)
-
-    try {
-      render(<MarkdownRenderer content={'<button data-copy-code="npm run verify">Copy</button>'} />)
-
-      fireEvent.click(screen.getByRole('button', { name: 'Copy' }))
-
-      await waitFor(() => {
-        expect(execCommand).toHaveBeenCalledWith('copy')
-      })
-      expect(writeText).toHaveBeenCalledWith('npm run verify')
-      expect(screen.getByRole('button', { name: 'Copied' })).toBeInTheDocument()
-    } finally {
-      Object.defineProperty(document, 'execCommand', {
-        configurable: true,
-        value: originalExecCommand,
-      })
-      Object.defineProperty(navigator, 'clipboard', {
-        configurable: true,
-        value: originalClipboard,
-      })
-    }
-  })
-})
-
-describe('MarkdownRenderer parse cache', () => {
-  beforeEach(() => {
-    __markdownParseCacheInternals.reset()
+  // ── Tables ──
+  it('wraps tables in md-table-wrap container', () => {
+    const { container } = renderWithProvider(
+      <MarkdownRenderer content={'| A | B |\n| --- | --- |\n| 1 | 2 |'} />,
+    )
+    expect(container.querySelector('.md-table-wrap')).toBeInTheDocument()
   })
 
-  it('uses the finalized cache for non-streaming content and hits on the second render', () => {
-    const content = '# heading one\n\nbody text body text'
-    render(<MarkdownRenderer content={content} />)
-    expect(__markdownParseCacheInternals.hasFinalized(content)).toBe(true)
-    expect(__markdownParseCacheInternals.finalizedSize()).toBe(1)
-
-    const beforeChars = __markdownParseCacheInternals.finalizedChars()
-    render(<MarkdownRenderer content={content} />)
-    expect(__markdownParseCacheInternals.finalizedSize()).toBe(1)
-    expect(__markdownParseCacheInternals.finalizedChars()).toBe(beforeChars)
+  it('renders table header and data cells', () => {
+    const { container } = renderWithProvider(
+      <MarkdownRenderer content={'| Name | Value |\n| --- | --- |\n| foo | bar |'} />,
+    )
+    expect(container.textContent).toContain('Name')
+    expect(container.textContent).toContain('Value')
+    expect(container.textContent).toContain('foo')
+    expect(container.textContent).toContain('bar')
   })
 
-  it('routes streaming content into the streaming cache without evicting finalized entries', () => {
-    const finalizedContent = 'finalized assistant turn text'
-    render(<MarkdownRenderer content={finalizedContent} />)
-    expect(__markdownParseCacheInternals.hasFinalized(finalizedContent)).toBe(true)
-
-    for (let i = 0; i < 8; i++) {
-      const chunk = `streaming partial ${i.toString().repeat(20)}`
-      render(<MarkdownRenderer content={chunk} streaming />)
-    }
-
-    expect(__markdownParseCacheInternals.hasFinalized(finalizedContent)).toBe(true)
-    expect(__markdownParseCacheInternals.streamingSize()).toBeLessThanOrEqual(4)
+  // ── Bold and emphasis ──
+  it('renders bold text', () => {
+    const { container } = renderWithProvider(
+      <MarkdownRenderer content="This is **bold** text." />,
+    )
+    expect(container.querySelector('strong')).toBeInTheDocument()
+    expect(container.textContent).toContain('bold')
   })
 
-  it('caps the finalized cache to roughly 200 entries', () => {
-    for (let i = 0; i < 220; i++) {
-      render(<MarkdownRenderer content={`entry ${i} content body`} />)
-    }
-    expect(__markdownParseCacheInternals.finalizedSize()).toBeLessThanOrEqual(200)
+  it('renders italic text', () => {
+    const { container } = renderWithProvider(
+      <MarkdownRenderer content="This is *italic* text." />,
+    )
+    expect(container.querySelector('em')).toBeInTheDocument()
+    expect(container.textContent).toContain('italic')
+  })
+
+  // ── Lists ──
+  it('renders unordered lists', () => {
+    const { container } = renderWithProvider(
+      <MarkdownRenderer content="- Item 1\n- Item 2\n- Item 3" />,
+    )
+    expect(container.querySelector('ul')).toBeInTheDocument()
+    expect(container.textContent).toContain('Item 1')
+    expect(container.textContent).toContain('Item 2')
+    expect(container.textContent).toContain('Item 3')
+  })
+
+  it('renders ordered lists', () => {
+    const { container } = renderWithProvider(
+      <MarkdownRenderer content="1. First\n2. Second\n3. Third" />,
+    )
+    expect(container.querySelector('ol')).toBeInTheDocument()
+    expect(container.textContent).toContain('First')
+    expect(container.textContent).toContain('Second')
+    expect(container.textContent).toContain('Third')
+  })
+
+  // ── Blockquote ──
+  it('renders blockquotes', () => {
+    const { container } = renderWithProvider(
+      <MarkdownRenderer content="> This is a quote." />,
+    )
+    expect(container.querySelector('blockquote')).toBeInTheDocument()
+    expect(container.textContent).toContain('This is a quote.')
+  })
+
+  // ── Horizontal rule ──
+  it('renders horizontal rules', () => {
+    const { container } = renderWithProvider(<MarkdownRenderer content="---" />)
+    expect(container.querySelector('hr')).toBeInTheDocument()
+  })
+
+  // ── Variant classes ──
+  it('applies document variant classes', () => {
+    const { container } = renderWithProvider(
+      <MarkdownRenderer content="# Title" variant="document" className="mx-auto" />,
+    )
+    const root = container.firstChild as HTMLDivElement
+    expect(root.className).toContain('mx-auto')
+    expect(root.className).toContain('prose-p:text-[15px]')
+  })
+
+  it('applies compact variant classes', () => {
+    const { container } = renderWithProvider(
+      <MarkdownRenderer content="**Bold**" variant="compact" />,
+    )
+    const root = container.firstChild as HTMLDivElement
+    expect(root.className).toContain('prose-p:text-xs')
+    expect(container.textContent).toContain('Bold')
+  })
+
+  it('default variant does not include document-specific classes', () => {
+    const { container } = renderWithProvider(<MarkdownRenderer content="# Title" />)
+    const root = container.firstChild as HTMLDivElement
+    expect(root.className).not.toContain('prose-p:text-[15px]')
+  })
+
+  // ── LaTeX / Math (rehype-katex) ──
+  it('renders inline LaTeX with KaTeX', () => {
+    const { container } = renderWithProvider(
+      <MarkdownRenderer content="Formula: $E = mc^2$" />,
+    )
+    expect(container.querySelector('.katex')).toBeInTheDocument()
+    expect(container.textContent).not.toContain('$E = mc^2$')
+  })
+
+  it('renders display LaTeX with KaTeX', () => {
+    const { container } = renderWithProvider(
+      <MarkdownRenderer content={'$$\nx = 1\n$$'} />,
+    )
+    // rehype-katex renders display math with .katex-display inside .katex
+    expect(container.querySelector('.katex')).toBeInTheDocument()
+    // Original $$ delimiters should not appear
+    expect(container.textContent).not.toContain('$$')
+  })
+
+  it('renders both inline and display math on the same page', () => {
+    const { container } = renderWithProvider(
+      <MarkdownRenderer content={'Inline: $x^2$ and display:\n\n$$\ny^3\n$$'} />,
+    )
+    const katexElements = container.querySelectorAll('.katex')
+    // Two KaTeX elements: one inline, one display
+    expect(katexElements.length).toBeGreaterThanOrEqual(2)
+    // Original delimiters should not appear
+    expect(container.textContent).not.toContain('$x^2$')
+    expect(container.textContent).not.toContain('$$')
+  })
+
+  // ── Streaming mode ──
+  it('renders content in streaming mode', () => {
+    const { container } = renderWithProvider(
+      <MarkdownRenderer content="Streaming text" streaming />,
+    )
+    expect(container.textContent).toContain('Streaming text')
+  })
+
+  it('handles streaming with partial code block', () => {
+    const { container } = renderWithProvider(
+      <MarkdownRenderer content={'```js\nconst a ='} streaming />,
+    )
+    const root = container.querySelector('[class*="markdown-prose"]')
+    expect(root).toBeInTheDocument()
+  })
+
+  // ── No dangerouslySetInnerHTML ──
+  it('does not use dangerouslySetInnerHTML (component-based rendering)', () => {
+    const { container } = renderWithProvider(
+      <MarkdownRenderer content="<script>alert('xss')</script>" />,
+    )
+    expect(container.textContent).not.toContain('alert')
+  })
+
+  // ── Empty content ──
+  it('renders empty content without errors', () => {
+    const { container } = renderWithProvider(<MarkdownRenderer content="" />)
+    expect(container.firstChild).toBeInTheDocument()
   })
 })

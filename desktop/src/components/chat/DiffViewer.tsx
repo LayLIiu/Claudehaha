@@ -1,5 +1,4 @@
 import ReactDiffViewer, { DiffMethod } from 'react-diff-viewer-continued'
-import { Highlight, type PrismTheme } from 'prism-react-renderer'
 import { CopyButton } from '../shared/CopyButton'
 import { useUIStore } from '../../stores/uiStore'
 import { calculateDiffStats } from './diffStats'
@@ -11,81 +10,9 @@ type Props = {
   monochrome?: boolean
 }
 
-function inferLanguage(filePath: string): string {
-  const ext = filePath.split('.').pop()?.toLowerCase()
-  const langMap: Record<string, string> = {
-    ts: 'typescript', tsx: 'tsx', js: 'javascript', jsx: 'jsx',
-    py: 'python', rs: 'rust', go: 'go', rb: 'ruby',
-    json: 'json', yaml: 'yaml', yml: 'yaml', toml: 'toml',
-    md: 'markdown', css: 'css', html: 'markup', xml: 'markup',
-    sql: 'sql', sh: 'bash', bash: 'bash', zsh: 'bash',
-  }
-  return langMap[ext ?? ''] || 'text'
-}
-
-/** Shared warm syntax theme — must stay in sync with CodeViewer */
-const warmSyntaxTheme: PrismTheme = {
-  plain: {
-    color: 'var(--color-code-fg)',
-    backgroundColor: 'transparent',
-  },
-  styles: [
-    { types: ['comment', 'prolog', 'doctype', 'cdata'], style: { color: 'var(--color-code-comment)', fontStyle: 'italic' as const } },
-    { types: ['string', 'attr-value', 'template-string'], style: { color: 'var(--color-code-string)' } },
-    { types: ['keyword', 'selector', 'important', 'atrule'], style: { color: 'var(--color-code-keyword)' } },
-    { types: ['function'], style: { color: 'var(--color-code-function)' } },
-    { types: ['tag'], style: { color: 'var(--color-code-keyword)' } },
-    { types: ['number', 'boolean'], style: { color: 'var(--color-code-number)' } },
-    { types: ['operator'], style: { color: 'var(--color-code-fg)' } },
-    { types: ['punctuation'], style: { color: 'var(--color-code-punctuation)' } },
-    { types: ['variable', 'parameter'], style: { color: 'var(--color-code-fg)' } },
-    { types: ['property', 'attr-name'], style: { color: 'var(--color-code-property)' } },
-    { types: ['builtin', 'class-name', 'constant', 'symbol'], style: { color: 'var(--color-code-type)' } },
-    { types: ['regex'], style: { color: 'var(--color-primary-container)' } },
-    { types: ['inserted'], style: { color: 'var(--color-code-inserted)' } },
-    { types: ['deleted'], style: { color: 'var(--color-code-deleted)' } },
-  ],
-}
-
-const monochromeSyntaxTheme: PrismTheme = {
-  plain: {
-    color: 'rgba(255,255,255,0.78)',
-    backgroundColor: 'transparent',
-  },
-  styles: [
-    { types: ['comment', 'prolog', 'doctype', 'cdata'], style: { color: 'rgba(255,255,255,0.36)', fontStyle: 'italic' as const } },
-    { types: ['string', 'attr-value', 'template-string'], style: { color: 'rgba(255,255,255,0.74)' } },
-    { types: ['keyword', 'selector', 'important', 'atrule'], style: { color: 'rgba(255,255,255,0.74)' } },
-    { types: ['function'], style: { color: 'rgba(255,255,255,0.78)' } },
-    { types: ['tag'], style: { color: 'rgba(255,255,255,0.74)' } },
-    { types: ['number', 'boolean'], style: { color: 'rgba(255,255,255,0.7)' } },
-    { types: ['operator'], style: { color: 'rgba(255,255,255,0.72)' } },
-    { types: ['punctuation'], style: { color: 'rgba(255,255,255,0.52)' } },
-    { types: ['variable', 'parameter'], style: { color: 'rgba(255,255,255,0.78)' } },
-    { types: ['property', 'attr-name'], style: { color: 'rgba(255,255,255,0.7)' } },
-    { types: ['builtin', 'class-name', 'constant', 'symbol'], style: { color: 'rgba(255,255,255,0.72)' } },
-    { types: ['regex'], style: { color: 'rgba(255,255,255,0.7)' } },
-    { types: ['inserted'], style: { color: 'rgba(255,255,255,0.78)' } },
-    { types: ['deleted'], style: { color: 'rgba(255,255,255,0.72)' } },
-  ],
-}
-
-function highlightSyntax(str: string, language: string, monochrome = false) {
-  return (
-    <Highlight theme={monochrome ? monochromeSyntaxTheme : warmSyntaxTheme} code={str} language={language}>
-      {({ tokens, getTokenProps }) => (
-        <>
-          {tokens.map((line, i) => (
-            <span key={i}>
-              {line.map((token, key) => (
-                <span key={key} {...getTokenProps({ token })} />
-              ))}
-            </span>
-          ))}
-        </>
-      )}
-    </Highlight>
-  )
+/** Render plain text code for diff view (prism-react-renderer removed) */
+function highlightSyntax(str: string) {
+  return <span style={{ whiteSpace: 'pre-wrap', fontFamily: 'var(--font-mono)' }}>{str}</span>
 }
 
 const diffStyles = {
@@ -200,7 +127,6 @@ const monochromeDiffStyles = {
 
 export function DiffViewer({ filePath, oldString, newString, monochrome = false }: Props) {
   const theme = useUIStore((state) => state.theme)
-  const language = inferLanguage(filePath)
 
   const { additions, deletions } = calculateDiffStats(oldString, newString)
 
@@ -243,7 +169,7 @@ export function DiffViewer({ filePath, oldString, newString, monochrome = false 
           newValue={newString}
           splitView={false}
           compareMethod={DiffMethod.WORDS}
-          renderContent={(str) => highlightSyntax(str, language, monochrome)}
+          renderContent={(str) => highlightSyntax(str)}
           hideLineNumbers={false}
           styles={monochrome ? monochromeDiffStyles : diffStyles}
           useDarkTheme={monochrome ? false : theme === 'dark'}

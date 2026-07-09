@@ -1,31 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Highlight, type PrismTheme } from 'prism-react-renderer'
 import { useTranslation } from '../../i18n'
 
 export const WORKSPACE_PREVIEW_LINE_LIMIT = 2000
 export const WORKSPACE_PLAIN_TEXT_LINE_THRESHOLD = 5000
-
-export const workspacePrismTheme: PrismTheme = {
-  plain: {
-    color: 'var(--color-code-fg)',
-    backgroundColor: 'transparent',
-  },
-  styles: [
-    { types: ['comment', 'prolog', 'doctype', 'cdata'], style: { color: 'var(--color-code-comment)', fontStyle: 'italic' } },
-    { types: ['string', 'attr-value', 'template-string'], style: { color: 'var(--color-code-string)' } },
-    { types: ['keyword', 'selector', 'important', 'atrule'], style: { color: 'var(--color-code-keyword)' } },
-    { types: ['function'], style: { color: 'var(--color-code-function)' } },
-    { types: ['tag'], style: { color: 'var(--color-code-keyword)' } },
-    { types: ['number', 'boolean'], style: { color: 'var(--color-code-number)' } },
-    { types: ['operator'], style: { color: 'var(--color-code-fg)' } },
-    { types: ['punctuation'], style: { color: 'var(--color-code-punctuation)' } },
-    { types: ['variable', 'parameter'], style: { color: 'var(--color-code-fg)' } },
-    { types: ['property', 'attr-name'], style: { color: 'var(--color-code-property)' } },
-    { types: ['builtin', 'class-name', 'constant', 'symbol'], style: { color: 'var(--color-code-type)' } },
-    { types: ['inserted'], style: { color: 'var(--color-code-inserted)' } },
-    { types: ['deleted'], style: { color: 'var(--color-code-deleted)' } },
-  ],
-}
 
 export function getFileExtension(name: string) {
   const cleanName = name.split('/').pop() ?? name
@@ -62,27 +39,12 @@ export function getLanguageFromPath(path: string) {
 
 export function InlineHighlightedCode({
   value,
-  language,
 }: {
   value: string
-  language: string
+  language?: string
 }) {
-  return (
-    <Highlight
-      theme={workspacePrismTheme}
-      code={value}
-      language={normalizePrismLanguage(language)}
-    >
-      {({ tokens, getTokenProps }) => (
-        <>
-          {(tokens[0] ?? []).map((token, tokenIndex) => {
-            const { key: tokenKey, ...tokenProps } = getTokenProps({ token, key: tokenIndex })
-            return <span key={String(tokenKey)} {...tokenProps} />
-          })}
-        </>
-      )}
-    </Highlight>
-  )
+  // Plain text fallback (prism-react-renderer removed)
+  return <span style={{ color: 'var(--color-code-fg)', fontFamily: 'var(--font-mono)' }}>{value}</span>
 }
 
 export function WorkspaceDiffSurface({

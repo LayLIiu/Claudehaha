@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type ComponentType, type CSSProperties } from 'react'
 import { Check, Copy } from 'lucide-react'
-import { Highlight, type PrismTheme } from 'prism-react-renderer'
 import { CopyButton } from '../shared/CopyButton'
 
 type Props = {
@@ -9,23 +8,6 @@ type Props = {
   maxLines?: number
   showLineNumbers?: boolean
   wrapLongLines?: boolean
-}
-
-const warmPrismTheme: PrismTheme = {
-  plain: {
-    color: '#f2f2f2',
-    backgroundColor: 'transparent',
-  },
-  styles: [
-    { types: ['comment', 'prolog', 'doctype', 'cdata'], style: { color: '#a6a6a6', fontStyle: 'italic' as const } },
-    { types: ['builtin'], style: { color: '#ff9f0a' } },
-    { types: ['keyword', 'selector', 'important', 'atrule'], style: { color: '#ff9f0a' } },
-    { types: ['string', 'attr-value', 'template-string'], style: { color: '#f2f2f2' } },
-    { types: ['function', 'tag', 'number', 'boolean', 'operator', 'punctuation', 'variable', 'parameter', 'property', 'attr-name', 'class-name', 'constant', 'symbol'], style: { color: '#f2f2f2' } },
-    { types: ['regex'], style: { color: '#f2f2f2' } },
-    { types: ['inserted'], style: { color: '#30d158' } },
-    { types: ['deleted'], style: { color: '#ff6961' } },
-  ],
 }
 
 const warmShikiTheme = {
@@ -108,57 +90,46 @@ function loadShikiRuntime(): Promise<ShikiRuntime | null> {
   return shikiRuntimePromise
 }
 
-function PrismCodeContent({
+function PlainTextFallback({
   code,
-  language,
   showLineNumbers,
   wrapLongLines,
 }: {
   code: string
-  language?: string
   showLineNumbers: boolean
   wrapLongLines: boolean
 }) {
+  const lines = code.split('\n')
   return (
-    <Highlight
-      theme={warmPrismTheme}
-      code={code}
-      language={language || 'text'}
+    <pre
+      data-code-viewer-content=""
+      data-highlight-engine="plain"
+      style={{
+        margin: 0,
+        padding: CODE_AREA_PADDING,
+        fontFamily: CODE_FONT_FAMILY,
+        fontSize: '14px',
+        lineHeight: String(CODE_LINE_HEIGHT),
+        whiteSpace: wrapLongLines ? 'pre-wrap' : 'pre',
+        wordBreak: wrapLongLines ? 'break-word' : 'normal',
+        color: '#f2f2f2',
+      }}
     >
-      {({ tokens, getLineProps, getTokenProps }) => (
-        <pre
-          data-code-viewer-content=""
-          data-highlight-engine="prism"
-          style={{
-            margin: 0,
-            padding: CODE_AREA_PADDING,
-            fontFamily: CODE_FONT_FAMILY,
-            fontSize: '14px',
-            lineHeight: String(CODE_LINE_HEIGHT),
-            whiteSpace: wrapLongLines ? 'pre-wrap' : 'pre',
-            wordBreak: wrapLongLines ? 'break-word' : 'normal',
-            color: '#f2f2f2',
-          }}
+      {lines.map((line, index) => (
+        <span
+          key={index}
+          data-line-number={showLineNumbers ? index + 1 : undefined}
         >
-          {tokens.map((line, index) => (
-            <span
-              key={index}
-              {...getLineProps({ line })}
-              data-line-number={showLineNumbers ? index + 1 : undefined}
-            >
-              {showLineNumbers && (
-                <span className="mr-3 inline-block min-w-[2.5ch] select-none text-right text-[var(--color-token-text-secondary)]">
-                  {index + 1}
-                </span>
-              )}
-              {line.map((token, key) => (
-                <span key={key} {...getTokenProps({ token })} />
-              ))}
+          {showLineNumbers && (
+            <span className="mr-3 inline-block min-w-[2.5ch] select-none text-right text-[var(--color-token-text-secondary)]">
+              {index + 1}
             </span>
-          ))}
-        </pre>
-      )}
-    </Highlight>
+          )}
+          {line}
+          {'\n'}
+        </span>
+      ))}
+    </pre>
   )
 }
 
@@ -245,9 +216,8 @@ function CodeArea({
       className="code-viewer-area relative max-h-[420px] overflow-auto bg-transparent"
     >
       {(!ShikiHighlighter || !loaded) && (
-        <PrismCodeContent
+        <PlainTextFallback
           code={code}
-          language={language}
           showLineNumbers={showLineNumbers}
           wrapLongLines={wrapLongLines}
         />

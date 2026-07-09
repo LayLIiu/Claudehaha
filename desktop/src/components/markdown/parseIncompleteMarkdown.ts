@@ -26,37 +26,13 @@ function countUnescaped(text: string, delimiter: string): number {
   return count
 }
 
-// --- Helper: check if position is inside a code fence ---
-function isInCodeFence(text: string, position: number): boolean {
-  const lines = text.slice(0, position).split('\n')
-  let inFence = false
-  let fenceChar: string | null = null
-  let fenceLen = 0
-
-  for (const line of lines) {
-    const match = /^ {0,3}(`{3,}|~{3,})/.exec(line)
-    if (inFence) {
-      if (match && match[1]![0] === fenceChar && match[1]!.length >= fenceLen) {
-        inFence = false
-      }
-    } else {
-      if (match) {
-        inFence = true
-        fenceChar = match[1]![0]
-        fenceLen = match[1]!.length
-      }
-    }
-  }
-  return inFence
-}
-
 // --- Handlers (sorted by priority) ---
 
 function handleUnclosedCodeFence(text: string): string {
   // Check if the text ends with an unclosed code fence
   const lines = text.split('\n')
   let inFence = false
-  let fenceChar: string | null = null
+  let fenceChar: string | undefined = undefined
   let fenceLen = 0
 
   for (const line of lines) {

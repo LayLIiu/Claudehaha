@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { MessageCircle } from 'lucide-react'
-import { Highlight } from 'prism-react-renderer'
 import { sessionsApi } from '../../api/sessions'
 import type {
   WorkspaceChangedFile,
@@ -24,10 +23,8 @@ import { clearWindowSelection, getSelectionPopoverPosition, useSelectionPopoverD
 import { MarkdownRenderer } from '../markdown/MarkdownRenderer'
 import {
   getFileExtension,
-  normalizePrismLanguage,
   WORKSPACE_PREVIEW_LINE_LIMIT,
   WorkspaceDiffSurface,
-  workspacePrismTheme,
 } from './WorkspaceCodeSurface'
 import { WorkspaceFileOpenWith } from './WorkspaceFileOpenWith'
 
@@ -614,43 +611,30 @@ function CodeSurface({
             })}
           </pre>
         ) : (
-          <Highlight
-            theme={workspacePrismTheme}
-            code={visibleCode}
-            language={normalizePrismLanguage(language)}
+          <pre
+            data-workspace-code=""
+            data-testid="workspace-code"
+            className="m-0 font-[var(--font-mono)] text-[12px] leading-[1.55]"
+            style={{ color: 'var(--color-code-fg)', background: 'transparent' }}
           >
-            {({ tokens, getLineProps, getTokenProps }) => (
-              <pre
-                data-workspace-code=""
-                data-testid="workspace-code"
-                className="m-0 font-[var(--font-mono)] text-[12px] leading-[1.55]"
-                style={{ color: 'var(--color-code-fg)', background: 'transparent' }}
-              >
-                {tokens.map((line, index) => {
-                  const { key: lineKey, ...lineProps } = getLineProps({ line, key: index })
-                  const lineNumber = index + 1
-                  return (
-                    <div key={String(lineKey)}>
-                      <div
-                        {...lineProps}
-                        data-workspace-line-number={lineNumber}
-                        className="group grid grid-cols-[48px_minmax(0,1fr)] gap-3 px-3 hover:bg-[var(--color-surface-hover)]"
-                      >
-                        {renderLineNumberButton(lineNumber)}
-                        <span className="whitespace-pre pr-6">
-                          {line.length === 1 && line[0]?.empty ? ' ' : line.map((token, tokenIndex) => {
-                            const { key: tokenKey, ...tokenProps } = getTokenProps({ token, key: tokenIndex })
-                            return <span key={String(tokenKey)} {...tokenProps} />
-                          })}
-                        </span>
-                      </div>
-                      {renderLineCommentEditor(lineNumber)}
-                    </div>
-                  )
-                })}
-              </pre>
-            )}
-          </Highlight>
+            {visibleCode.split('\n').map((line, index) => {
+              const lineNumber = index + 1
+              return (
+                <div key={index}>
+                  <div
+                    data-workspace-line-number={lineNumber}
+                    className="group grid grid-cols-[48px_minmax(0,1fr)] gap-3 px-3 hover:bg-[var(--color-surface-hover)]"
+                  >
+                    {renderLineNumberButton(lineNumber)}
+                    <span className="whitespace-pre pr-6">
+                      {line || ' '}
+                    </span>
+                  </div>
+                  {renderLineCommentEditor(lineNumber)}
+                </div>
+              )
+            })}
+          </pre>
         )}
         {lines.length > WORKSPACE_PREVIEW_LINE_LIMIT && (
           <div className="sticky bottom-0 flex items-center gap-3 border-t border-[var(--color-token-border)] bg-[var(--color-surface-glass)] px-3 py-2 text-xs text-[var(--color-token-text-secondary)] backdrop-blur">

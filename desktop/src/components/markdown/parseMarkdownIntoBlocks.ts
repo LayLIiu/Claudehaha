@@ -18,20 +18,6 @@ function countTagOccurrences(html: string, tagName: string): number {
   return (html.match(openRe) || []).length - (html.match(closeRe) || []).length
 }
 
-function countDollarPairs(text: string): number {
-  let count = 0
-  let i = 0
-  while (i < text.length) {
-    if (text[i] === '$' && text[i + 1] === '$') {
-      count++
-      i += 2
-    } else {
-      i++
-    }
-  }
-  return Math.floor(count / 2)
-}
-
 export function parseMarkdownIntoBlocks(text: string): string[] {
   if (!text) return [text]
 
