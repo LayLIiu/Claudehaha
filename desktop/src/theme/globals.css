@@ -1722,12 +1722,14 @@ button, input, textarea, select, a, [role="button"] {
 }
 
 .app-shell--mobile .sidebar-shell {
+  --color-surface-sidebar: #111111;
   position: fixed;
   inset: 0 auto 0 0;
   z-index: 50;
   width: min(88vw, var(--sidebar-width));
   max-width: var(--sidebar-width);
   overflow: visible;
+  background-color: var(--color-surface) !important;
   transform: translateX(-100%);
   transition:
     transform var(--motion-sidebar-duration) var(--motion-sidebar-easing),
@@ -2127,6 +2129,11 @@ html.electron-macos .app-shell,
 .app-shell--mobile .sidebar-panel[data-state="closed"] {
   width: min(88vw, var(--sidebar-width));
   min-width: min(88vw, var(--sidebar-width));
+  background-image: none;
+  background-color: var(--color-surface) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-right: 1px solid var(--color-token-border);
   box-shadow: var(--shadow-dropdown);
 }
 
@@ -2147,16 +2154,7 @@ html.electron-macos .app-shell,
 }
 
 /* Spring collapse/expand for tool call groups */
-/* Chevron rotation for turn collapse toggle — still CSS-driven for instant response */
-.turn-chevron {
-  display: inline-block;
-  vertical-align: middle;
-  transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.turn-chevron[data-rotated="true"] {
-  transform: rotate(90deg);
-}
-
+/* Chevron rotation for turn collapse toggle — driven by inline style on SVG */
 .codex-turn-process {
   width: 100%;
   margin: 1px 0 3px;
@@ -2168,13 +2166,13 @@ html.electron-macos .app-shell,
   max-width: min(100%, var(--thread-content-max-width));
   min-height: 30px;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   border: 0;
   border-radius: 999px;
   background: transparent;
   padding: 3px 6px 3px 2px;
   color: color-mix(in srgb, var(--color-token-text-secondary) 88%, white);
-  font-size: 16px;
+  font-size: 13px;
   line-height: 1.35;
   text-align: left;
   cursor: pointer;
@@ -2187,6 +2185,26 @@ html.electron-macos .app-shell,
   color: var(--color-token-foreground);
 }
 
+.codex-turn-process-trigger--static {
+  display: inline-flex;
+  max-width: min(100%, var(--thread-content-max-width));
+  cursor: default;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  padding: 3px 6px;
+  color: color-mix(in srgb, var(--color-token-text-secondary) 88%, white);
+  font-size: 13px;
+  line-height: 1.35;
+  gap: 6px;
+}
+
+.codex-turn-process-content-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .codex-turn-process-trigger:focus-visible {
   outline: none;
   background: rgba(255,255,255,0.06);
@@ -2196,15 +2214,55 @@ html.electron-macos .app-shell,
 }
 
 .codex-turn-process-chevron {
-  width: 14px;
+  flex-shrink: 0;
   color: color-mix(in srgb, var(--color-token-text-secondary) 72%, transparent);
-  font-size: 12px;
 }
 
 .codex-turn-process-title {
   flex: 0 0 auto;
   font-weight: 400;
   letter-spacing: -0.015em;
+}
+
+/* Animated gradient text for "Working for..." label — matches ZCode */
+.animated-gradient-text {
+  background: linear-gradient(
+    90deg,
+    var(--animated-gradient-text-strong, #fff) 0%,
+    var(--animated-gradient-text-strong, #fff) 34%,
+    var(--animated-gradient-text-soft, #fff3) 50%,
+    var(--animated-gradient-text-strong, #fff) 66%,
+    var(--animated-gradient-text-strong, #fff) 100%
+  );
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  will-change: background-position;
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: 4s linear infinite gradient-flow;
+  display: inline-block;
+  font-weight: 500;
+}
+
+@keyframes gradient-flow {
+  0% { background-position: 100% 0 }
+  50% { background-position: 0 0 }
+  100% { background-position: 0 0 }
+}
+
+/* Light theme gradient overrides */
+:root:not([data-theme="dark"]) .animated-gradient-text {
+  --animated-gradient-text-strong: #0a0a0a;
+  --animated-gradient-text-soft: #0a0a0a38;
+}
+[data-theme="light"] .animated-gradient-text {
+  --animated-gradient-text-strong: #0a0a0a;
+  --animated-gradient-text-soft: #0a0a0a38;
+}
+[data-theme="dark"] .animated-gradient-text {
+  --animated-gradient-text-strong: #fff;
+  --animated-gradient-text-soft: #fff3;
 }
 
 .codex-turn-process-summary {
@@ -2231,11 +2289,20 @@ html.electron-macos .app-shell,
   max-width: var(--thread-content-max-width);
 }
 
+/* Fade-out animation for auto-collapse close */
+.codex-turn-process-collapse--animate-close > div {
+  animation: 300ms ease-in-out forwards history-fade-out;
+}
+@keyframes history-fade-out {
+  0% { opacity: 1 }
+  100% { opacity: 0 }
+}
+
 .codex-turn-process-content {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding: 1px 0 5px;
+  gap: 20px;
+  padding: 20px 0 5px;
 }
 
 .codex-turn-process-item {
@@ -2403,6 +2470,17 @@ html.electron-macos .app-shell,
   .sidebar-copy,
   .sidebar-section {
     transition-duration: 0.01ms !important;
+  }
+
+  .animated-gradient-text {
+    animation: none !important;
+    -webkit-text-fill-color: unset;
+    color: unset;
+    background: none;
+  }
+
+  .codex-turn-process-collapse--animate-close > div {
+    animation: none !important;
   }
 }
 
@@ -2893,7 +2971,6 @@ html[data-touch-h5] [data-virtualized-turn-content] {
 html[data-touch-h5] .app-shell-viewport {
   min-height: var(--touch-h5-viewport-height, 100dvh);
   height: var(--touch-h5-viewport-height, 100dvh);
-  padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
   padding-left: env(safe-area-inset-left, 0px);
   padding-right: env(safe-area-inset-right, 0px);

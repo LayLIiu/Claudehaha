@@ -23,6 +23,8 @@ import { type AdvisorBlock, isAdvisorBlock } from '../utils/advisor.js';
 import { collapseBackgroundBashNotifications } from '../utils/collapseBackgroundBashNotifications.js';
 import { collapseHookSummaries } from '../utils/collapseHookSummaries.js';
 import { collapseReadSearchGroups } from '../utils/collapseReadSearch.js';
+import { applyTurnCollapse, type TurnProcessGroup } from '../utils/turnCollapse.js';
+import { TurnProcessContent } from './messages/TurnProcessContent.js';
 import { collapseTeammateShutdowns } from '../utils/collapseTeammateShutdowns.js';
 import { getGlobalConfig } from '../utils/config.js';
 import { isEnvTruthy } from '../utils/envUtils.js';
@@ -517,7 +519,8 @@ const MessagesImpl = ({
     const {
       messages: groupedMessages
     } = applyGrouping(messagesToShow, tools, verbose);
-    const collapsed = collapseBackgroundBashNotifications(collapseHookSummaries(collapseTeammateShutdowns(collapseReadSearchGroups(groupedMessages, tools))), verbose);
+    const collapsedPreTurn = collapseBackgroundBashNotifications(collapseHookSummaries(collapseTeammateShutdowns(collapseReadSearchGroups(groupedMessages, tools))), verbose);
+    const collapsed = applyTurnCollapse(collapsedPreTurn);
     const lookups = buildMessageLookups(normalizedMessages, messagesToShow);
     const hiddenMessageCount = messagesToShowNotTruncated.length - MAX_MESSAGES_TO_SHOW_IN_TRANSCRIPT_MODE;
     return {
@@ -612,6 +615,26 @@ const MessagesImpl = ({
   }, [progress]);
   const messageKey = useCallback((msg_7: RenderableMessage) => `${msg_7.uuid}-${conversationId}`, [conversationId]);
   const renderMessageRow = (msg_8: RenderableMessage, index: number) => {
+    // Intercept turn_process type — render directly without MessageRow
+    if (msg_8.type === 'turn_process') {
+      const tp = msg_8 as unknown as TurnProcessGroup
+      const k_0 = messageKey(msg_8);
+      const isStreaming = isLoading && tp.endTime == null;
+      const hasLatestPart = tp.endTime != null;
+      return <MessageActionsSelectedContext.Provider key={k_0} value={index === selectedIdx}>
+          <TurnProcessContent
+            message={tp}
+            isStreaming={isStreaming}
+            hasLatestPart={hasLatestPart}
+            renderProcessMessage={(procMsg) => {
+              // Re-render process messages through the normal pipeline
+              // by delegating back to MessageRow
+              const procKey = (procMsg as { uuid?: string }).uuid ?? String(index);
+              return <MessageRow key={procKey} message={procMsg} isUserContinuation={false} hasContentAfter={false} tools={tools} commands={commands} verbose={verbose} inProgressToolUseIDs={inProgressToolUseIDs} streamingToolUseIDs={streamingToolUseIDs} screen={screen} canAnimate={canAnimate} onOpenRateLimitOptions={onOpenRateLimitOptions} lastThinkingBlockId={lastThinkingBlockId} latestBashOutputUUID={latestBashOutputUUID} columns={columns} isLoading={isLoading} lookups={lookups_0} />;
+            }}
+          />
+        </MessageActionsSelectedContext.Provider>;
+    }
     const prevType = index > 0 ? renderableMessages[index - 1]?.type : undefined;
     const isUserContinuation = msg_8.type === 'user' && prevType === 'user';
     // hasContentAfter is only consumed for collapsed_read_search groups;

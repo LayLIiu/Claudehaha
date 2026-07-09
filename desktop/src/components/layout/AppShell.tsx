@@ -257,7 +257,7 @@ export function AppShell() {
         {isMobileShell ? (
           <div
             data-testid="mobile-session-header"
-	            className="flex shrink-0 items-center gap-3 border-b border-[var(--color-token-border)] bg-[var(--color-surface)] px-3 py-2"
+            className="flex shrink-0 items-center gap-3 border-b border-[var(--color-token-border)] bg-[var(--color-surface)] px-3 pb-2 pt-[max(env(safe-area-inset-top,0px),44px)]"
           >
             <button
               type="button"

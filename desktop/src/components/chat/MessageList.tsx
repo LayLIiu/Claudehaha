@@ -9,6 +9,7 @@ import { useWorkspaceChatContextStore } from '../../stores/workspaceChatContextS
 import { SETTINGS_TAB_ID, useTabStore } from '../../stores/tabStore'
 import { useTeamStore } from '../../stores/teamStore'
 import { useUIStore } from '../../stores/uiStore'
+import { useSettingsStore } from '../../stores/settingsStore'
 import { useTranslation } from '../../i18n'
 import type { TranslationKey } from '../../i18n/locales/en'
 import { UserMessage } from './UserMessage'
@@ -59,8 +60,11 @@ type TurnProcessGroup = {
   stepCount: number
   /** Start time (timestamp of the user message) */
   startTime: number | null
-  /** End time (timestamp of the final assistant message) */
+  /** End time (timestamp of the last process item) */
   endTime: number | null
+  /** Whether a final assistant_text message was separated from this group.
+   *  When true, the turn has a "latest part" below this process group. */
+  hasFinalAssistant: boolean
 }
 
 type RenderItem =
@@ -819,26 +823,51 @@ function applyTurnCollapse(items: RenderItem[], hasStreamingAnswer?: boolean): R
   // All items within a turn, preserving original order. The last
   // assistant_text is the "final answer" that stays visible; everything
   // before it (including intermediate assistant text like "好的，我去调查")
-  // is collapsed into a turn_process group — matching CodexMobile's
-  // "N 条之前的消息" pattern.
+  // is collapsed into a turn_process group — matching ZCode's
+  // history/latest partition pattern.
   let turnItems: RenderItem[] = []
 
   const flushCurrentTurn = (isLast: boolean) => {
     if (currentUserMsgId === null) return
 
-    // Find the last assistant_text — the final answer that stays visible
+    // Find the last assistant_text that qualifies as the "final answer".
+    // ZCode's rule: only the last content block AFTER all tool calls is the final answer.
+    // If an assistant_text is followed by more tool calls, it's an intermediate
+    // response (e.g., "好的，我去调查") and should be part of history.
     let lastAssistantIdx = -1
-    for (let i = turnItems.length - 1; i >= 0; i--) {
-      const ti = turnItems[i]!
-      if (ti.kind === 'message' && ti.message.type === 'assistant_text') {
-        lastAssistantIdx = i
-        break
+    if (!isLast || !hasStreamingAnswer) {
+      // For completed turns (not actively streaming), find the last assistant_text
+      // that has NO tool calls after it.
+      for (let i = turnItems.length - 1; i >= 0; i--) {
+        const ti = turnItems[i]!
+        if (ti.kind === 'message' && ti.message.type === 'assistant_text') {
+          // Check if there are any tool calls after this assistant_text
+          let hasToolsAfter = false
+          for (let j = i + 1; j < turnItems.length; j++) {
+            const after = turnItems[j]!
+            if (after.kind === 'tool_group' || after.kind === 'tool_burst'
+                || after.kind === 'web_search_group' || after.kind === 'exploration_group') {
+              hasToolsAfter = true
+              break
+            }
+            // Also count tool_use messages
+            if (after.kind === 'message' && after.message.type === 'tool_use') {
+              hasToolsAfter = true
+              break
+            }
+          }
+          if (!hasToolsAfter) {
+            lastAssistantIdx = i
+            break
+          }
+          // This assistant_text has tools after it → it's intermediate, keep looking
+        }
       }
     }
 
     // When streaming answer exists but hasn't been committed as a message yet,
     // treat the entire turnItems as process content (no final assistant in messages).
-    // This ensures the process collapses BEFORE the streaming summary appears.
+    // This ensures the process stays expanded while the streaming summary appears.
     const hasFinalAnswer = lastAssistantIdx >= 0 || (isLast && hasStreamingAnswer)
 
     if (hasFinalAnswer) {
@@ -874,6 +903,7 @@ function applyTurnCollapse(items: RenderItem[], hasStreamingAnswer?: boolean): R
               stepCount,
               startTime: currentUserMsgTimestamp,
               endTime,
+              hasFinalAssistant: finalAssistant != null,
             },
             id: `turn-${currentUserMsgId}-${result.length}`,
           })
@@ -897,6 +927,14 @@ function applyTurnCollapse(items: RenderItem[], hasStreamingAnswer?: boolean): R
       currentUserMsgId = item.message.id
       currentUserMsgTimestamp = item.message.timestamp
       turnItems = []
+      result.push(item)
+      continue
+    }
+
+    // background_task messages should not be collapsed into turn_process;
+    // they are rendered as standalone cards and must stay visible.
+    if (item.kind === 'message' && item.message.type === 'background_task') {
+      flushCurrentTurn(false)
       result.push(item)
       continue
     }
@@ -2415,17 +2453,8 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
 
 
   // ── Turn collapse expand state ──
-  const [expandedTurns, setExpandedTurns] = useState<Set<string>>(new Set())
   const [expandedToolBursts, setExpandedToolBursts] = useState<Set<string>>(new Set())
 
-  const toggleTurnExpand = useCallback((userMsgId: string) => {
-    setExpandedTurns(prev => {
-      const next = new Set(prev)
-      if (next.has(userMsgId)) next.delete(userMsgId)
-      else next.add(userMsgId)
-      return next
-    })
-  }, [])
   const toggleToolBurstExpand = useCallback((burstId: string) => {
     setExpandedToolBursts(prev => {
       const next = new Set(prev)
@@ -2572,11 +2601,22 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
         ) : item.kind === 'tool_burst' ? (
           renderToolBurst(item, chatState !== 'idle' && !toolGroupsFollowedByText.has(index))
         ) : item.kind === 'turn_process' ? (
-          <TurnProcessSection
-            group={item.group}
-            isExpanded={expandedTurns.has(item.id)}
-            onToggle={() => toggleTurnExpand(item.id)}
-            renderInnerItem={renderInnerItem}
+          <AssistantHistorySection
+            stateKey={item.id}
+            hasHistoryContent={item.group.processItems.length > 0}
+            renderHistoryContent={() => (
+              <div className="codex-turn-process-content-inner">
+                {item.group.processItems.map((pi) => (
+                  <div className="codex-turn-process-item" key={pi.kind === 'message' ? pi.message.id : pi.id}>
+                    {renderInnerItem(pi)}
+                  </div>
+                ))}
+              </div>
+            )}
+            startedAt={item.group.startTime ?? Date.now()}
+            hasLatestPart={item.group.hasFinalAssistant}
+            settling={false}
+            streaming={chatState !== 'idle' && chatState !== 'permission_pending' && item.group.endTime == null}
           />
         ) : item.kind === 'web_search_group' ? (
           <WebSearchGroupSection
@@ -2791,12 +2831,44 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
   )
 }
 
-/** Format elapsed seconds as "Xs" or "Xm Ys" */
-function formatProcessElapsed(seconds: number): string {
-  if (seconds < 60) return `${seconds}s`
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return `${m}m ${s}s`
+// ─── ZCode-style history duration formatting ───────────────────────────
+const MS_PER_SECOND = 1000
+const MS_PER_MINUTE = 60 * MS_PER_SECOND
+const MS_PER_HOUR = 60 * MS_PER_MINUTE
+const MS_PER_DAY = 24 * MS_PER_HOUR
+/** Delay before unmounting collapsed content after close animation (ms) */
+const HISTORY_COLLAPSE_UNMOUNT_DELAY = 300
+
+/** Module-level Map to persist open/collapsed state across re-renders */
+const historyOpenStateMap = new Map<string, boolean>()
+
+/** Format a duration in milliseconds as a localized string like "48 秒" or "2 分 3 秒" */
+function formatHistoryDuration(durationMs: number, t: (key: TranslationKey) => string, locale: string): string {
+  const ms = Math.max(durationMs, 0)
+  const days = Math.floor(ms / MS_PER_DAY)
+  const hours = Math.floor((ms % MS_PER_DAY) / MS_PER_HOUR)
+  const minutes = Math.floor((ms % MS_PER_HOUR) / MS_PER_MINUTE)
+  const seconds = Math.floor((ms % MS_PER_MINUTE) / MS_PER_SECOND)
+  // Chinese locales use a space between number and unit
+  const separator = locale.toLowerCase().startsWith('zh') ? ' ' : ''
+  const parts: string[] = []
+  const push = (value: number, key: TranslationKey) => {
+    parts.push(`${value}${separator}${t(key)}`)
+  }
+  if (days > 0) push(days, 'chat.history.duration.day')
+  if (hours > 0) push(hours, 'chat.history.duration.hour')
+  if (minutes > 0) push(minutes, 'chat.history.duration.minute')
+  if (seconds > 0 || parts.length === 0) push(seconds, 'chat.history.duration.second')
+  return parts.join(' ')
+}
+
+/** Whether the history section should be forced open (streaming / settling / no latest part).
+ *  Mirrors ZCode's R1 function. Note: settling is currently always false at the call site
+ *  because chatStore does not expose a settling phase yet. When it does, pass
+ *  settling={chatState === 'settling'} to keep history open during the brief window after
+ *  streaming ends but before the final message is committed. */
+function shouldForceHistoryOpen(hasLatestPart: boolean, streaming: boolean, settling: boolean): boolean {
+  return streaming || settling || !hasLatestPart
 }
 
 /** Collapsible section for consecutive web search / web fetch tool calls */
@@ -3004,66 +3076,192 @@ function ExplorationGroupSection({
   )
 }
 
-/** Collapsible section for completed turn process items */
-function TurnProcessSection({
-  group,
-  isExpanded,
-  onToggle,
-  renderInnerItem,
+/** ZCode-style collapsible history section for completed turn process items.
+ *  Shows "工作中 48 秒" / "已工作 48 秒" / "已处理" and auto-collapses
+ *  when streaming ends and a final answer is present. */
+function AssistantHistorySection({
+  stateKey,
+  hasHistoryContent,
+  renderHistoryContent,
+  startedAt,
+  durationMs,
+  hasLatestPart,
+  settling,
+  streaming,
 }: {
-  group: TurnProcessGroup
-  isExpanded: boolean
-  onToggle: () => void
-  renderInnerItem: (item: RenderItem) => ReactNode
+  /** Unique key for persisting open/collapsed state across re-renders */
+  stateKey: string
+  /** Whether there is history content to render */
+  hasHistoryContent: boolean
+  /** Callback that renders the history content */
+  renderHistoryContent: () => ReactNode
+  /** Timestamp when this turn started */
+  startedAt: number
+  /** Server-provided duration in ms (optional, used after streaming ends).
+   *  TODO: pass server-provided durationMs when available in session snapshot. */
+  durationMs?: number
+  /** Whether a final answer (latest part) exists */
+  hasLatestPart: boolean
+  /** Whether the turn is settling (stream done but UI not yet committed) */
+  settling: boolean
+  /** Whether the turn is actively streaming */
+  streaming: boolean
 }) {
-  const { processItems, startTime, endTime } = group
   const t = useTranslation()
+  const { locale } = useSettingsStore()
 
-  // Compute elapsed time for this turn (WorkedForTimer)
-  let elapsedText = ''
-  if (startTime != null && endTime != null) {
-    const elapsedSec = Math.round((endTime - startTime) / 1000)
-    if (elapsedSec > 0) elapsedText = formatProcessElapsed(elapsedSec)
+  // ── Open/collapsed state ──
+  const forceOpen = shouldForceHistoryOpen(hasLatestPart, streaming, settling)
+  const [isOpen, setIsOpen] = useState(() => historyOpenStateMap.get(stateKey) ?? forceOpen)
+  // When forced open, override user preference
+  const resolvedIsOpen = forceOpen ? true : isOpen
+
+  // ── Render content even when collapsed (for animation) ──
+  const [shouldRenderContent, setShouldRenderContent] = useState(resolvedIsOpen)
+  // ── Auto-collapse closing flag (for close animation) ──
+  const [isAutoCollapseClosing, setIsAutoCollapseClosing] = useState(false)
+
+  // ── Live elapsed timer ──
+  const [liveElapsed, setLiveElapsed] = useState(() => Math.max(Date.now() - startedAt, 0))
+  const wasStreamingRef = useRef(streaming)
+  const frozenElapsedRef = useRef<number | null>(streaming ? null : Math.max(Date.now() - startedAt, 0))
+  const unmountTimerRef = useRef<number | null>(null)
+
+  // Sync open state when forceOpen changes
+  useEffect(() => {
+    setIsOpen(historyOpenStateMap.get(stateKey) ?? shouldForceHistoryOpen(hasLatestPart, streaming, settling))
+  }, [hasLatestPart, settling, stateKey, streaming])
+
+  // Handle streaming → idle transition: freeze elapsed and auto-collapse
+  useEffect(() => {
+    if (streaming) {
+      wasStreamingRef.current = true
+      frozenElapsedRef.current = null
+      setIsAutoCollapseClosing(false)
+      setIsOpen(true)
+      setLiveElapsed(Math.max(Date.now() - startedAt, 0))
+      const interval = window.setInterval(() => {
+        setLiveElapsed(Math.max(Date.now() - startedAt, 0))
+      }, MS_PER_SECOND)
+      return () => { window.clearInterval(interval) }
+    }
+    if (settling) {
+      setIsAutoCollapseClosing(false)
+      setIsOpen(true)
+      return
+    }
+    // Streaming just ended
+    if (wasStreamingRef.current && frozenElapsedRef.current === null) {
+      const frozen = Math.max(Date.now() - startedAt, 0)
+      frozenElapsedRef.current = frozen
+      setLiveElapsed(frozen)
+      // Auto-collapse: record closed state
+      setIsAutoCollapseClosing(true)
+      historyOpenStateMap.set(stateKey, false)
+      setIsOpen(false)
+    }
+  }, [settling, startedAt, stateKey, streaming])
+
+  // Delayed unmount of collapsed content (saves DOM while allowing close animation)
+  useEffect(() => {
+    if (resolvedIsOpen) {
+      if (unmountTimerRef.current !== null) {
+        window.clearTimeout(unmountTimerRef.current)
+        unmountTimerRef.current = null
+      }
+      setShouldRenderContent(true)
+      return
+    }
+    if (shouldRenderContent) {
+      unmountTimerRef.current = window.setTimeout(() => {
+        setShouldRenderContent(false)
+        setIsAutoCollapseClosing(false)
+        unmountTimerRef.current = null
+      }, HISTORY_COLLAPSE_UNMOUNT_DELAY)
+    }
+    return () => {
+      if (unmountTimerRef.current !== null) window.clearTimeout(unmountTimerRef.current)
+    }
+  }, [resolvedIsOpen, shouldRenderContent])
+
+  // Cleanup on unmount
+  useEffect(() => () => {
+    if (unmountTimerRef.current !== null) window.clearTimeout(unmountTimerRef.current)
+  }, [])
+
+  // ── Compute display duration ──
+  const computedDuration = wasStreamingRef.current ? (frozenElapsedRef.current ?? liveElapsed) : undefined
+  const displayDuration = streaming ? liveElapsed : durationMs ?? computedDuration
+  const formattedDuration = displayDuration != null ? formatHistoryDuration(displayDuration, t, locale) : null
+
+  // ── Compute label text (ZCode three-state) ──
+  //   streaming:           "工作中 {duration}"  (animated gradient text)
+  //   complete w/ duration: "已工作 {duration}"
+  //   no content:          "已处理"
+  const label = streaming
+    ? t('chat.history.workingFor').replace('{duration}', formattedDuration ?? formatHistoryDuration(liveElapsed, t, locale))
+    : formattedDuration
+      ? t('chat.history.workedFor').replace('{duration}', formattedDuration)
+      : t('chat.history.worked')
+
+  // Whether to keep content mounted for animation
+  const keepMounted = resolvedIsOpen || isAutoCollapseClosing || shouldRenderContent
+  // Whether this is the auto-collapse close animation (for CSS fade-out)
+  const isAnimateClosing = isAutoCollapseClosing && !resolvedIsOpen && shouldRenderContent
+
+  // ── Render ──
+  if (!hasHistoryContent) {
+    // No content to collapse — just show the label (ZCode: static div, no chevron)
+    return (
+      <div className="codex-turn-process">
+        <div className="codex-turn-process-trigger codex-turn-process-trigger--static">
+          <span className="codex-turn-process-title">{label}</span>
+        </div>
+        <div className="codex-turn-process-divider" />
+      </div>
+    )
   }
 
   return (
-    <div className="codex-turn-process" data-expanded={isExpanded ? 'true' : 'false'}>
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={isExpanded}
-        data-testid="turn-process-trigger"
-        className="codex-turn-process-trigger"
-      >
-        <span
-          className="turn-chevron codex-turn-process-chevron"
-          data-rotated={isExpanded ? 'true' : 'false'}
-          aria-hidden="true"
+    <div className="codex-turn-process" data-expanded={resolvedIsOpen ? 'true' : 'false'}>
+      <div className="flex w-full border-b border-border/50 pb-2">
+        <button
+          type="button"
+          onClick={() => {
+            if (streaming || settling) return
+            setIsAutoCollapseClosing(false)
+            const next = !resolvedIsOpen
+            historyOpenStateMap.set(stateKey, next)
+            setIsOpen(next)
+          }}
+          aria-expanded={resolvedIsOpen}
+          data-testid="turn-process-trigger"
+          className="codex-turn-process-trigger"
         >
-          {'▸'}
-        </span>
-        <span className="codex-turn-process-title">{t('chat.turnProcessed')}</span>
-        {elapsedText && (
-          <span className="codex-turn-process-time">
-            {elapsedText}
+          <ChevronRight
+            className="codex-turn-process-chevron"
+            size={14}
+            style={{
+              transform: resolvedIsOpen ? 'rotate(90deg)' : 'rotate(0deg)',
+              transition: 'transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+            }}
+          />
+          <span className={streaming ? 'animated-gradient-text' : 'codex-turn-process-title'}>
+            {label}
           </span>
-        )}
-      </button>
+        </button>
+      </div>
 
       <Collapse
-        open={isExpanded}
-        duration={560}
+        open={resolvedIsOpen}
+        duration={300}
         easing="cubic-bezier(0.16, 1, 0.3, 1)"
         collapsedOffset={0}
-        className="codex-turn-process-collapse"
+        className={`codex-turn-process-collapse${isAnimateClosing ? ' codex-turn-process-collapse--animate-close' : ''}`}
         contentClassName="codex-turn-process-content"
         testId="turn-process-collapse"
       >
-        {processItems.map((pi) => (
-          <div className="codex-turn-process-item" key={pi.kind === 'message' ? pi.message.id : pi.id}>
-            {renderInnerItem(pi)}
-          </div>
-        ))}
+        {keepMounted ? renderHistoryContent() : null}
       </Collapse>
 
       <div className="codex-turn-process-divider" />

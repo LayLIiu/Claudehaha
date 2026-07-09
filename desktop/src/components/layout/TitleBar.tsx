@@ -1,6 +1,8 @@
 import { useUIStore } from '../../stores/uiStore'
 import { useTranslation } from '../../i18n'
 
+const isWindows = typeof navigator !== 'undefined' && /Win/i.test(navigator.platform || navigator.userAgent)
+
 export function TitleBar() {
   const { activeView, setActiveView } = useUIStore()
   const t = useTranslation()

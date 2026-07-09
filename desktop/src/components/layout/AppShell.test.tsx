@@ -400,4 +400,32 @@ describe('AppShell boot flow', () => {
       expect(mocks.setActiveTab).toHaveBeenCalledWith('session-1')
     })
   })
+
+  it('keeps a fallback top inset for the mobile session header in fullscreen webviews', async () => {
+    mocks.isMobile = true
+    mocks.tabState.activeTabId = 'session-1'
+    mocks.tabState.tabs = [
+      {
+        sessionId: 'session-1',
+        title: 'Existing session',
+        type: 'session',
+        status: 'idle',
+      },
+    ]
+    useSessionStore.setState({
+      sessions: [{
+        id: 'session-1',
+        title: 'Existing session',
+        modifiedAt: new Date().toISOString(),
+      } as never],
+      activeSessionId: null,
+      isLoading: false,
+      error: null,
+    })
+
+    render(<AppShell />)
+
+    const header = await screen.findByTestId('mobile-session-header')
+    expect(header.className).toContain('pt-[max(env(safe-area-inset-top,0px),44px)]')
+  })
 })
