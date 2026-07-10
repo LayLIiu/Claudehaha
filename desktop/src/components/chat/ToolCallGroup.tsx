@@ -251,12 +251,12 @@ function ActiveEditTitle({
 function RunningToolTitle({ toolName, detail }: { toolName: string; detail: string }) {
   const verb = TOOL_ACTION_LABEL[toolName]?.[0] || '正在执行'
   return (
-    <span className="flex min-w-0 items-center gap-1">
+    <span className="flex min-w-0 items-center gap-1.5">
       <CadencedShimmerText>
         <span>{verb}</span>
       </CadencedShimmerText>
       {detail && (
-        <span className="min-w-0 truncate font-[var(--font-mono)] text-[11px] text-[var(--color-token-text-secondary)]">
+        <span className="min-w-0 truncate font-[var(--font-mono)] text-[12px] text-[var(--color-token-text-tertiary)]">
           {detail}
         </span>
       )}
@@ -276,10 +276,10 @@ function ToolEditFileSummaryRows({
       {files.map((file) => (
         <div
           key={file.path}
-          className="flex min-h-7 items-center gap-2 rounded-[var(--radius-xs)] px-2 py-1 text-[12px] text-[var(--color-token-conversation-summary-trailing)]"
+          className="flex min-h-6 items-center gap-2 px-1 py-0.5 text-[12px] text-[var(--color-token-conversation-summary-trailing)]"
           title={file.path}
         >
-          <FilePenLine size={14} className="shrink-0 text-[var(--color-token-input-placeholder-foreground)]" aria-hidden="true" />
+          <FilePenLine size={14} className="shrink-0 text-[var(--color-token-icon-foreground)]" aria-hidden="true" />
           <span className="min-w-0 flex-1 truncate font-[var(--font-mono)]">{file.label}</span>
           {file.editCount > 1 ? (
             <span className="shrink-0 text-[10px] text-[var(--color-token-text-secondary)]">×{file.editCount}</span>
@@ -611,13 +611,14 @@ function AgentToolGroup({
 
   // Flat mode: just the agent cards, no collapsible wrapper
   return (
-    <div className="mb-[3px]">
+    <div className="mb-[2px]">
       <button
         type="button"
         onClick={() => setExpanded((value) => !value)}
-        className="agent-card-glow flex w-full items-center gap-2 rounded-[var(--radius-2xl)] bg-[var(--color-surface-container-high)] px-3 py-2 text-left transition-colors"
+        className="agent-card-glow flex w-full items-center gap-2 rounded-[var(--radius-xl)] bg-[var(--color-surface-container-high)]/60 px-3 py-1.5 text-left transition-colors"
       >
-        <ChevronDown size={15} className={`shrink-0 text-[var(--color-token-foreground)] transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} aria-hidden="true" />
+        <ChevronDown size={14} className={`shrink-0 text-[var(--color-token-icon-foreground)] transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} aria-hidden="true" />
+        <Bot size={16} className="shrink-0 text-[var(--color-token-icon-foreground)]" aria-hidden="true" />
         <span className="flex-1 truncate text-[12px] text-[var(--color-token-text-secondary)]">
 {isAnyRunning
             ? activeToolTitle || (toolCalls.length === 1 ? t('toolGroup.agentOne') : t('toolGroup.agentMany', { count: toolCalls.length }))
@@ -700,14 +701,14 @@ function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isSt
   ) : summary
 
   return (
-    <div className="group/collapsed-tool-activity mb-[3px]" data-summary-key={summaryKey}>
+    <div className="group/collapsed-tool-activity mb-[2px]" data-summary-key={summaryKey}>
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="flex w-full items-center gap-2 rounded-[var(--radius-xs)] px-2 py-1.5 text-left transition-colors"
+        className="flex w-full items-center gap-2 px-1 py-1 text-left text-[13px] transition-colors hover:opacity-80"
       >
-        <ChevronDown size={15} className={`shrink-0 text-[var(--color-token-input-placeholder-foreground)] transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} aria-hidden="true" />
-        <span className="flex-1 truncate text-[var(--text-size-chat)] text-[var(--color-token-conversation-summary-trailing)] group-hover/collapsed-tool-activity:text-[var(--color-token-foreground)]">
+        <ChevronDown size={14} className={`shrink-0 text-[var(--color-token-icon-foreground)] transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} aria-hidden="true" />
+        <span className="flex-1 truncate text-[var(--color-token-conversation-summary-trailing)] group-hover/collapsed-tool-activity:text-[var(--color-token-foreground)]">
           {isRunning ? (
             effectiveRunningDisplay?.editStats ? (
               <ActiveEditTitle toolName={effectiveRunningDisplay.toolCall.toolName} stats={effectiveRunningDisplay.editStats} />
@@ -723,7 +724,7 @@ function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isSt
       </button>
 
       <Collapse open={expanded}>
-        <div className="ml-3 mt-1 space-y-1 border-l border-[var(--color-token-border)]/38 pl-3">
+        <div className="ml-2 mt-0.5 space-y-1 border-l border-[var(--color-token-border-default)] pl-3.5">
           <ToolEditFileSummaryRows files={editFileSummaries} />
           {toolCalls.map((tc) => {
             return (
@@ -929,7 +930,7 @@ function ToolCallTree({
         diffStats={toolDiffStats}
       />
       {childToolCalls.length > 0 && (
-        <div className={compact ? 'ml-3 border-l border-[var(--color-token-border)]/38 pl-3' : 'mb-1.5 ml-6 border-l border-[var(--color-token-border)]/38 pl-3'}>
+        <div className={compact ? 'ml-2 border-l border-[var(--color-token-border-default)] pl-3.5' : 'mb-1.5 ml-2 border-l border-[var(--color-token-border-default)] pl-3.5'}>
           <div className="space-y-1">
             {childToolCalls.map((childToolCall) => (
               <ToolCallTree

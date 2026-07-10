@@ -150,7 +150,7 @@ export function GitActionsDialog({
       ref={dialogRef}
       role="dialog"
       aria-label="Git 操作"
-      className="liquid-glass glass-panel fixed z-[360] w-[min(220px,calc(100vw-32px))] overflow-hidden rounded-[14px] border border-[rgba(255,255,255,0.1)] bg-[rgba(28,28,30,0.92)] p-1.5 shadow-[0_16px_48px_rgba(0,0,0,0.34)] backdrop-blur-xl"
+      className="liquid-glass glass-panel fixed z-[360] w-[min(220px,calc(100vw-32px))] overflow-hidden rounded-[14px] border border-[var(--color-surface-glass-border)] p-1.5 shadow-[0_16px_48px_rgba(0,0,0,0.34)]"
       style={menuStyle}
     >
       <div className="px-2 pb-1.5 pt-2 text-[13px] font-semibold text-[rgba(255,255,255,0.44)]">
@@ -323,7 +323,7 @@ function ModalFrame({
       ref={frameRef}
       role="dialog"
       aria-label={title}
-      className="liquid-glass glass-panel w-[min(380px,calc(100vw-32px))] overflow-hidden rounded-[18px] border border-[rgba(255,255,255,0.11)] bg-[rgba(28,28,30,0.94)] p-4 shadow-[0_22px_64px_rgba(0,0,0,0.42)]"
+      className="liquid-glass glass-panel w-[min(380px,calc(100vw-32px))] overflow-hidden rounded-[18px] border border-[var(--color-surface-glass-border)] p-4 shadow-[0_22px_64px_rgba(0,0,0,0.42)]"
     >
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">

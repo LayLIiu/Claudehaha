@@ -54,6 +54,17 @@ const traceWindows = new Map<string, BrowserWindow>()
 let isQuitting = false
 let trayController: TrayController | null = null
 
+// Suppress EPIPE errors when stdout/stderr pipes are broken (e.g., parent terminal closed).
+// This is a normal occurrence when running as a background/desktop process.
+process.stdout?.on?.('error', (err: NodeJS.ErrnoException) => {
+  if (err.code === 'EPIPE') return
+  throw err
+})
+process.stderr?.on?.('error', (err: NodeJS.ErrnoException) => {
+  if (err.code === 'EPIPE') return
+  throw err
+})
+
 installMacOsChromiumKeychainPromptGuard(app)
 
 function appRoot() {

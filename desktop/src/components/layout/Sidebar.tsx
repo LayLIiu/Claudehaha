@@ -697,7 +697,6 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
       {...(isMacOSDesktop ? { style: { background: 'transparent' } } : {})}
       className={`sidebar-panel relative h-full flex flex-col ${isMacOSDesktop ? '' : (isMobile ? 'bg-[var(--color-surface)]' : 'bg-[var(--color-surface-sidebar)]')} select-none`}
       data-state={expanded ? 'open' : 'closed'}
-      data-desktop-drag-region={isDesktopRuntime ? true : undefined}
       aria-label="Sidebar"
     >
       {isMobile && (
@@ -718,7 +717,12 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
         </div>
       )}
 
-      <div className={`px-3 pb-3 flex flex-col ${isDesktopRuntime && !isWindows && !isMobile ? 'pt-[44px]' : ''} ${expanded ? 'gap-0.5' : 'items-center gap-2'}`}>
+      {/* macOS titlebar drag region — only the top padding area should be draggable */}
+      {isDesktopRuntime && !isWindows && !isMobile && (
+        <div data-desktop-drag-region className="h-[44px] flex-shrink-0" />
+      )}
+
+      <div className={`px-3 pb-3 flex flex-col ${expanded ? 'gap-0.5' : 'items-center gap-2'}`}>
         <NavItem
           active={false}
           collapsed={!expanded}

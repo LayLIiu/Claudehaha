@@ -60,15 +60,15 @@ export const ToolCallBlock = memo(function ToolCallBlock({ toolName, input, resu
   let statusLabel: React.ReactNode = null
   if (isPending && !result) {
     statusLabel = (
-      <span className="inline-flex min-w-0 max-w-[58%] shrink-0 items-center gap-1 text-[10px] text-[var(--color-outline)]">
-        <LoaderCircle size={12} strokeWidth={2.4} className="animate-spin" aria-hidden="true" />
+      <span className="inline-flex min-w-0 max-w-[58%] shrink-0 items-center gap-1 text-[10px] text-[var(--color-token-text-tertiary)]">
+        <LoaderCircle size={11} strokeWidth={2.4} className="animate-spin" aria-hidden="true" />
         <span className="truncate">
           {toolName === 'Write' ? t('tool.generatingContent') : toolName === 'Edit' || toolName === 'MultiEdit' ? t('tool.preparingEdit') : t('tool.preparingTool')}
         </span>
         {liveStatsSummary && (
           <>
-            <span className="shrink-0 text-[var(--color-token-text-secondary)]">·</span>
-            <span className="shrink-0 font-[var(--font-mono)] tabular-nums text-[var(--color-token-text-secondary)]">
+            <span className="shrink-0 text-[var(--color-token-text-tertiary)]">·</span>
+            <span className="shrink-0 font-[var(--font-mono)] tabular-nums text-[var(--color-token-text-tertiary)]">
               {liveStatsSummary}
             </span>
           </>
@@ -77,20 +77,20 @@ export const ToolCallBlock = memo(function ToolCallBlock({ toolName, input, resu
     )
   } else if (status === 'stopped' && !result) {
     statusLabel = (
-      <span className="inline-flex shrink-0 items-center gap-1 text-[10px] text-[var(--color-outline)]">
-        <CircleStop size={12} strokeWidth={2.25} aria-hidden="true" />
+      <span className="inline-flex shrink-0 items-center gap-1 text-[10px] text-[var(--color-token-text-tertiary)]">
+        <CircleStop size={11} strokeWidth={2.25} aria-hidden="true" />
         {t('tool.stopped')}
       </span>
     )
   } else if (result && outputSummary) {
     statusLabel = (
-      <span className={`shrink-0 text-[10px] ${isError ? 'text-[var(--color-error)]' : 'text-[var(--color-outline)]'}`}>
+      <span className={`shrink-0 text-[10px] ${isError ? 'text-[var(--color-error)]' : 'text-[var(--color-token-text-tertiary)]'}`}>
         {outputSummary}
       </span>
     )
   } else if (liveStatsSummary) {
     statusLabel = (
-      <span className="shrink-0 font-[var(--font-mono)] text-[10px] tabular-nums text-[var(--color-outline)]">
+      <span className="shrink-0 font-[var(--font-mono)] text-[10px] tabular-nums text-[var(--color-token-text-tertiary)]">
         {liveStatsSummary}
       </span>
     )
@@ -135,14 +135,21 @@ export const ToolCallBlock = memo(function ToolCallBlock({ toolName, input, resu
     )
   }
 
+  // Source badge: tool name in a small bordered pill (ZCode style)
+  const sourceBadge = (
+    <span className="shrink-0 rounded border border-[var(--color-token-border-default)] bg-[var(--color-surface-container-low)] px-1.5 py-0.5 font-[var(--font-mono)] text-[10px] leading-none text-[var(--color-token-text-tertiary)]">
+      {toolName}
+    </span>
+  )
+
   return (
     <ToolLayout
       toolId={`${toolName}-${kindDetail}`}
       icon={Icon}
-      kindLabel={`${isRunning ? runningLabel : completedLabel} ${toolName}`}
+      kindLabel={isRunning ? runningLabel : completedLabel}
       kindDetail={kindDetail || undefined}
       primaryText={primaryText}
-      statusLabel={statusLabel}
+      statusLabel={<>{sourceBadge}{statusLabel}</>}
       isRunning={isRunning}
       showFailureStatus={isError}
       canToggle={hasContent}

@@ -1,5 +1,6 @@
 import { memo, useEffect, useState, Suspense, useRef } from 'react'
 import { ShikiHighlighter } from 'react-shiki'
+import { Copy, Check } from 'lucide-react'
 import { useShikiHighlighter } from './ShikiContext'
 import { MermaidRenderer } from '../chat/MermaidRenderer'
 import { CopyButton } from '../shared/CopyButton'
@@ -146,7 +147,7 @@ export const ShikiCodeBlock = memo(function ShikiCodeBlock({ code, language, isI
     )
   }
 
-  const languageLabel = language || 'code'
+  const languageLabel = language || '代码'
 
   return (
     <div
@@ -163,9 +164,11 @@ export const ShikiCodeBlock = memo(function ShikiCodeBlock({ code, language, isI
         </span>
         <CopyButton
           text={code}
-          label="Copy code"
-          copiedLabel="Copied code"
-          className="icon-md inline-flex items-center justify-center rounded-[var(--radius-xs)] text-[var(--color-token-input-placeholder-foreground)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border)]"
+          label="拷贝"
+          copiedLabel="已拷贝"
+          displayLabel={<Copy size={14} />}
+          displayCopiedLabel={<Check size={14} />}
+          className="icon-md inline-flex items-center justify-center rounded-[var(--radius-xs)] text-[var(--color-token-input-placeholder-foreground)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border)] hover:text-[var(--color-token-foreground)]"
         />
       </div>
 

@@ -315,7 +315,7 @@ export function OpenProjectMenu({
           <div
             ref={menuRef}
             role="menu"
-            className={`liquid-glass glass-panel fixed z-50 w-[min(260px,calc(100vw-32px))] overflow-hidden rounded-[14px] border border-[rgba(255,255,255,0.1)] bg-[rgba(32,32,32,0.93)] p-1.5 shadow-[0_14px_42px_rgba(0,0,0,0.36)] backdrop-blur-xl ${animatingOut ? 'glass-animate-exit' : ''}`}
+            className={`liquid-glass glass-panel fixed z-50 w-[min(260px,calc(100vw-32px))] overflow-hidden rounded-[14px] border border-[var(--color-surface-glass-border)] p-1.5 shadow-[0_14px_42px_rgba(0,0,0,0.36)] ${animatingOut ? 'glass-animate-exit' : ''}`}
             style={{ top: rect.bottom + 6, right: Math.max(12, window.innerWidth - rect.right) }}
           >
             {simpleTargets.map((target) => (
@@ -363,7 +363,7 @@ export function OpenProjectMenu({
           ref={menuRef}
           role="dialog"
           aria-label="Git 工具"
-          className={`liquid-glass glass-panel fixed z-[340] w-[min(320px,calc(100vw-32px))] overflow-hidden rounded-[18px] border border-[rgba(255,255,255,0.12)] bg-[rgba(28,28,30,0.93)] p-3 shadow-[0_18px_56px_rgba(0,0,0,0.36)] backdrop-blur-xl ${animatingOut ? 'glass-animate-exit' : ''}`}
+          className={`liquid-glass glass-panel fixed z-[340] w-[min(320px,calc(100vw-32px))] overflow-hidden rounded-[18px] border border-[var(--color-surface-glass-border)] p-3 shadow-[0_18px_56px_rgba(0,0,0,0.36)] ${animatingOut ? 'glass-animate-exit' : ''}`}
           style={{
             top: rect.bottom + 8,
             right: 14,
@@ -483,7 +483,7 @@ export function OpenProjectMenu({
 
       {branchPopoverOpen && branchRect ? createPortal(
         <div
-          className="liquid-glass glass-panel fixed z-[350] w-[min(280px,calc(100vw-32px))] overflow-hidden rounded-[16px] border border-[rgba(255,255,255,0.11)] bg-[rgba(28,28,30,0.94)] p-2.5 shadow-[0_18px_56px_rgba(0,0,0,0.38)] backdrop-blur-xl"
+          className="liquid-glass glass-panel fixed z-[350] w-[min(280px,calc(100vw-32px))] overflow-hidden rounded-[16px] border border-[var(--color-surface-glass-border)] p-2.5 shadow-[0_18px_56px_rgba(0,0,0,0.38)]"
           style={{
             top: Math.max(12, branchRect.top - 22),
             left: Math.max(12, branchRect.left - 292),
@@ -534,7 +534,7 @@ export function OpenProjectMenu({
             ref={graphDialogRef}
             role="dialog"
             aria-label="Git 图谱"
-            className="liquid-glass glass-panel w-[min(760px,calc(100vw-32px))] max-h-[min(560px,calc(100vh-48px))] overflow-hidden rounded-[18px] border border-[rgba(255,255,255,0.11)] bg-[rgba(28,28,30,0.94)] shadow-[0_24px_72px_rgba(0,0,0,0.46)]"
+            className="liquid-glass glass-panel w-[min(760px,calc(100vw-32px))] max-h-[min(560px,calc(100vh-48px))] overflow-hidden rounded-[18px] border border-[var(--color-surface-glass-border)] shadow-[0_24px_72px_rgba(0,0,0,0.46)]"
           >
             <div className="flex items-center justify-between gap-2 border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
               <div className="text-[15px] font-semibold text-[rgba(255,255,255,0.92)]">Git 图谱</div>

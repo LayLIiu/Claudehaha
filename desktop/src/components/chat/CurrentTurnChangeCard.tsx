@@ -110,7 +110,7 @@ export function CurrentTurnChangeCard({
 
   return (
     <section
-      className="mx-auto mb-4 w-full max-w-[860px] overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-surface-glass-border)] bg-[var(--color-surface-container-low)] shadow-[var(--shadow-lg)]"
+	      className="mx-auto mb-4 w-full max-w-[860px] overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-surface-glass-border)] bg-[var(--color-surface-glass)] shadow-[var(--shadow-lg)]"
       aria-label={cardLabel}
     >
       <div className="flex min-h-[74px] items-center justify-between gap-3 border-b border-[var(--color-surface-glass-border)] px-4 py-3">

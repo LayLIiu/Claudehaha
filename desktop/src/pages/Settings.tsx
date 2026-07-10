@@ -209,15 +209,16 @@ export function Settings() {
   ]
 
   return (
-    <div className="settings-page-root flex-1 grid min-h-0 grid-cols-[64px_minmax(0,1fr)] lg:grid-cols-[283px_minmax(0,1fr)] overflow-hidden" data-desktop-drag-region={isDesktopRuntime() ? true : undefined}>
+    <div className="settings-page-root flex-1 grid min-h-0 grid-cols-[64px_minmax(0,1fr)] lg:grid-cols-[283px_minmax(0,1fr)] overflow-hidden">
       {/* Sidebar navigation */}
       <aside
         data-testid="settings-sidebar-panel"
-        data-desktop-drag-region={isDesktopRuntime() ? true : undefined}
-        className="settings-sidebar-panel relative flex flex-col py-2 pt-[36px]"
+        className="settings-sidebar-panel relative flex flex-col"
       >
+        {/* Titlebar drag region for sidebar */}
+        {isDesktopRuntime() && <div data-desktop-drag-region className="h-[var(--titlebar-height)] flex-shrink-0" />}
         {/* Back button */}
-        <div className="px-3 mb-1">
+        <div className="px-3 mb-1 py-2">
           <button
             type="button"
             onClick={() => {
@@ -258,13 +259,14 @@ export function Settings() {
       {/* Content area */}
       <div
         data-testid="settings-content-panel"
-        data-desktop-drag-region={isDesktopRuntime() ? true : undefined}
         className={
           activeTab === 'trace'
             ? 'settings-content-panel flex-1 flex min-h-0 flex-col overflow-hidden'
             : 'settings-content-panel ml-2 flex-1 overflow-y-auto'
         }
       >
+        {/* Titlebar drag region for content area */}
+        {isDesktopRuntime() && <div data-desktop-drag-region className="h-[var(--titlebar-height)] flex-shrink-0" />}
         {activeTab === 'trace' ? (
           <TraceList />
         ) : (

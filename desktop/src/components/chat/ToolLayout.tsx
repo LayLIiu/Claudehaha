@@ -126,7 +126,7 @@ export const ToolLayout = memo(function ToolLayout({
 
   return (
     <div
-      className={`tool-call-row ${compact ? 'mb-0' : 'mb-[3px]'} ${animate ? 'tool-stream-animate' : ''}`}
+      className={`tool-call-row ${compact ? 'mb-0' : 'mb-[2px]'} ${animate ? 'tool-stream-animate' : ''}`}
       data-tool-call-id={toolId}
       data-tool-name={dataToolName}
       data-status={dataStatus}
@@ -134,18 +134,18 @@ export const ToolLayout = memo(function ToolLayout({
       <button
         type="button"
         onClick={handleToggle}
-        className={`group/tool-summary inline-flex max-w-full items-center gap-2 self-start text-left text-[13px] rounded-[var(--radius-sm)] px-2 py-1.5 transition-colors ${
+        className={`group/tool-summary inline-flex max-w-full items-center gap-1.5 self-start text-left text-[13px] transition-colors hover:opacity-80 ${
           effectiveCanToggle ? 'cursor-pointer' : 'cursor-default'
         }`}
       >
         {/* Icon */}
         {showIcon && (
           <Icon
-            size={14}
+            size={16}
             className={`shrink-0 ${
               showFailureStatus
                 ? 'text-[var(--color-error)]'
-                : 'text-[var(--color-token-input-placeholder-foreground)]'
+                : 'text-[var(--color-token-icon-foreground)]'
             }`}
             aria-hidden="true"
           />
@@ -153,18 +153,16 @@ export const ToolLayout = memo(function ToolLayout({
 
         {/* Kind label */}
         <span
-          className={`font-medium whitespace-nowrap shrink-0 text-[11px] tracking-[0.03em] ${
-            isRunning
-              ? 'text-[var(--color-token-text-secondary)]'
-              : 'text-[var(--color-token-text-secondary)]'
-          } ${isRunning ? 'animated-tool-label' : ''}`}
+          className={`font-medium whitespace-nowrap shrink-0 text-[12px] ${
+            isRunning ? 'animated-tool-label' : 'text-[var(--color-token-text-secondary)]'
+          }`}
         >
           {kindLabel}
         </span>
 
         {/* Kind detail */}
         {kindDetail && (
-          <span className="min-w-0 truncate font-[var(--font-mono)] text-[11px] text-[var(--color-token-text-secondary)]">
+          <span className="min-w-0 truncate font-[var(--font-mono)] text-[12px] text-[var(--color-token-text-tertiary)]">
             {kindDetail}
           </span>
         )}
@@ -187,7 +185,7 @@ export const ToolLayout = memo(function ToolLayout({
         {effectiveCanToggle && (
           <ChevronDown
             size={14}
-            className={`shrink-0 text-[var(--color-token-input-placeholder-foreground)] transition-transform duration-200 ${
+            className={`shrink-0 text-[var(--color-token-icon-foreground)] transition-transform duration-200 ${
               shouldShowContent ? 'rotate-180' : ''
             }`}
             aria-hidden="true"
@@ -197,7 +195,7 @@ export const ToolLayout = memo(function ToolLayout({
 
       {/* Expanded content */}
       {shouldShowContent && (
-        <div className="ml-3 mt-1.5 space-y-2.5 border-l border-[var(--color-token-border)]/38 pl-3 text-popover-foreground outline-none">
+        <div className="ml-2 mt-0.5 space-y-2 border-l border-[var(--color-token-border-default)] pl-3.5 text-[var(--color-token-foreground)] outline-none">
           {renderContent?.()}
         </div>
       )}
