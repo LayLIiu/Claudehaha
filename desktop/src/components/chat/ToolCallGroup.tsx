@@ -1,5 +1,5 @@
 import { memo, useMemo, useRef, useState } from 'react'
-import { BookMarked, ChevronDown, ChevronRight, Settings } from 'lucide-react'
+import { BookMarked, ChevronDown, ChevronRight, Settings, FilePenLine, Bot, CircleStop, Clock } from 'lucide-react'
 import { ToolCallBlock } from './ToolCallBlock'
 import { MarkdownRenderer } from '../markdown/MarkdownRenderer'
 import { Modal } from '../shared/Modal'
@@ -279,7 +279,7 @@ function ToolEditFileSummaryRows({
           className="flex min-h-7 items-center gap-2 rounded-[var(--radius-xs)] px-2 py-1 text-[12px] text-[var(--color-token-conversation-summary-trailing)]"
           title={file.path}
         >
-          <span className="material-symbols-outlined icon-xs shrink-0 text-[var(--color-token-input-placeholder-foreground)]">draft</span>
+          <FilePenLine size={14} className="shrink-0 text-[var(--color-token-input-placeholder-foreground)]" aria-hidden="true" />
           <span className="min-w-0 flex-1 truncate font-[var(--font-mono)]">{file.label}</span>
           {file.editCount > 1 ? (
             <span className="shrink-0 text-[10px] text-[var(--color-token-text-secondary)]">×{file.editCount}</span>
@@ -617,9 +617,7 @@ function AgentToolGroup({
         onClick={() => setExpanded((value) => !value)}
         className="agent-card-glow flex w-full items-center gap-2 rounded-[var(--radius-2xl)] bg-[var(--color-surface-container-high)] px-3 py-2 text-left transition-colors"
       >
-        <span className="material-symbols-outlined icon-xs text-[var(--color-token-foreground)]">
-          {expanded ? 'expand_less' : 'expand_more'}
-        </span>
+        <ChevronDown size={15} className={`shrink-0 text-[var(--color-token-foreground)] transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} aria-hidden="true" />
         <span className="flex-1 truncate text-[12px] text-[var(--color-token-text-secondary)]">
 {isAnyRunning
             ? activeToolTitle || (toolCalls.length === 1 ? t('toolGroup.agentOne') : t('toolGroup.agentMany', { count: toolCalls.length }))
@@ -631,10 +629,10 @@ function AgentToolGroup({
           </span>
         )}
         {!isAnyRunning && !errorPresent && !allComplete && !anyStopped && (
-          <span className="material-symbols-outlined icon-xs text-[var(--color-token-foreground)]">pending</span>
+          <Clock size={14} className="text-[var(--color-token-foreground)]" aria-hidden="true" />
         )}
         {!isAnyRunning && !errorPresent && !allComplete && anyStopped && (
-          <span className="material-symbols-outlined icon-xs text-[var(--color-token-foreground)]">stop_circle</span>
+          <CircleStop size={14} className="text-[var(--color-token-foreground)]" aria-hidden="true" />
         )}
       </button>
 
@@ -708,9 +706,7 @@ function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isSt
         onClick={() => setExpanded((v) => !v)}
         className="flex w-full items-center gap-2 rounded-[var(--radius-xs)] px-2 py-1.5 text-left transition-colors"
       >
-        <span className={`material-symbols-outlined icon-xs text-[var(--color-token-input-placeholder-foreground)] transition-transform duration-300 ${expanded ? 'rotate-90' : ''}`}>
-          {expanded ? 'expand_less' : 'expand_more'}
-        </span>
+        <ChevronDown size={15} className={`shrink-0 text-[var(--color-token-input-placeholder-foreground)] transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} aria-hidden="true" />
         <span className="flex-1 truncate text-[var(--text-size-chat)] text-[var(--color-token-conversation-summary-trailing)] group-hover/collapsed-tool-activity:text-[var(--color-token-foreground)]">
           {isRunning ? (
             effectiveRunningDisplay?.editStats ? (
@@ -801,7 +797,7 @@ function AgentCallCard({
   return (
     <div className="agent-card-glow overflow-hidden rounded-[var(--radius-2xl)] bg-[var(--color-surface-container-high)]">
       <div className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors">
-        <span className="material-symbols-outlined icon-md text-[var(--color-outline)]">smart_toy</span>
+        <Bot size={18} className="text-[var(--color-outline)]" aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="text-[13px] font-semibold text-[var(--color-token-foreground)]">Agent</span>
@@ -855,9 +851,7 @@ function AgentCallCard({
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[var(--color-outline)] transition-colors"
           aria-label={expanded ? 'Collapse agent' : 'Expand agent'}
         >
-          <span className="material-symbols-outlined icon-sm">
-          {expanded ? 'expand_less' : 'expand_more'}
-          </span>
+          <ChevronDown size={16} className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} aria-hidden="true" />
         </button>
       </div>
 
