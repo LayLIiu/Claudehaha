@@ -1039,7 +1039,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                   }}
                                   onContextMenu={(e) => handleContextMenu(e, session.id)}
                                   className={`
-                                    sidebar-session-row group/session relative w-full -ml-[8px] pl-0 pr-2 ${isMobile ? 'py-3' : 'py-[5px]'} text-left text-[13px] transition-[background,color] duration-150
+                                    sidebar-session-row group/session relative w-[calc(100%-10px)] ml-1.5 mr-1 pl-0 pr-1 ${isMobile ? 'py-3' : 'py-[5px]'} text-left text-[13px] transition-[background,color] duration-150
                                     ${selectedSessionIds.has(session.id)
                                       ? 'sidebar-session-row--selected text-[var(--color-token-foreground)]'
                                       : session.id === activeTabId

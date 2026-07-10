@@ -46,6 +46,9 @@ desktop/brand-assets/
 docs/superpowers/
 .superpowers/
 
+# ZCode agent metadata (auto-generated)
+.zcode/
+
 # Temp server/web logs
 .tmp-*.log
 
