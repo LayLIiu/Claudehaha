@@ -899,7 +899,7 @@ export function ActiveSession() {
                   {historyError}
                 </div>
               ) : (
-                <MessageList compact={showRightPanel} bottomPadding={100} taskPillOffset={taskPillOffset} />
+                <MessageList compact={showRightPanel} bottomPadding={140} taskPillOffset={taskPillOffset} />
               )}
             </>
           )}

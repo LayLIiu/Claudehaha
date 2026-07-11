@@ -870,37 +870,52 @@ function applyTurnCollapse(items: RenderItem[], isTurnActive?: boolean): RenderI
     }
 
     if (lastAssistantIdx >= 0) {
-      const processItems = turnItems.slice(0, lastAssistantIdx)
+      const rawProcessItems = turnItems.slice(0, lastAssistantIdx)
       const finalAssistant = turnItems[lastAssistantIdx]!
       const afterItems = turnItems.slice(lastAssistantIdx + 1)
 
-      if (processItems.length > 0) {
-        const stepCount = countProcessSteps(processItems)
-        if (stepCount > 0) {
-          let endTime: number | null = null
-          for (let i = processItems.length - 1; i >= 0; i--) {
-            const pi = processItems[i]!
-            if (pi.kind === 'message' && pi.message.timestamp != null) { endTime = pi.message.timestamp; break }
-            if ((pi.kind === 'tool_group' || pi.kind === 'web_search_group' || pi.kind === 'exploration_group') && pi.toolCalls.length > 0) {
-              endTime = pi.toolCalls[pi.toolCalls.length - 1]!.timestamp; break
-            }
-            if (pi.kind === 'tool_burst') {
-              const all = [...pi.burst.pinnedToolCalls, ...pi.burst.overflowToolCalls]
-              if (all.length > 0) { endTime = all[all.length - 1]!.timestamp; break }
-            }
+      if (rawProcessItems.length > 0) {
+        // Separate tool groups (always visible) from collapsible items (thinking,
+        // intermediate assistant_text) so tool summaries are never hidden behind
+        // the "已处理" fold.
+        const collapsibleItems: RenderItem[] = []
+        const toolGroupItems: RenderItem[] = []
+        for (const pi of rawProcessItems) {
+          if (pi.kind === 'tool_group' || pi.kind === 'tool_burst'
+              || pi.kind === 'web_search_group' || pi.kind === 'exploration_group') {
+            toolGroupItems.push(pi)
+          } else {
+            collapsibleItems.push(pi)
           }
-          result.push({
-            kind: 'turn_process',
-            group: {
-              userMsgId: currentUserMsgId!,
-              processItems: [...processItems],
-              stepCount,
-              startTime: currentUserMsgTimestamp,
-              endTime,
-              hasFinalAssistant: true,
-            },
-            id: `turn-${currentUserMsgId}-${result.length}`,
-          })
+        }
+
+        // Collapsible items go into turn_process (the "已处理" section)
+        if (collapsibleItems.length > 0) {
+          const stepCount = countProcessSteps(collapsibleItems)
+          if (stepCount > 0) {
+            let endTime: number | null = null
+            for (let i = collapsibleItems.length - 1; i >= 0; i--) {
+              const pi = collapsibleItems[i]!
+              if (pi.kind === 'message' && pi.message.timestamp != null) { endTime = pi.message.timestamp; break }
+            }
+            result.push({
+              kind: 'turn_process',
+              group: {
+                userMsgId: currentUserMsgId!,
+                processItems: collapsibleItems,
+                stepCount,
+                startTime: currentUserMsgTimestamp,
+                endTime,
+                hasFinalAssistant: true,
+              },
+              id: `turn-${currentUserMsgId}-${result.length}`,
+            })
+          }
+        }
+
+        // Tool group summaries are always exposed (never folded into turn_process)
+        for (const tgi of toolGroupItems) {
+          result.push(tgi)
         }
       }
 

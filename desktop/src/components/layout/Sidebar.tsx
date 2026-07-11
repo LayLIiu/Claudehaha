@@ -1051,7 +1051,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                                 >
                                   {unreadSessionIds.has(session.id) && !runningSessionIds.has(session.id) && !isBatchMode && (
                                     <span
-                                      className="absolute left-[30px] top-1/2 -translate-y-1/2 inline-block h-[7px] w-[7px] rounded-full bg-[#5B9BF5] shadow-[0_0_4px_rgba(91,155,245,0.6)]"
+                                      className="absolute left-[22px] top-1/2 -translate-y-1/2 inline-block h-[7px] w-[7px] rounded-full bg-[#5B9BF5] shadow-[0_0_4px_rgba(91,155,245,0.6)]"
                                       aria-label={t('sidebar.sessionUnread')}
                                       title={t('sidebar.sessionUnread')}
                                     />
