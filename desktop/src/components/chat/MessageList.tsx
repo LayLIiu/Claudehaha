@@ -25,6 +25,8 @@ import { InlineTaskSummary } from './InlineTaskSummary'
 import { ShikiProvider } from '../markdown/ShikiContext'
 import { CurrentTurnChangeCard } from './CurrentTurnChangeCard'
 import { summarizeToolEditFiles, type ToolEditFileSummary } from './toolEditSummary'
+import type { LiveTurnChangeSummary } from './turnLiveChangeSummary'
+import { calculateDiffStats } from './diffStats'
 import type { AgentTaskNotification, UIMessage } from '../../types/chat'
 import { formatTokenCount } from '../../lib/formatTokenCount'
 import { isTouchH5Document } from '../../lib/touchH5'
@@ -106,6 +108,8 @@ type RewindTurnTarget = {
 type BranchableMessageTarget = {
   uiMessageId: string
   transcriptMessageId: string
+  /** Where to fork relative to this turn.  undefined = after (legacy). */
+  forkPosition?: 'before' | 'after'
 }
 
 type TurnChangeCardModel = {
@@ -199,7 +203,7 @@ function ChatSelectionMenu({
       type="button"
       onMouseDown={(event) => event.preventDefault()}
       onClick={onAdd}
-      className="liquid-glass glass-panel fixed z-50 inline-flex h-11 items-center gap-2 rounded-full px-5 text-[15px] font-semibold text-[var(--color-token-foreground)] shadow-[var(--shadow-dropdown)] transition-colors hover:bg-white/[0.085] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
+      className="liquid-glass glass-panel fixed z-50 inline-flex h-11 items-center gap-2 rounded-full px-5 text-[13px] font-semibold text-[var(--color-token-foreground)] shadow-[var(--shadow-dropdown)] transition-colors hover:bg-white/[0.085] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
       style={{ left: selection.x, top: selection.y }}
     >
       <MessageCircle size={21} strokeWidth={2.15} className="shrink-0 text-[var(--color-token-foreground)]" aria-hidden="true" />
@@ -875,47 +879,27 @@ function applyTurnCollapse(items: RenderItem[], isTurnActive?: boolean): RenderI
       const afterItems = turnItems.slice(lastAssistantIdx + 1)
 
       if (rawProcessItems.length > 0) {
-        // Separate tool groups (always visible) from collapsible items (thinking,
-        // intermediate assistant_text) so tool summaries are never hidden behind
-        // the "已处理" fold.
-        const collapsibleItems: RenderItem[] = []
-        const toolGroupItems: RenderItem[] = []
-        for (const pi of rawProcessItems) {
-          if (pi.kind === 'tool_group' || pi.kind === 'tool_burst'
-              || pi.kind === 'web_search_group' || pi.kind === 'exploration_group') {
-            toolGroupItems.push(pi)
-          } else {
-            collapsibleItems.push(pi)
+        // All process items (thinking, tool groups, intermediate assistant_text)
+        // go into the turn_process fold. Only the final answer stays visible.
+        const stepCount = countProcessSteps(rawProcessItems)
+        if (stepCount > 0) {
+          let endTime: number | null = null
+          for (let i = rawProcessItems.length - 1; i >= 0; i--) {
+            const pi = rawProcessItems[i]!
+            if (pi.kind === 'message' && pi.message.timestamp != null) { endTime = pi.message.timestamp; break }
           }
-        }
-
-        // Collapsible items go into turn_process (the "已处理" section)
-        if (collapsibleItems.length > 0) {
-          const stepCount = countProcessSteps(collapsibleItems)
-          if (stepCount > 0) {
-            let endTime: number | null = null
-            for (let i = collapsibleItems.length - 1; i >= 0; i--) {
-              const pi = collapsibleItems[i]!
-              if (pi.kind === 'message' && pi.message.timestamp != null) { endTime = pi.message.timestamp; break }
-            }
-            result.push({
-              kind: 'turn_process',
-              group: {
-                userMsgId: currentUserMsgId!,
-                processItems: collapsibleItems,
-                stepCount,
-                startTime: currentUserMsgTimestamp,
-                endTime,
-                hasFinalAssistant: true,
-              },
-              id: `turn-${currentUserMsgId}-${result.length}`,
-            })
-          }
-        }
-
-        // Tool group summaries are always exposed (never folded into turn_process)
-        for (const tgi of toolGroupItems) {
-          result.push(tgi)
+          result.push({
+            kind: 'turn_process',
+            group: {
+              userMsgId: currentUserMsgId!,
+              processItems: rawProcessItems,
+              stepCount,
+              startTime: currentUserMsgTimestamp,
+              endTime,
+              hasFinalAssistant: true,
+            },
+            id: `turn-${currentUserMsgId}-${result.length}`,
+          })
         }
       }
 
@@ -972,6 +956,37 @@ function countProcessSteps(items: RenderItem[]): number {
     else count += 1
   }
   return count
+}
+
+/** Extract file-edit stats from a tool_use message (Write/Edit/MultiEdit). */
+function extractTurnFileEdit(message: Extract<UIMessage, { type: 'tool_use' }>): { path: string; additions: number; deletions: number } | null {
+  const input = message.input as Record<string, unknown> | null
+  const filePath = typeof input?.file_path === 'string' ? input.file_path : null
+  if (!filePath) return null
+  if (message.toolName === 'Write') {
+    const content = typeof input?.content === 'string' ? input.content : ''
+    const stats = calculateDiffStats('', content)
+    return { path: filePath, ...stats }
+  }
+  if (message.toolName === 'Edit') {
+    const oldStr = typeof input?.old_string === 'string' ? input.old_string : ''
+    const newStr = typeof input?.new_string === 'string' ? input.new_string : ''
+    const stats = calculateDiffStats(oldStr, newStr)
+    return { path: filePath, ...stats }
+  }
+  if (message.toolName === 'MultiEdit' && Array.isArray(input?.edits)) {
+    let additions = 0
+    let deletions = 0
+    for (const edit of input.edits as Array<Record<string, unknown>>) {
+      const oldStr = typeof edit.old_string === 'string' ? edit.old_string : ''
+      const newStr = typeof edit.new_string === 'string' ? edit.new_string : ''
+      const stats = calculateDiffStats(oldStr, newStr)
+      additions += stats.additions
+      deletions += stats.deletions
+    }
+    return { path: filePath, additions, deletions }
+  }
+  return null
 }
 
 function isTurnResponseMessage(message: UIMessage) {
@@ -2137,10 +2152,13 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
     () => buildRenderModel(messages, activeAskUserQuestionToolUseId, isTurnActive),
     [activeAskUserQuestionToolUseId, isTurnActive, messages],
   )
-  // Tool groups that have been followed by assistant text, meaning the group's
-  // work is done and it should show its summary (even if the turn is still
-  // active).  Groups NOT in this set should stay in running mode because the
-  // AI hasn't produced text after them yet — more tools may follow.
+  // Tool groups that are followed by a non-tool item (assistant text, thinking,
+  // system message, turn_process, etc.) — meaning the group's work is done and
+  // it should show its summary. Groups NOT in this set stay in running mode
+  // because more tools may follow.
+  //
+  // User's rule: if what follows a tool group is anything that is NOT a tool
+  // (thinking, text, system, etc.), the tools are complete → show summary.
   const toolGroupsFollowedByText = useMemo(() => {
     const set = new Set<number>()
     let pendingGroups: number[] = []
@@ -2148,12 +2166,15 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
       const item = renderItems[i]!
       if (item.kind === 'tool_group' || item.kind === 'tool_burst' || item.kind === 'web_search_group' || item.kind === 'exploration_group') {
         pendingGroups.push(i)
-      } else if (item.kind === 'message' && item.message.type === 'assistant_text' && item.message.content.trim()) {
+      } else if (item.kind === 'message' && item.message.type === 'user_text') {
+        // User message starts a new turn — reset pending groups
+        pendingGroups = []
+      } else {
+        // Any non-tool item after tool groups means the tools are done:
+        // thinking, assistant_text, system, error, turn_process, etc.
         for (const idx of pendingGroups) {
           set.add(idx)
         }
-        pendingGroups = []
-      } else if (item.kind === 'message' && item.message.type === 'user_text') {
         pendingGroups = []
       }
     }
@@ -2462,6 +2483,53 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
     return result
   }, [branchableMessageTargets, branchingMessageId, handleBranchMessage, t])
 
+  const forkEntryByMessageId = useMemo(() => {
+    if (branchableMessageTargets.size === 0) {
+      return new Map<string, { loading: boolean; onForkBefore: () => void; onForkAfter: () => void }>()
+    }
+    const result = new Map<string, { loading: boolean; onForkBefore: () => void; onForkAfter: () => void }>()
+    for (const [uiMessageId, target] of branchableMessageTargets) {
+      result.set(uiMessageId, {
+        loading: branchingMessageId === target.uiMessageId,
+        onForkBefore: () => { void handleBranchMessage({ ...target, forkPosition: 'before' }) },
+        onForkAfter: () => { void handleBranchMessage(target) },
+      })
+    }
+    return result
+  }, [branchableMessageTargets, branchingMessageId, handleBranchMessage])
+
+  // Client-side per-turn file change summary (ZCode MessageChangeSummaryPanel style).
+  // Maps assistant message id → files edited in that turn + diff stats.
+  const turnChangeByMessageId = useMemo(() => {
+    const result = new Map<string, { summary: LiveTurnChangeSummary; files: Array<{ path: string; additions: number; deletions: number }> }>()
+    for (let i = 0; i < deferredMessages.length; i += 1) {
+      const msg = deferredMessages[i]
+      if (!msg || msg.type !== 'assistant_text') continue
+      const files: Array<{ path: string; additions: number; deletions: number }> = []
+      const stats = new Map<string, { additions: number; deletions: number }>()
+      for (let j = i + 1; j < deferredMessages.length; j += 1) {
+        const next = deferredMessages[j]
+        if (!next || next.type === 'user_text') break
+        if (next.type !== 'tool_use') continue
+        const edit = extractTurnFileEdit(next)
+        if (!edit) continue
+        const existing = stats.get(edit.path) ?? { additions: 0, deletions: 0 }
+        stats.set(edit.path, { additions: existing.additions + edit.additions, deletions: existing.deletions + edit.deletions })
+      }
+      if (stats.size === 0) continue
+      let additions = 0
+      let deletions = 0
+      for (const [path, s] of stats) {
+        files.push({ path, additions: s.additions, deletions: s.deletions })
+        additions += s.additions
+        deletions += s.deletions
+      }
+      files.sort((a, b) => a.path.localeCompare(b.path))
+      result.set(msg.id, { summary: { fileCount: files.length, additions, deletions }, files })
+    }
+    return result
+  }, [deferredMessages])
+
   const toolResultByToolUseId = useMemo(() => {
     if (toolResultMap.size === 0) return new Map<string, { content: unknown; isError: boolean }>()
     const result = new Map<string, { content: unknown; isError: boolean }>()
@@ -2533,6 +2601,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
                 : null
             }
             branchAction={branchActionByMessageId.get(item.message.id)}
+            forkEntry={forkEntryByMessageId.get(item.message.id)}
             showActions={
               item.message.type === 'user_text'
                 ? !item.message.pending && item.message.content.trim().length > 0
@@ -2667,6 +2736,8 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
                 : null
             }
             branchAction={branchActionByMessageId.get(item.message.id)}
+            forkEntry={forkEntryByMessageId.get(item.message.id)}
+            turnChange={turnChangeByMessageId.get(item.message.id)}
             showActions={
               item.message.type === 'user_text'
                 ? !item.message.pending && item.message.content.trim().length > 0
@@ -2707,7 +2778,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
         <div
           ref={scrollContentRef}
           className={compact ? 'mx-auto max-w-full' : 'codex-task-transcript mx-auto max-w-[var(--thread-content-max-width)]'}
-          style={{ paddingBottom: bottomPadding }}
+          style={{ paddingBottom: chatState !== 'idle' && isTouchH5Document() ? bottomPadding + 50 : bottomPadding }}
         >
           {virtualTranscriptWindow.enabled ? (
             <VirtualSpacer height={virtualTranscriptWindow.beforeHeight} position="top" />
@@ -3299,6 +3370,8 @@ export const MessageBlock = memo(function MessageBlock({
   agentTaskNotifications,
   toolResult,
   branchAction,
+  forkEntry,
+  turnChange,
   showActions,
   turnChangedFiles,
 }: {
@@ -3311,6 +3384,15 @@ export const MessageBlock = memo(function MessageBlock({
     label: string
     loading?: boolean
     onBranch: () => void
+  }
+  forkEntry?: {
+    loading?: boolean
+    onForkBefore: () => void
+    onForkAfter: () => void
+  }
+  turnChange?: {
+    summary: LiveTurnChangeSummary
+    files: Array<{ path: string; additions: number; deletions: number }>
   }
   showActions?: boolean
   turnChangedFiles?: string[]
@@ -3346,6 +3428,8 @@ export const MessageBlock = memo(function MessageBlock({
           <AssistantMessage
             content={message.content}
             branchAction={showActions ? branchAction : undefined}
+            forkEntry={showActions ? forkEntry : undefined}
+            turnChange={showActions ? turnChange : undefined}
             sessionId={sessionId ?? undefined}
             timestamp={showActions ? message.timestamp : undefined}
             showActions={showActions}

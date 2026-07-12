@@ -2,9 +2,12 @@ import { memo, useCallback, useMemo } from 'react'
 import type { MouseEvent as ReactMouseEvent } from 'react'
 import { MarkdownRenderer } from '../markdown/MarkdownRenderer'
 import { MessageActionBar, type MessageBranchAction } from './MessageActionBar'
+import { ForkEntryRow } from './ForkEntryRow'
+import { InlineTurnChangeTag } from './InlineTurnChangeTag'
 import { InlineImageGallery } from './InlineImageGallery'
 import { InlineVideoGallery } from './InlineVideoGallery'
 import { AssistantOutputTargetCard } from './AssistantOutputTargetCard'
+import type { LiveTurnChangeSummary } from './turnLiveChangeSummary'
 import { handlePreviewLink } from '../../lib/handlePreviewLink'
 import { getServerBaseUrl } from '../../lib/desktopRuntime'
 import { getDesktopHost } from '../../lib/desktopHost'
@@ -17,6 +20,19 @@ type Props = {
   content: string
   isStreaming?: boolean
   branchAction?: MessageBranchAction
+  /** Inline fork entry (before/after buttons).  Replaces the small branch
+   *  icon in MessageActionBar when present. */
+  forkEntry?: {
+    loading?: boolean
+    disabled?: boolean
+    onForkBefore: () => void
+    onForkAfter: () => void
+  }
+  /** Per-turn change summary computed client-side (ZCode-style MessageChangeSummaryPanel) */
+  turnChange?: {
+    summary: LiveTurnChangeSummary
+    files: Array<{ path: string; additions: number; deletions: number }>
+  }
   sessionId?: string
   timestamp?: number
   showActions?: boolean
@@ -27,7 +43,7 @@ type Props = {
 
 const MAX_CARDS = 3
 
-export const AssistantMessage = memo(function AssistantMessage({ content, isStreaming, branchAction, sessionId, timestamp, showActions = true, turnChangedFiles }: Props) {
+export const AssistantMessage = memo(function AssistantMessage({ content, isStreaming, branchAction, forkEntry, turnChange, sessionId, timestamp, showActions = true, turnChangedFiles }: Props) {
   const t = useTranslation()
   const workDir = useWorkspacePanelStore((s) => (sessionId ? s.statusBySession[sessionId]?.workDir : undefined))
 
@@ -106,9 +122,27 @@ export const AssistantMessage = memo(function AssistantMessage({ content, isStre
           <MessageActionBar
             copyText={isStreaming ? undefined : content}
             copyLabel="Copy reply"
-            branchAction={branchAction}
+            branchAction={forkEntry ? undefined : branchAction}
             align="start"
             timestamp={timestamp}
+          />
+        )}
+
+        {showActions && forkEntry && (
+          <ForkEntryRow
+            loading={forkEntry.loading}
+            disabled={forkEntry.disabled}
+            onForkBefore={forkEntry.onForkBefore}
+            onForkAfter={forkEntry.onForkAfter}
+          />
+        )}
+
+        {showActions && turnChange && !isStreaming && (
+          <InlineTurnChangeTag
+            summary={turnChange.summary}
+            workDir={workDir ?? null}
+            sessionId={sessionId}
+            files={turnChange.files}
           />
         )}
       </div>
