@@ -29,7 +29,7 @@ export const UserMessage = memo(function UserMessage({ content, attachments, bra
           {hasText && (
             <div
               data-user-message-bubble={true}
-              className="user-message-bubble min-w-0 max-w-full rounded-[var(--radius-2xl)] bg-[var(--color-surface-container-high)] px-3 py-2 text-[var(--text-size-chat)] leading-[calc(var(--text-size-chat)_+_8px)] text-[var(--color-token-foreground)] whitespace-pre-wrap break-words"
+              className="user-message-bubble min-w-0 max-w-full rounded-xl rounded-tr-xs border border-[var(--color-token-border)] px-4 py-3 text-[13px] text-[var(--color-token-foreground)] whitespace-pre-wrap break-words"
               style={{
                 overflowWrap: 'anywhere',
                 wordBreak: 'break-word',

@@ -119,7 +119,7 @@ export function CurrentTurnChangeCard({
             <FileDiff size={20} strokeWidth={2.2} />
           </div>
           <div className="min-w-0">
-            <div className="truncate text-[16px] font-semibold leading-5 tracking-[-0.02em] text-[var(--color-token-foreground)]">
+            <div className="truncate text-[14px] font-semibold leading-5 tracking-[-0.02em] text-[var(--color-token-foreground)]">
               {t('chat.turnChangesTitle', { count: files.length })}
             </div>
             <div className="mt-0.5 flex items-center gap-1.5 font-mono text-[14px] font-medium leading-5">

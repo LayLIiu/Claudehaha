@@ -1,20 +1,31 @@
 import { create } from 'zustand'
 import { isThemeMode, THEME_MODES, type ThemeMode } from '../types/settings'
+import { isDesktopRuntime } from '../lib/desktopRuntime'
 
 const THEME_STORAGE_KEY = 'cc-haha-theme'
+
+function isMobileViewport(): boolean {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false
+  return window.matchMedia('(max-width: 767px)').matches
+}
+
+function isMobileH5(): boolean {
+  if (isDesktopRuntime()) return false
+  return isMobileViewport()
+}
 
 function getStoredTheme(): ThemeMode {
   try {
     const stored = localStorage.getItem(THEME_STORAGE_KEY)
     if (isThemeMode(stored)) return stored
   } catch { /* localStorage unavailable */ }
-  return 'white'
+  return isMobileH5() ? 'black' : 'white'
 }
 
 export function applyTheme(theme: ThemeMode) {
   if (typeof document === 'undefined') return
   document.documentElement.setAttribute('data-theme', theme)
-  document.documentElement.style.colorScheme = theme === 'dark' ? 'dark' : 'light'
+  document.documentElement.style.colorScheme = (theme === 'dark' || theme === 'black') ? 'dark' : 'light'
 }
 
 export function initializeTheme() {

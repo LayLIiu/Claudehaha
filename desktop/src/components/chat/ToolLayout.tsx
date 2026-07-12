@@ -126,7 +126,7 @@ export const ToolLayout = memo(function ToolLayout({
 
   return (
     <div
-      className={`tool-call-row ${compact ? 'mb-0' : 'mb-[2px]'} ${animate ? 'tool-stream-animate' : ''}`}
+      className={`tool-call-row overflow-hidden rounded-xl border border-[var(--color-token-border)] bg-[var(--color-card,#fff)] shadow-none ${compact ? 'mb-0' : 'mb-[2px]'} ${animate ? 'tool-stream-animate' : ''}`}
       data-tool-call-id={toolId}
       data-tool-name={dataToolName}
       data-status={dataStatus}
@@ -134,7 +134,7 @@ export const ToolLayout = memo(function ToolLayout({
       <button
         type="button"
         onClick={handleToggle}
-        className={`group/tool-summary inline-flex max-w-full items-center gap-1.5 self-start text-left text-[13px] transition-colors hover:opacity-80 ${
+        className={`group/tool-summary inline-flex w-full max-w-full items-center gap-2 self-start px-3 py-2 text-left text-[13px] transition-colors hover:bg-[var(--color-surface-hover,rgba(10,10,10,0.05))] ${
           effectiveCanToggle ? 'cursor-pointer' : 'cursor-default'
         }`}
       >
@@ -195,7 +195,7 @@ export const ToolLayout = memo(function ToolLayout({
 
       {/* Expanded content */}
       {shouldShowContent && (
-        <div className="ml-2 mt-0.5 space-y-2 border-l border-[var(--color-token-border-default)] pl-3.5 text-[var(--color-token-foreground)] outline-none">
+        <div className="ml-2 mt-0 space-y-2 border-l border-[var(--color-token-border)] pl-3.5 pb-2 text-[var(--color-token-foreground)] outline-none">
           {renderContent?.()}
         </div>
       )}
