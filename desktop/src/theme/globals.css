@@ -298,8 +298,21 @@
   }
 }
 
-/* ─── Tailwind Theme Override (matches prototype design system) ─── */
+/* ─── Tailwind Theme Override (ZCode-style oklch palette) ─── */
 @theme {
+  /* ZCode neutral gray ramp (oklch) */
+  --color-neutral-50: oklch(98.5% 0 0);
+  --color-neutral-100: oklch(97% 0 0);
+  --color-neutral-200: oklch(92.2% 0 0);
+  --color-neutral-300: oklch(87% 0 0);
+  --color-neutral-400: oklch(70% 0 0);
+  --color-neutral-500: oklch(55.6% 0 0);
+  --color-neutral-600: oklch(44% 0 0);
+  --color-neutral-700: oklch(37.1% 0 0);
+  --color-neutral-800: oklch(26.9% 0 0);
+  --color-neutral-900: oklch(20.5% 0 0);
+  --color-neutral-950: oklch(14.5% 0 0);
+
   --color-primary: #0169cc;
   --color-primary-container: #0A7CE8;
   --color-primary-fixed: #3399FF;
@@ -343,6 +356,19 @@
   --color-info-container: #E4F1FF;
   --color-warning: #CA8A04;
   --color-warning-container: #FFF3D6;
+
+  /* ZCode card backgrounds + diff */
+  --color-card: #FFFFFF;
+  --color-card-selected: var(--color-neutral-200);
+  --color-background-alt: #1A1A1A99;
+  --color-input: #FFFFFF;
+  --color-input-focused: var(--color-neutral-50);
+  --color-input-border: var(--color-border);
+  --color-input-border-hover: rgba(10,10,10,0.33);
+  --color-input-border-focused: var(--color-brand);
+
+  --color-diff-added: oklch(62.7% .194 149.214);
+  --color-diff-removed: oklch(57.7% .245 27.325);
 
   --font-headline: -apple-system, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'Arial', sans-serif;
   --font-body: -apple-system, 'SF Pro Text', 'Helvetica Neue', 'Arial', sans-serif;
@@ -554,9 +580,9 @@
   --radius-4xl: calc(24px * var(--corner-radius-scale));
 
   /* Codex-aligned typography tokens */
-  --codex-chat-font-size: 14px;
+  --codex-chat-font-size: 13px;
   --codex-chat-code-font-size: 12px;
-  --text-size-chat: 14px;
+  --text-size-chat: 13px;
   --markdown-font-size: var(--codex-chat-font-size);
   --markdown-line-height: calc(var(--markdown-font-size) + 8px);
 
@@ -953,9 +979,9 @@
   --radius-4xl: calc(24px * var(--corner-radius-scale));
 
   /* Codex-aligned typography tokens */
-  --codex-chat-font-size: 14px;
+  --codex-chat-font-size: 13px;
   --codex-chat-code-font-size: 12px;
-  --text-size-chat: 14px;
+  --text-size-chat: 13px;
   --markdown-font-size: var(--codex-chat-font-size);
   --markdown-line-height: calc(var(--markdown-font-size) + 8px);
 
@@ -1157,9 +1183,14 @@
   --color-warning: #F7C46C;
   --color-warning-container: rgba(247, 196, 108, 0.16);
 
-  --color-surface-sidebar: rgba(24, 24, 24, 0.75);
+  --color-surface-sidebar: var(--color-neutral-950);
   --color-surface-hover: rgba(255, 255, 255, 0.055);
   --color-surface-selected: rgba(255, 255, 255, 0.10);
+  --color-card: var(--color-neutral-800);
+  --color-card-selected: var(--color-neutral-700);
+  --color-background-alt: #26262699;
+  --color-input: var(--color-neutral-800);
+  --color-input-focused: var(--color-neutral-950);
   --color-memory-accent: #b06dff;
   --color-memory-surface: #1D2423;
   --color-memory-border: #334743;
@@ -1322,9 +1353,9 @@
   --radius-4xl: calc(24px * var(--corner-radius-scale));
 
   /* Codex-aligned typography tokens */
-  --codex-chat-font-size: 14px;
+  --codex-chat-font-size: 13px;
   --codex-chat-code-font-size: 12px;
-  --text-size-chat: 14px;
+  --text-size-chat: 13px;
   --markdown-font-size: var(--codex-chat-font-size);
   --markdown-line-height: calc(var(--markdown-font-size) + 8px);
 
@@ -1476,6 +1507,83 @@
 
   --shimmer-text-secondary: color-mix(in srgb, var(--color-token-foreground) 58%, transparent);
   --shimmer-contrast: color-mix(in srgb, var(--color-token-foreground) 78%, transparent);
+}
+
+/* ─── Black theme (pure black, for H5 mobile) ──────────────────── */
+[data-theme="black"] {
+  color-scheme: dark;
+
+  --color-primary: #0169cc;
+  --color-primary-container: #0A7CE8;
+  --color-primary-fixed: #3399FF;
+  --color-primary-fixed-dim: #0169cc;
+
+  --color-on-primary: #FFFFFF;
+  --color-on-surface: #fcfcfc;
+  --color-on-surface-variant: #A8A8A8;
+
+  --color-surface: #000000;
+  --color-surface-bright: #0A0A0A;
+  --color-surface-dim: #000000;
+  --color-surface-container: #1C1C1E;
+  --color-surface-container-low: #141414;
+  --color-surface-container-high: #2A2A2A;
+  --color-surface-container-highest: #2A2A2A;
+  --color-surface-container-lowest: #000000;
+  --color-surface-variant: #1C1C1E;
+  --color-background: #000000;
+
+  --color-dot-grid: hsla(0, 0%, 100%, 0.35);
+
+  --color-outline: #7D8796;
+  --color-outline-variant: rgba(255, 255, 255, 0.08);
+
+  --color-secondary: #8AB4F8;
+  --color-secondary-container: #23344E;
+  --color-tertiary: #7DD3FC;
+  --color-tertiary-container: #173042;
+
+  --color-error: #FFB4AB;
+  --color-error-container: #93000A;
+  --color-on-error-container: #FFDAD6;
+
+  --color-inverse-surface: #F0F0F0;
+  --color-inverse-on-surface: #1B1B1B;
+  --color-inverse-primary: #8F482F;
+
+  --color-success: #00a240;
+  --color-success-container: rgba(0, 162, 64, 0.16);
+  --color-info: #74E0F7;
+  --color-info-container: rgba(116, 224, 247, 0.16);
+  --color-warning: #F7C46C;
+  --color-warning-container: rgba(247, 196, 108, 0.16);
+
+  --color-surface-sidebar: var(--color-neutral-950);
+  --color-surface-hover: rgba(255, 255, 255, 0.055);
+  --color-surface-selected: rgba(255, 255, 255, 0.10);
+  --color-card: var(--color-neutral-800);
+  --color-card-selected: var(--color-neutral-700);
+  --color-background-alt: #26262699;
+  --color-input: var(--color-neutral-800);
+  --color-input-focused: var(--color-neutral-950);
+
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-focus: rgba(1, 105, 204, 0.48);
+  --color-border-separator: rgba(255, 255, 255, 0.06);
+
+  --color-text-primary: var(--color-on-surface);
+  --color-text-secondary: var(--color-on-surface-variant);
+  --color-text-tertiary: #7A7A7A;
+
+  --color-surface-user-msg: var(--color-surface-glass);
+  --color-surface-glass: #1C1C1E;
+  --color-surface-glass-border: rgba(255, 255, 255, 0.1);
+
+  --color-code-bg: #1C1C1E;
+  --color-code-fg: #E8E8E8;
+
+  --gradient-btn-primary: linear-gradient(135deg, #0A7CE8, #0169cc);
+  --gradient-btn-primary-hover: linear-gradient(135deg, #0A7CE8, #0169cc);
 }
 
 /* ─── Material Symbols ─────────────────────────────────────────── */
@@ -1800,6 +1908,7 @@ button, input, textarea, select, a, [role="button"] {
     opacity 260ms ease;
   transform: translate3d(0, 0, 0);
   will-change: transform, bottom;
+  padding: 0 16px 16px 16px;
 }
 
 /* Input inside dock region receives pointer events */
@@ -1996,6 +2105,9 @@ button, input, textarea, select, a, [role="button"] {
 }
 
 .user-message-bubble {
+  border: 1px solid var(--color-border, rgba(255,255,255,0.08));
+  background: var(--color-neutral-800, #404040);
+  border-radius: 12px 4px 12px 12px;
 }
 
 /* macOS Electron：原生液态玻璃/毛玻璃接管，CSS backdrop-filter 不再需要 */
@@ -2016,14 +2128,21 @@ html.electron-macos .app-shell,
   background-color: rgba(26, 26, 26, 0.68) !important;
   backdrop-filter: blur(24px) saturate(200%) !important;
   -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
-  border-right: 0.5px solid rgba(255, 255, 255, 0.1) !important;
+  border-right: none !important;
 }
 .electron-macos .settings-sidebar-panel {
   background-image: none !important;
   background-color: rgba(26, 26, 26, 0.68) !important;
   backdrop-filter: blur(24px) saturate(200%) !important;
   -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
-  border-right: 0.5px solid rgba(255, 255, 255, 0.1) !important;
+  border-right: none !important;
+}
+
+/* macOS: remove divider between sidebar and content area */
+.electron-macos #content-area[data-sidebar-state="open"]:not(.app-shell-main--mobile) {
+  border-left: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
 }
 
 .electron-macos .app-shell-main--settings,
@@ -2063,14 +2182,14 @@ html.electron-macos .app-shell,
     background-color: rgba(24, 24, 24, 0.68) !important;
     backdrop-filter: blur(24px) saturate(200%) !important;
     -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
-    border-right: 0.5px solid rgba(255, 255, 255, 0.06);
+    border-right: none;
   }
   .electron-macos .settings-sidebar-panel {
     background-image: none !important;
     background-color: rgba(24, 24, 24, 0.68) !important;
     backdrop-filter: blur(24px) saturate(200%) !important;
     -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
-    border-right: 0.5px solid rgba(255, 255, 255, 0.06) !important;
+    border-right: none !important;
   }
 }
 
@@ -2193,7 +2312,7 @@ html.electron-macos .app-shell,
 .codex-turn-process-content-inner {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 10px;
 }
 
 .codex-turn-process-trigger:focus-visible {
@@ -3278,6 +3397,19 @@ mark.codex-thread-find-active {
 .sidebar-session-row--active,
 .sidebar-session-row--selected {
   background: var(--color-sidebar-item-active);
+}
+
+/* Spring pop animation for dropdown menus and panels */
+@keyframes spring-pop {
+  0% { opacity: 0; transform: translateY(8px) scale(0.96); }
+  60% { opacity: 1; transform: translateY(-2px) scale(1.02); }
+  80% { transform: translateY(1px) scale(0.99); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.sidebar-codex-menu,
+.composer-top-tray-panel {
+  animation: spring-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 .sidebar-codex-menu {
