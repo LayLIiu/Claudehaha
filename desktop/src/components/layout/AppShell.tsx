@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type HTMLAttributes } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type HTMLAttributes } from 'react'
 import { Sidebar } from './Sidebar'
 import { ContentRouter } from './ContentRouter'
 import { WindowControls } from './WindowControls'
@@ -23,6 +23,7 @@ import { useSessionStore } from '../../stores/sessionStore'
 import { useTranslation } from '../../i18n'
 import { H5ConnectionView } from './H5ConnectionView'
 import { useMobileViewport } from '../../hooks/useMobileViewport'
+import { OpenProjectMenu } from './OpenProjectMenu'
 import type { Tab } from '../../stores/tabStore'
 import { MessageSquare, PanelLeftClose, PanelLeftOpen, Sun, Moon, Settings } from 'lucide-react'
 import { getTraceLaunchRequest } from '../../lib/traceLaunch'
@@ -45,6 +46,11 @@ export function AppShell() {
   const [h5StartupError, setH5StartupError] = useState<H5ConnectionRequiredError | null>(null)
   const [bootstrapNonce, setBootstrapNonce] = useState(0)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [envPanelOpen, setEnvPanelOpen] = useState(false)
+  const mobileEnvPanelAnchorRef = useRef<HTMLButtonElement>(null)
+  const swipeStartX = useRef(0)
+  const swipeStartY = useRef(0)
+  const swipeDragging = useRef(false)
   const t = useTranslation()
   const traceLaunch = useMemo(() => getTraceLaunchRequest(), [])
   const desktopRuntime = isDesktopRuntime()
@@ -74,6 +80,36 @@ export function AppShell() {
     isMobileShell && !effectiveSidebarOpen
       ? { 'aria-hidden': true, inert: '' }
       : {}
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (!isMobileShell) return
+    const touch = e.touches[0]!
+    swipeStartX.current = touch.clientX
+    swipeStartY.current = touch.clientY
+    swipeDragging.current = false
+  }, [isMobileShell])
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isMobileShell) return
+    const touch = e.touches[0]!
+    const dx = touch.clientX - swipeStartX.current
+    const dy = touch.clientY - swipeStartY.current
+    // Only activate if starting from left edge (< 30px) and swiping right
+    if (!swipeDragging.current && swipeStartX.current < 30 && dx > 10 && Math.abs(dx) > Math.abs(dy)) {
+      swipeDragging.current = true
+    }
+  }, [isMobileShell])
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!isMobileShell || !swipeDragging.current) return
+    const touch = e.changedTouches[0]!
+    const dx = touch.clientX - swipeStartX.current
+    // If swiped more than 60px to the right, open sidebar
+    if (dx > 60) {
+      setEffectiveSidebarOpen(true)
+    }
+    swipeDragging.current = false
+  }, [isMobileShell])
 
   useEffect(() => {
     let cancelled = false
@@ -228,7 +264,12 @@ export function AppShell() {
   }
 
   return (
-    <div className={`app-shell app-shell-viewport flex overflow-hidden bg-[var(--color-surface-sidebar)]${isMobileShell ? ' app-shell--mobile' : ''}`}>
+    <div
+      className={`app-shell app-shell-viewport flex overflow-hidden bg-[var(--color-surface-sidebar)]${isMobileShell ? ' app-shell--mobile' : ''}`}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {isMobileShell && effectiveSidebarOpen ? (
         <button
           type="button"
@@ -302,6 +343,34 @@ export function AppShell() {
                 </div>
               </div>
             ) : null}
+            {isActiveChatTab && (
+              <div className="relative flex shrink-0 items-center gap-1">
+                <OpenProjectMenu
+                  path={activeSession?.workDir || ''}
+                  sessionId={activeTabId}
+                  variant="environment"
+                  externalOpen={envPanelOpen}
+                  onExternalClose={() => setEnvPanelOpen(false)}
+                  hideTrigger
+                  anchorElement={mobileEnvPanelAnchorRef.current}
+                />
+                <button
+                  ref={mobileEnvPanelAnchorRef}
+                  type="button"
+                  aria-label={t('tasks.toggleSummary')}
+                  title={t('tasks.toggleSummary')}
+                  onClick={() => setEnvPanelOpen((v) => !v)}
+                  data-active={envPanelOpen ? 'true' : 'false'}
+                  className={`inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] spring-bounce-btn ${
+                    envPanelOpen
+                      ? 'bg-[var(--color-surface-hover)] text-[var(--color-token-foreground)] shadow-[0_8px_18px_rgba(0,0,0,0.12)]'
+                      : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">checklist</span>
+                </button>
+              </div>
+            )}
           </div>
         ) : null}
 

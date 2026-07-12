@@ -96,6 +96,7 @@ export function OpenProjectMenu({
   const menuRef = useRef<HTMLDivElement>(null)
   const branchButtonRef = useRef<HTMLButtonElement>(null)
   const graphDialogRef = useRef<HTMLDivElement>(null)
+  const lockedRectRef = useRef<DOMRect | null>(null)
   const { animatingOut, requestClose: requestAnimClose } = useGlassPanelAnimation(() => {
     setOpen(false)
     setBranchPopoverOpen(false)
@@ -104,6 +105,7 @@ export function OpenProjectMenu({
 
   useEffect(() => {
     if (externalOpen) setOpen(true)
+    else handleClose()
   }, [externalOpen])
 
   const handleClose = useCallback(() => {
@@ -258,7 +260,14 @@ export function OpenProjectMenu({
     ? t('openProject.openProject')
     : t('openProject.openIn', { target: primaryTarget.label })
 
-  const rect = (hideTrigger && anchorElement ? anchorElement : buttonRef.current)?.getBoundingClientRect()
+  const anchorEl = hideTrigger && anchorElement ? anchorElement : buttonRef.current
+  if (open && !lockedRectRef.current && anchorEl) {
+    lockedRectRef.current = anchorEl.getBoundingClientRect()
+  }
+  if (!open && lockedRectRef.current) {
+    lockedRectRef.current = null
+  }
+  const rect = lockedRectRef.current ?? anchorEl?.getBoundingClientRect()
   const branchRect = branchButtonRef.current?.getBoundingClientRect()
   const workspaceStatus = sessionId ? statusBySession[sessionId] : undefined
   const changeCount = workspaceStatus?.changedFiles.length ?? 0

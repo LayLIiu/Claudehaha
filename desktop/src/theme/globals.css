@@ -1673,6 +1673,7 @@ button, input, textarea, select, a, [role="button"] {
     0 0 0 0.5px var(--color-surface-glass-border) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+  transform-origin: top center;
   /* Snappy enter animation */
   animation: glass-panel-enter 150ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -1687,22 +1688,18 @@ button, input, textarea, select, a, [role="button"] {
 @keyframes glass-panel-enter {
   from {
     opacity: 0;
-    transform: translateY(-2px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }
 
 @keyframes glass-panel-exit {
   from {
     opacity: 1;
-    transform: translateY(0) scale(1);
   }
   to {
     opacity: 0;
-    transform: translateY(-2px) scale(0.98);
   }
 }
 
@@ -1831,8 +1828,9 @@ button, input, textarea, select, a, [role="button"] {
   background-color: var(--color-surface) !important;
   transform: translateX(-100%);
   transition:
-    transform var(--motion-sidebar-duration) var(--motion-sidebar-easing),
-    width var(--motion-sidebar-duration) var(--motion-sidebar-easing);
+    transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    width 380ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 280ms ease;
 }
 
 .app-shell--mobile .sidebar-shell[data-state="closed"] {
@@ -2138,11 +2136,14 @@ html.electron-macos .app-shell,
   border-right: none !important;
 }
 
-/* macOS: remove divider between sidebar and content area */
+/* macOS: seamless glass sidebar with visible content-area rounded corner */
 .electron-macos #content-area[data-sidebar-state="open"]:not(.app-shell-main--mobile) {
   border-left: none !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
+  border-radius: var(--radius-2xl) 0 0 var(--radius-2xl) !important;
+  box-shadow:
+    -1px 0 0 0 rgba(255, 255, 255, 0.06),
+    0 0 0 0.5px rgba(255, 255, 255, 0.05) !important;
+  margin-left: 2px;
 }
 
 .electron-macos .app-shell-main--settings,
