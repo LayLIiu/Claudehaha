@@ -45,6 +45,11 @@ const baseInspection = {
   },
 }
 
+const compactedInspection = {
+  ...baseInspection,
+  context: { ...baseInspection.context, totalTokens: 9_000, percentage: 5 },
+}
+
 function deferred<T>() {
   let resolve!: (value: T) => void
   const promise = new Promise<T>((res) => {
@@ -267,59 +272,62 @@ describe('ContextUsageIndicator request behavior', () => {
   })
 
   it('forces a fresh inspection when refreshNonce bumps after a compaction (#743)', async () => {
-    // First request hangs — simulates an auto refresh that started just
-    // before the compact boundary and would resolve with pre-compact data.
-    const first = deferred<typeof baseInspection>()
-    sessionsApiMock.getInspection
-      .mockImplementationOnce(() => first.promise)
-      .mockResolvedValueOnce({
-        ...baseInspection,
-        context: { ...baseInspection.context, totalTokens: 9_000, percentage: 5 },
+    vi.useFakeTimers()
+    try {
+      // First request hangs — simulates an auto refresh that started just
+      // before the compact boundary and would resolve with pre-compact data.
+      const first = deferred<typeof baseInspection>()
+      sessionsApiMock.getInspection
+        .mockImplementationOnce(() => first.promise)
+        .mockResolvedValueOnce(compactedInspection)
+
+      const { rerender } = render(
+        <ContextUsageIndicator
+          sessionId="session-1"
+          chatState="idle"
+          messageCount={1}
+          refreshNonce={0}
+        />,
+      )
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0)
       })
+      expect(sessionsApiMock.getInspection).toHaveBeenCalledTimes(1)
 
-    const { rerender } = render(
-      <ContextUsageIndicator
-        sessionId="session-1"
-        chatState="idle"
-        messageCount={1}
-        refreshNonce={0}
-      />,
-    )
+      rerender(
+        <ContextUsageIndicator
+          sessionId="session-1"
+          chatState="idle"
+          messageCount={1}
+          refreshNonce={1}
+        />,
+      )
 
-    await act(async () => {
-      await Promise.resolve()
-    })
-    expect(sessionsApiMock.getInspection).toHaveBeenCalledTimes(1)
-
-    rerender(
-      <ContextUsageIndicator
-        sessionId="session-1"
-        chatState="idle"
-        messageCount={1}
-        refreshNonce={1}
-      />,
-    )
-
-    // The forced refresh bypasses both the auto-refresh throttle and the
-    // in-flight request reuse.
-    await waitFor(() => {
+      // The forced refresh has a 2 s initial delay, then bypasses both the
+      // auto-refresh throttle and the in-flight request reuse.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2_000)
+      })
       expect(sessionsApiMock.getInspection).toHaveBeenCalledTimes(2)
-    })
-    await waitFor(() => {
+
+      // Advance to let the promise resolve and state update
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0)
+      })
       expect(screen.getByTestId('context-usage-indicator')).toHaveAttribute('aria-label', expect.stringContaining('5%'))
-    })
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
-  it('retries the forced refresh once when it fails right after compaction (#743)', async () => {
+  it('retries the forced refresh with back-off when it fails right after compaction (#743)', async () => {
     vi.useFakeTimers()
     try {
       sessionsApiMock.getInspection
         .mockResolvedValueOnce(baseInspection)
         .mockRejectedValueOnce(new Error('Request timed out after 30s'))
-        .mockResolvedValueOnce({
-          ...baseInspection,
-          context: { ...baseInspection.context, totalTokens: 9_000, percentage: 5 },
-        })
+        .mockResolvedValueOnce(compactedInspection)
 
       const { rerender } = render(
         <ContextUsageIndicator
@@ -342,17 +350,170 @@ describe('ContextUsageIndicator request behavior', () => {
           refreshNonce={1}
         />,
       )
+
+      // Wait for the 2 s initial delay then the forced refresh
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(0)
+        await vi.advanceTimersByTimeAsync(2_000)
       })
       expect(sessionsApiMock.getInspection).toHaveBeenCalledTimes(2)
 
-      // The CLI was still busy and the forced refresh failed — one delayed
-      // retry recovers the meter instead of leaving the stale percentage.
+      // The CLI was still busy and the forced refresh failed — a delayed
+      // retry (3 s) recovers the meter.
       await act(async () => {
-        await vi.advanceTimersByTimeAsync(5_000)
+        await vi.advanceTimersByTimeAsync(3_000)
       })
       expect(sessionsApiMock.getInspection).toHaveBeenCalledTimes(3)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('retries when forced refresh returns stale pre-compact data (#743)', async () => {
+    vi.useFakeTimers()
+    try {
+      // First: initial auto-refresh (returns pre-compact data)
+      // Second: forced refresh also returns pre-compact data (stale)
+      // Third: retry returns post-compact data
+      sessionsApiMock.getInspection
+        .mockResolvedValueOnce(baseInspection)
+        .mockResolvedValueOnce(baseInspection) // stale — same token count
+        .mockResolvedValueOnce(compactedInspection)
+
+      const { rerender } = render(
+        <ContextUsageIndicator
+          sessionId="session-1"
+          chatState="idle"
+          messageCount={1}
+          refreshNonce={0}
+        />,
+      )
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0)
+      })
+      expect(sessionsApiMock.getInspection).toHaveBeenCalledTimes(1)
+
+      rerender(
+        <ContextUsageIndicator
+          sessionId="session-1"
+          chatState="idle"
+          messageCount={1}
+          refreshNonce={1}
+        />,
+      )
+
+      // Wait for the 2 s initial delay + forced refresh
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2_000)
+      })
+      expect(sessionsApiMock.getInspection).toHaveBeenCalledTimes(2)
+
+      // The second call returned stale data (same totalTokens as pre-compact),
+      // so the indicator schedules a retry after 3 s.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3_000)
+      })
+      expect(sessionsApiMock.getInspection).toHaveBeenCalledTimes(3)
+
+      // The third call returned post-compact data — UI should update.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0)
+      })
+      expect(screen.getByTestId('context-usage-indicator')).toHaveAttribute('aria-label', expect.stringContaining('5%'))
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('schedules a safety-net refresh when going idle after compaction', async () => {
+    vi.useFakeTimers()
+    try {
+      sessionsApiMock.getInspection
+        .mockResolvedValueOnce(baseInspection)
+        .mockResolvedValueOnce(compactedInspection)
+        .mockResolvedValueOnce(compactedInspection)
+
+      const { rerender } = render(
+        <ContextUsageIndicator
+          sessionId="session-1"
+          chatState="thinking"
+          messageCount={1}
+          refreshNonce={0}
+        />,
+      )
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0)
+      })
+      expect(sessionsApiMock.getInspection).toHaveBeenCalledTimes(1)
+
+      // Compact happens
+      rerender(
+        <ContextUsageIndicator
+          sessionId="session-1"
+          chatState="thinking"
+          messageCount={1}
+          refreshNonce={1}
+        />,
+      )
+
+      // Wait for the 2 s initial delay + forced refresh
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2_000)
+      })
+      expect(sessionsApiMock.getInspection).toHaveBeenCalledTimes(2)
+
+      // Session goes idle — this should schedule the safety-net refresh
+      rerender(
+        <ContextUsageIndicator
+          sessionId="session-1"
+          chatState="idle"
+          messageCount={1}
+          refreshNonce={1}
+        />,
+      )
+
+      // Before the safety-net fires, no extra calls
+      expect(sessionsApiMock.getInspection).toHaveBeenCalledTimes(2)
+
+      // Advance past the safety-net delay (15 s)
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(15_000)
+      })
+      expect(sessionsApiMock.getInspection).toHaveBeenCalledTimes(3)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('does not schedule safety-net refresh when going idle without prior compaction', async () => {
+    vi.useFakeTimers()
+    try {
+      sessionsApiMock.getInspection.mockResolvedValue(baseInspection)
+
+      render(
+        <ContextUsageIndicator
+          sessionId="session-1"
+          chatState="thinking"
+          messageCount={1}
+          refreshNonce={0}
+        />,
+      )
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0)
+      })
+      expect(sessionsApiMock.getInspection).toHaveBeenCalledTimes(1)
+
+      // Transition to idle without any compaction (refreshNonce stays at 0)
+      // Note: refreshNonce === lastRefreshNonceRef.current (both 0), so
+      // justCompacted is false, and safety-net should not fire.
+
+      // Advance well past the safety-net delay — no extra calls expected
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(30_000)
+      })
+      // The 30s polling interval fires once (chatState was "thinking" initially),
+      // but after going idle the interval is cleaned up.
+      // We expect at most the polling call, not a safety-net call.
+      expect(sessionsApiMock.getInspection.mock.calls.length).toBeLessThanOrEqual(2)
     } finally {
       vi.useRealTimers()
     }

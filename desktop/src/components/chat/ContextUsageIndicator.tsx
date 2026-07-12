@@ -23,10 +23,17 @@ type Props = {
 const ACTIVE_REFRESH_MS = 30_000
 const CONTEXT_REQUEST_TIMEOUT_MS = 20_000
 const AUTO_REFRESH_MIN_INTERVAL_MS = 10_000
-// Right after a compaction the CLI may still be busy finishing the turn, so
-// the forced refresh can time out — retry once instead of keeping the stale
-// pre-compact percentage on screen.
-const FORCED_REFRESH_RETRY_MS = 5_000
+// After a compaction the CLI may still be busy finishing the turn.  Wait a
+// short beat before the first forced request so the server has time to update
+// its internal context accounting, then retry up to three more times with
+// increasing back-off if the response still looks stale (#743).
+const FORCED_REFRESH_INITIAL_DELAY_MS = 2_000
+const FORCED_REFRESH_RETRY_DELAYS_MS = [3_000, 6_000, 10_000]
+// Once a compact session goes idle the 30 s polling interval stops.  If the
+// forced refreshes above all resolved with stale data (or all failed) the
+// pre-compact percentage would remain on screen forever.  Schedule a one-shot
+// safety-net refresh a little later as a last resort.
+const IDLE_SAFETY_NET_DELAY_MS = 15_000
 
 function formatNumber(value: number | undefined) {
   return new Intl.NumberFormat().format(value ?? 0)
@@ -91,25 +98,25 @@ export function ContextUsageIndicator({
   const detailsRef = useRef<HTMLDivElement>(null)
   const requestSeq = useRef(0)
   const contextIdentityRef = useRef('')
-  const inFlightRequestRef = useRef<Promise<boolean> | null>(null)
+  const inFlightRequestRef = useRef<Promise<SessionContextSnapshot | null> | null>(null)
   const inFlightIdentityRef = useRef<string | null>(null)
   const lastAutoRefreshAtRef = useRef(0)
 
-  const refresh = useCallback(async (mode: 'auto' | 'manual' | 'force' = 'manual'): Promise<boolean> => {
+  const refresh = useCallback(async (mode: 'auto' | 'manual' | 'force' = 'manual'): Promise<SessionContextSnapshot | null> => {
     if (!sessionId || draft) {
       setLoading(false)
-      return false
+      return null
     }
     if (mode === 'auto' && !isDocumentVisible()) {
       setLoading(false)
-      return false
+      return null
     }
     if (mode === 'auto' && Date.now() - lastAutoRefreshAtRef.current < AUTO_REFRESH_MIN_INTERVAL_MS) {
-      return inFlightRequestRef.current ?? false
+      return inFlightRequestRef.current ?? null
     }
     if (typeof sessionsApi.getInspection !== 'function') {
       setLoading(false)
-      return false
+      return null
     }
     const activeSessionId = sessionId
     const activeContextIdentity = `${activeSessionId}:${runtimeSelectionKey}`
@@ -129,7 +136,7 @@ export function ContextUsageIndicator({
       timeout: CONTEXT_REQUEST_TIMEOUT_MS,
     })
       .then((inspection) => {
-        if (seq !== requestSeq.current || activeContextIdentity !== contextIdentityRef.current) return false
+        if (seq !== requestSeq.current || activeContextIdentity !== contextIdentityRef.current) return null
         const nextContext = inspection.context ?? inspection.contextEstimate ?? null
         const nextSource = inspection.context ? 'live' : inspection.contextEstimate ? 'estimate' : null
         const usageModel = inspection.usage?.models.find((model) => firstNonEmpty(model.displayName, model.model)) ?? null
@@ -144,12 +151,12 @@ export function ContextUsageIndicator({
         ) ?? null)
         setError(nextContext ? null : inspection.errors?.context ?? null)
         setUpdatedAt(Date.now())
-        return nextContext !== null
+        return nextContext
       })
       .catch((err) => {
-        if (seq !== requestSeq.current || activeContextIdentity !== contextIdentityRef.current) return false
+        if (seq !== requestSeq.current || activeContextIdentity !== contextIdentityRef.current) return null
         setError(err instanceof Error ? err.message : String(err))
-        return false
+        return null
       })
       .finally(() => {
         if (inFlightRequestRef.current === request) {
@@ -166,24 +173,52 @@ export function ContextUsageIndicator({
   // After a compaction the context shrinks server-side but nothing else
   // re-reads it promptly (auto refreshes are throttled and stop once the
   // session goes idle), leaving the pre-compact percentage on screen (#743).
-  // Force a fresh request, and retry once if the CLI was still busy.
+  // Force a fresh request after a short delay (so the CLI has time to finish
+  // its internal accounting), then retry with increasing back-off if the
+  // response still contains pre-compact token counts.
   const lastRefreshNonceRef = useRef(refreshNonce)
+  const preCompactTokensRef = useRef<number | null>(null)
   useEffect(() => {
     if (refreshNonce === lastRefreshNonceRef.current) return
     lastRefreshNonceRef.current = refreshNonce
+    // Snapshot the current token count so we can detect stale responses.
+    preCompactTokensRef.current = context?.totalTokens ?? null
     let cancelled = false
-    let retryTimer: ReturnType<typeof setTimeout> | null = null
-    void refresh('force').then((ok) => {
-      if (ok || cancelled) return
-      retryTimer = setTimeout(() => {
-        void refresh('force')
-      }, FORCED_REFRESH_RETRY_MS)
-    })
+    const timers: Array<ReturnType<typeof setTimeout>> = []
+
+    const attemptForceRefresh = (attempt: number) => {
+      if (cancelled) return
+      void refresh('force').then((snapshot) => {
+        if (cancelled) return
+        // If we got a valid snapshot, check whether the token count actually
+        // dropped — if not, the CLI likely hasn't finished compacting yet and
+        // we should retry.
+        if (snapshot) {
+          const preTokens = preCompactTokensRef.current
+          if (preTokens !== null && snapshot.totalTokens >= preTokens) {
+            // Stale — treat as failure and retry.
+          } else {
+            return // Success — token count dropped (or no baseline to compare)
+          }
+        }
+        const retryDelay = attempt < FORCED_REFRESH_RETRY_DELAYS_MS.length
+          ? FORCED_REFRESH_RETRY_DELAYS_MS[attempt]
+          : FORCED_REFRESH_RETRY_DELAYS_MS[FORCED_REFRESH_RETRY_DELAYS_MS.length - 1]
+        const timer = setTimeout(() => attemptForceRefresh(attempt + 1), retryDelay)
+        timers.push(timer)
+      })
+    }
+
+    // Small initial delay so the CLI can finish its compact bookkeeping
+    // before we query it.
+    const initialTimer = setTimeout(() => attemptForceRefresh(0), FORCED_REFRESH_INITIAL_DELAY_MS)
+    timers.push(initialTimer)
+
     return () => {
       cancelled = true
-      if (retryTimer) clearTimeout(retryTimer)
+      for (const timer of timers) clearTimeout(timer)
     }
-  }, [refresh, refreshNonce])
+  }, [context?.totalTokens, refresh, refreshNonce])
 
   useEffect(() => {
     const contextIdentity = `${sessionId}:${runtimeSelectionKey}`
@@ -218,6 +253,30 @@ export function ContextUsageIndicator({
     }, ACTIVE_REFRESH_MS)
     return () => clearInterval(timer)
   }, [chatState, messageCount, refresh])
+
+  // Safety-net: after a compaction the session eventually goes idle which
+  // stops the 30 s polling above.  If the forced refreshes all returned stale
+  // data (or all failed), the pre-compact percentage stays on screen forever.
+  // Schedule a one-shot delayed refresh when we transition to idle right after
+  // a compaction.
+  const lastCompactToIdleRef = useRef(false)
+  useEffect(() => {
+    const justCompacted = refreshNonce > 0 && lastRefreshNonceRef.current === refreshNonce
+    if (chatState === 'idle' && justCompacted && !lastCompactToIdleRef.current) {
+      lastCompactToIdleRef.current = true
+      let cancelled = false
+      const timer = setTimeout(() => {
+        if (!cancelled) void refresh('force')
+      }, IDLE_SAFETY_NET_DELAY_MS)
+      return () => {
+        cancelled = true
+        clearTimeout(timer)
+      }
+    }
+    if (chatState !== 'idle') {
+      lastCompactToIdleRef.current = false
+    }
+  }, [chatState, refresh, refreshNonce])
 
   // Close details popup on outside click
   useEffect(() => {
