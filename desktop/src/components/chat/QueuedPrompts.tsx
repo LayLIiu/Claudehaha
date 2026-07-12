@@ -23,10 +23,9 @@ import { QueuedPromptItem } from './QueuedPromptItem'
 
 type QueuedPromptsProps = {
   sessionId: string
-  isActive: boolean
 }
 
-export function QueuedPrompts({ sessionId, isActive }: QueuedPromptsProps) {
+export function QueuedPrompts({ sessionId }: QueuedPromptsProps) {
   const t = useTranslation()
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -97,7 +96,6 @@ export function QueuedPrompts({ sessionId, isActive }: QueuedPromptsProps) {
               <QueuedPromptItem
                 key={message.id}
                 message={message}
-                isActive={isActive}
                 onSendNow={(id) => sendNow(sessionId, id)}
                 onUpdate={(id, content) => updateMessage(sessionId, id, content)}
                 onRemove={(id) => removeMessage(sessionId, id)}

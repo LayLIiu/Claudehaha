@@ -1106,7 +1106,7 @@ export function ChatInput({
           )}
 
           {!isMemberSession && activeTabId && (
-            <QueuedPrompts sessionId={activeTabId} isActive={isActive} />
+            <QueuedPrompts sessionId={activeTabId} />
           )}
 
           {composerAttachments.length > 0 && (

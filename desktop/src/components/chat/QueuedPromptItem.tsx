@@ -36,7 +36,6 @@ function getStatusBadgeClass(status: QueuedPromptStatus): string {
 
 export type QueuedPromptItemProps = {
   message: QueuedUserMessage
-  isActive: boolean
   onSendNow: (id: string) => void
   onUpdate: (id: string, content: string) => void
   onRemove: (id: string) => void
@@ -44,7 +43,6 @@ export type QueuedPromptItemProps = {
 
 export function QueuedPromptItem({
   message,
-  isActive,
   onSendNow,
   onUpdate,
   onRemove,
@@ -171,7 +169,6 @@ export function QueuedPromptItem({
           <button
             type="button"
             onClick={() => onSendNow(message.id)}
-            disabled={isActive}
             aria-label={t('chat.queuedPromptSendNow')}
             title={t('chat.queuedPromptSendNow')}
             className="inline-flex h-7 shrink-0 items-center gap-1 rounded-[var(--radius-2xs)] px-2 font-semibold text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] disabled:opacity-40"
