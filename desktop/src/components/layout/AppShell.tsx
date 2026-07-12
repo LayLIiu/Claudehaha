@@ -24,9 +24,12 @@ import { useTranslation } from '../../i18n'
 import { H5ConnectionView } from './H5ConnectionView'
 import { useMobileViewport } from '../../hooks/useMobileViewport'
 import type { Tab } from '../../stores/tabStore'
+import { MessageSquare, PanelLeftClose, PanelLeftOpen, Sun, Moon, Settings } from 'lucide-react'
 import { getTraceLaunchRequest } from '../../lib/traceLaunch'
 import { TraceList } from '../../pages/TraceList'
 import { TraceSession } from '../../pages/TraceSession'
+import { CommandPalette } from '../chat/CommandPalette'
+import { useCommandPaletteStore } from '../../stores/commandPaletteStore'
 
 function isChatTab(tab: Tab | undefined) {
   return tab?.type === 'session'
@@ -307,6 +310,54 @@ export function AppShell() {
       {!isMobileShell && <WindowControls />}
       <ToastContainer />
       <UpdateChecker />
+      <CommandPaletteHost />
     </div>
   )
+}
+
+function CommandPaletteHost() {
+  const open = useCommandPaletteStore((s) => s.open)
+  const close = useCommandPaletteStore((s) => s.closePalette)
+  const t = useTranslation()
+  const setSidebarOpen = useUIStore((s) => s.setSidebarOpen)
+  const sidebarOpen = useUIStore((s) => s.sidebarOpen)
+  const toggleTheme = useUIStore((s) => s.toggleTheme)
+  const isDark = useUIStore((s) => s.theme) === 'dark'
+
+  const commands = useMemo(() => [
+    {
+      id: 'new-task',
+      label: t('commandPalette.newTask'),
+      icon: <MessageSquare size={16} />,
+      section: 'suggested' as const,
+      keywords: ['new', 'task', 'session'],
+      run: () => useSessionStore.getState().setActiveSession(null),
+    },
+    {
+      id: 'toggle-sidebar',
+      label: sidebarOpen ? t('commandPalette.hideSidebar') : t('commandPalette.showSidebar'),
+      icon: sidebarOpen ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />,
+      section: 'panels' as const,
+      keywords: ['sidebar', 'panel', 'toggle'],
+      run: () => setSidebarOpen(!sidebarOpen),
+    },
+    {
+      id: 'toggle-theme',
+      label: isDark ? t('commandPalette.switchLight') : t('commandPalette.switchDark'),
+      icon: isDark ? <Sun size={16} /> : <Moon size={16} />,
+      section: 'configure' as const,
+      keywords: ['theme', 'dark', 'light', 'mode'],
+      run: () => toggleTheme(),
+    },
+    {
+      id: 'settings',
+      label: t('commandPalette.settings'),
+      icon: <Settings size={16} />,
+      section: 'configure' as const,
+      keywords: ['settings', 'preferences', 'config'],
+      run: () => useTabStore.getState().openTab(SETTINGS_TAB_ID, 'Settings', 'settings'),
+    },
+  ], [t, sidebarOpen, isDark, setSidebarOpen, toggleTheme])
+
+  return <CommandPalette open={open} onClose={close} commands={commands} />
 }

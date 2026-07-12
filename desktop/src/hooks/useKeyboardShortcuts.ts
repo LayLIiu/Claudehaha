@@ -3,6 +3,7 @@ import { useSessionStore } from '../stores/sessionStore'
 import { useChatStore } from '../stores/chatStore'
 import { useTabStore } from '../stores/tabStore'
 import { useUIStore } from '../stores/uiStore'
+import { useCommandPaletteStore } from '../stores/commandPaletteStore'
 import {
   getAppZoomKeyboardAction,
   nextAppZoomLevel,
@@ -50,10 +51,10 @@ export function useKeyboardShortcuts() {
         setActiveView('code')
       }
 
-      // Cmd+K — Open global session search
+      // Cmd+K — Open command palette
       if (meta && e.key === 'k') {
         e.preventDefault()
-        openModal('globalSearch')
+        useCommandPaletteStore.getState().togglePalette()
       }
 
       // Escape — Close modal or clear state
