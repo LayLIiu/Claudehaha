@@ -442,16 +442,16 @@ describe('ChatInput file mentions', () => {
       type: 'user_message',
     }))
     expect(input.value).toBe('')
-    expect(screen.getByTestId('pending-user-message')).toHaveTextContent('please adjust the current direction')
+    expect(screen.getByTestId('queued-prompt-item')).toHaveTextContent('please adjust the current direction')
 
-    fireEvent.click(screen.getByRole('button', { name: /Guide now/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Send now/i }))
 
     expect(mocks.wsSend).toHaveBeenCalledWith(sessionId, {
       type: 'user_message',
       content: 'please adjust the current direction',
       attachments: [],
     })
-    expect(screen.queryByTestId('pending-user-message')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('queued-prompt-item')).not.toBeInTheDocument()
     expect(useChatStore.getState().sessions[sessionId]?.messages).toMatchObject([
       { type: 'assistant_text', content: 'workingstill answering' },
       { type: 'user_text', content: 'please adjust the current direction' },
@@ -508,18 +508,18 @@ describe('ChatInput file mentions', () => {
     })
     fireEvent.keyDown(input, { key: 'Enter' })
 
-    fireEvent.click(screen.getByRole('button', { name: /Edit queued message/i }))
-    const editInput = screen.getByLabelText('Queued message text')
+    fireEvent.click(screen.getByRole('button', { name: /Edit/i }))
+    const editInput = screen.getByLabelText('Edit queued prompt')
     fireEvent.change(editInput, {
       target: { value: 'edited queued draft' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    fireEvent.keyDown(editInput, { key: 'Enter', metaKey: true })
 
-    expect(screen.getByTestId('pending-user-message')).toHaveTextContent('edited queued draft')
+    expect(screen.getByTestId('queued-prompt-item')).toHaveTextContent('edited queued draft')
 
-    fireEvent.click(screen.getByRole('button', { name: /Delete queued message/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Remove/i }))
 
-    expect(screen.queryByTestId('pending-user-message')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('queued-prompt-item')).not.toBeInTheDocument()
     expect(mocks.wsSend).not.toHaveBeenCalledWith(sessionId, expect.objectContaining({
       type: 'user_message',
     }))
@@ -558,7 +558,7 @@ describe('ChatInput file mentions', () => {
     })
     fireEvent.keyDown(input, { key: 'Enter' })
 
-    expect(screen.getByTestId('pending-user-message')).toHaveTextContent('continue after completion')
+    expect(screen.getByTestId('queued-prompt-item')).toHaveTextContent('continue after completion')
     expect(mocks.wsSend).not.toHaveBeenCalledWith(sessionId, expect.objectContaining({
       type: 'user_message',
     }))

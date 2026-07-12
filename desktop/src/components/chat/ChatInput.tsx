@@ -24,6 +24,7 @@ import { RepositoryLaunchControls } from '../shared/RepositoryLaunchControls'
 import { FileSearchMenu, type FileSearchMenuHandle } from './FileSearchMenu'
 import { LocalSlashCommandPanel, type LocalSlashCommandName } from './LocalSlashCommandPanel'
 import { ContextUsageIndicator } from './ContextUsageIndicator'
+import { QueuedPrompts } from './QueuedPrompts'
 import {
   appendAgentSlashCommands,
   buildAgentSlashCommands,
@@ -123,8 +124,6 @@ export function ChatInput({
   const [launchUseWorktree, setLaunchUseWorktree] = useState(false)
   const [launchReady, setLaunchReady] = useState(true)
   const [launchTransitioning, setLaunchTransitioning] = useState(false)
-  const [editingQueuedMessageId, setEditingQueuedMessageId] = useState<string | null>(null)
-  const [editingQueuedMessageText, setEditingQueuedMessageText] = useState('')
   const composingRef = useRef(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
@@ -155,9 +154,6 @@ export function ChatInput({
     clearComposerPrefill,
     clearComposerInsertion,
     queueUserMessage,
-    updateQueuedUserMessage,
-    removeQueuedUserMessage,
-    sendQueuedUserMessage,
   } = useChatStore()
   const activeTabId = useTabStore((s) => s.activeTabId)
   const sessionState = useChatStore((s) => activeTabId ? s.sessions[activeTabId] : undefined)
@@ -165,7 +161,6 @@ export function ChatInput({
   const slashCommands = sessionState?.slashCommands ?? []
   const composerPrefill = sessionState?.composerPrefill ?? null
   const composerInsertion = sessionState?.composerInsertion ?? null
-  const queuedUserMessages = sessionState?.queuedUserMessages ?? []
   const runtimeSelection = useSessionRuntimeStore((state) =>
     activeTabId ? state.selections[activeTabId] : undefined,
   )
@@ -253,8 +248,6 @@ export function ChatInput({
     setSlashFilter('')
     setAtFilter('')
     setAtCursorPos(-1)
-    setEditingQueuedMessageId(null)
-    setEditingQueuedMessageText('')
     previousActiveTabIdRef.current = activeTabId
   }, [activeTabId, saveComposerDraft, setComposerAttachments, setComposerInput])
 
@@ -266,8 +259,8 @@ export function ChatInput({
   }, [saveComposerDraft])
 
   useEffect(() => {
-    textareaRef.current?.focus()
-  }, [isActive])
+    if (!isMobileComposer) textareaRef.current?.focus()
+  }, [isActive, isMobileComposer])
 
   useEffect(() => {
     if (!composerPrefill || !activeTabId) return
@@ -929,25 +922,6 @@ export function ChatInput({
     if (activeTabId) removeWorkspaceReference(activeTabId, id)
   }
 
-  const startEditingQueuedMessage = (messageId: string, content: string) => {
-    setEditingQueuedMessageId(messageId)
-    setEditingQueuedMessageText(content)
-  }
-
-  const saveQueuedMessageEdit = () => {
-    if (!activeTabId || !editingQueuedMessageId) return
-    const nextContent = editingQueuedMessageText.trim()
-    if (!nextContent) return
-    updateQueuedUserMessage(activeTabId, editingQueuedMessageId, nextContent)
-    setEditingQueuedMessageId(null)
-    setEditingQueuedMessageText('')
-  }
-
-  const cancelQueuedMessageEdit = () => {
-    setEditingQueuedMessageId(null)
-    setEditingQueuedMessageText('')
-  }
-
   const insertSlashCommand = () => {
     if (isMemberSession) return
     const el = textareaRef.current
@@ -980,10 +954,10 @@ export function ChatInput({
       data-testid="chat-input-shell"
       className={
         isHeroComposer
-          ? `bg-transparent ${isMobileComposer ? 'px-4 pb-3' : 'px-8 pb-4'}`
+          ? `bg-transparent ${isMobileComposer ? 'px-1 pb-3' : 'px-8 pb-4'}`
           : compact
-            ? `bg-transparent ${isMobileComposer ? 'px-3 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-0' : 'px-2 pb-2 pt-0'}`
-            : `bg-transparent ${isMobileComposer ? 'px-3 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-0' : 'px-0 pb-[16px] pt-0'}`
+            ? `bg-transparent ${isMobileComposer ? 'px-1 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-0' : 'px-2 pb-2 pt-0'}`
+            : `bg-transparent ${isMobileComposer ? 'px-1 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-0' : 'px-0 pb-[16px] pt-0'}`
       }
     >
       <div
@@ -1007,8 +981,8 @@ export function ChatInput({
           className={isHeroComposer
             ? `glass-panel codex-new-task-input-panel relative flex flex-col gap-2 overflow-visible ${embedLaunchControlsInHero ? 'rounded-[var(--radius-4xl)]' : 'rounded-t-[var(--radius-4xl)] rounded-b-none'} p-3 transition-colors ${isDragActive ? 'composer-drop-target-active' : ''}`
             : compact
-              ? `glass-panel relative overflow-visible p-3 transition-colors ${isMobileComposer ? 'rounded-[var(--radius-2xl)] shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[var(--radius-3xl)]'} ${isDragActive ? 'composer-drop-target-active' : ''}`
-              : `glass-panel relative overflow-visible transition-colors ${isMobileComposer ? 'rounded-[var(--radius-2xl)] p-3 shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[var(--radius-3xl)] pt-[10px] pb-3 px-4 -ml-[8px] w-[calc(100%+8px)]'} ${isDragActive ? 'composer-drop-target-active' : ''}`}
+              ? `glass-panel relative overflow-visible ${isMobileComposer ? 'p-2' : 'p-3'} transition-colors ${isMobileComposer ? 'rounded-[var(--radius-2xl)] shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[var(--radius-3xl)]'} ${isDragActive ? 'composer-drop-target-active' : ''}`
+              : `glass-panel relative overflow-visible transition-colors ${isMobileComposer ? 'rounded-[var(--radius-2xl)] p-2 shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[var(--radius-3xl)] pt-[10px] pb-3 px-4 -ml-[8px] w-[calc(100%+8px)]'} ${isDragActive ? 'composer-drop-target-active' : ''}`}
           {...dragHandlers}
         >
           {isDragActive && (
@@ -1086,7 +1060,7 @@ export function ChatInput({
           {!isMemberSession && slashMenuOpen && filteredCommands.length > 0 && (
               <div
               ref={slashMenuRef}
-	              className="liquid-glass glass-panel composer-top-tray-panel absolute bottom-full left-0 right-0 z-50 mb-2 overflow-hidden p-1.5 shadow-[var(--shadow-dropdown)]"
+	              className="composer-top-tray-panel absolute bottom-full left-0 right-0 z-50 mb-2 overflow-hidden p-1.5 shadow-[var(--shadow-dropdown)]"
             >
               <div className="max-h-[300px] overflow-y-auto">
                 {filteredCommands.map((command, index) => (
@@ -1131,103 +1105,8 @@ export function ChatInput({
             </div>
           )}
 
-          {!isMemberSession && activeTabId && queuedUserMessages.length > 0 && (
-            <div
-              data-testid="pending-user-message-list"
-              className={[
-	                'overflow-hidden border-b border-[var(--color-token-border)]',
-                isHeroComposer ? '-mx-3 -mt-3' : useCompactControls ? '-mx-3 -mt-3' : '-mx-4 -mt-[10px]',
-              ].join(' ')}
-            >
-              {queuedUserMessages.map((message) => {
-                const isEditing = editingQueuedMessageId === message.id
-                return (
-                  <div
-                    key={message.id}
-                    data-testid="pending-user-message"
-                    className={[
-                      'flex min-w-0 items-center gap-2 px-3 py-2 text-xs',
-	                    'border-t border-[rgba(255,255,255,0.08)] first:border-t-0',
-	                    'bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))]/70 text-[var(--color-token-text-secondary)]',
-                    ].join(' ')}
-                  >
-	                    <span className="material-symbols-outlined icon-sm shrink-0 text-[var(--color-token-text-secondary)]" aria-hidden="true">
-                      subdirectory_arrow_right
-                    </span>
-                    {isEditing ? (
-                      <>
-                        <input
-                          value={editingQueuedMessageText}
-                          onChange={(event) => setEditingQueuedMessageText(event.target.value)}
-                          onKeyDown={(event) => {
-                            if (event.key === 'Enter') {
-                              event.preventDefault()
-                              saveQueuedMessageEdit()
-                            }
-                            if (event.key === 'Escape') {
-                              event.preventDefault()
-                              cancelQueuedMessageEdit()
-                            }
-                          }}
-                          aria-label={t('chat.pendingMessageEditInput')}
-                          className="min-w-0 flex-1 rounded-[var(--radius-2xs)] border border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-2 py-1 text-xs text-[var(--color-token-foreground)] outline-none focus:border-[var(--color-token-focus-border,var(--color-border-focus))]"
-                          autoFocus
-                        />
-                        <button
-                          type="button"
-                          onClick={saveQueuedMessageEdit}
-                          disabled={!editingQueuedMessageText.trim()}
-                          className="shrink-0 rounded-[var(--radius-2xs)] px-2 py-1 font-semibold text-[var(--color-brand)] hover:bg-[var(--color-surface-hover)] disabled:opacity-40"
-                        >
-                          {t('common.save')}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={cancelQueuedMessageEdit}
-                          className="shrink-0 rounded-[var(--radius-2xs)] px-2 py-1 font-medium text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)]"
-                        >
-                          {t('common.cancel')}
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <span className="min-w-0 flex-1 truncate font-medium" title={message.displayContent}>
-                          {message.displayContent}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => sendQueuedUserMessage(activeTabId, message.id)}
-                          aria-label={t('chat.pendingMessageGuideNow')}
-                          title={t('chat.pendingMessageGuideNow')}
-                          className="inline-flex h-7 shrink-0 items-center gap-1 rounded-[var(--radius-2xs)] px-2 font-semibold text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]"
-                        >
-                          <span className="material-symbols-outlined text-[15px]" aria-hidden="true">subdirectory_arrow_right</span>
-                          <span>{t('chat.pendingMessageGuide')}</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => startEditingQueuedMessage(message.id, message.displayContent)}
-                          aria-label={t('chat.pendingMessageEdit')}
-                          title={t('chat.pendingMessageEdit')}
-                          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-2xs)] text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]"
-                        >
-                          <span className="material-symbols-outlined text-[15px]" aria-hidden="true">edit</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => removeQueuedUserMessage(activeTabId, message.id)}
-                          aria-label={t('chat.pendingMessageDelete')}
-                          title={t('chat.pendingMessageDelete')}
-                          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-2xs)] text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-error)]"
-                        >
-                          <span className="material-symbols-outlined text-[15px]" aria-hidden="true">delete</span>
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
+          {!isMemberSession && activeTabId && (
+            <QueuedPrompts sessionId={activeTabId} isActive={isActive} />
           )}
 
           {composerAttachments.length > 0 && (
@@ -1247,7 +1126,7 @@ export function ChatInput({
               <div className="flex items-start gap-2 relative">
                 {!input && !isWorkspaceMissing && (
                   <span
-                    className="shimmer-sweep-text pointer-events-none absolute top-0 left-0 py-1.5 leading-6 text-[15px]"
+                    className="shimmer-sweep-text pointer-events-none absolute top-0 left-0 py-1.5 leading-6 text-[13px]"
                     aria-hidden="true"
                   >
                     {composerPlaceholder}
@@ -1264,7 +1143,7 @@ export function ChatInput({
                   placeholder=""
                   disabled={isWorkspaceMissing}
                   rows={1}
-                  className="flex-1 resize-none border-none bg-transparent py-1.5 leading-6 text-[15px] text-[var(--color-token-foreground)] outline-none disabled:opacity-50"
+                  className="flex-1 resize-none border-none bg-transparent py-1.5 leading-6 text-[13px] text-[var(--color-token-foreground)] outline-none disabled:opacity-50"
                 />
               </div>
             </div>
@@ -1272,7 +1151,7 @@ export function ChatInput({
             <div className="relative">
               {!input && !isWorkspaceMissing && (
                 <span
-                  className={`shimmer-sweep-text pointer-events-none absolute top-0 left-0 text-[15px] leading-6 ${
+                  className={`shimmer-sweep-text pointer-events-none absolute top-0 left-0 text-[13px] leading-6 ${
                     useCompactControls ? 'py-1' : 'py-1.5'
                   }`}
                   aria-hidden="true"
@@ -1291,7 +1170,7 @@ export function ChatInput({
                 placeholder=""
                 disabled={isWorkspaceMissing}
                 rows={1}
-                className={`w-full resize-none bg-transparent text-[15px] leading-6 text-[var(--color-token-foreground)] outline-none disabled:opacity-50 ${
+                className={`w-full resize-none bg-transparent text-[13px] leading-6 text-[var(--color-token-foreground)] outline-none disabled:opacity-50 ${
                   useCompactControls ? 'py-1' : 'py-1.5'
                 }`}
               />

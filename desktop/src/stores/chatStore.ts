@@ -121,6 +121,12 @@ export type PerSessionState = {
   composerInsertion?: ComposerReferenceInsertion | null
   composerDraft?: ComposerDraftState | null
   queuedUserMessages?: QueuedUserMessage[]
+  /** Whether auto-run for queued prompts is paused by user */
+  isQueuedPromptAutoRunPaused?: boolean
+  /** Index of the turn currently being previewed for fork (null = no preview) */
+  forkingTurnIndex?: number | null
+  /** Whether the user forked from a turn and we're showing its descendant view */
+  forkedFromTurn?: boolean
 }
 
 // Short-window dedup for server messages.  When the same message is
@@ -181,6 +187,9 @@ const DEFAULT_SESSION_STATE: PerSessionState = {
   composerInsertion: null,
   composerDraft: null,
   queuedUserMessages: [],
+  isQueuedPromptAutoRunPaused: false,
+  forkingTurnIndex: null,
+  forkedFromTurn: false,
 }
 
 function createDefaultSessionState(): PerSessionState {
@@ -244,6 +253,10 @@ type ChatStore = {
   updateQueuedUserMessage: (sessionId: string, messageId: string, content: string) => void
   removeQueuedUserMessage: (sessionId: string, messageId: string) => void
   sendQueuedUserMessage: (sessionId: string, messageId: string) => void
+  reorderQueuedUserMessages: (sessionId: string, fromIndex: number, toIndex: number) => void
+  setQueuedPromptAutoRunPaused: (sessionId: string, paused: boolean) => void
+  setForkingTurnIndex: (sessionId: string, turnIndex: number | null) => void
+  setForkedFromTurn: (sessionId: string, value: boolean) => void
   clearMessages: (sessionId: string) => void
   handleServerMessage: (sessionId: string, msg: ServerMessage) => void
 }
@@ -1571,6 +1584,50 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       content: queuedMessage.content,
       attachments: queuedMessage.attachments,
     })
+  },
+
+  reorderQueuedUserMessages: (sessionId, fromIndex, toIndex) => {
+    set((s) => ({
+      sessions: updateSessionIn(s.sessions, sessionId, (session) => {
+        const queue = session.queuedUserMessages ?? []
+        if (
+          fromIndex < 0 || toIndex < 0 ||
+          fromIndex >= queue.length || toIndex >= queue.length ||
+          fromIndex === toIndex
+        ) {
+          return session
+        }
+        const next = [...queue]
+        const [item] = next.splice(fromIndex, 1)
+        if (!item) return session
+        next.splice(toIndex, 0, item)
+        return { queuedUserMessages: next }
+      }),
+    }))
+  },
+
+  setQueuedPromptAutoRunPaused: (sessionId, paused) => {
+    set((state) => ({
+      sessions: updateSessionIn(state.sessions, sessionId, () => ({
+        isQueuedPromptAutoRunPaused: paused,
+      })),
+    }))
+  },
+
+  setForkingTurnIndex: (sessionId, turnIndex) => {
+    set((state) => ({
+      sessions: updateSessionIn(state.sessions, sessionId, () => ({
+        forkingTurnIndex: turnIndex,
+      })),
+    }))
+  },
+
+  setForkedFromTurn: (sessionId, value) => {
+    set((state) => ({
+      sessions: updateSessionIn(state.sessions, sessionId, () => ({
+        forkedFromTurn: value,
+      })),
+    }))
   },
 
   clearMessages: (sessionId) => {
