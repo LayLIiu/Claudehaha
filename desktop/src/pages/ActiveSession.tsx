@@ -44,6 +44,9 @@ import { ActiveGoalStrip } from '../components/chat/ActiveGoalStrip'
 import { TaskProgressDockPill } from '../components/chat/TaskProgressDockPill'
 import { isDesktopRuntime } from '../lib/desktopRuntime'
 import { conversationToMarkdown, downloadMarkdownFile } from '../lib/conversationExport'
+import { PetOverlay } from '../components/pet/PetOverlay'
+import { usePetStore } from '../stores/petStore'
+import { chatStateToPetState } from '../types/pet'
 
 const TASK_POLL_INTERVAL_MS = 1000
 const WORKSPACE_RESIZE_STEP = 32
@@ -638,6 +641,12 @@ export function ActiveSession() {
     setComposerDocked(false)
   }, [activeTabId])
 
+  // Sync pet animation state with chat state
+  const setPetState = usePetStore((s) => s.setPetState)
+  useEffect(() => {
+    setPetState(chatStateToPetState(chatState))
+  }, [chatState, setPetState])
+
   if (!activeTabId) return null
 
   return (
@@ -999,18 +1008,19 @@ export function ActiveSession() {
           </div>
         </div>
 
-        {showWorkbench ? (
-          <>
             <WorkspaceResizeHandle />
             <aside
               data-testid="workbench-panel"
-              className="flex h-full shrink-0 flex-col bg-[var(--color-surface)]"
-              style={{ width: rightPanelWidth, maxWidth: '62%', minWidth: 'min(420px, 54%)' }}
+              className="flex h-full shrink-0 flex-col bg-[var(--color-surface)] transition-[width] duration-[600ms] ease-[cubic-bezier(0.32,0.72,0,1)]"
+              style={{
+                width: showWorkbench ? rightPanelWidth : 0,
+                maxWidth: showWorkbench ? '62%' : 0,
+                minWidth: showWorkbench ? 'min(420px, 54%)' : 0,
+                overflow: 'hidden',
+              }}
             >
-              <WorkbenchPanel sessionId={activeTabId} />
+              {showWorkbench && <WorkbenchPanel sessionId={activeTabId} />}
             </aside>
-          </>
-        ) : null}
       </div>
 
       {!isMemberSession && activeTabId ? (
@@ -1033,6 +1043,9 @@ export function ActiveSession() {
         confirmVariant="danger"
         loading={isArchivingSession}
       />
+
+      {/* Pet companion overlay */}
+      <PetOverlay />
     </div>
   )
 }

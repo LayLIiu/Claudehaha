@@ -52,6 +52,8 @@ import { MemorySettings } from './MemorySettings'
 import { useUIStore, type SettingsTab } from '../stores/uiStore'
 import { useTabStore, SETTINGS_TAB_ID } from '../stores/tabStore'
 import { useChatStore } from '../stores/chatStore'
+import { usePetStore } from '../stores/petStore'
+import { PET_STATES, type PetState } from '../types/pet'
 import { ClaudeOfficialLogin } from '../components/settings/ClaudeOfficialLogin'
 import { ChatGPTOfficialLogin } from '../components/settings/ChatGPTOfficialLogin'
 import {
@@ -2552,6 +2554,9 @@ export function GeneralSettings() {
         </SettingsRow>
       </SettingsCard>
 
+      {/* ─── Pet Companion ─── */}
+      <PetSettingsSection />
+
       {/* ─── Output Style ─── */}
       <SettingsCard>
         <SettingsRow
@@ -4208,4 +4213,162 @@ function isValidHttpProxyUrl(value: string) {
   } catch {
     return false
   }
+}
+
+// ─── Pet Companion Settings ────────────────────────────────────
+
+const PET_STATE_LABELS: Record<PetState, string> = {
+  idle: '待机',
+  'running-right': '向右移动',
+  'running-left': '向左移动',
+  waving: '挥手',
+  jumping: '跳跃',
+  failed: '失败',
+  waiting: '等待输入',
+  running: '处理中',
+  review: '审查完成',
+}
+
+const PET_POSITION_OPTIONS = [
+  { value: 'bottom-right' as const, label: '右下角' },
+  { value: 'bottom-left' as const, label: '左下角' },
+  { value: 'bottom-center' as const, label: '底部居中' },
+]
+
+function PetSettingsSection() {
+  const enabled = usePetStore((s) => s.enabled)
+  const scale = usePetStore((s) => s.scale)
+  const position = usePetStore((s) => s.position)
+  const showLookDirection = usePetStore((s) => s.showLookDirection)
+  const activePetId = usePetStore((s) => s.activePetId)
+  const loadedPets = usePetStore((s) => s.loadedPets)
+  const setEnabled = usePetStore((s) => s.setEnabled)
+  const setScale = usePetStore((s) => s.setScale)
+  const setPosition = usePetStore((s) => s.setPosition)
+  const setShowLookDirection = usePetStore((s) => s.setShowLookDirection)
+  const setActivePet = usePetStore((s) => s.setActivePet)
+  const setPetState = usePetStore((s) => s.setPetState)
+
+  const petList = Array.from(loadedPets.values())
+
+  return (
+    <SettingsCard>
+      <SettingsRow
+        label="宠物伙伴"
+        description="在编码时拥有一只可爱的动画小伙伴，它会根据工作状态做出反应"
+      >
+        <button
+          onClick={() => setEnabled(!enabled)}
+          className={`relative h-6 w-11 rounded-full transition-colors ${
+            enabled ? 'bg-[var(--color-brand)]' : 'bg-[var(--color-token-border)]'
+          }`}
+        >
+          <span
+            className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+              enabled ? 'translate-x-[22px]' : 'translate-x-0.5'
+            }`}
+          />
+        </button>
+      </SettingsRow>
+
+      {enabled && (
+        <>
+          {/* Pet selector */}
+          {petList.length > 1 && (
+            <SettingsRow label="选择宠物">
+              <div className="flex gap-1.5">
+                {petList.map((pet) => (
+                  <button
+                    key={pet.id}
+                    onClick={() => setActivePet(pet.id)}
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                      activePetId === pet.id
+                        ? 'bg-[image:var(--gradient-btn-primary)] text-[var(--color-btn-primary-fg)] border-transparent shadow-[var(--shadow-button-primary)]'
+                        : 'border-[var(--color-token-border)] text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                    }`}
+                  >
+                    {pet.displayName}
+                  </button>
+                ))}
+              </div>
+            </SettingsRow>
+          )}
+
+          {/* Scale */}
+          <SettingsRow
+            label="宠物大小"
+            description={`${Math.round(scale * 100)}%`}
+          >
+            <div className="flex items-center gap-3">
+              <input
+                type="range"
+                min="0.5"
+                max="2"
+                step="0.1"
+                value={scale}
+                onChange={(e) => setScale(parseFloat(e.target.value))}
+                className="h-1 w-28 cursor-pointer appearance-none rounded-full bg-[var(--color-token-border)] accent-[var(--color-brand)]"
+              />
+            </div>
+          </SettingsRow>
+
+          {/* Position */}
+          <SettingsRow
+            label="宠物位置"
+            description="选择宠物在屏幕上的显示位置"
+          >
+            <div className="flex gap-1.5">
+              {PET_POSITION_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setPosition(opt.value)}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+                    position === opt.value
+                      ? 'bg-[image:var(--gradient-btn-primary)] text-[var(--color-btn-primary-fg)] border-transparent shadow-[var(--shadow-button-primary)]'
+                      : 'border-[var(--color-token-border)] text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </SettingsRow>
+
+          {/* Look direction */}
+          <SettingsRow
+            label="鼠标跟随注视"
+            description="宠物的目光会跟随鼠标指针方向"
+          >
+            <button
+              onClick={() => setShowLookDirection(!showLookDirection)}
+              className={`relative h-6 w-11 rounded-full transition-colors ${
+                showLookDirection ? 'bg-[var(--color-brand)]' : 'bg-[var(--color-token-border)]'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                  showLookDirection ? 'translate-x-[22px]' : 'translate-x-0.5'
+                }`}
+              />
+            </button>
+          </SettingsRow>
+
+          {/* Animation preview */}
+          <SettingsRow label="动画预览" full>
+            <div className="flex flex-wrap gap-1.5 mt-1">
+              {PET_STATES.map((state) => (
+                <button
+                  key={state}
+                  onClick={() => setPetState(state)}
+                  className="rounded-lg border border-[var(--color-token-border)] px-2.5 py-1 text-[11px] text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] transition-colors"
+                >
+                  {PET_STATE_LABELS[state]}
+                </button>
+              ))}
+            </div>
+          </SettingsRow>
+        </>
+      )}
+    </SettingsCard>
+  )
 }
