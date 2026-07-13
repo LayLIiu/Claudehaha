@@ -642,12 +642,12 @@ export function ActiveSession() {
 
   return (
     <div className="flex-1 flex relative overflow-hidden text-on-surface">
-      <DotGridShader />
       <div data-testid="active-session-content-row" className="relative z-10 flex min-h-0 min-w-0 flex-1">
         <div
           data-testid="active-session-chat-column"
-          className={`relative flex min-h-0 flex-col ${showRightPanel ? CHAT_COLUMN_WITH_WORKSPACE_CLASS : isMobileLayout ? 'min-w-0 flex-1' : 'min-w-[360px] flex-1'}`}
+          className={`relative flex min-h-0 flex-col overflow-hidden ${showRightPanel ? CHAT_COLUMN_WITH_WORKSPACE_CLASS : isMobileLayout ? 'min-w-0 flex-1' : 'min-w-[360px] flex-1'}`}
         >
+          <DotGridShader />
           {isMemberSession && (
             <div className="relative shrink-0 bg-[var(--color-surface-container)]">
               <div className="absolute left-3 right-3 bottom-0 h-px rounded-full bg-[rgba(255,255,255,0.08)]" />

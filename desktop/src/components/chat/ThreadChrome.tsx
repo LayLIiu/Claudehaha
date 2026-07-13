@@ -19,8 +19,10 @@ import { useTerminalPanelStore } from '../../stores/terminalPanelStore'
 import { useTranslation } from '../../i18n'
 import { OpenProjectMenu } from '../layout/OpenProjectMenu'
 import { ActiveGoalStrip } from './ActiveGoalStrip'
+import { HistoryStatePill } from './HistoryStatePill'
 import type { SessionListItem } from '../../types/session'
 import type { ActiveGoalState } from '../../types/chat'
+import { useChatStore } from '../../stores/chatStore'
 import { isDesktopRuntime } from '../../lib/desktopRuntime'
 import { conversationToMarkdown, downloadMarkdownFile } from '../../lib/conversationExport'
 import type { UIMessage } from '../../types/chat'
@@ -80,6 +82,9 @@ export interface ThreadChromeProps {
   onArchive: () => void
   onTogglePinned: () => void
   isSessionPinned: boolean
+  isViewingForkedTurn?: boolean
+  viewingTurnIndex?: number
+  onJumpToParent?: () => void
 }
 
 export function ThreadChrome({
@@ -102,6 +107,8 @@ export function ThreadChrome({
   isSessionPinned,
 }: ThreadChromeProps) {
   const t = useTranslation()
+  const forkedFromTurn = useChatStore((s) => activeTabId ? s.sessions[activeTabId]?.forkedFromTurn : undefined)
+  const viewingTurnIndex = useChatStore((s) => activeTabId ? s.sessions[activeTabId]?.forkingTurnIndex : null)
   const [titleMenuOpen, setTitleMenuOpen] = useState(false)
   const titleMenuBtnRef = useRef<HTMLButtonElement>(null)
   const titleMenuPortalRef = useRef<HTMLDivElement>(null)
@@ -238,6 +245,11 @@ export function ThreadChrome({
           )}
           <ActiveGoalStrip goal={activeGoal} isRunning={isActive} compact />
         </div>
+        {forkedFromTurn && viewingTurnIndex != null && (
+          <div className="px-4 pb-2">
+            <HistoryStatePill turnIndex={viewingTurnIndex} onJumpToParent={() => {}} />
+          </div>
+        )}
         <div className="session-header-actions relative flex shrink-0 items-center gap-1">
           <OpenProjectMenu
             path={openProjectPath}

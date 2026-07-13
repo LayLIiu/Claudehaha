@@ -6,12 +6,13 @@
  * 数据使用客户端实时计算的 liveTurnChangeSummary（无需后端 checkpoint）。
  */
 import { useState } from 'react'
-import { ChevronDown, ChevronRight, FileDiff } from 'lucide-react'
+import { ChevronDown, ChevronRight, FileDiff, Eye } from 'lucide-react'
 import type { LiveTurnChangeSummary } from './turnLiveChangeSummary'
 import { RollingDiffStats } from './RollingDiffStats'
 import { relativizeWorkspacePath } from './CurrentTurnChangeCard'
 import { useTranslation } from '../../i18n'
 import { useWorkspacePanelStore } from '../../stores/workspacePanelStore'
+import { useSidePaneStore } from '../../stores/sidePaneStore'
 import { isAbsoluteLocalPath, localFileUrl } from '../../lib/handlePreviewLink'
 import { shouldOfferStaticHtmlPreview } from '../../lib/htmlPreviewPolicy'
 import { getServerBaseUrl } from '../../lib/desktopRuntime'
@@ -78,21 +79,36 @@ export function InlineTurnChangeTag({ summary, workDir, sessionId, files }: Inli
           {files.map((file) => {
             const displayPath = relativizeWorkspacePath(file.path, workDir ?? null)
             return (
-              <button
+              <div
                 key={file.path}
-                type="button"
-                onClick={() => openFile(file)}
-                title={displayPath}
-                className="flex min-h-[38px] w-full items-center justify-between gap-3 px-3 text-left transition-colors hover:bg-[var(--color-surface-hover,rgba(10,10,10,0.05))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-brand)]/30"
+                className="flex min-h-[38px] w-full items-center justify-between gap-3 px-3"
               >
-                <span className="min-w-0 flex-1 truncate text-[13px] text-[var(--color-token-foreground)]">
-                  {displayPath}
-                </span>
-                <span className="flex shrink-0 items-baseline gap-1 font-mono text-[13px] font-medium">
-                  <span className="text-[var(--color-diff-added,oklch(62.7% .194 149.214))]">+{file.additions}</span>
-                  <span className="text-[var(--color-diff-removed,oklch(57.7% .245 27.325))]">-{file.deletions}</span>
-                </span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => openFile(file)}
+                  title={displayPath}
+                  className="flex min-w-0 flex-1 items-center gap-3 text-left transition-colors hover:bg-[var(--color-surface-hover,rgba(10,10,10,0.05))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-brand)]/30"
+                >
+                  <span className="min-w-0 flex-1 truncate text-[13px] text-[var(--color-token-foreground)]">
+                    {displayPath}
+                  </span>
+                  <span className="flex shrink-0 items-baseline gap-1 font-mono text-[13px] font-medium">
+                    <span className="text-[var(--color-diff-added,oklch(62.7% .194 149.214))]">+{file.additions}</span>
+                    <span className="text-[var(--color-diff-removed,oklch(57.7% .245 27.325))]">-{file.deletions}</span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    useSidePaneStore.getState().open('code-viewer')
+                  }}
+                  title="Review"
+                  className="inline-flex h-7 shrink-0 items-center gap-1 rounded-[var(--radius-sm)] border border-[var(--color-token-border)] px-2 text-[11px] font-medium text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)]"
+                >
+                  <Eye size={11} />
+                  <span>Review</span>
+                </button>
+              </div>
             )
           })}
         </div>

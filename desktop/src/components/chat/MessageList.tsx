@@ -108,7 +108,7 @@ type RewindTurnTarget = {
 type BranchableMessageTarget = {
   uiMessageId: string
   transcriptMessageId: string
-  /** Where to fork relative to this turn.  undefined = after (legacy). */
+  turnIndex: number
   forkPosition?: 'before' | 'after'
 }
 
@@ -1005,25 +1005,28 @@ function getBranchableMessageTargets(messages: UIMessage[]): Map<string, Brancha
   let currentTurnCandidates: Array<Extract<UIMessage, { type: 'user_text' | 'assistant_text' }>> = []
   let hasResponseForCurrentTurn = false
 
-  const markCurrentTurnBranchable = () => {
+  const markCurrentTurnBranchable = (turnIndex: number) => {
     if (!hasResponseForCurrentTurn) return
     for (const candidate of currentTurnCandidates) {
       if (!candidate.transcriptMessageId) continue
       branchableTargets.set(candidate.id, {
         uiMessageId: candidate.id,
         transcriptMessageId: candidate.transcriptMessageId,
+        turnIndex,
       })
     }
   }
 
+  let turnIndex = 0
   for (const message of messages) {
     if (message.type === 'user_text') {
-      markCurrentTurnBranchable()
+      markCurrentTurnBranchable(turnIndex)
       currentTurnCandidates = []
       hasResponseForCurrentTurn = false
       if (!message.pending && message.transcriptMessageId) {
         currentTurnCandidates = [message]
       }
+      turnIndex++
       continue
     }
 
@@ -1038,7 +1041,7 @@ function getBranchableMessageTargets(messages: UIMessage[]): Map<string, Brancha
     }
   }
 
-  markCurrentTurnBranchable()
+  markCurrentTurnBranchable(turnIndex)
   return branchableTargets
 }
 
@@ -1876,9 +1879,12 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
   const [turnActionErrors, setTurnActionErrors] = useState<Record<string, string>>({})
   const [isLoadingTurnChangeCards, setIsLoadingTurnChangeCards] = useState(false)
   const [branchingMessageId, setBranchingMessageId] = useState<string | null>(null)
+  // Tool slice pagination — reserved for future backend API
+  // const [expandedToolCounts, setExpandedToolCounts] = useState<Record<string, number>>({})
   const [rewindingTurnId, setRewindingTurnId] = useState<string | null>(null)
   const [turnUndoConfirmTargetId, setTurnUndoConfirmTargetId] = useState<string | null>(null)
   const [showJumpToLatest, setShowJumpToLatest] = useState(false)
+  // Tool slice pagination — reserved for future backend API integration
   const [virtualViewport, setVirtualViewport] = useState<VirtualViewport>({
     scrollTop: SCROLL_BOTTOM_SENTINEL,
     viewportHeight: VIRTUAL_DEFAULT_VIEWPORT_HEIGHT,
@@ -2485,12 +2491,13 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
 
   const forkEntryByMessageId = useMemo(() => {
     if (branchableMessageTargets.size === 0) {
-      return new Map<string, { loading: boolean; onForkBefore: () => void; onForkAfter: () => void }>()
+      return new Map<string, { loading: boolean; turnIndex: number; onForkBefore: () => void; onForkAfter: () => void }>()
     }
-    const result = new Map<string, { loading: boolean; onForkBefore: () => void; onForkAfter: () => void }>()
+    const result = new Map<string, { loading: boolean; turnIndex: number; onForkBefore: () => void; onForkAfter: () => void }>()
     for (const [uiMessageId, target] of branchableMessageTargets) {
       result.set(uiMessageId, {
         loading: branchingMessageId === target.uiMessageId,
+        turnIndex: target.turnIndex,
         onForkBefore: () => { void handleBranchMessage({ ...target, forkPosition: 'before' }) },
         onForkAfter: () => { void handleBranchMessage(target) },
       })
@@ -2601,7 +2608,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
                 : null
             }
             branchAction={branchActionByMessageId.get(item.message.id)}
-            forkEntry={forkEntryByMessageId.get(item.message.id)}
+            forkEntry={forkEntryByMessageId.get(item.message.id) ? { ...forkEntryByMessageId.get(item.message.id)!, sessionId: resolvedSessionId ?? '' } : undefined}
             showActions={
               item.message.type === 'user_text'
                 ? !item.message.pending && item.message.content.trim().length > 0
@@ -2736,7 +2743,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
                 : null
             }
             branchAction={branchActionByMessageId.get(item.message.id)}
-            forkEntry={forkEntryByMessageId.get(item.message.id)}
+            forkEntry={forkEntryByMessageId.get(item.message.id) ? { ...forkEntryByMessageId.get(item.message.id)!, sessionId: resolvedSessionId ?? '' } : undefined}
             turnChange={turnChangeByMessageId.get(item.message.id)}
             showActions={
               item.message.type === 'user_text'
@@ -3387,6 +3394,8 @@ export const MessageBlock = memo(function MessageBlock({
   }
   forkEntry?: {
     loading?: boolean
+    turnIndex: number
+    sessionId: string
     onForkBefore: () => void
     onForkAfter: () => void
   }

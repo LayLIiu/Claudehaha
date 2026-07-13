@@ -2107,7 +2107,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         }
         refreshCompletedTranscriptHistory(get, sessionId)
         for (const queuedMessage of get().sessions[sessionId]?.queuedUserMessages ?? []) {
+          if (get().sessions[sessionId]?.isQueuedPromptAutoRunPaused) break
           get().sendQueuedUserMessage(sessionId, queuedMessage.id)
+          break
         }
         break
       }

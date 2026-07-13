@@ -24,7 +24,8 @@ type Props = {
    *  icon in MessageActionBar when present. */
   forkEntry?: {
     loading?: boolean
-    disabled?: boolean
+    turnIndex: number
+    sessionId: string
     onForkBefore: () => void
     onForkAfter: () => void
   }
@@ -131,7 +132,8 @@ export const AssistantMessage = memo(function AssistantMessage({ content, isStre
         {showActions && forkEntry && (
           <ForkEntryRow
             loading={forkEntry.loading}
-            disabled={forkEntry.disabled}
+            sessionId={forkEntry.sessionId}
+            turnIndex={forkEntry.turnIndex}
             onForkBefore={forkEntry.onForkBefore}
             onForkAfter={forkEntry.onForkAfter}
           />
