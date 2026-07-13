@@ -57,7 +57,7 @@ export function WorkbenchPanel({ sessionId, variant = 'panel', onClose }: Workbe
   }
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col bg-[var(--color-surface)]">
+    <div className="flex h-full min-h-0 w-full flex-col rounded-2xl bg-[var(--color-surface)]">
       <div className="flex h-[50px] shrink-0 items-center gap-2 border-b border-[var(--color-token-border)] bg-[var(--color-surface)] pl-2.5 pr-2">
         <div
           role="tablist"
