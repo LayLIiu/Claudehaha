@@ -1382,7 +1382,7 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
 
     return (
       <>
-        <div className="flex h-10 shrink-0 items-center gap-1.5 border-b border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3 text-[12px]">
+        <div className="flex h-10 shrink-0 items-center gap-1.5 rounded-t-xl border-b border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3 text-[12px]">
           <span className="truncate text-[var(--color-token-text-secondary)]">{status?.repoName || 'workspace'}</span>
           {activePreviewTab.path.split('/').map((segment, index, segments) => (
             <span key={`${segment}:${index}`} className="flex min-w-0 items-center gap-1.5">
@@ -1440,7 +1440,7 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
   const renderPreviewTabs = () => (
     <>
       <div
-        className="flex h-11 shrink-0 items-center gap-2 border-b border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3"
+        className="flex h-11 shrink-0 items-center gap-2 rounded-t-xl border-b border-[var(--color-token-border)] bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3"
       >
         <div
           role="tablist"
@@ -1579,7 +1579,7 @@ export function WorkspacePanel({ sessionId, embedded = false, forceVisible = fal
         <div
           className={`${hasPreviewTabs ? 'basis-[32%] min-w-[220px] max-w-[320px]' : 'w-full'} flex h-full shrink-0 flex-col bg-[var(--color-surface)]`}
         >
-          <div className="flex h-10 shrink-0 items-center gap-1.5 border-b border-[var(--color-token-border)] px-2.5">
+          <div className="flex h-10 shrink-0 items-center gap-1.5 rounded-t-xl border-b border-[var(--color-token-border)] px-2.5">
             <div className="relative min-w-0">
               <button
                 type="button"
