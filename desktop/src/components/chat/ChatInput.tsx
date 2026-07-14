@@ -956,8 +956,8 @@ export function ChatInput({
         isHeroComposer
           ? `bg-transparent ${isMobileComposer ? 'px-0.5 pb-3' : 'px-8 pb-4'}`
           : compact
-            ? `bg-transparent ${isMobileComposer ? 'px-0.5 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-0' : 'px-2 pb-2 pt-0'}`
-            : `bg-transparent ${isMobileComposer ? 'px-0.5 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-0' : 'px-0 pb-[16px] pt-0'}`
+            ? `bg-transparent ${isMobileComposer ? 'px-0.5 pb-[calc(env(safe-area-inset-bottom)+2px)] pt-0' : 'px-2 pb-2 pt-0'}`
+            : `bg-transparent ${isMobileComposer ? 'px-0.5 pb-[calc(env(safe-area-inset-bottom)+2px)] pt-0' : 'px-0 pb-[16px] pt-0'}`
       }
     >
       <div

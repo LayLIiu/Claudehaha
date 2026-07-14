@@ -573,7 +573,7 @@ export function EmptySession() {
         data-testid="empty-session-composer-shell"
         className={`absolute left-0 right-0 z-30 flex justify-center ${
         isMobileComposer
-          ? 'bottom-0 px-3 pb-[calc(env(safe-area-inset-bottom)+10px)]'
+          ? 'bottom-0 px-3 pb-[calc(env(safe-area-inset-bottom)+2px)]'
           : 'bottom-5 px-8'
       }`}
       >
