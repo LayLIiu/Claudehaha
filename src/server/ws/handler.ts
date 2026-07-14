@@ -112,6 +112,10 @@ const prewarmIdleTimers = new Map<string, ReturnType<typeof setTimeout>>()
 const DEFAULT_PREWARM_IDLE_TIMEOUT_MS = 5 * 60_000
 const VALID_EFFORT_LEVELS = new Set(['low', 'medium', 'high', 'max'])
 
+/** V2 task tool names — when these tools complete, we also push a task_update
+ *  message so the desktop client can refresh its task panel in real-time. */
+const TASK_V2_TOOL_NAMES = new Set(['TaskCreate', 'TaskUpdate', 'TaskGet', 'TaskList', 'TaskStop'])
+
 async function sendRepositoryStartupStatus(
   ws: ServerWebSocket<WebSocketData>,
   sessionId: string,
@@ -2441,6 +2445,19 @@ function bindClientSessionOutput(
     }
 
     const serverMsgs = translateCliMessage(cliMsg, sessionId)
+    // When a V2 task tool completes, append a task_update message so the
+    // desktop client can refresh its task panel in real-time without waiting
+    // for tool_result or the next poll cycle.
+    for (const msg of serverMsgs) {
+      if (msg.type === 'tool_use_complete' && TASK_V2_TOOL_NAMES.has(msg.toolName)) {
+        serverMsgs.push({
+          type: 'task_update',
+          taskId: msg.toolUseId,
+          status: 'updated',
+        })
+        break  // only one task_update per batch
+      }
+    }
     for (const msg of serverMsgs) {
       sendMessage(ws, msg)
     }

@@ -1960,6 +1960,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         } else if (TASK_TOOL_NAMES.has(toolName)) {
           const useId = msg.toolUseId || session?.activeToolUseId
           if (useId) addPendingTaskToolUseId(sessionId, useId)
+          // Immediately refresh tasks on tool_use_complete for V2 task tools
+          // so the task panel updates in real-time without waiting for tool_result.
+          // The tool has already executed server-side at this point, so the
+          // task state on disk is up-to-date.
+          useCLITaskStore.getState().refreshTasks(sessionId)
         }
         break
       }
@@ -2180,6 +2185,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         useTeamStore.getState().handleTeamDeleted(msg.teamName)
         break
       case 'task_update':
+        useCLITaskStore.getState().refreshTasks(sessionId)
         break
       case 'session_title_updated':
         useSessionStore.getState().updateSessionTitle(msg.sessionId, msg.title)

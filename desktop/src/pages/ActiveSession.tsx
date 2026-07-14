@@ -606,6 +606,17 @@ export function ActiveSession() {
     fetchSessionTasks,
   ])
 
+  // Extra: when tasks transition from incomplete to all-complete, do one
+  // final refresh so the task panel reliably shows the completed state
+  // even though the main polling effect above just stopped.
+  useEffect(() => {
+    if (!activeTabId || isMemberSession) return
+    const tasks = useCLITaskStore.getState().tasks
+    if (tasks.length > 0 && !hasIncompleteTasks) {
+      void useCLITaskStore.getState().refreshTasks(activeTabId)
+    }
+  }, [activeTabId, isMemberSession, hasIncompleteTasks])
+
   const t = useTranslation()
   const streamingText = sessionState?.streamingText ?? ''
   const activeGoal = sessionState?.activeGoal ?? null
