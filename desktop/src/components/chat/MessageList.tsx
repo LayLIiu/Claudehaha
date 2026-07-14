@@ -838,10 +838,23 @@ function applyTurnCollapse(items: RenderItem[], isTurnActive?: boolean): RenderI
   const flushCurrentTurn = (isActive: boolean) => {
     if (currentUserMsgId === null) return
 
-    // ZCode rule: during streaming, no partition happens at all.
-    // The active turn stays fully expanded until it completes.
+    // Active turn: wrap ALL items into a turn_process so we get the live
+    // "工作中 · 12秒" fold header. No final answer separation yet.
     if (isActive) {
-      for (const ti of turnItems) result.push(ti)
+      if (turnItems.length > 0) {
+        result.push({
+          kind: 'turn_process',
+          group: {
+            userMsgId: currentUserMsgId!,
+            processItems: [...turnItems],
+            stepCount: countProcessSteps(turnItems),
+            startTime: currentUserMsgTimestamp,
+            endTime: null,
+            hasFinalAssistant: false,
+          },
+          id: `turn-${currentUserMsgId}-${result.length}`,
+        })
+      }
       return
     }
 
@@ -2718,7 +2731,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
             }
             hasLatestPart={item.group.hasFinalAssistant}
             settling={false}
-            streaming={false}
+            streaming={chatState !== 'idle'}
           />
         ) : item.kind === 'web_search_group' ? (
           <WebSearchGroupSection
