@@ -496,7 +496,7 @@ export function AdapterSettings() {
   }
 
   return (
-    <div className="max-w-2xl space-y-8">
+    <div className="space-y-8">
       {/* Description */}
       <div>
         <p className="text-sm leading-6 text-[var(--color-token-text-secondary)]">

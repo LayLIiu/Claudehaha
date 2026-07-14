@@ -211,11 +211,11 @@ export function Settings() {
   ]
 
   return (
-    <div className="settings-page-root flex-1 grid min-h-0 grid-cols-[64px_minmax(0,1fr)] lg:grid-cols-[283px_minmax(0,1fr)] overflow-hidden">
+    <div className="settings-page-root flex-1 grid min-h-0 grid-cols-[64px_minmax(0,1fr)] lg:grid-cols-[var(--sidebar-width)_minmax(0,1fr)] overflow-hidden">
       {/* Sidebar navigation */}
       <aside
         data-testid="settings-sidebar-panel"
-        className="settings-sidebar-panel relative flex flex-col"
+        className="settings-sidebar-panel relative flex flex-col pr-3"
       >
         {/* Titlebar drag region for sidebar */}
         {isDesktopRuntime() && <div data-desktop-drag-region className="h-[var(--titlebar-height)] flex-shrink-0" />}
@@ -264,7 +264,7 @@ export function Settings() {
         className={
           activeTab === 'trace'
             ? 'settings-content-panel flex-1 flex min-h-0 flex-col overflow-hidden'
-            : 'settings-content-panel ml-2 flex-1 overflow-y-auto'
+            : 'settings-content-panel flex-1 overflow-y-auto'
         }
       >
         {/* Titlebar drag region for content area */}
@@ -272,7 +272,7 @@ export function Settings() {
         {activeTab === 'trace' ? (
           <TraceList />
         ) : (
-          <div className="mx-auto flex max-w-5xl flex-col gap-8 px-3 py-6 pb-8 lg:px-5 lg:py-10">
+          <div className="flex flex-col gap-8 px-3 py-6 pb-8 lg:px-5 lg:py-10">
             {activeTab === 'providers' && <ProviderSettings />}
             {activeTab === 'activity' && <ActivitySettings />}
             {activeTab === 'general' && <GeneralSettings />}
@@ -466,7 +466,7 @@ function ProviderSettings() {
   const isOpenAIOfficialActive = hasLoadedProviders && activeId === OPENAI_OFFICIAL_PROVIDER_ID
 
   return (
-    <div className="max-w-2xl">
+    <div>
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-base font-semibold text-[var(--color-token-foreground)]">{t('settings.providers.title')}</h2>
@@ -3335,7 +3335,7 @@ function H5AccessSettings() {
   }
 
   return (
-    <div className="max-w-3xl">
+    <div>
       <section aria-labelledby="h5-access-title" role="region">
         <div className="mb-5 flex items-start gap-3">
           <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[var(--color-token-border)] bg-[var(--color-surface-container-low)] text-[var(--color-brand)]">

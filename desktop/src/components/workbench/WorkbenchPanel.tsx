@@ -1,13 +1,9 @@
-import { FolderOpen, Globe, Maximize2 } from 'lucide-react'
+import { FolderOpen, Globe, Maximize2, PanelRightClose } from 'lucide-react'
 import { useTranslation } from '../../i18n'
-import {
-  useWorkspacePanelStore,
-  type WorkbenchMode,
-} from '../../stores/workspacePanelStore'
+import { useWorkspacePanelStore, type WorkbenchMode } from '../../stores/workspacePanelStore'
 import { useBrowserPanelStore } from '../../stores/browserPanelStore'
-import { useTabStore } from '../../stores/tabStore'
-import { WorkspacePanel } from '../workspace/WorkspacePanel'
 import { BrowserSurface } from '../browser/BrowserSurface'
+import { WorkspacePanel } from '../workspace/WorkspacePanel'
 
 type WorkbenchPanelProps = {
   sessionId: string
@@ -15,20 +11,17 @@ type WorkbenchPanelProps = {
   onClose?: () => void
 }
 
-const MODE_ITEMS: ReadonlyArray<{
+type ModeItem = {
   mode: WorkbenchMode
-  labelKey: 'workbench.modeWorkspace' | 'workbench.modeBrowser'
+  labelKey: string
   Icon: typeof FolderOpen
-}> = [
+}
+
+const MODE_ITEMS: ModeItem[] = [
   { mode: 'workspace', labelKey: 'workbench.modeWorkspace', Icon: FolderOpen },
   { mode: 'browser', labelKey: 'workbench.modeBrowser', Icon: Globe },
 ]
 
-/**
- * Unified right-side "Workbench" panel. Hosts the file workspace and the native
- * browser surface behind a single per-session mode switch (file ↔ browser),
- * sharing the panel's open state and width via {@link useWorkspacePanelStore}.
- */
 export function WorkbenchPanel({ sessionId, variant = 'panel', onClose }: WorkbenchPanelProps) {
   const t = useTranslation()
   const mode = useWorkspacePanelStore((state) => state.getMode(sessionId))
@@ -45,7 +38,10 @@ export function WorkbenchPanel({ sessionId, variant = 'panel', onClose }: Workbe
   }
 
   const handleExpand = () => {
-    useTabStore.getState().openWorkbenchTab(sessionId, t('workbench.tabTitle'))
+    if (mode !== 'browser') {
+      setMode(sessionId, 'browser')
+    }
+    ensureBlankBrowser(sessionId)
   }
 
   const handleClose = () => {
@@ -57,12 +53,20 @@ export function WorkbenchPanel({ sessionId, variant = 'panel', onClose }: Workbe
   }
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col rounded-2xl bg-[var(--color-surface)]">
-      <div className="flex h-[50px] shrink-0 items-center gap-2 border-b border-[var(--color-token-border)] bg-[var(--color-surface)] pl-2.5 pr-2">
+    <div className="relative flex h-full min-h-0 w-full flex-col rounded-2xl bg-[var(--color-surface)]">
+      <button
+        type="button"
+        aria-label={t('workbench.close')}
+        onClick={handleClose}
+        className="absolute right-4 top-[9px] z-10 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
+      >
+        <PanelRightClose size={15} strokeWidth={1.9} aria-hidden="true" />
+      </button>
+      <div className="flex h-[50px] shrink-0 items-center gap-2 border-b border-[var(--color-token-border)] bg-[var(--color-surface)] pl-2.5 pr-12">
         <div
           role="tablist"
           aria-label={t('workbench.modeSwitch')}
-          className="inline-flex items-center gap-0.5 rounded-[var(--radius-sm)] border border-[var(--color-token-border)] bg-[var(--color-surface)] p-0.5"
+          className="inline-flex min-w-0 shrink items-center gap-0.5 rounded-[var(--radius-sm)] border border-[var(--color-token-border)] bg-[var(--color-surface)] p-0.5 overflow-hidden"
         >
           {MODE_ITEMS.map(({ mode: itemMode, labelKey, Icon }) => {
             const isActive = mode === itemMode
@@ -98,22 +102,10 @@ export function WorkbenchPanel({ sessionId, variant = 'panel', onClose }: Workbe
               <Maximize2 size={15} strokeWidth={2} aria-hidden="true" />
             </button>
           )}
-          <button
-            type="button"
-            aria-label={t('workbench.close')}
-            onClick={handleClose}
-            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand)]/35"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="codex-sidebar-toggle-icon">
-              <rect x="2.25" y="2.5" width="11.5" height="11" rx="2" />
-              <path d="M6.25 2.75v10.5" />
-              <path d="M9.2 6 11.2 8 9.2 10" />
-            </svg>
-          </button>
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col bg-[var(--color-surface)]">
+      <div className="flex min-h-0 flex-1 flex-col bg-[var(--color-surface)] overflow-hidden">
         {mode === 'browser' ? (
           <BrowserSurface sessionId={sessionId} />
         ) : (

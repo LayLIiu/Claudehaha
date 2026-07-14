@@ -276,7 +276,7 @@ export function ComputerUseSettings() {
   }, [filteredApps, authorizedBundleIds])
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="space-y-6">
       {/* Title */}
       <div>
         <div className="flex items-center justify-between gap-4">

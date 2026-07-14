@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { Archive, Download, Folder, GitBranch, LoaderCircle, MoreHorizontal, Pencil, Pin, PinOff, SquareTerminal } from 'lucide-react'
+import { Archive, Download, GitBranch, LoaderCircle, MoreHorizontal, PanelRight, PanelRightClose, Pencil, Pin, PinOff, SquareTerminal } from 'lucide-react'
 import {
   SCHEDULED_TAB_ID,
   SETTINGS_TAB_ID,
@@ -138,6 +138,7 @@ function WorkspaceResizeHandle() {
   const t = useTranslation()
   const width = useWorkspacePanelStore((state) => state.width)
   const setWidth = useWorkspacePanelStore((state) => state.setWidth)
+  const setResizing = useWorkspacePanelStore((state) => state.setResizing)
   const [dragState, setDragState] = useState<{ startX: number; startWidth: number } | null>(null)
   const dragStateRef = useRef(dragState)
 
@@ -156,10 +157,12 @@ function WorkspaceResizeHandle() {
 
     const handlePointerUp = () => {
       setDragState(null)
+      setResizing(false)
     }
 
     document.body.style.cursor = 'col-resize'
     document.body.style.userSelect = 'none'
+    setResizing(true)
     window.addEventListener('pointermove', handlePointerMove)
     window.addEventListener('pointerup', handlePointerUp)
     window.addEventListener('pointercancel', handlePointerUp)
@@ -171,7 +174,7 @@ function WorkspaceResizeHandle() {
       window.removeEventListener('pointerup', handlePointerUp)
       window.removeEventListener('pointercancel', handlePointerUp)
     }
-  }, [dragState, setWidth])
+  }, [dragState, setWidth, setResizing])
 
   return (
     <div
@@ -426,6 +429,7 @@ export function ActiveSession() {
   )
   const showRightPanel = showWorkbench
   const rightPanelWidth = useWorkspacePanelStore((state) => state.width)
+  const isResizing = useWorkspacePanelStore((state) => state.isResizing)
   const showTerminalPanel = useTerminalPanelStore((state) =>
     activeTabId && isSessionTabState(activeTabId, activeTabType) && !isMemberSession && !isMobileLayout
       ? state.isPanelOpen(activeTabId)
@@ -901,7 +905,7 @@ export function ActiveSession() {
                         }}
                         className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] spring-bounce-btn"
                       >
-                        <Folder size={15} strokeWidth={1.9} />
+                        <PanelRight size={15} strokeWidth={1.9} />
                       </button>
                       )}
                     </div>
@@ -1022,15 +1026,16 @@ export function ActiveSession() {
             <WorkspaceResizeHandle />
             <aside
               data-testid="workbench-panel"
-              className="flex h-full shrink-0 flex-col bg-[var(--color-surface)] transition-[width] duration-[600ms] ease-[cubic-bezier(0.32,0.72,0,1)]"
+              className={`flex h-full shrink-0 flex-col bg-[var(--color-surface)] ${isResizing ? '' : 'transition-[width] duration-[550ms] ease-[cubic-bezier(0.32,0.72,0,1)]'}`}
               style={{
                 width: showWorkbench ? rightPanelWidth : 0,
-                maxWidth: showWorkbench ? '62%' : 0,
-                minWidth: showWorkbench ? 'min(420px, 54%)' : 0,
                 overflow: 'hidden',
+                transform: 'translateZ(0)',
               }}
             >
-              {showWorkbench && <WorkbenchPanel sessionId={activeTabId} />}
+              <div style={{ width: rightPanelWidth, minHeight: '100%' }}>
+                {showWorkbench && <WorkbenchPanel sessionId={activeTabId} />}
+              </div>
             </aside>
       </div>
 
@@ -1055,8 +1060,8 @@ export function ActiveSession() {
         loading={isArchivingSession}
       />
 
-      {/* Pet companion overlay */}
-      <PetOverlay />
+      {/* Pet companion overlay — hidden on mobile to avoid blocking send button */}
+      {!isMobileLayout && <PetOverlay />}
     </div>
   )
 }

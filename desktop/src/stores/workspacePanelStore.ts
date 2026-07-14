@@ -8,8 +8,8 @@ import {
 } from '../api/sessions'
 
 export const WORKSPACE_PANEL_DEFAULT_WIDTH = 860
-export const WORKSPACE_PANEL_MIN_WIDTH = 640
-export const WORKSPACE_PANEL_MAX_WIDTH = 1120
+export const WORKSPACE_PANEL_MIN_WIDTH = 380
+export const WORKSPACE_PANEL_MAX_WIDTH = 1400
 
 export type WorkspacePanelView = 'changed' | 'all'
 export type WorkbenchMode = 'workspace' | 'browser'
@@ -58,6 +58,7 @@ type WorkspacePanelStore = {
   panelBySession: Record<string, WorkspacePanelSessionState | undefined>
   modeBySession: Record<string, WorkbenchMode | undefined>
   width: number
+  isResizing: boolean
   statusBySession: Record<string, WorkspaceStatusResult | undefined>
   expandedPathsBySession: Record<string, string[] | undefined>
   treeBySessionPath: Record<string, Record<string, WorkspaceTreeResult | undefined> | undefined>
@@ -74,6 +75,7 @@ type WorkspacePanelStore = {
   closePanel: (sessionId: string) => void
   togglePanel: (sessionId: string) => void
   setWidth: (width: number) => void
+  setResizing: (resizing: boolean) => void
   setActiveView: (sessionId: string, view: WorkspacePanelView) => void
   loadStatus: (sessionId: string) => Promise<void>
   loadTree: (sessionId: string, path?: string) => Promise<void>
@@ -190,6 +192,7 @@ export const useWorkspacePanelStore = create<WorkspacePanelStore>((set, get) => 
   panelBySession: {},
   modeBySession: {},
   width: WORKSPACE_PANEL_DEFAULT_WIDTH,
+  isResizing: false,
   statusBySession: {},
   expandedPathsBySession: {},
   treeBySessionPath: {},
@@ -255,6 +258,8 @@ export const useWorkspacePanelStore = create<WorkspacePanelStore>((set, get) => 
     }),
 
   setWidth: (width) => set({ width: clampWorkspacePanelWidth(width) }),
+
+  setResizing: (resizing) => set({ isResizing: resizing }),
 
   setActiveView: (sessionId, view) =>
     set((state) => ({

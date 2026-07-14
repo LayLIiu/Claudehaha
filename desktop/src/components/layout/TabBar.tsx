@@ -18,7 +18,7 @@ import { useTranslation } from '../../i18n'
 import { getDesktopHost } from '../../lib/desktopHost'
 import { WindowControls, showWindowControls } from './WindowControls'
 import { OpenProjectMenu } from './OpenProjectMenu'
-import { Folder, FolderOpen, SquareTerminal } from 'lucide-react'
+import { PanelRight, PanelRightClose, SquareTerminal } from 'lucide-react'
 import { ActionDialog } from '../shared/ActionDialog'
 
 const TAB_WIDTH = 180
@@ -382,7 +382,7 @@ export function TabBar() {
         />
         {isActiveSessionTab && activeTabId && (
           <ToolbarIconButton
-            icon={isWorkspacePanelOpen ? <FolderOpen size={18} strokeWidth={1.9} /> : <Folder size={18} strokeWidth={1.9} />}
+            icon={isWorkspacePanelOpen ? <PanelRightClose size={18} strokeWidth={1.9} /> : <PanelRight size={18} strokeWidth={1.9} />}
             label={t(isWorkspacePanelOpen ? 'tabs.hideWorkspace' : 'tabs.showWorkspace')}
             onClick={() => {
               const workbench = useWorkspacePanelStore.getState()

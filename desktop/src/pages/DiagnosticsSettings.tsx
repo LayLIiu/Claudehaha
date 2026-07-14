@@ -111,7 +111,7 @@ export function DiagnosticsSettings() {
   }
 
   return (
-    <div className="max-w-4xl">
+    <div>
       <div className="flex items-start justify-between gap-4 mb-5">
         <div>
           <h2 className="text-base font-semibold text-[var(--color-token-foreground)]">{t('settings.diagnostics.title')}</h2>

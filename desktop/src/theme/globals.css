@@ -1803,6 +1803,8 @@ button, input, textarea, select, a, [role="button"] {
   opacity: 1;
   will-change: opacity;
   transform: translateX(0);
+  position: relative;
+  z-index: 25;
 }
 
 .sidebar-shell--hidden {
@@ -1951,9 +1953,10 @@ button, input, textarea, select, a, [role="button"] {
   content: '';
   position: absolute;
   bottom: 0;
-  left: 0;
-  right: 0;
-  width: auto;
+  left: 50%;
+  right: auto;
+  width: calc(var(--chat-input-width, 100%) + 32px);
+  transform: translateX(-50%);
   height: 200px;
   background: linear-gradient(to bottom, transparent 0%, transparent 35%, var(--color-surface) 60%);
   pointer-events: none;
@@ -1984,6 +1987,9 @@ button, input, textarea, select, a, [role="button"] {
 
 .app-shell-main--settings {
   background: transparent !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  transition: none !important;
 }
 
 .settings-page-root {
@@ -1999,7 +2005,8 @@ button, input, textarea, select, a, [role="button"] {
   position: relative;
   border-left: none;
   box-shadow: none;
-  margin-left: 18px;
+  margin-left: 0;
+  border-radius: var(--radius-2xl) 0 0 var(--radius-2xl);
 }
 
 .general-settings-view {
@@ -2116,24 +2123,25 @@ html.electron-macos body,
 html.electron-macos #root,
 html.electron-macos .app-shell,
 .electron-macos .app-shell-viewport {
-  background: transparent !important;
+  background: rgba(24, 24, 24, 0.45) !important;
 }
 .electron-macos .app-shell-viewport::before {
   display: none !important;
 }
 .electron-macos .sidebar-panel {
   background-image: none !important;
-  background-color: rgba(26, 26, 26, 0.68) !important;
-  backdrop-filter: blur(24px) saturate(200%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border-right: none !important;
 }
 .electron-macos .settings-sidebar-panel {
   background-image: none !important;
-  background-color: rgba(26, 26, 26, 0.68) !important;
-  backdrop-filter: blur(24px) saturate(200%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border-right: none !important;
+  z-index: 25 !important;
 }
 
 /* macOS: seamless glass sidebar with visible content-area rounded corner */
@@ -2143,7 +2151,6 @@ html.electron-macos .app-shell,
   box-shadow:
     -1px 0 0 0 rgba(255, 255, 255, 0.06),
     0 0 0 0.5px rgba(255, 255, 255, 0.05) !important;
-  margin-left: 2px;
 }
 
 .electron-macos .app-shell-main--settings,
@@ -2153,15 +2160,20 @@ html.electron-macos .app-shell,
 
 .electron-macos .settings-content-panel {
   background: var(--color-surface) !important;
+  border-radius: var(--radius-2xl) 0 0 var(--radius-2xl) !important;
+  box-shadow:
+    -1px 0 0 0 rgba(255, 255, 255, 0.06),
+    0 0 0 0.5px rgba(255, 255, 255, 0.05) !important;
 }
 
+.electron-macos .sidebar-settings-dock {
+  background: transparent !important;
+}
 .electron-macos .sidebar-settings-dock::after {
-  background: #1a1a1a !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  display: none !important;
 }
 .electron-macos .sidebar-settings-dock::before {
-  background: linear-gradient(to bottom, transparent, #1a1a1a) !important;
+  display: none !important;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -2180,16 +2192,16 @@ html.electron-macos .app-shell,
   }
   .electron-macos .sidebar-panel {
     background-image: none !important;
-    background-color: rgba(24, 24, 24, 0.68) !important;
-    backdrop-filter: blur(24px) saturate(200%) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
+    background-color: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     border-right: none;
   }
   .electron-macos .settings-sidebar-panel {
     background-image: none !important;
-    background-color: rgba(24, 24, 24, 0.68) !important;
-    backdrop-filter: blur(24px) saturate(200%) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
+    background-color: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     border-right: none !important;
   }
 }
@@ -2680,7 +2692,7 @@ html.electron-macos .app-shell,
 
 .sidebar-settings-dock {
   z-index: 30;
-  background: transparent;
+  background: var(--color-surface-sidebar);
   padding-top: 16px !important;
 }
 

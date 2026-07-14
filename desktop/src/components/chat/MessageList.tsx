@@ -2775,7 +2775,7 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
   return (
     <ShikiProvider>
     <div className="relative min-h-0 flex-1">
-      <div className="pointer-events-none absolute top-0 z-10 h-[30px]" style={{ left: '50%', width: '820px', transform: 'translateX(-50%)', background: 'linear-gradient(to bottom, var(--color-surface) 0%, transparent 100%)' }} />
+      <div className="pointer-events-none absolute top-0 z-10 h-[30px]" style={{ left: '50%', width: 'calc(var(--chat-input-width, 800px) + 32px)', transform: 'translateX(-50%)', background: 'linear-gradient(to bottom, var(--color-surface) 0%, transparent 100%)' }} />
       <div
         ref={scrollContainerRef}
         onScroll={updateAutoScrollState}

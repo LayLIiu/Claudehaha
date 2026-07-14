@@ -6,7 +6,7 @@
  */
 import { useRef, useState, useEffect, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { Archive, Download, Folder, FolderOpen, GitBranch, LoaderCircle, MoreHorizontal, Pencil, Pin, PinOff, SquareTerminal } from 'lucide-react'
+import { Archive, Download, GitBranch, LoaderCircle, MoreHorizontal, PanelRight, PanelRightClose, Pencil, Pin, PinOff, SquareTerminal } from 'lucide-react'
 import { useGlassPanelAnimation } from '../../hooks/useGlassPanelAnimation'
 import { EnvTypeIcon } from '../common/EnvTypeIcon'
 
@@ -300,8 +300,8 @@ export function ThreadChrome({
           </button>
           <button
             type="button"
-            aria-label={t('tabs.showWorkspace')}
-            title={t('tabs.showWorkspace')}
+            aria-label={t(showWorkbench ? 'tabs.hideWorkspace' : 'tabs.showWorkspace')}
+            title={t(showWorkbench ? 'tabs.hideWorkspace' : 'tabs.showWorkspace')}
             onClick={() => {
               if (!activeTabId) return
               const ws = useWorkspacePanelStore.getState()
@@ -312,14 +312,9 @@ export function ThreadChrome({
                 ws.openPanel(activeTabId)
               }
             }}
-            data-active={showWorkbench ? 'true' : 'false'}
-            className={`inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] spring-bounce-btn ${
-              showWorkbench
-                ? 'bg-[var(--color-surface)] text-[var(--color-token-foreground)] shadow-[0_8px_18px_rgba(0,0,0,0.12)]'
-                : 'text-[var(--color-token-text-secondary)] hover:bg-[var(--color-surface)] hover:text-[var(--color-token-foreground)]'
-            }`}
+            className="inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] text-[var(--color-token-text-secondary)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-token-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-token-focus-border,var(--color-border-focus))] spring-bounce-btn"
           >
-            {showWorkbench ? <FolderOpen size={15} strokeWidth={1.9} /> : <Folder size={15} strokeWidth={1.9} />}
+            {showWorkbench ? <PanelRightClose size={15} strokeWidth={1.9} /> : <PanelRight size={15} strokeWidth={1.9} />}
           </button>
         </div>
       </div>

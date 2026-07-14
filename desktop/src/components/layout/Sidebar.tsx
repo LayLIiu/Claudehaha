@@ -836,7 +836,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
                 </div>
               </div>
             )}
-            <div className="sidebar-scroll-area min-h-0 flex-1 overflow-y-auto px-0 pb-20">
+            <div className="sidebar-scroll-area min-h-0 flex-1 overflow-y-auto px-0">
               {error && (
                 <div className="mx-1 mt-2 rounded-[var(--radius-md)] border border-[var(--color-error)]/20 bg-[var(--color-error)]/5 px-3 py-2">
                   <div className="text-xs font-medium text-[var(--color-error)]">{t('sidebar.sessionListFailed')}</div>
@@ -1134,7 +1134,7 @@ export function Sidebar({ isMobile = false, onRequestClose }: SidebarProps) {
       {!isMobile && (
         <div
           data-testid="sidebar-settings-dock"
-          className={`sidebar-settings-dock absolute bottom-0 left-0 right-0 p-3 ${expanded ? '' : 'flex justify-center'}`}
+          className={`sidebar-settings-dock shrink-0 p-3 ${expanded ? '' : 'flex justify-center'}`}
         >
           <NavItem
             active={activeTabId === SETTINGS_TAB_ID}
