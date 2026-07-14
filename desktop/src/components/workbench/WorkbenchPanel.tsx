@@ -84,7 +84,7 @@ export function WorkbenchPanel({ sessionId, variant = 'panel', onClose }: Workbe
                 }`}
               >
                 <Icon size={15} strokeWidth={2} aria-hidden="true" className="shrink-0" />
-                <span>{t(labelKey)}</span>
+                <span>{t(labelKey as any)}</span>
               </button>
             )
           })}

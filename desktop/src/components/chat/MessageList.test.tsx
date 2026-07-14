@@ -1038,7 +1038,9 @@ describe('MessageList nested tool calls', () => {
 
     render(<MessageList />)
 
-    const groupSummary = screen.getByText('Ran a command, Called a tool')
+    // With the new collapsible "已处理/工作中" UI and unresolved child tool (local_bash),
+    // the group should still be in running state
+    const groupSummary = screen.getByText(/^Working/, { exact: false })
     const groupButton = groupSummary.closest('button')
     expect(groupButton?.textContent).not.toContain('check_circle')
     expect(screen.getByText('local_bash', { exact: false })).toBeTruthy()
@@ -3619,20 +3621,18 @@ describe('MessageList nested tool calls', () => {
 
     render(<MessageList />)
 
+    // User message has the standard branch action ("Fork a new conversation");
+    // assistant message uses ForkEntryRow (hover-only fork before/after turn) instead.
     const branchButtons = screen.getAllByRole('button', { name: 'Fork a new conversation' })
-    expect(branchButtons).toHaveLength(2)
+    expect(branchButtons).toHaveLength(1)
     expect(branchButtons[0]!.closest('[data-message-actions]')).toBe(
       screen.getByRole('button', { name: 'Copy prompt' }).closest('[data-message-actions]')
     )
-    expect(branchButtons[1]!.closest('[data-message-actions]')).toBe(
-      screen.getByRole('button', { name: 'Copy reply' }).closest('[data-message-actions]')
-    )
-    expect(branchButtons[1]?.getAttribute('title')).toBe('Fork a new conversation')
 
-    fireEvent.click(branchButtons[1]!)
+    fireEvent.click(branchButtons[0]!)
 
     await waitFor(() => {
-      expect(branchSession).toHaveBeenCalledWith(ACTIVE_TAB, 'transcript-assistant-1')
+      expect(branchSession).toHaveBeenCalledWith(ACTIVE_TAB, 'transcript-user-1')
     })
     expect(connectToSession).toHaveBeenCalledWith('branched-session-1')
     expect(useTabStore.getState().activeTabId).toBe('branched-session-1')

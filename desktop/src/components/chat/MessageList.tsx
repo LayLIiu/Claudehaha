@@ -2679,8 +2679,8 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
     //    group yet.
     const isToolGroupStreaming = (toolCalls: ToolCall[]) => {
       if (toolGroupsFollowedByText.has(index)) return false
-      const hasUnresolved = toolCalls.some((tc) => !toolResultMap.has(tc.toolUseId))
-      if (hasUnresolved) return true
+      // Recursively check child tools (e.g. local_bash spawned by TaskUpdate)
+      if (hasUnresolvedToolCalls(toolCalls, toolResultMap, childToolCallsByParent)) return true
       if (chatState !== 'idle') return true
       return false
     }
@@ -2711,6 +2711,11 @@ export function MessageList({ sessionId, compact = false, bottomPadding = 160, t
               </div>
             )}
             startedAt={item.group.startTime ?? Date.now()}
+            durationMs={
+              item.group.endTime && item.group.startTime
+                ? item.group.endTime - item.group.startTime
+                : undefined
+            }
             hasLatestPart={item.group.hasFinalAssistant}
             settling={false}
             streaming={false}

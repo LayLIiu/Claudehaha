@@ -1259,6 +1259,7 @@ export const zh: Record<TranslationKey, string> = {
   'chat.compactSummary.tokens': '壓縮前 {count} tokens',
   'chat.compactSummary.messages': '已摘要 {count} 條訊息',
   'chat.turnProcessed': '已處理',
+  'chat.history.working': '工作中',
   'chat.history.workingFor': '工作中 {duration}',
   'chat.history.workedFor': '已工作 {duration}',
   'chat.history.worked': '已處理',

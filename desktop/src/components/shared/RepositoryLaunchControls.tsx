@@ -335,12 +335,12 @@ export function RepositoryLaunchControls({
 
   return (
     <div ref={rootRef} className={`flex min-w-0 flex-col ${isMobileBrowser ? 'gap-0' : isComposerPlacement ? 'gap-1' : 'gap-2'}`}>
-      <div className={`flex min-w-0 items-center justify-start gap-x-1.5 gap-y-1 overflow-hidden border-t border-[var(--color-border-separator)] ${
+      <div className={`flex min-w-0 items-center justify-start gap-x-1.5 gap-y-1 overflow-hidden ${
         isMobileBrowser
-          ? 'min-h-[52px] flex-wrap rounded-none bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3 py-2 shadow-none'
-          : isComposerPlacement
+          ? 'min-h-[52px] flex-wrap rounded-2xl bg-[var(--color-token-bg-subtle,rgba(255,255,255,0.04))] px-3 py-2 shadow-none border border-[var(--color-border-separator)]'
+          : 'border-t border-[var(--color-border-separator)] ' + (isComposerPlacement
             ? 'min-h-[44px] flex-nowrap bg-transparent px-4 py-2'
-          : 'min-h-[48px] flex-nowrap rounded-b-xl bg-[var(--color-surface-container-low)] px-4 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]'
+          : 'min-h-[48px] flex-nowrap rounded-b-xl bg-[var(--color-surface-container-low)] px-4 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]')
       }`}>
         <DirectoryPicker value={workDir} onChange={onWorkDirChange} variant="workbar" isGitProject={isGitReady} />
 

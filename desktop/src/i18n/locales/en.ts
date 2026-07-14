@@ -1257,6 +1257,7 @@ export const en = {
   'chat.compactSummary.tokens': '{count} tokens before compact',
   'chat.compactSummary.messages': '{count} messages summarized',
   'chat.turnProcessed': 'Processed',
+  'chat.history.working': 'Working',
   'chat.history.workingFor': 'Working for {duration}',
   'chat.history.workedFor': 'Worked for {duration}',
   'chat.history.worked': 'Worked',

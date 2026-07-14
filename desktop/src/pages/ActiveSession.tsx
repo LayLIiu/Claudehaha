@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
-import { Archive, Download, GitBranch, LoaderCircle, MoreHorizontal, PanelRight, PanelRightClose, Pencil, Pin, PinOff, SquareTerminal } from 'lucide-react'
+import { Archive, Download, GitBranch, LoaderCircle, MoreHorizontal, PanelRight, Pencil, Pin, PinOff, SquareTerminal } from 'lucide-react'
 import {
   SCHEDULED_TAB_ID,
   SETTINGS_TAB_ID,

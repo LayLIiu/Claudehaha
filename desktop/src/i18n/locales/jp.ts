@@ -1259,6 +1259,7 @@ export const jp: Record<TranslationKey, string> = {
   'chat.compactSummary.tokens': '圧縮前は {count} トークン',
   'chat.compactSummary.messages': '{count} 件のメッセージを要約しました',
   'chat.turnProcessed': '処理済み',
+  'chat.history.working': '作業中',
   'chat.history.workingFor': '作業中 {duration}',
   'chat.history.workedFor': '作業時間 {duration}',
   'chat.history.worked': '処理済み',

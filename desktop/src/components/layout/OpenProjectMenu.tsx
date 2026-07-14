@@ -375,7 +375,7 @@ export function OpenProjectMenu({
           className={`liquid-glass glass-panel fixed z-[340] w-[min(320px,calc(100vw-32px))] overflow-hidden rounded-[18px] border border-[var(--color-surface-glass-border)] p-3 shadow-[0_18px_56px_rgba(0,0,0,0.36)] ${animatingOut ? 'glass-animate-exit' : ''}`}
           style={{
             top: rect.bottom + 8,
-            right: 14,
+            right: Math.max(12, window.innerWidth - rect.right),
           }}
         >
           <div className="flex items-center justify-between gap-2">

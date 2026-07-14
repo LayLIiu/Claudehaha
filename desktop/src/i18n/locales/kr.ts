@@ -1259,6 +1259,7 @@ export const kr: Record<TranslationKey, string> = {
   'chat.compactSummary.tokens': '압축 전 {count} 토큰',
   'chat.compactSummary.messages': '{count}개의 메시지를 요약했습니다',
   'chat.turnProcessed': '처리됨',
+  'chat.history.working': '작업 중',
   'chat.history.workingFor': '작업 중 {duration}',
   'chat.history.workedFor': '작업 시간 {duration}',
   'chat.history.worked': '처리됨',
