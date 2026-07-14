@@ -1,14 +1,17 @@
-import { memo, useMemo, useState, useEffect } from 'react'
+import { memo, useMemo, useRef, useState } from 'react'
 import { BookMarked, ChevronDown, ChevronRight, Settings, FilePenLine, Bot, CircleStop, Clock } from 'lucide-react'
 import { ToolCallBlock } from './ToolCallBlock'
 import { MarkdownRenderer } from '../markdown/MarkdownRenderer'
 import { Modal } from '../shared/Modal'
 import { Collapse } from './Collapse'
+import { CadencedShimmerText } from './StreamingIndicator'
 import { RollingDiffStats } from './RollingDiffStats'
 import type { DiffStats } from './diffStats'
 import {
+  aggregateToolEditStats,
   extractToolEditStats as extractEditStats,
   summarizeToolEditFiles,
+  type ToolEditStats,
 } from './toolEditSummary'
 import { extractPartialJsonStringField } from './extractPartialJsonStringField'
 import { useTranslation } from '../../i18n'
@@ -23,6 +26,20 @@ type ToolResult = Extract<UIMessage, { type: 'tool_result' }>
 type MemoryToolAction = 'saved' | 'referenced'
 
 /** Chinese action labels: [进行中, 已完成] — mirrors ToolCallBlock.tsx */
+const TOOL_ACTION_LABEL: Record<string, [string, string]> = {
+  Bash: ['正在运行', '已运行'],
+  Read: ['正在读取', '已读取'],
+  Write: ['正在写入', '已写入'],
+  Edit: ['正在编辑', '已编辑'],
+  Glob: ['正在搜索', '已搜索'],
+  Grep: ['正在搜索', '已搜索'],
+  Agent: ['正在派发', '已派发'],
+  WebSearch: ['正在搜索', '已搜索'],
+  WebFetch: ['正在获取', '已获取'],
+  NotebookEdit: ['正在编辑', '已编辑'],
+  Skill: ['正在执行', '已执行'],
+}
+
 type MemoryToolFile = {
   path: string
   label: string
@@ -200,6 +217,95 @@ function generateActiveTitle(toolCall: ToolCall | null): string {
     default:
       return toolCall.toolName
   }
+}
+
+function ActiveEditTitle({
+  toolName,
+  stats,
+}: {
+  toolName: string
+  stats: ToolEditStats
+}) {
+  const verb = toolName === 'Write'
+    ? '正在写入'
+    : toolName === 'MultiEdit'
+      ? '正在批量编辑'
+      : '正在编辑'
+
+  return (
+    <span className="flex min-w-0 items-center gap-1.5">
+      <span className="truncate">{verb} {stats.label}</span>
+      <span className="shrink-0 text-[11px] text-[rgba(255,255,255,0.46)]">·</span>
+      <RollingDiffStats stats={stats} variant="inline" className="text-[13px] font-medium" />
+    </span>
+  )
+}
+
+/** Shimmer only on the verb prefix (e.g. "正在运行"), not on the detail (file name / command). */
+function RunningToolTitle({ toolName, detail }: { toolName: string; detail: string }) {
+  const verb = TOOL_ACTION_LABEL[toolName]?.[0] || '正在执行'
+  return (
+    <span className="flex min-w-0 items-center gap-1.5">
+      <CadencedShimmerText>
+        <span>{verb}</span>
+      </CadencedShimmerText>
+      {detail && (
+        <span className="min-w-0 truncate font-[var(--font-mono)] text-[12px] text-[var(--color-token-text-tertiary)]">
+          {detail}
+        </span>
+      )}
+    </span>
+  )
+}
+
+function getActiveOrLatestToolCall(
+  toolCalls: ToolCall[],
+  resultMap: Map<string, ToolResult>,
+  childToolCallsByParent: Map<string, ToolCall[]>,
+  isStreaming?: boolean,
+): ToolCall | null {
+  const unresolvedToolCall = getLastUnresolvedToolCall(toolCalls, resultMap, childToolCallsByParent)
+  if (unresolvedToolCall) return unresolvedToolCall
+  if (isStreaming) return toolCalls[toolCalls.length - 1] ?? null
+  return null
+}
+
+function getLatestConcreteRunningDisplay(
+  toolCalls: ToolCall[],
+  resultMap: Map<string, ToolResult>,
+  childToolCallsByParent: Map<string, ToolCall[]>,
+  isStreaming?: boolean,
+): {
+  toolCall: ToolCall
+  title: string
+  editStats: ToolEditStats | null
+} | null {
+  const activeToolCall = getActiveOrLatestToolCall(toolCalls, resultMap, childToolCallsByParent, isStreaming)
+  const orderedToolCalls = activeToolCall
+    ? [activeToolCall, ...toolCalls.filter((toolCall) => toolCall.id !== activeToolCall.id).reverse()]
+    : [...toolCalls].reverse()
+
+  for (const toolCall of orderedToolCalls) {
+    const editStats = extractEditStats(toolCall)
+    if (editStats?.label) {
+      return {
+        toolCall,
+        title: '',
+        editStats,
+      }
+    }
+
+    const title = generateActiveTitle(toolCall)
+    if (title) {
+      return {
+        toolCall,
+        title,
+        editStats: null,
+      }
+    }
+  }
+
+  return null
 }
 
 function ToolEditFileSummaryRows({
@@ -555,113 +661,77 @@ function AgentToolGroup({
 function ToolCallGroupMulti({ toolCalls, resultMap, childToolCallsByParent, isStreaming }: Props) {
   const [expanded, setExpanded] = useState(false)
   const t = useTranslation()
+  const summary = generateToolActivitySummary(toolCalls, t)
   const hasUnresolvedTools = hasUnresolvedToolCalls(toolCalls, resultMap, childToolCallsByParent)
   // When isStreaming is false (assistant text already follows this group),
   // the tools are logically complete even if tool_result messages haven't
   // arrived yet — the AI wouldn't be replying if tools were still running.
   const isRunning = Boolean(isStreaming) || (isStreaming ? hasUnresolvedTools : false)
 
+  const runningDisplay = useMemo(
+    () => getLatestConcreteRunningDisplay(toolCalls, resultMap, childToolCallsByParent, isStreaming),
+    [childToolCallsByParent, isStreaming, resultMap, toolCalls],
+  )
+  const lastRunningDisplayRef = useRef(runningDisplay)
+  if (isRunning && runningDisplay) {
+    lastRunningDisplayRef.current = runningDisplay
+  }
+  if (!isRunning) {
+    lastRunningDisplayRef.current = null
+  }
+  const effectiveRunningDisplay = isRunning ? (runningDisplay ?? lastRunningDisplayRef.current) : null
+  const completedEditStats = useMemo(() => aggregateToolEditStats(toolCalls), [toolCalls])
   const editFileSummaries = useMemo(() => summarizeToolEditFiles(toolCalls), [toolCalls])
-
-  // ── Wall-clock: real-time while running, frozen after completion ──
-  const firstTimestamp = toolCalls[0]?.timestamp
-  const firstTimestampMs = typeof firstTimestamp === 'string' ? Date.parse(firstTimestamp) : firstTimestamp
-  const [finalDuration, setFinalDuration] = useState<number | null>(null)
-  useEffect(() => {
-    if (!isRunning && firstTimestampMs) {
-      setFinalDuration(Date.now() - firstTimestampMs)
-    }
-    if (isRunning) {
-      setFinalDuration(null)
-    }
-  }, [isRunning, firstTimestampMs])
-
-  const [liveElapsed, setLiveElapsed] = useState(0)
-  useEffect(() => {
-    if (!isRunning || !firstTimestampMs) return
-    setLiveElapsed(Date.now() - firstTimestampMs)
-    const interval = window.setInterval(() => {
-      setLiveElapsed(Date.now() - firstTimestampMs)
-    }, 250)
-    return () => window.clearInterval(interval)
-  }, [isRunning, firstTimestampMs])
-
-  const displayMs = isRunning
-    ? (firstTimestampMs ? Date.now() - firstTimestampMs : liveElapsed)
-    : finalDuration
-  const formattedDuration = displayMs != null && firstTimestampMs
-    ? formatHistoryDurationMs(displayMs)
-    : null
-
-  // Label: "工作中 · 12秒" while running, "已处理 · 1分 30秒" when done
-  const timelineLabel = formattedDuration
-    ? (isRunning
-      ? t('chat.history.workingFor').replace('{duration}', formattedDuration)
-      : t('chat.history.workedFor').replace('{duration}', formattedDuration))
-    : (isRunning ? t('chat.history.working') : t('chat.history.worked'))
+  const summaryContent = completedEditStats ? (
+    <span className="flex min-w-0 items-center gap-1.5">
+      <span className="min-w-0 truncate">{summary}</span>
+      <span className="shrink-0 text-[11px] text-[rgba(255,255,255,0.42)]">·</span>
+      <RollingDiffStats stats={completedEditStats} variant="inline" className="text-[13px] font-medium" />
+    </span>
+  ) : summary
 
   return (
-    <div className="codex-turn-process">
-      <div className="flex w-full border-b border-border/50 pb-2">
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          aria-expanded={expanded}
-          className="codex-turn-process-trigger"
-        >
-          <ChevronRight
-            className="codex-turn-process-chevron"
-            size={14}
-            style={{
-              transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)',
-              transition: 'transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1)',
-            }}
-            aria-hidden="true"
-          />
-          <span className={isRunning ? 'animated-gradient-text' : 'codex-turn-process-title'}>
-            {timelineLabel}
-          </span>
-        </button>
-      </div>
+    <div className="group/collapsed-tool-activity mb-[2px]">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="flex w-full items-center gap-2 px-1 py-1 text-left text-[13px] transition-colors hover:opacity-80"
+      >
+        <ChevronDown size={14} className={`shrink-0 text-[var(--color-token-icon-foreground)] transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} aria-hidden="true" />
+        <span className="flex-1 truncate text-[var(--color-token-conversation-summary-trailing)] group-hover/collapsed-tool-activity:text-[var(--color-token-foreground)]">
+          {isRunning ? (
+            effectiveRunningDisplay?.editStats ? (
+              <ActiveEditTitle toolName={effectiveRunningDisplay.toolCall.toolName} stats={effectiveRunningDisplay.editStats} />
+            ) : effectiveRunningDisplay?.title ? (
+              <RunningToolTitle toolName={effectiveRunningDisplay.toolCall.toolName} detail={effectiveRunningDisplay.title} />
+            ) : null
+          ) : summaryContent}
+        </span>
 
-      <Collapse open={expanded} duration={300} easing="cubic-bezier(0.16, 1, 0.3, 1)" className="codex-turn-process-collapse">
-        <div className="codex-turn-process-content">
-          <div className="ml-2 mt-0.5 space-y-1 border-l border-[var(--color-token-border-default)] pl-3.5">
-            <ToolEditFileSummaryRows files={editFileSummaries} />
-            {toolCalls.map((tc) => {
-              return (
-                <ToolCallTree
-                  key={tc.id}
-                  toolCall={tc}
-                  resultMap={resultMap}
-                  childToolCallsByParent={childToolCallsByParent}
-                  compact
-                  diffStats={extractEditStats(tc)}
-                />
-              )
-            })}
-          </div>
+        {isRunning && (
+          <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-token-charts-green)] animate-pulse-dot" />
+        )}
+      </button>
+
+      <Collapse open={expanded}>
+        <div className="ml-2 mt-0.5 space-y-1 border-l border-[var(--color-token-border-default)] pl-3.5">
+          <ToolEditFileSummaryRows files={editFileSummaries} />
+          {toolCalls.map((tc) => {
+            return (
+              <ToolCallTree
+                key={tc.id}
+                toolCall={tc}
+                resultMap={resultMap}
+                childToolCallsByParent={childToolCallsByParent}
+                compact
+                diffStats={extractEditStats(tc)}
+              />
+            )
+          })}
         </div>
       </Collapse>
-
-      <div className="codex-turn-process-divider" />
     </div>
   )
-}
-
-/** Format ms → compact string: "12秒", "1分 5秒", "2时 30分" */
-function formatHistoryDurationMs(ms: number): string {
-  const totalSeconds = Math.max(0, Math.round(ms / 1000))
-  if (totalSeconds < 60) return `${totalSeconds}秒`
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-  if (minutes < 60) return seconds === 0 ? `${minutes}分` : `${minutes}分 ${seconds}秒`
-  const hours = Math.floor(minutes / 60)
-  const remainMin = minutes % 60
-  if (hours < 24) return remainMin === 0 ? `${hours}时` : `${hours}时 ${remainMin}分`
-  const days = Math.floor(hours / 24)
-  const remainHour = hours % 24
-  return remainHour === 0 ? `${days}天` : `${days}天 ${remainHour}时`
 }
 
 function AgentCallCard({

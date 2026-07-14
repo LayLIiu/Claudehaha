@@ -1038,11 +1038,10 @@ describe('MessageList nested tool calls', () => {
 
     render(<MessageList />)
 
-    // With the new collapsible "已处理/工作中" UI and unresolved child tool (local_bash),
-    // the group should still be in running state
-    const groupSummary = screen.getByText(/^Working/, { exact: false })
-    const groupButton = groupSummary.closest('button')
-    expect(groupButton?.textContent).not.toContain('check_circle')
+    // With unresolved child tool (local_bash), the group stays in running state
+    // (green pulse dot visible). Verify the group renders and child tools are accessible.
+    const pulseDots = document.querySelectorAll('.animate-pulse-dot')
+    expect(pulseDots.length).toBeGreaterThan(0)
     expect(screen.getByText('local_bash', { exact: false })).toBeTruthy()
   })
 
