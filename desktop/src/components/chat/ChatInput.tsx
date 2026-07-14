@@ -954,10 +954,10 @@ export function ChatInput({
       data-testid="chat-input-shell"
       className={
         isHeroComposer
-          ? `bg-transparent ${isMobileComposer ? 'px-1 pb-3' : 'px-8 pb-4'}`
+          ? `bg-transparent ${isMobileComposer ? 'px-0.5 pb-3' : 'px-8 pb-4'}`
           : compact
-            ? `bg-transparent ${isMobileComposer ? 'px-1 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-0' : 'px-2 pb-2 pt-0'}`
-            : `bg-transparent ${isMobileComposer ? 'px-1 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-0' : 'px-0 pb-[16px] pt-0'}`
+            ? `bg-transparent ${isMobileComposer ? 'px-0.5 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-0' : 'px-2 pb-2 pt-0'}`
+            : `bg-transparent ${isMobileComposer ? 'px-0.5 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-0' : 'px-0 pb-[16px] pt-0'}`
       }
     >
       <div
@@ -981,8 +981,8 @@ export function ChatInput({
           className={isHeroComposer
             ? `glass-panel codex-new-task-input-panel relative flex flex-col gap-2 overflow-visible ${embedLaunchControlsInHero ? 'rounded-[var(--radius-4xl)]' : 'rounded-t-[var(--radius-4xl)] rounded-b-none'} p-3 transition-colors ${isDragActive ? 'composer-drop-target-active' : ''}`
             : compact
-              ? `glass-panel relative overflow-visible ${isMobileComposer ? 'p-2' : 'p-3'} transition-colors ${isMobileComposer ? 'rounded-[var(--radius-2xl)] shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[var(--radius-3xl)]'} ${isDragActive ? 'composer-drop-target-active' : ''}`
-              : `glass-panel relative overflow-visible transition-colors ${isMobileComposer ? 'rounded-[var(--radius-2xl)] p-2 shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[var(--radius-3xl)] pt-[10px] pb-3 px-4 -ml-[8px] w-[calc(100%+8px)]'} ${isDragActive ? 'composer-drop-target-active' : ''}`}
+              ? `glass-panel relative overflow-visible ${isMobileComposer ? 'p-1.5' : 'p-3'} transition-colors ${isMobileComposer ? 'rounded-[var(--radius-2xl)] shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[var(--radius-3xl)]'} ${isDragActive ? 'composer-drop-target-active' : ''}`
+              : `glass-panel relative overflow-visible transition-colors ${isMobileComposer ? 'rounded-[var(--radius-2xl)] p-1.5 shadow-[0_-12px_36px_rgba(15,23,42,0.12)]' : 'rounded-[var(--radius-3xl)] pt-[10px] pb-3 px-4 -ml-[8px] w-[calc(100%+8px)]'} ${isDragActive ? 'composer-drop-target-active' : ''}`}
           {...dragHandlers}
         >
           {isDragActive && (

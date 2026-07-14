@@ -1855,6 +1855,36 @@ button, input, textarea, select, a, [role="button"] {
   --markdown-line-height: 23px;
 }
 
+.app-shell--mobile .codex-task-transcript {
+  max-width: none !important;
+}
+
+.app-shell--mobile .chat-input-dock-region {
+  padding-left: 2px !important;
+  padding-right: 2px !important;
+}
+
+.app-shell--mobile [data-testid="chat-input-shell"],
+.app-shell--mobile [data-testid="empty-session-composer-shell"] {
+  padding-left: 2px !important;
+  padding-right: 2px !important;
+}
+
+.app-shell--mobile [data-testid="chat-input-panel"],
+.app-shell--mobile [data-testid="empty-session-composer-panel"] {
+  padding: 5px !important;
+}
+
+.app-shell--mobile [data-testid="chat-input-shell"] > div,
+.app-shell--mobile [data-testid="empty-session-composer-shell"] > div {
+  margin: 0 !important;
+  max-width: none !important;
+}
+
+.app-shell--mobile .user-message-bubble {
+  font-size: 15px;
+}
+
 .sidebar-panel {
   width: var(--sidebar-width);
   min-width: var(--sidebar-width);
