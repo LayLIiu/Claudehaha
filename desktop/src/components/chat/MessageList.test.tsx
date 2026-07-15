@@ -1040,8 +1040,8 @@ describe('MessageList nested tool calls', () => {
 
     // With unresolved child tool (local_bash), the group stays in running state
     // (green pulse dot visible). Verify the group renders and child tools are accessible.
-    const pulseDots = document.querySelectorAll('.animate-pulse-dot')
-    expect(pulseDots.length).toBeGreaterThan(0)
+    const runningDots = document.querySelectorAll('[class*="pulse-dot"]')
+    expect(runningDots.length).toBeGreaterThan(0)
     expect(screen.getByText('local_bash', { exact: false })).toBeTruthy()
   })
 

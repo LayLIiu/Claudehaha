@@ -390,7 +390,7 @@ export function OpenProjectMenu({
             </div>
           </div>
 
-          <div className="mt-2.5 space-y-1">
+          <div className="mt-2 space-y-px">
             <ToolRow
               icon={<SquarePen size={15} />}
               label="更改"
@@ -404,7 +404,7 @@ export function OpenProjectMenu({
               type="button"
               disabled={repoContext?.state !== 'ok' || repoLoading}
               onClick={() => setBranchPopoverOpen((value) => !value)}
-              className="flex h-9 w-full items-center gap-2 rounded-[10px] px-2 text-left transition-colors hover:bg-[rgba(255,255,255,0.06)] disabled:cursor-default disabled:opacity-70 disabled:hover:bg-transparent"
+              className="flex h-8 w-full items-center gap-2 rounded-[10px] px-2 text-left transition-colors hover:bg-[rgba(255,255,255,0.06)] disabled:cursor-default disabled:opacity-70 disabled:hover:bg-transparent"
             >
               <span className="flex h-6 w-6 shrink-0 items-center justify-center text-[rgba(255,255,255,0.82)]">
                 <GitBranch size={15} />
@@ -415,7 +415,7 @@ export function OpenProjectMenu({
               <ChevronDown size={14} className={`shrink-0 text-[rgba(255,255,255,0.52)] transition-transform ${branchPopoverOpen ? 'rotate-180' : ''}`} />
             </button>
 
-            <div className="flex h-9 items-center gap-2 rounded-[10px] px-2 transition-colors hover:bg-[rgba(255,255,255,0.06)]">
+            <div className="flex h-8 items-center gap-2 rounded-[10px] px-2 transition-colors hover:bg-[rgba(255,255,255,0.06)]">
               <button
                 type="button"
                 disabled={!sessionId}
